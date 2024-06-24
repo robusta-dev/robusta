@@ -21,6 +21,8 @@ global:
 
 automountServiceAccountToken: true
 
+enableHolmesGPT: false
+
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
   check_prometheus_flags: true
@@ -72,13 +74,14 @@ lightActions:
 - list_resource_names
 - node_dmesg_enricher
 - status_enricher
-- popeye_scan
 - krr_scan
+- popeye_scan
 - handle_alertmanager_event
 - drain
 - cordon
 - uncordon
 - rollout_restart
+- ask_holmes
 - prometheus_all_available_metrics
 - prometheus_get_series
 

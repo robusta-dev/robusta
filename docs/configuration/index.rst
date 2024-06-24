@@ -10,6 +10,13 @@ Robusta can receive alerts from many sources and send them to many destinations.
 .. grid::
     :gutter: 3
 
+    .. grid-item-card:: :octicon:`book;1em;` AI Analysis
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: ai-analysis
+        :link-type: doc
+
+        Analyze alerts with `Holmes GPT <https://stackoverflow.com/>`_.
+
     .. grid-item-card:: :octicon:`book;1em;` Data Sources
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/index
@@ -50,4 +57,3 @@ Popular Sinks (Destinations)
         :class-card: sd-bg-light sd-bg-text-light
         :link: sinks/RobustaUI
         :link-type: doc
-

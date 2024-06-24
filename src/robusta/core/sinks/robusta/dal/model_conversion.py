@@ -3,7 +3,7 @@ import json
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from robusta.core.model.env_vars import ENABLE_GRAPH_BLOCK
 from robusta.core.reporting import (
@@ -21,8 +21,9 @@ from robusta.core.reporting import (
     PrometheusBlock,
     TableBlock,
 )
-from robusta.core.reporting.blocks import GraphBlock, EmptyFileBlock
+from robusta.core.reporting.blocks import EmptyFileBlock, GraphBlock
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
+from robusta.core.reporting.holmes import HolmesResultsBlock
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
 
@@ -68,7 +69,7 @@ class ModelConversion:
     @staticmethod
     def get_file_type(filename: str):
         last_dot_idx = filename.rindex(".")
-        return filename[last_dot_idx + 1:]
+        return filename[last_dot_idx + 1 :]
 
     @staticmethod
     def get_file_object(block: FileBlock):
@@ -84,6 +85,22 @@ class ModelConversion:
             "metadata": block.metadata,
             "data": "",
         }
+
+    @staticmethod
+    def add_ai_analysis_data(structured_data: List[Dict], block: HolmesResultsBlock):
+        structured_data.append(
+            {
+                "type": "markdown",
+                "metadata": {"type": "ai_investigation_result"},
+                "data": Transformer.to_github_markdown(block.holmes_result.analysis),
+            }
+        )
+        for tool_call in block.holmes_result.tool_calls:
+            file_block = FileBlock(f"{tool_call.description}.txt", tool_call.result.encode())
+            file_block.zip()
+            data_obj = ModelConversion.get_file_object(file_block)
+            data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
+            structured_data.append(data_obj)
 
     @staticmethod
     def to_evidence_json(
@@ -110,7 +127,12 @@ class ModelConversion:
             elif isinstance(block, GraphBlock):
                 if ENABLE_GRAPH_BLOCK:
                     structured_data.append(
-                        {"type": "prometheus", "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
+                        {
+                            "type": "prometheus",
+                            "data": block.graph_data.dict(),
+                            "metadata": block.graph_data.metadata,
+                            "version": 1.0,
+                        }
                     )
                 else:
                     if block.is_text_file():
@@ -122,6 +144,8 @@ class ModelConversion:
                 if block.is_text_file():
                     block.zip()
                 structured_data.append(ModelConversion.get_file_object(block))
+            elif isinstance(block, HolmesResultsBlock):
+                ModelConversion.add_ai_analysis_data(structured_data, block)
             elif isinstance(block, HeaderBlock):
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):
