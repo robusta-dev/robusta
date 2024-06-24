@@ -5,7 +5,7 @@ from collections import defaultdict
 from string import Template
 from typing import Any, Dict, Union
 
-from hikaru.model import ObjectReference
+from hikaru.model.rel_1_26 import ObjectReference
 
 from robusta.core.reporting import FindingSubject
 
