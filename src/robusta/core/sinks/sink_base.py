@@ -2,9 +2,10 @@ import threading
 import time
 from abc import abstractmethod, ABC
 from collections import defaultdict
+from datetime import datetime
 from typing import Any, List, Dict, Tuple, DefaultDict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
@@ -33,19 +34,62 @@ class NotificationGroup(BaseModel):
 
 class NotificationSummary(BaseModel):
     message_id: Optional[str] = None  # identifier of the summary message
-    start_ts: float = Field(default_factory=lambda: time.time())  # Timestamp of the first notification
+    start_ts: float = None
+    end_ts: float = None
     # Keys for the table are determined by grouping.notification_mode.summary.by
     summary_table: DefaultDict[KeyT, List[int]] = None
 
-    def register_notification(self, summary_key: KeyT, resolved: bool, interval: int):
-        now_ts = time.time()
+    def register_notification(self, summary_key: KeyT, resolved: bool, interval: int, aligned: bool):
+        now_dt = datetime.now()
+        now_ts = int(now_dt.timestamp())
         idx = 1 if resolved else 0
-        if now_ts - self.start_ts > interval or not self.summary_table:
-            # Expired or the first summary ever for this group_key, reset the data
+        if not self.end_ts or now_ts > self.end_ts:
+            # Group expired or the first summary ever for this group_key, reset the data
             self.summary_table = defaultdict(lambda: [0, 0])
-            self.start_ts = now_ts
+            self.start_ts, self.end_ts = self.calculate_interval_boundaries(interval, aligned, now_dt)
             self.message_id = None
         self.summary_table[summary_key][idx] += 1
+
+    @classmethod
+    def calculate_interval_boundaries(cls, interval: int, aligned: bool, now_dt: datetime) -> Tuple[float, float]:
+        now_ts = int(now_dt.timestamp())
+        if aligned:
+            # This handles leap seconds by adjusting the length of the last interval in the
+            # day to the actual end of day. Note leap seconds are expected to almost always be +1,
+            # but it's also expected that some -1's will appear in the (far) future, and it's
+            # not out of the realm of possibility that somewhat larger adjustments will happen
+            # before the leap second adjustment is phased out around 2035.
+
+            start_of_this_day_ts, end_of_this_day_ts = cls.get_day_boundaries(now_dt)
+            start_ts = now_ts - (now_ts - start_of_this_day_ts) % interval
+            end_ts = start_ts + interval
+            if (
+                    end_ts > end_of_this_day_ts  # negative leap seconds
+                    or end_of_this_day_ts - end_ts < interval  # positive leap seconds
+            ):
+                end_ts = end_of_this_day_ts
+        else:
+            start_ts = now_ts
+            end_ts = now_ts + interval
+        return start_ts, end_ts
+
+    @staticmethod
+    def get_day_boundaries(now_dt: datetime) -> Tuple[int, int]:
+        # Note: we assume day boundaries according to the timezone configured on the pod
+        # running Robusta runner. A caveat of this is that Slack will show times according
+        # to the client's timezone, which may differ.
+
+        start_of_this_day = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_of_this_day_ts = int(start_of_this_day.timestamp())
+        try:
+            end_of_this_day = start_of_this_day.replace(day=start_of_this_day.day + 1)
+        except ValueError:  # end of month
+            try:
+                end_of_this_day = start_of_this_day.replace(month=start_of_this_day.month + 1, day=1)
+            except ValueError:  # end of year
+                end_of_this_day = start_of_this_day.replace(year=start_of_this_day.year + 1, month=1, day=1)
+        end_of_this_day_ts = int(end_of_this_day.timestamp())
+        return start_of_this_day_ts, end_of_this_day_ts
 
 
 class SinkBase(ABC):
