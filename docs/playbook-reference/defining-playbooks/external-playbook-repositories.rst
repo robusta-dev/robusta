@@ -1,20 +1,27 @@
 Loading External Actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta can load playbook actions from external git repositories. This extends Robusta with additional actions for
-use in :ref:`customPlaybooks<customPlaybooks>`.
+Robusta can load playbook actions from external git repositories and externally hosted
+Python packages provided as .tar/.tar.gz files. This extends Robusta with additional
+actions for use in :ref:`customPlaybooks<customPlaybooks>`.
 
 .. warning::
 
-    Robusta does not watch for changes in git repositories. Playbooks are reloaded when:
+    Robusta does not watch for changes in git repositories/externally hosted Python packages.
+    Playbooks are reloaded when:
 
     * Robusta starts
     * Robusta's configuration changes
     * ``robusta playbooks reload`` is run
 
-External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH.
+External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH
+in the case of git repositories, and appropriate URLs in the case of externally hosted
+Python packages. The way Robusta distinguishes between the case of git repository and an
+external package is to check if the URL ends with `.tar`, `.tar.gz`, or `.tar.gz` - if that
+is the case, the source is an external package; otherwise the URL is treated as a git
+address.
 
-If you are going to be using an external repository via HTTPS, you just need to configure
+If you are going to be using an external git repository via HTTPS, you just need to configure
 correct read access credentials (see below). When connecting via SSH, however, there is an
 additional requirement to verify the remote host's identity on the client side, as SSH
 generally does not provide any method of doing that automatically (in contrast with HTTPS,

@@ -3,17 +3,21 @@ import importlib.util
 import logging
 import os
 import pkgutil
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 from inspect import getmembers
 from typing import Dict, Optional
+from urllib.parse import urlparse
 
+import dpath.util
+import requests
+import toml
 import yaml
 
-import toml
-import dpath.util
 from robusta.core.model.env_vars import (
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
@@ -116,31 +120,75 @@ class ConfigLoader:
         for playbook_package, playbooks_repo in playbooks_repos.items():
             try:
                 if playbooks_repo.pip_install:  # skip playbooks that are already in site-packages
-                    if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
-                        repo = GitRepo(playbooks_repo.url, playbooks_repo.key.get_secret_value(), playbooks_repo.branch)
-                        local_path = repo.repo_local_path
-                    elif playbooks_repo.url.startswith(LOCAL_PATH_URL_PREFIX):
-                        local_path = playbooks_repo.url.replace(LOCAL_PATH_URL_PREFIX, "")
-                    else:
-                        raise Exception(
-                            f"Illegal playbook repo url {playbooks_repo.url}. "
-                            f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
-                        )
+                    remove_pkg_path = None
+                    try:
+                        check_pkg_path = True
+                        if (
+                            (
+                                playbooks_repo.url.startswith("https://")
+                                or playbooks_repo.url.startswith("http://")
+                            ) and (
+                                playbooks_repo.url.endswith(".tgz")
+                                or playbooks_repo.url.endswith(".tar.gz")
+                                or playbooks_repo.url.endswith(".tar")
+                            )
+                        ):
+                            if playbooks_repo.url.startswith("http://"):
+                                logging.warning(
+                                    f"Downloading a playbook package from non-https source f{playbooks_repo.url}"
+                                )
+                            temp_dir = tempfile.mkdtemp()
+                            # after installing the downloaded package, remove it along with its directory
+                            remove_pkg_path = temp_dir
+                            pkg_name = urlparse(playbooks_repo.url).path.rsplit('/', 1)[-1]
+                            filename = os.path.join(temp_dir, pkg_name)
+                            self.download_file(playbooks_repo.url, filename, playbooks_repo.http_headers)
+                            pkg_path = f"file://{filename}"
+                            check_pkg_path = False
+                        elif playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
+                            repo = GitRepo(playbooks_repo.url, playbooks_repo.key.get_secret_value(), playbooks_repo.branch)
+                            pkg_path = repo.repo_local_path
+                        elif playbooks_repo.url.startswith(LOCAL_PATH_URL_PREFIX):
+                            pkg_path = playbooks_repo.url.replace(LOCAL_PATH_URL_PREFIX, "")
+                        else:
+                            raise Exception(
+                                f"Illegal playbook repo url {playbooks_repo.url}. "
+                                f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
+                            )
 
-                    if not os.path.exists(local_path):  # in case the repo url was defined before it was actually loaded
-                        logging.error(f"Playbooks local path {local_path} does not exist. Skipping")
-                        continue
+                        if check_pkg_path and not os.path.exists(pkg_path):
+                            # In case the repo url was defined before it was actually loaded. Note we don't
+                            # perform this check when the pkg is sourced from an externally hosted tgz etc.
+                            logging.error(f"Playbook local path {pkg_path} does not exist. Skipping")
+                            continue
 
-                    # Adding to pip the playbooks repo from local_path
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-build-isolation", local_path])
-                    playbook_package = self.__get_package_name(local_path=local_path)
-
+                        # Adding to pip the playbooks repo from local_path
+                        if playbooks_repo.build_isolation:
+                            extra_pip_args = []
+                        else:
+                            extra_pip_args = ["--no-build-isolation"]
+                        subprocess.check_call([sys.executable, "-m", "pip", "install"] + extra_pip_args + [pkg_path])
+                        playbook_package = self.__get_package_name(local_path=pip_path)
+                    finally:
+                        if remove_pkg_path:
+                            shutil.rmtree(remove_pkg_path)
                 playbook_packages.append(playbook_package)
             except Exception:
                 logging.error(f"Failed to add playbooks repo {playbook_package}", exc_info=True)
 
         for package_name in playbook_packages:
             self.__import_playbooks_package(actions_registry, package_name)
+
+    @classmethod
+    def download_file(cls, url: str, dest_path: str, headers: Optional[Dict[str, str]]) -> None:
+        logging.debug(f"Downloading playbook file from {url} to {dest_path}")
+        # Note we don't need to care about deleting the file if something fails, it's done by
+        # the caller (__load_playbooks_repos above).
+        with requests.get(url, stream=True, headers=headers) as r:
+            r.raise_for_status()
+            f = open(dest_path, 'wb')
+            for chunk in r.iter_content(chunk_size=65536):
+                f.write(chunk)
 
     @classmethod
     def __import_playbooks_package(cls, actions_registry: ActionsRegistry, package_name: str):
