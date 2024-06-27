@@ -1,7 +1,6 @@
 :hide-toc:
 
 
-
 Integrating with Prometheus
 ================================
 .. toctree::
@@ -17,6 +16,7 @@ Integrating with Prometheus
    victoria-metrics
    grafana-alert-manager
    embedded-prometheus
+   troubleshooting-alertmanager
 
 
 
@@ -28,6 +28,7 @@ Robusta works best when integrated with Prometheus and AlertManager. When proper
 
 If you installed Robusta's :ref:`Embedded Prometheus Stack`, then everything is pre-integrated and not setup is necessary. If not, you will need follow a guide below.
 
+.. _alertmanager-setup-options:
 
 Setup Instructions
 ^^^^^^^^^^^^^^^^^^

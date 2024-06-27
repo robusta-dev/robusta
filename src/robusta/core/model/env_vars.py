@@ -69,6 +69,7 @@ RUNNER_SERVICE_ACCOUNT = os.environ.get("RUNNER_SERVICE_ACCOUNT", f"{RELEASE_NAM
 
 TELEMETRY_PERIODIC_SEC = int(os.environ.get("TELEMETRY_PERIODIC_SEC", 60 * 60 * 24))  # 24H
 
+SLACK_REQUEST_TIMEOUT = int(os.environ.get("SLACK_REQUEST_TIMEOUT", 90))
 SLACK_TABLE_COLUMNS_LIMIT = int(os.environ.get("SLACK_TABLE_COLUMNS_LIMIT", 3))
 DISCORD_TABLE_COLUMNS_LIMIT = int(os.environ.get("DISCORD_TABLE_COLUMNS_LIMIT", 4))
 RSA_KEYS_PATH = os.environ.get("RSA_KEYS_PATH", "/etc/robusta/auth")
@@ -101,7 +102,7 @@ RRM_PERIOD_SEC = int(os.environ.get("RRM_PERIOD_SEC", 90))
 
 MAX_ALLOWED_RULES_PER_CRD_ALERT = int(os.environ.get("MAX_ALLOWED_RULES_PER_CRD_ALERT", 600))
 
-IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/genuine-flight-317411/devel")
+IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "robustadev")
 
 FIO_IMAGE = os.environ.get("FIO_IMAGE", "robusta-fio-benchmark:1.0")
 DISK_TOOLS_IMAGE = os.environ.get("DISK_TOOLS_IMAGE", "disk-tools:1.5")
@@ -125,3 +126,5 @@ PROCESSED_ALERTS_CACHE_MAX_SIZE = int(os.environ.get("PROCESSED_ALERTS_CACHE_MAX
 
 POD_WAIT_RETRIES = int(os.environ.get("POD_WAIT_RETRIES", 10))
 POD_WAIT_RETRIES_SECONDS = int(os.environ.get("POD_WAIT_RETRIES_SECONDS", 5))
+
+HOLMES_ENABLED = load_bool("HOLMES_ENABLED", False)
