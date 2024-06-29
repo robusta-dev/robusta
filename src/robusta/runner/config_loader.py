@@ -128,9 +128,11 @@ class ConfigLoader:
                                 playbooks_repo.url.startswith("https://")
                                 or playbooks_repo.url.startswith("http://")
                             ) and (
-                                playbooks_repo.url.endswith(".tgz")
+                                playbooks_repo.url.endswith(".tar")
                                 or playbooks_repo.url.endswith(".tar.gz")
-                                or playbooks_repo.url.endswith(".tar")
+                                or playbooks_repo.url.endswith(".tgz")
+                                or playbooks_repo.url.endswith(".tar.bz2")
+                                or playbooks_repo.url.endswith(".tbz2")
                             )
                         ):
                             if playbooks_repo.url.startswith("http://"):

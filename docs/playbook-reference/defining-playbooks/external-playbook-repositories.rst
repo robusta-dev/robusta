@@ -116,6 +116,20 @@ The ``key`` parameter must contain a ``base64`` encoded deployment key with ``re
         ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
         -----END OPENSSH PRIVATE KEY-----
 
+Loading Actions from an external Python Package
+---------------------------------------------------
+
+For external Python packages, just specify an url starting with http(s), and ending with
+either .tar, .tar.gz, .tgz, .tar.bz2, or .tbz2.
+
+.. code-block:: yaml
+
+    playbookRepos:
+      web_playbooks:
+        url: "https://my-domain.com/bla/web-playbooks.tgz"
+        http_headers: # optional, may be used for auth
+          Authorization: Bearer XXXYYY
+        # pip_install: True      # optional: load this playbook's dependencies (default True)
 
 Handling Secrets
 *******************
