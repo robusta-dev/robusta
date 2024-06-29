@@ -173,7 +173,10 @@ class ConfigLoader:
                         playbook_package = self.__get_package_name(local_path=pip_path)
                     finally:
                         if remove_pkg_path:
-                            shutil.rmtree(remove_pkg_path)
+                            try:
+                                shutil.rmtree(remove_pkg_path)
+                            except:
+                                pass
                 playbook_packages.append(playbook_package)
             except Exception:
                 logging.error(f"Failed to add playbooks repo {playbook_package}", exc_info=True)
