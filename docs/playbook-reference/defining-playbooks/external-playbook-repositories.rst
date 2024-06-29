@@ -17,9 +17,9 @@ actions for use in :ref:`customPlaybooks<customPlaybooks>`.
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH
 in the case of git repositories, and appropriate URLs in the case of externally hosted
 Python packages. The way Robusta distinguishes between the case of git repository and an
-external package is to check if the URL ends with `.tar`, `.tar.gz`, or `.tar.gz` - if that
-is the case, the source is an external package; otherwise the URL is treated as a git
-address.
+external package is to check if the URL ends with `.tar`, `.tar.gz`, `.tar.gz`, `.tar.bz2`,
+or `.tbz2` - if that is the case, the source is treated as an external package; otherwise the
+URL is treated as a git repository address.
 
 If you are going to be using an external git repository via HTTPS, you just need to configure
 correct read access credentials (see below). When connecting via SSH, however, there is an
@@ -119,7 +119,7 @@ The ``key`` parameter must contain a ``base64`` encoded deployment key with ``re
 Loading Actions from an external Python Package
 ---------------------------------------------------
 
-For external Python packages, just specify an url starting with http(s), and ending with
+For external Python packages, just specify an URL starting with http(s), and ending with
 either .tar, .tar.gz, .tgz, .tar.bz2, or .tbz2.
 
 .. code-block:: yaml
