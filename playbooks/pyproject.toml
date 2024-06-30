@@ -25,7 +25,7 @@ rsa = "^4.8"
 humanize = "^3.13.1"
 
 [tool.poetry.dev-dependencies]
-robusta-cli = "^0.8.9"
+robusta-api = "^0.14"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
