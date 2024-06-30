@@ -17,7 +17,7 @@ class MsTeamsSinkParams(SinkBaseParams):
 
     @validator("webhook_override")
     def validate_webhook_override(cls, v: str):
-        return MsTeamsWebhookUrlTransformer.validate_channel_override(v)
+        return MsTeamsWebhookUrlTransformer.validate_webhook_override(v)
 
 
 class MsTeamsSinkConfigWrapper(SinkConfigBase):
