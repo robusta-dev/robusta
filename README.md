@@ -17,7 +17,7 @@
 Robusta integrates with Prometheus (e.g. `kube-prometheus-stack` or Coralogix) by webhook and adds features like: 
 
 * [**Smart Grouping**](https://docs.robusta.dev/master/configuration/notification-grouping.html) - reduce notification spam with Slack threads 🧵
-* *[*AI Investigation**](https://docs.robusta.dev/master/configuration/ai-analysis.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
+* [**AI Investigation**](https://docs.robusta.dev/master/configuration/ai-analysis.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
 * [**Alert Enrichment**](https://docs.robusta.dev/master/how-it-works/index.html#automatically-investigate-a-prometheus-alert) - see pod logs and other data alongside your alerts
 * [**Self-Healing**](https://docs.robusta.dev/master/tutorials/alert-remediation.html#remediate-prometheus-alerts) - define auto-remediation rules for faster fixes
 * [**Advanced Routing**](https://docs.robusta.dev/master/tutorials/index.html#notification-routing) based on team, namespace, and more
