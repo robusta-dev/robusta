@@ -99,7 +99,7 @@ Better Prometheus Alerts (and more) for Kubernetes
 
             .. md-tab-item:: AI Investigation
 
-               .. image:: /images/ai-investigation.png
+               .. image:: /images/ai-analysis.png
                    :width: 800px
 
             .. md-tab-item:: Kubernetes Problems
