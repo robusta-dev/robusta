@@ -7,12 +7,15 @@ Robusta can integrate with `Holmes GPT <https://github.com/robusta-dev/holmesgpt
 
 Holmes can be installed with Robusta by adding ``enableHolmesGPT: true`` to the Robusta ``generated_values.yaml`` file.
 
-When available, AI based investigations can be launched from the ``Ask Holmes`` button in Slack, or from the Robusta UI.
+When available, AI based investigations can be launched using the ``Ask Holmes`` button in Slack. The results will be sent back as a new message.
 
-   .. image:: /images/robusta-holmes-investigation.png
-       :width: 600px
+.. image:: /images/robusta-holmes-investigation.png
+    :width: 600px
 
-Clicking it, will launch a Holmes investigation and the results will be sent back to Slack or Robusta UI.
+On the Robusta UI, clicking the ``Find Root Cause`` button will start an investigation and display its results.
+
+.. image:: /images/ai-root-causeanalysis.png
+    :width: 600px
 
 Configuration
 ^^^^^^^^^^^^^^^^^^
