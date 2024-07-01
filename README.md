@@ -6,7 +6,7 @@
   <p align="center">
     <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
     <a href="#-installing-robusta"><strong>Installation</strong></a> | 
-    <a href="[https://docs.robusta.dev/master/configuration/index.html"><strong>Integrations ↗</strong></a> |
+    <a href="https://docs.robusta.dev/master/configuration/index.html"><strong>Integrations ↗</strong></a> |
     <a href="https://docs.robusta.dev/master/index.html"><strong>Docs ↗</strong></a> |
     <a href="https://bit.ly/robusta-slack"><strong>Slack Community ↗</strong></a>
   </p>
