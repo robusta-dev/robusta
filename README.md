@@ -16,14 +16,15 @@
 
 Robusta integrates with Prometheus (e.g. `kube-prometheus-stack` or Coralogix) by webhook and adds features like: 
 
-* **Grouping** - reduce notification spam with "Live Summary Messages" and Slack threads 🧵
-* **Enrichment** - see pods logs and other relevant information alongside your alerts
-* **Self-Healing** - define auto-remediation rules for alert response, like running Kubernetes jobs or executing bash commands
-* **Routing by Team/Namespace** to different channels based on labels or Kubernetes metadata
-* **Problem-Detection without PromQL** - generate Kubernetes-native alerts for OOMKills, failing Jobs, and more
-* **Change Tracking** for Kubernetes Resources so you can correlate between alerts and new deployments
-* **Auto-Resolve** - for integrations like Slack/Jira, Robusta updates the external system when alerts are resolved
-* **Dozens of Integrations** - Slack, Teams, Jira, and more
+* [**Smart Grouping**](https://docs.robusta.dev/master/configuration/notification-grouping.html) - reduce notification spam with Slack threads 🧵
+* [**AI Investigation**](https://docs.robusta.dev/master/configuration/ai-analysis.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
+* [**Alert Enrichment**](https://docs.robusta.dev/master/how-it-works/index.html#automatically-investigate-a-prometheus-alert) - see pod logs and other data alongside your alerts
+* [**Self-Healing**](https://docs.robusta.dev/master/tutorials/alert-remediation.html#remediate-prometheus-alerts) - define auto-remediation rules for faster fixes
+* [**Advanced Routing**](https://docs.robusta.dev/master/tutorials/index.html#notification-routing) based on team, namespace, and more
+* [**Problem-Detection without PromQL**](https://docs.robusta.dev/master/playbook-reference/triggers/index.html#triggers-reference) - generate Kubernetes-native alerts for OOMKills, failing Jobs, and more
+* [**Change-Tracking**](https://docs.robusta.dev/master/tutorials/playbook-track-changes.html#track-kubernetes-changes) for Kubernetes Resources to correlate alerts and rollouts
+* [**Auto-Resolve**](https://docs.robusta.dev/master/configuration/sinks/jira.html#jira) - update external systems when alerts are resolved (e.g. Jira)
+* [**Dozens of Integrations**](https://docs.robusta.dev/master/configuration/index.html#integrations-overview) - Slack, Teams, Jira, and more
 
 Don't have Prometheus? You can use Robusta without Prometheus, or install our all-in-one Kubernetes observability stack with Robusta and Prometheus included.
 
