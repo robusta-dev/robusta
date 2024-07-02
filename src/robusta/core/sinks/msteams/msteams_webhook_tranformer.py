@@ -1,3 +1,4 @@
+import os
 from typing import Dict, Optional
 
 import regex
@@ -6,6 +7,16 @@ from robusta.core.sinks.common.channel_transformer import ANNOTATIONS_PREF, MISS
 
 ANNOTATIONS_COMPOSITE_PATTERN = r".*\$({?annotations.[^$]+).*"
 ANNOTATIONS_ONLY_VALUE_PATTERN = r"^(annotations.[^$]+)$"
+URL_PATTERN = regex.compile(
+    r"^(https?)://"
+    r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"
+    r"localhost|"
+    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+    r"\[?[A-F0-9]*:[A-F0-9:]+\]?)"
+    r"(?::\d+)?"
+    r"(?:/?|[/?]\S+)$",
+    regex.IGNORECASE,
+)
 
 
 # This class supports overriding the webhook_url only using annotations from yaml files.
@@ -15,7 +26,7 @@ ANNOTATIONS_ONLY_VALUE_PATTERN = r"^(annotations.[^$]+)$"
 # The regex used for label validation is '(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?'.
 class MsTeamsWebhookUrlTransformer(BaseChannelTransformer):
     @classmethod
-    def validate_webhook_override(cls, v: Optional[str]):
+    def validate_webhook_override(cls, v: Optional[str]) -> Optional[str]:
         if v:
             if regex.match(ANNOTATIONS_ONLY_VALUE_PATTERN, v):
                 return "$" + v
@@ -23,6 +34,16 @@ class MsTeamsWebhookUrlTransformer(BaseChannelTransformer):
                 err_msg = f"webhook_override must be '{ANNOTATIONS_PREF}foo' or contain patterns like: '${ANNOTATIONS_PREF}foo'"
                 raise ValueError(err_msg)
         return v
+
+    @classmethod
+    def validate_url_or_get_env(cls, webhook_url: str, default_webhook_url: str) -> str:
+        if URL_PATTERN.match(webhook_url):
+            return webhook_url
+        env_value = os.getenv(webhook_url)
+        if env_value:
+            return env_value
+
+        return default_webhook_url
 
     @classmethod
     def template(
@@ -37,5 +58,8 @@ class MsTeamsWebhookUrlTransformer(BaseChannelTransformer):
         webhook_url = webhook_override
 
         webhook_url = cls.process_template_annotations(webhook_url, annotations)
+        if MISSING in webhook_url:
+            return default_webhook_url
+        webhook_url = cls.validate_url_or_get_env(webhook_url, default_webhook_url)
 
-        return webhook_url if MISSING not in webhook_url else default_webhook_url
+        return webhook_url
