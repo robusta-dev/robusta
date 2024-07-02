@@ -31,7 +31,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
     subject = params.resource.dict() if params.resource else {}
     try:
         holmes_req = HolmesRequest(
-            source=params.context.get("source", "unknown source"),
+            source=params.context.get("source", "unknown source") if params.context else "unknown source",
             title=f"{investigation__title}",
             subject=subject,
             context=params.context if params.context else {},
@@ -44,7 +44,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         holmes_result = HolmesResult(**json.loads(result.text))
         title_suffix = (
             f" on {params.resource.name}"
-            if params.resource.name and params.resource.name.lower() != "unresolved"
+            if params.resource and params.resource.name and params.resource.name.lower() != "unresolved"
             else ""
         )
 
@@ -52,11 +52,11 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             title=f"AI Analysis of {investigation__title}{title_suffix}",
             aggregation_key="HolmesInvestigationResult",
             subject=FindingSubject(
-                name=params.resource.name,
-                namespace=params.resource.namespace,
-                subject_type=FindingSubjectType.from_kind(params.resource.kind),
-                node=params.resource.node,
-                container=params.resource.container,
+                name=params.resource.name if params.resource else "",
+                namespace=params.resource.namespace if params.resource else "",
+                subject_type=FindingSubjectType.from_kind(params.resource.kind) if params.resource else FindingSubjectType.TYPE_NONE,
+                node=params.resource.node if params.resource else "",
+                container=params.resource.container if params.resource else "",
             ),
             finding_type=FindingType.AI_ANALYSIS,
             failure=False,
