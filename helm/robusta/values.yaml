@@ -526,7 +526,7 @@ platformPlaybooks:
   actions:
   - create_finding:
       aggregation_key: "JobFailure"
-      title: "Job Failed"
+      title: "Job $name on namespace $namespace failed"
   - job_info_enricher: {}
   - job_events_enricher: {}
   - job_pod_enricher: {}
