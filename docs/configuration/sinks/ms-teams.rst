@@ -47,7 +47,7 @@ This can be done using the optional ``webhook_override`` sink parameter.
 
 As for now, the ``webhook_override`` parameter supports retrieving values specifically from annotations. You can specify an annotation key to retrieve the MS Teams webhook URL using the format ``annotations.<annotation_key>``. For example, if you use ``annotations.ms-team-alerts-sink``, the webhook URL will be taken from an annotation with the key ``ms-team-alerts-sink``.
 
-If the specified annotation does not exist, the default webhook URL from the ``webhook_url`` parameter will be used. If the annotation exists but contains an invalid URL, the system will look for an environmental variable with the name matching the annotation's value.
+If the specified annotation does not exist, the default webhook URL from the ``webhook_url`` parameter will be used. If the annotation exists but does not contain a URL, the system will look for an environmental variable with the name matching the ``annotation`` value.
 
 .. code-block:: yaml
 
