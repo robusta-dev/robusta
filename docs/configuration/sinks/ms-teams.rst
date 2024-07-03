@@ -38,21 +38,16 @@ Obtaining a webhook URL
     :align: center
 
 
-Dynamic MS Teams Webhook Override
+Dynamically Route MS Teams Alerts
 -------------------------------------------------------------------
 
-You can set the ``MS Teams`` webhook url value dynamically, based on the value of a specific ``annotation`` and environmental variable passed to runner.
+You can set the MS Teams webhook url value dynamically, based on the value of a specific ``annotation`` and environmental variable passed to runner.
 
 This can be done using the optional ``webhook_override`` sink parameter.
 
-As for now we support only getting values for annotations, the allowed values for this parameter are:
+As for now, the ``webhook_override`` parameter supports retrieving values specifically from annotations. You can specify an annotation key to retrieve the MS Teams webhook URL using the format ``annotations.<annotation_key>``. For example, if you use ``annotations.ms-team-alerts-sink``, the webhook URL will be taken from an annotation with the key ``ms-team-alerts-sink``.
 
-- ``annotations.anno`` - The ``MS Teams`` webhook URL will be taken from an annotation with the key anno.
-If no such annotation exists, the default webhook will be used. If the annotation is found but its value
-does not contain a valid URL, the system will search for an environmental variable with the name of the value
- in the ``additional_env_vars`` section of your ``generated_values.yaml`` file.
-
-For example:
+If the specified annotation does not exist, the default webhook URL from the ``webhook_url`` parameter will be used. If the annotation exists but contains an invalid URL, the system will look for an environmental variable with the name matching the annotation's value.
 
 .. code-block:: yaml
 
@@ -61,10 +56,20 @@ For example:
     - ms_teams_sink:
         name: main_ms_teams_sink
         webhook_url: teams-incoming-webhook  # see instructions below
-        webhook_override: DYNAMIC MS TEAMS WEBHOOK URL OVERRIDE (Optional)
+        webhook_override: "annotations.ms-team-alerts-sink"
 
 A replacement pattern is also allowed, using ``$`` sign, before the variable.
 For cases where labels or annotations include special characters, such as ``${annotations.kubernetes.io/service-name}``, you can use the `${}` replacement pattern to represent the entire key, including special characters.
 For example, if you want to dynamically set the MS Teams webhook url based on the annotation ``kubernetes.io/service-name``, you can use the following syntax:
 
 - ``webhook_override: "${annotations.kubernetes.io/service-name}"``
+
+Example:
+
+.. code-block:: yaml
+
+        sinksConfig:
+        - ms_teams_sink:
+            name: main_ms_teams_sink
+            webhook_url: teams-incoming-webhook  # see instructions below
+            webhook_override: ${annotations.kubernetes.io/service-name}
