@@ -7,7 +7,6 @@ from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
 from prometheus_api_client import PrometheusApiClientException
 from prometrix import PrometheusQueryResult
-from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 from robusta.api import (
     ExecutionBaseEvent,
@@ -18,10 +17,12 @@ from robusta.api import (
     PrometheusKubernetesAlert,
     PrometheusQueryParams,
     action,
+    run_prometheus_query,
     run_prometheus_query_range,
 )
-from robusta.core.model.base_params import PrometheusParams, ActionParams
+from robusta.core.model.base_params import PrometheusParams
 from robusta.core.reporting import JsonBlock
+from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -64,7 +65,6 @@ def get_prometheus_all_available_metrics(prometheus_params: PrometheusParams) ->
         raise e
 
 
-
 class PrometheusGetSeriesParams(PrometheusParams):
     """
     :var match: List of Prometheus series selectors.
@@ -87,11 +87,15 @@ def prometheus_get_series(event: ExecutionBaseEvent, prometheus_params: Promethe
 def get_prometheus_series(prometheus_params: PrometheusGetSeriesParams) -> dict:
     try:
         prom = get_prometheus_connect(prometheus_params=prometheus_params)
-        return prom.get_series(match=prometheus_params.match, end_time=prometheus_params.end_time,
-                               start_time=prometheus_params.start_time)
+        return prom.get_series(
+            match=prometheus_params.match, end_time=prometheus_params.end_time, start_time=prometheus_params.start_time
+        )
 
     except Exception as e:
-        logging.error(f"Failed to fetch Prometheus series for match criteria {prometheus_params.match} within the time range {prometheus_params.start_time} - {prometheus_params.end_time}", exc_info=True)
+        logging.error(
+            f"Failed to fetch Prometheus series for match criteria {prometheus_params.match} within the time range {prometheus_params.start_time} - {prometheus_params.end_time}",
+            exc_info=True,
+        )
         raise e
 
 
@@ -154,3 +158,78 @@ def prometheus_rules_enricher(alert: PrometheusKubernetesAlert):
     kubelet_error_string = get_duplicate_kubelet_msg(alert.get_alert_label("rule_group"))
     if kubelet_error_string:
         alert.add_enrichment([MarkdownBlock(kubelet_error_string)])
+
+
+class PrometheusSlaParams(PrometheusParams):
+    """
+    :var id: uuid of the silence. use for update, empty on create.
+    :var comment: text comment of the silence.
+    :var createdBy: author of the silence.
+    """
+
+    promql_query: str
+    threshold: float
+    operator: str
+    debug: bool = False
+
+
+@action
+def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaParams):
+    """
+    Adjusts the finding info if a prometheus sla query condition is met.
+
+    for example prometheus queries see here:
+    https://prometheus.io/docs/prometheus/latest/querying/examples/
+    """
+
+    logging.info("prom_sla_enricher")
+
+    if not params.promql_query:
+        raise Exception("Invalid request, prometheus_enricher requires a promql query.")
+
+    if params.operator not in [">", "<", "==", "!="]:
+        params.operator = ">"
+
+    try:
+        prometheus_result = run_prometheus_query(prometheus_params=params, query=params.promql_query)
+    except PrometheusApiClientException as e:
+        data = PrometheusQueryResult({"resultType": "error", "result": str(e)})
+        event.add_enrichment(
+            [PrometheusBlock(data=data, query=params.promql_query)],
+        )
+
+    query_result = 0
+    if prometheus_result.result_type == "scalar":
+        query_result = prometheus_result.scalar_result.value
+    elif prometheus_result.result_type == "vector":
+        query_result = float(prometheus_result.vector_result[-1].value.value)
+
+    rule_result: bool = False
+    if params.operator == ">":
+        rule_result = query_result > params.threshold
+    elif params.operator == "<":
+        rule_result = query_result < params.threshold
+    elif params.operator == "==":
+        rule_result = query_result == params.threshold
+    elif params.operator == "!=":
+        rule_result = query_result != params.threshold
+
+    original_title = ""
+    for sink in event.named_sinks:
+        for finding in event.sink_findings[sink]:
+            original_title = finding.title
+
+    event.add_enrichment(
+        [MarkdownBlock("*SLA Query* : " + params.promql_query)],
+    )
+
+    operator_to_name = {"<": "lt", "==": "eq", ">": "gt", "!=": "ne"}
+
+    if rule_result:
+        new_title = f"SLA_VIOLATION {query_result:.3f} {operator_to_name.get(params.operator)} {params.threshold} {original_title}"
+        event.override_finding_attributes(title=new_title)
+    else:
+        new_title = (
+            f"SLA {query_result:.3f} {operator_to_name.get(params.operator)} {params.threshold} {original_title}"
+        )
+        event.override_finding_attributes(title=new_title)
