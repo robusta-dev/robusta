@@ -20,6 +20,10 @@ On the Robusta UI, clicking the ``Find Root Cause`` button will start an investi
 Configuration
 ^^^^^^^^^^^^^^^^^^
 
+.. warning::
+
+  Only GPT-4o is officially supported. We highly recommend using GPT-4o to get the most accurate results!
+
 In order to include ``Holmes GPT`` with you Robusta installation, add the following to your ``generated_values.yaml``
 
 To use Open AI (this is the default llm):
