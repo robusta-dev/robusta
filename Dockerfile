@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.11-slim as builder
+FROM python:3.13.0b2-slim as builder
 ENV PATH="/root/.local/bin/:$PATH"
 
 RUN apt-get update \
@@ -40,7 +40,7 @@ COPY playbooks/ /etc/robusta/playbooks/defaults
 RUN pip install --no-cache-dir /etc/robusta/playbooks/defaults
 
 # Final stage
-FROM python:3.11-slim
+FROM python:3.13.0b2-slim
 
 ENV ENV_TYPE=DEV
 ENV PYTHONUNBUFFERED=1
