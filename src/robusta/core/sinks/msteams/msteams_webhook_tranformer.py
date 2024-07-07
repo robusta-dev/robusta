@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Dict, Optional
 
@@ -39,9 +40,12 @@ class MsTeamsWebhookUrlTransformer(BaseChannelTransformer):
     def validate_url_or_get_env(cls, webhook_url: str, default_webhook_url: str) -> str:
         if URL_PATTERN.match(webhook_url):
             return webhook_url
+        logging.info(f"URL matching failed for: {webhook_url}. Trying to get environment variable.")
+
         env_value = os.getenv(webhook_url)
         if env_value:
             return env_value
+        logging.info(f"Environment variable not found for: {webhook_url}. Using default webhook URL.")
 
         return default_webhook_url
 
