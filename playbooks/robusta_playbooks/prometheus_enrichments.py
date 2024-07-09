@@ -162,27 +162,21 @@ def prometheus_rules_enricher(alert: PrometheusKubernetesAlert):
 
 class PrometheusSlaParams(PrometheusParams):
     """
-    :var id: uuid of the silence. use for update, empty on create.
-    :var comment: text comment of the silence.
-    :var createdBy: author of the silence.
+    :var promql_query: a promql non range query that should return a scalar or vector.
+    :var operator: one of < > == != used for SLA condition.
+    :var threshold: float used with operator for SLA condition.
     """
 
     promql_query: str
-    threshold: float
     operator: str
-    debug: bool = False
+    threshold: float
 
 
 @action
 def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaParams):
     """
-    Adjusts the finding info if a prometheus sla query condition is met.
-
-    for example prometheus queries see here:
-    https://prometheus.io/docs/prometheus/latest/querying/examples/
+    Enriches the finding title and description with an SLA VIOATLION warning incase a condition is met.
     """
-
-    logging.info("prom_sla_enricher")
 
     if not params.promql_query:
         raise Exception("Invalid request, prometheus_enricher requires a promql query.")
@@ -224,12 +218,6 @@ def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaPara
     )
 
     operator_to_name = {"<": "lt", "==": "eq", ">": "gt", "!=": "ne"}
-
-    if rule_result:
-        new_title = f"SLA_VIOLATION {query_result:.3f} {operator_to_name.get(params.operator)} {params.threshold} {original_title}"
-        event.override_finding_attributes(title=new_title)
-    else:
-        new_title = (
-            f"SLA {query_result:.3f} {operator_to_name.get(params.operator)} {params.threshold} {original_title}"
-        )
-        event.override_finding_attributes(title=new_title)
+    sla_violation = "SLA VIOLATION" if rule_result else "SLA"
+    new_title = f"{sla_violation} {query_result:.3f} {operator_to_name.get(params.operator)} {params.threshold} {original_title}"
+    event.override_finding_attributes(title=new_title)
