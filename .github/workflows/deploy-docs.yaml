@@ -74,7 +74,7 @@ jobs:
 
     - name: Upload docs to public gcp bucket
       if: needs.has-secrets.outputs.docs
-      run: gsutil rsync -R ./docs/_build/html "gs://robusta-public/${GITHUB_REF##*/}/"
+      run: gsutil rsync -R ./docs/_build/html "gs://robusta-docs/${GITHUB_REF##*/}/"
 
     - name: Upload docs artifact
       uses: actions/upload-artifact@v2
