@@ -146,7 +146,7 @@ class SlackSender:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": Transformer.apply_length_limit(block.text, MAX_BLOCK_CHARS),
+                    "text": Transformer.apply_length_limit_to_markdown(block.text, MAX_BLOCK_CHARS),
                 },
             }
         ]
