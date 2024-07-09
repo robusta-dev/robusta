@@ -123,6 +123,8 @@ class ConfigLoader:
                     remove_pkg_path = None
                     try:
                         check_pkg_path = True
+                        # Check that the config specifies an external Python package to be downloaded
+                        # and installed in Robusta.
                         if (
                             (
                                 playbooks_repo.url.startswith("https://")
