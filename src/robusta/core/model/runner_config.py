@@ -37,7 +37,7 @@ class PlaybookRepo(BaseModel):
     branch: Optional[str] = None  # when url is a git repo
     pip_install: bool = True  # Set to False, if the playbooks package is already in site-packages.
     http_headers: Optional[Dict[str, str]] = None
-    build_isolation: Optional[bool] = False
+    build_isolation: bool = False
 
     @root_validator
     def validate_pip_build_isolation(cls, values: Dict) -> Dict:

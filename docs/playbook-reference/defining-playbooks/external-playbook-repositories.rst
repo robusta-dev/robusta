@@ -129,7 +129,14 @@ either .tar, .tar.gz, .tgz, .tar.bz2, or .tbz2.
         url: "https://my-domain.com/bla/web-playbooks.tgz"
         http_headers: # optional, may be used for auth
           Authorization: Bearer XXXYYY
-        # pip_install: True      # optional: load this playbook's dependencies (default True)
+        # pip_install: true      # optional: load this playbook's dependencies (default True)
+        # build_isolation: false
+
+Note that the `http_headers` option is only available for this method of loading actions. Also,
+the `build_isolation` is optional (defaults to `true`). If specified as `false`, the `pip`
+install command for the package being installed will be run with `--no-build-isolation` (see
+the `pip docs <https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-no-build-isolation>`_
+for details).
 
 Handling Secrets
 *******************
