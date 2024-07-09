@@ -60,7 +60,10 @@ class Transformer:
 
     @staticmethod
     def apply_length_limit_to_markdown(msg: str, max_length: int, truncator: str = "...") -> str:
-        return trim_markdown(msg, max_length, truncator)
+        try:
+            return trim_markdown(msg, max_length, truncator)
+        except:
+            return Transformer.apply_length_limit(msg, max_length, truncator)
 
     @staticmethod
     def to_markdown_diff(block: KubernetesDiffBlock, use_emoji_sign: bool = False) -> List[ListBlock]:
