@@ -10,13 +10,20 @@ from hikaru.model.rel_1_26 import ObjectReference
 from robusta.core.reporting import FindingSubject
 
 
+class ExtendedTemplate(Template):
+    # Add the possibility of using the "." character in placeholders in order to support
+    # annotations and labels. Note the pattern is case-insensitive (see the documentation
+    # of string.Template).
+    idpattern = r'(?a:[_a-z][_a-z0-9.]*)'
+
+
 def format_event_templated_string(subject: Union[FindingSubject, ObjectReference], string_to_substitute) -> str:
     """
         For templating strings based on event subjects
     """
-    labels: Dict[str, str] = defaultdict(lambda: "<missing>")
+    variables: Dict[str, str] = defaultdict(lambda: "<missing>")
     kind = subject.kind if isinstance(subject, ObjectReference) else subject.subject_type.value
-    labels.update(
+    variables.update(
         {
             "name": subject.name,
             "kind": kind,
@@ -24,7 +31,11 @@ def format_event_templated_string(subject: Union[FindingSubject, ObjectReference
             "node": subject.node if isinstance(subject, FindingSubject) and subject.node else "<missing>",
         }
     )
-    return Template(string_to_substitute).safe_substitute(labels)
+    if isinstance(subject, FindingSubject):
+        variables.update({f"labels.{key}": value for key, value in subject.labels.items()})
+        variables.update({f"annotations.{key}": value for key, value in subject.annotations.items()})
+    return ExtendedTemplate(string_to_substitute).safe_substitute(variables)
+
 
 def load_json(s: Union[str, bytes]) -> Any:
     """
