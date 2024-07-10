@@ -20,12 +20,16 @@ Alternatively, generate a key by running ``robusta integrations slack`` and set 
      # slack integration params
      - slack_sink:
          name: main_slack_sink
-         api_key: MY SLACK KEY
+         api_key: MY SLACK KEY  # to avoid putting your key in Helm values, see below
          slack_channel: MY SLACK CHANNEL
          max_log_file_limit_kb: <Optional> # (Default: 1000) The maximum allowed file size for "snippets" (in kilobytes) uploaded to the Slack channel. Larger files can be sent to Slack, but they may not be viewable directly within the Slack.
          channel_override: DYNAMIC SLACK CHANNEL OVERRIDE (Optional)
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. warning::
+
+    If you don't want to put your Slack key in Helm values, you can use a secret. See the :ref:`Managing Secrets <Managing Secrets>` section for more information.
 
 Notification Grouping
 -----------------------------
