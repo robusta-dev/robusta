@@ -2,8 +2,11 @@ import logging
 from typing import List
 
 from hikaru.model.rel_1_26 import Pod, PodList
+
+from playbooks.robusta_playbooks.playbook_utils import pod_row
 from robusta.api import (
     BaseBlock,
+    EnrichmentType,
     FileBlock,
     Finding,
     FindingSeverity,
@@ -19,17 +22,7 @@ from robusta.api import (
     TableBlock,
     action,
     create_node_graph_enrichment,
-    EnrichmentType
 )
-
-
-def pod_row(pod: Pod) -> List[str]:
-    ready_condition = [condition.status for condition in pod.status.conditions if condition.type == "Ready"]
-    return [
-        pod.metadata.namespace,
-        pod.metadata.name,
-        ready_condition[0] if ready_condition else "Unknown",
-    ]
 
 
 def has_resource_request(pod: Pod, resource_type: str) -> bool:
@@ -85,7 +78,7 @@ def node_running_pods_enricher(event: NodeEvent):
 
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(
-        TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name=f"Pods running on the node")
+        TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node")
     )
     event.add_enrichment(block_list)
 
@@ -127,7 +120,7 @@ def node_status_enricher(event: NodeEvent):
         logging.error(f"node_status_enricher was called on event without node : {event}")
         return
 
-    logging.info(f"node_status_enricher is depricated, use status_enricher instead")
+    logging.info("node_status_enricher is depricated, use status_enricher instead")
 
     event.add_enrichment(
         [
@@ -154,8 +147,9 @@ def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     )
     if exec_result:
         event.add_enrichment(
-            [FileBlock(f"dmesg.log", exec_result.encode())], enrichment_type=EnrichmentType.text_file,
-            title="DMESG Info"
+            [FileBlock("dmesg.log", exec_result.encode())],
+            enrichment_type=EnrichmentType.text_file,
+            title="DMESG Info",
         )
 
 
@@ -189,8 +183,9 @@ def node_health_watcher(event: NodeChangeEvent):
         subject=KubeObjFindingSubject(event.obj),
     )
     event.add_finding(finding)
-    event.add_enrichment([KubernetesDiffBlock([], event.old_obj,
-                                              event.obj, event.obj.metadata.name, kind=event.obj.kind)])
+    event.add_enrichment(
+        [KubernetesDiffBlock([], event.old_obj, event.obj, event.obj.metadata.name, kind=event.obj.kind)]
+    )
     node_status_enricher(event)
 
 
