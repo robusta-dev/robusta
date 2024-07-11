@@ -2,8 +2,8 @@ import logging
 from typing import List
 
 from hikaru.model.rel_1_26 import Node, PodList
-from robusta_playbooks.playbook_utils import pod_row
 
+from playbooks.robusta_playbooks.playbook_utils import pod_row
 from robusta.api import (
     BaseBlock,
     EnrichmentType,
