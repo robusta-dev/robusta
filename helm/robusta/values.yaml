@@ -183,7 +183,6 @@ builtinPlaybooks:
   - on_pod_evicted_enricher: {}
   - pod_events_enricher: {}
   - enrich_pod_with_node_events: {}
-  - logs_enricher: {}
 
 - name: "PodOOMKill"
   triggers:
