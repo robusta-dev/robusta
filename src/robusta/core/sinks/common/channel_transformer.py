@@ -1,6 +1,6 @@
 from collections import defaultdict
 from string import Template
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 
 import regex
 
@@ -18,21 +18,7 @@ ONLY_VALUE_PATTERN = r"^(labels.[^$]+|annotations.[^$]+|cluster_name)$"
 MISSING = "<missing>"
 
 
-class ChannelTransformer:
-    @classmethod
-    def validate_channel_override(cls, v: Union[str, None]):
-        if v:
-            if regex.match(ONLY_VALUE_PATTERN, v):
-                return "$" + v
-            if not regex.match(COMPOSITE_PATTERN, v):
-                err_msg = (
-                    f"channel_override must be '{CLUSTER_PREF}' or '{LABELS_PREF}foo' or '{ANNOTATIONS_PREF}foo' "
-                    f"or contain patters like: '${CLUSTER_PREF}'/'${LABELS_PREF}foo'/"
-                    f"'${ANNOTATIONS_PREF}foo'"
-                )
-                raise ValueError(err_msg)
-        return v
-
+class BaseChannelTransformer:
     @classmethod
     def normalize_key_string(cls, s: str) -> str:
         return s.replace("/", "_").replace(".", "_").replace("-", "_")
@@ -47,7 +33,7 @@ class ChannelTransformer:
     # else, if found, return replacement else return MISSING
     @classmethod
     def get_replacement(cls, prefix: str, value: str, normalized_replacements: Dict) -> str:
-        if prefix in value:  # value is in the format of "$prefix" or "prefix"
+        if prefix in value:
             value = cls.normalize_key_string(value.replace(prefix, ""))
             if "$" in value:
                 return Template(value).safe_substitute(normalized_replacements)
@@ -56,13 +42,7 @@ class ChannelTransformer:
         return ""
 
     @classmethod
-    def replace_token(
-        cls,
-        pattern: regex.Pattern,
-        prefix: str,
-        channel: str,
-        replacements: Dict[str, str],
-    ) -> str:
+    def replace_token(cls, pattern: regex.Pattern, prefix: str, channel: str, replacements: Dict[str, str]) -> str:
         tokens = pattern.findall(channel)
         for token in tokens:
             clean_token = token.replace("{", "").replace("}", "")
@@ -70,6 +50,30 @@ class ChannelTransformer:
             if replacement:
                 channel = channel.replace(token, replacement)
         return channel
+
+    @classmethod
+    def process_template_annotations(cls, channel: str, annotations: Dict[str, str]) -> str:
+        if ANNOTATIONS_PREF in channel:
+            normalized_annotations = cls.normalize_dict_keys(annotations)
+            channel = cls.replace_token(BRACKETS_PATTERN, ANNOTATIONS_PREF, channel, normalized_annotations)
+            channel = cls.replace_token(ANNOTATIONS_PREF_PATTERN, ANNOTATIONS_PREF, channel, normalized_annotations)
+        return channel
+
+
+class ChannelTransformer(BaseChannelTransformer):
+    @classmethod
+    def validate_channel_override(cls, v: Optional[str]) -> str:
+        if v:
+            if regex.match(ONLY_VALUE_PATTERN, v):
+                return "$" + v
+            if not regex.match(COMPOSITE_PATTERN, v):
+                err_msg = (
+                    f"channel_override must be '{CLUSTER_PREF}' or '{LABELS_PREF}foo' or '{ANNOTATIONS_PREF}foo' "
+                    f"or contain patters like: '${CLUSTER_PREF}'/'${LABELS_PREF}foo'/"
+                    f"'${ANNOTATIONS_PREF}foo'"
+                )
+                raise ValueError(err_msg)
+        return v
 
     @classmethod
     def template(
@@ -93,14 +97,6 @@ class ChannelTransformer:
             channel = cls.replace_token(BRACKETS_PATTERN, LABELS_PREF, channel, normalized_labels)
             channel = cls.replace_token(LABEL_PREF_PATTERN, LABELS_PREF, channel, normalized_labels)
 
-        if ANNOTATIONS_PREF in channel:
-            normalized_annotations = cls.normalize_dict_keys(annotations)
-            channel = cls.replace_token(BRACKETS_PATTERN, ANNOTATIONS_PREF, channel, normalized_annotations)
-            channel = cls.replace_token(
-                ANNOTATIONS_PREF_PATTERN,
-                ANNOTATIONS_PREF,
-                channel,
-                normalized_annotations,
-            )
+        channel = cls.process_template_annotations(channel, annotations)
 
         return channel if MISSING not in channel else default_channel
