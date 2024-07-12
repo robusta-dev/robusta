@@ -2,7 +2,6 @@ import logging
 from typing import List
 
 from hikaru.model.rel_1_26 import Pod, PodList
-from robusta_playbooks.playbook_utils import pod_row
 
 from robusta.api import (
     BaseBlock,
@@ -19,9 +18,11 @@ from robusta.api import (
     PodRunningParams,
     ResourceGraphEnricherParams,
     RobustaPod,
-    TableBlock,
     action,
     create_node_graph_enrichment,
+    get_node_allocatable_resources_table_block,
+    get_node_running_pods_table_block_or_none,
+    get_node_status_table_block,
 )
 
 
@@ -74,12 +75,10 @@ def node_running_pods_enricher(event: NodeEvent):
         return
 
     block_list: List[BaseBlock] = []
-    pod_list: PodList = PodList.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
-
-    effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
-    block_list.append(
-        TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node")
-    )
+    table_resources = get_node_running_pods_table_block_or_none(node)
+    if not table_resources:
+        return
+    block_list.append(table_resources)
     event.add_enrichment(block_list)
 
 
@@ -97,13 +96,7 @@ def node_allocatable_resources_enricher(event: NodeEvent):
 
     block_list: List[BaseBlock] = []
     if node:
-        block_list.append(
-            TableBlock(
-                [[k, v] for (k, v) in node.status.allocatable.items()],
-                ["resource", "value"],
-                table_name="Node Allocatable Resources - The amount of compute resources that are available for pods",
-            )
-        )
+        block_list.append(get_node_allocatable_resources_table_block(node))
     event.add_enrichment(block_list)
 
 
@@ -116,21 +109,14 @@ def node_status_enricher(event: NodeEvent):
 
     Can help troubleshooting Node issues.
     """
-    if not event.get_node():
-        logging.error(f"node_status_enricher was called on event without node : {event}")
+    node = event.get_node()
+    if not node:
+        logging.error("node_status_enricher was called on event without node : {event}")
         return
 
     logging.info("node_status_enricher is depricated, use status_enricher instead")
 
-    event.add_enrichment(
-        [
-            TableBlock(
-                [[c.type, c.status] for c in event.get_node().status.conditions],
-                headers=["Type", "Status"],
-                table_name="*Node status details:*",
-            ),
-        ]
-    )
+    event.add_enrichment(get_node_status_table_block(node))
 
 
 @action

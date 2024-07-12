@@ -1,11 +1,6 @@
 import logging
-from typing import List
 
-from hikaru.model.rel_1_26 import Node, PodList
-
-from playbooks.robusta_playbooks.playbook_utils import pod_row
 from robusta.api import (
-    BaseBlock,
     EnrichmentType,
     Finding,
     FindingSeverity,
@@ -13,6 +8,9 @@ from robusta.api import (
     PodFindingSubject,
     TableBlock,
     action,
+    get_node_allocatable_resources_table_block,
+    get_node_running_pods_table_block_or_none,
+    get_node_status_table_block,
 )
 
 
@@ -26,10 +24,9 @@ def on_pod_evicted_enricher(event: PodEvent):
         logging.error(f"cannot run on_pod_evicted_enricher on event with no pod: {event}")
         return
 
-    try:
-        node = Node.readNode(pod.spec.nodeName).obj
-    except Exception as e:
-        logging.error(f"Failed to read pod's node information: {e}")
+    node = pod.get_node()
+    if not node:
+        logging.error(f"cannot run on_pod_evicted_enricher on event with no node: {event}")
         return
 
     finding = Finding(
@@ -39,23 +36,16 @@ def on_pod_evicted_enricher(event: PodEvent):
         subject=PodFindingSubject(pod),
     )
 
-    node: Node = Node.readNode(pod.spec.nodeName).obj
     node_labels = [("Node Name", pod.spec.nodeName)]
     node_info_block = TableBlock(
         [[k, v] for k, v in node_labels],
         headers=["Field", "Value"],
         table_name="*Node general info:*",
     )
-    node_status_block = TableBlock(
-        [[condition.type, condition.status] for condition in node.status.conditions],
-        headers=["Type", "Status"],
-        table_name="*Node status details:*",
-    )
+    node_status_block = get_node_status_table_block(node)
 
-    allocatable_resources_block = TableBlock(
-        [[resource, value] for resource, value in node.status.allocatable.items()],
-        headers=["Resource", "Value"],
-        table_name="*Node Allocatable Resources:*",
+    allocatable_resources_block = get_node_allocatable_resources_table_block(
+        node, table_name="*Node Allocatable Resources:*"
     )
 
     finding.add_enrichment(
@@ -66,15 +56,5 @@ def on_pod_evicted_enricher(event: PodEvent):
 
     event.add_finding(finding)
 
-    try:
-        pod_list = PodList.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
-    except Exception as e:
-        logging.error(f"Failed to list pods for node {node.metadata.name}: {e}")
-        return
-
-    effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
-    block_list: List[BaseBlock] = []
-    block_list.append(
-        TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node")
-    )
-    event.add_enrichment(block_list)
+    running_nodes_table = get_node_running_pods_table_block_or_none(node)
+    event.add_enrichment(running_nodes_table)
