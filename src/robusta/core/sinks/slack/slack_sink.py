@@ -23,7 +23,7 @@ class SlackSink(SinkBase):
             self.slack_sender.send_finding_to_slack(finding, self.params, platform_enabled)
 
     def handle_notification_grouping(self, finding: Finding, platform_enabled: bool) -> None:
-        # There is a lock over the whole of the method to account:
+        # There is a lock over the whole of the method:
         # 1) to prevent concurrent modifications to group accounting data structures
         # 2) to make sure two threads with identical group_key don't create
         #    two identical messages (of which one would eventually be orphaned and
