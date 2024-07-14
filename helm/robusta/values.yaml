@@ -554,6 +554,17 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
+- name: "RobustaMaintenance"
+  triggers:
+  - on_schedule:
+      cron_schedule_repeat:
+        cron_expression: "0 */3 * * *" # every 3 hours
+  actions:
+  - cleanup_robusta_pods:
+      hours_back: 6
+  sinks:
+    - "robusta_ui_sink"
+
 # Any playbook name listed here will be disabled
 disabledPlaybooks: []
 

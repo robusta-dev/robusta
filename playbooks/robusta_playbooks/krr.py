@@ -346,6 +346,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     update_state(ScanState.PENDING)
 
     try:
+        krr_pod_labels = {"app": "krr.robusta.dev"}
         logs = RobustaJob.run_simple_job_spec(
             spec,
             job_name,
@@ -356,6 +357,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             delete_job_post_execution=False,
             process_name=False,
             finalizers=["robusta.dev/krr-job-output"],
+            custom_pod_labels=krr_pod_labels
         )
 
         # NOTE: We need to remove the logs before the json result
