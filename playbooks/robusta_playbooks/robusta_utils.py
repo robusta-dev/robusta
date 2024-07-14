@@ -23,7 +23,6 @@ def timestamp_in_last_hours_back(timestamp: datetime, hours_back: int) -> bool:
 
 @action
 def cleanup_robusta_pods(event: ExecutionBaseEvent, params: RobustaUtilsParams):
-    logging.info("running test_pod_orm")
     v1 = client.CoreV1Api()
     pod_list = v1.list_namespaced_pod(INSTALLATION_NAMESPACE)
     finalizers_to_remove = ["robusta.dev/krr-job-output"]
@@ -33,12 +32,13 @@ def cleanup_robusta_pods(event: ExecutionBaseEvent, params: RobustaUtilsParams):
         if 'krr-job' not in pod.metadata.name:
             continue
 
-        if pod.status.phase == 'running':
+        if pod.status.phase.lower() == 'running':
             continue
 
         creation_ts = getattr(pod.metadata, "creation_timestamp", None)
         if not creation_ts or timestamp_in_last_hours_back(creation_ts, params.hours_back):
             continue
+        logging.info(f"removing finalizer for pod {pod.metadata.name} in namespace {pod.metadata.namespace}")
         body = {"metadata": {"$deleteFromPrimitiveList/finalizers": finalizers_to_remove}}
         client.CoreV1Api().patch_namespaced_pod(
             name=pod.metadata.name,
