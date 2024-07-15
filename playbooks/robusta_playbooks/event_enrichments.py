@@ -278,7 +278,7 @@ def enrich_pod_with_node_events(event: PodEvent, params: EventEnricherParams):
     Given a Kubernetes pod, fetch related events in the near past for its node
     """
     pod = event.get_pod()
-    node: Node = Node.readNode(pod.spec.nodeName).obj
+    node = pod.get_node()
     if not node:
         logging.error(f"cannot run pods_node_events_enricher on alert with no node object: {event}")
         return

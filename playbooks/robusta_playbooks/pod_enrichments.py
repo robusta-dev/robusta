@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
 
-from hikaru.model.rel_1_26 import Node
 from robusta.api import (
+    EnrichmentType,
     PodEvent,
     PodResourceGraphEnricherParams,
     ResourceChartItemType,
@@ -13,7 +13,6 @@ from robusta.api import (
     create_node_graph_enrichment,
     create_resource_enrichment,
     pod_limits,
-    EnrichmentType
 )
 from robusta.core.model.pods import pod_requests
 
@@ -64,7 +63,7 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         lines=limit_lines,
-        metrics_legends_labels=["pod"]
+        metrics_legends_labels=["pod"],
     )
     pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")
 
@@ -78,7 +77,7 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
     if not pod:
         logging.error(f"cannot run pod_node_graph_enricher on event with no pod: {pod_event}")
         return
-    node: Node = Node.readNode(pod.spec.nodeName).obj
+    node = pod.get_node()
     if not node:
         logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
