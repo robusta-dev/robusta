@@ -521,8 +521,9 @@ class RobustaJob(Job):
         finalizers: Optional[
             List[str]
         ] = None,  # Finalizers are used to verify the pod is not deleted before getting the logs
+        custom_pod_labels: Optional[Dict[str, str]] = None,
     ) -> str:
-        pod_meta = ObjectMeta(annotations=custom_annotations)
+        pod_meta = ObjectMeta(annotations=custom_annotations, labels=custom_pod_labels)
         if finalizers:
             pod_meta.finalizers = finalizers
         job_name = to_kubernetes_name(name) if process_name else name
