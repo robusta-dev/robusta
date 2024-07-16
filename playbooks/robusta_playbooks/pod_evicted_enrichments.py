@@ -15,18 +15,18 @@ from robusta.api import (
 
 
 @action
-def on_pod_evicted_enricher(event: PodEvent):
+def pod_evicted_enricher(event: PodEvent):
     """
     Retrieves pod and node information for an OOMKilled pod
     """
     pod = event.get_pod()
     if not pod:
-        logging.error(f"cannot run on_pod_evicted_enricher on event with no pod: {event}")
+        logging.error(f"cannot run pod_evicted_enricher on event with no pod: {event}")
         return
 
     node = pod.get_node()
     if not node:
-        logging.error(f"cannot run on_pod_evicted_enricher on event with no node: {event}")
+        logging.error(f"cannot run pod_evicted_enricher on event with no node: {event}")
         return
 
     finding = Finding(
