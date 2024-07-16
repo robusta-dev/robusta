@@ -191,6 +191,7 @@ def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaPara
         event.add_enrichment(
             [PrometheusBlock(data=data, query=params.promql_query)],
         )
+        return
 
     query_result = 0
     if prometheus_result.result_type == "scalar":
@@ -212,6 +213,7 @@ def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaPara
     for sink in event.named_sinks:
         for finding in event.sink_findings[sink]:
             original_title = finding.title
+        break
 
     event.add_enrichment(
         [MarkdownBlock("*SLA Query* : " + params.promql_query)],
