@@ -556,12 +556,14 @@ class SupabaseDal(AccountResourceFetcher):
             logging.error(f"Failed to persist namespaces {namespaces} error: {e}")
             raise
 
-    def publish_cluster_nodes(self, node_count: int, pod_count: int):
+    def publish_cluster_nodes(self, node_count: int, pod_count: int, avg_cpu: float, avg_mem: float):
         data = {
             "_account_id": self.account_id,
             "_cluster_id": self.cluster,
             "_node_count": node_count,
             "_pod_count": pod_count,
+            "_avg_cpu": avg_cpu,
+            "_avg_mem": avg_mem
         }
         try:
             self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()

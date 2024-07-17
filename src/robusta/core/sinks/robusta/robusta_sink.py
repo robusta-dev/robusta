@@ -32,7 +32,7 @@ from robusta.core.pubsub.event_subscriber import EventHandler
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.consts import ScanState, ScanType
 from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
-from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
+from robusta.core.sinks.robusta.prometheus_discovery_utils import PrometheusDiscoveryUtils
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.robusta.rrm.rrm import RRM
 from robusta.core.sinks.sink_base import SinkBase
@@ -51,7 +51,6 @@ class RobustaSink(SinkBase, EventHandler):
         self.token = sink_config.robusta_sink.token
         self.ttl_hours = sink_config.robusta_sink.ttl_hours
         self.persist_events = sink_config.robusta_sink.persist_events
-
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
             logging.error(
@@ -79,7 +78,7 @@ class RobustaSink(SinkBase, EventHandler):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
 
         global_config = self.get_global_config()
-        self.__prometheus_health_checker = PrometheusHealthChecker(
+        self.__prometheus_discovery_util = PrometheusDiscoveryUtils(
             discovery_period_sec=self.__discovery_period_sec, global_config=global_config
         )
         self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
@@ -495,7 +494,7 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __update_cluster_status(self):
         self.last_send_time = time.time()
-        prometheus_health_checker_status = self.__prometheus_health_checker.get_status()
+        prometheus_health_checker_status = self.__prometheus_discovery_util.get_status()
         activity_stats = ActivityStats(
             relayConnection=False,
             alertManagerConnection=prometheus_health_checker_status.alertmanager,
@@ -526,7 +525,9 @@ class RobustaSink(SinkBase, EventHandler):
             )
 
             self.dal.publish_cluster_status(cluster_status)
-            self.dal.publish_cluster_nodes(cluster_stats.nodes, self.__pods_running_count)
+            avg_cpu = self.__prometheus_discovery_util.get_cluster_avg_cpu()
+            avg_mem = self.__prometheus_discovery_util.get_cluster_avg_memory()
+            self.dal.publish_cluster_nodes(cluster_stats.nodes, self.__pods_running_count, avg_cpu, avg_mem)
         except Exception:
             logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",
