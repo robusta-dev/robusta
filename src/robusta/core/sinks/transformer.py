@@ -59,24 +59,29 @@ class Transformer:
 
     @staticmethod
     def trim_markdown(text: str, max_length: int, suffix: str = "...") -> str:
-        if len(text) < max_length:
+        if len(text) <= max_length:
             return text
+        if max_length <= len(suffix):
+            return suffix[:max_length]
         if '```' not in text:
             return Transformer.apply_length_limit(text, max_length, suffix)
+
         suffix_len = len(suffix)
         code_markdown_len = len('```')
-        tuncate_index = max_length - suffix_len
+        truncate_index = max_length - suffix_len
 
-        # if there is a code annotation near the end of the string
-        if '```' in text[tuncate_index - code_markdown_len*2:tuncate_index]:
-            tuncate_index = tuncate_index - code_markdown_len*2
+        # edge case, last few characters contains a partial codeblock '`' character
+        # we shorten by a few extra characters so we don't accidentally write ````
+        end_buffer_index = max(truncate_index - code_markdown_len*2 - 1, 0)
+        if '`' in text[truncate_index:max_length] and '```' in text[end_buffer_index:max_length]:
+            truncate_index = end_buffer_index
 
-        code_annotation_truncat_count = text.count('```', __start=tuncate_index)
-        needs_end_markdown_string = (code_annotation_truncat_count % 2 == 1) # if there is an odd number of markdowns on the right
-        if needs_end_markdown_string:
-            return (text[:tuncate_index - code_markdown_len - suffix_len] + '```' + suffix)[:tuncate_index]
+        count_removed_code_annotation = text.count('```', truncate_index, len(text))
+        needs_end_code_annotation = (count_removed_code_annotation % 2 == 1) # if there is an odd number of ``` removed
+        if needs_end_code_annotation:
+            return text[:truncate_index - code_markdown_len] + suffix + '```'
         else:
-            return text[:tuncate_index - suffix_len] + suffix
+            return text[:truncate_index] + suffix
 
     @staticmethod
     def apply_length_limit_to_markdown(msg: str, max_length: int, truncator: str = "...") -> str:
