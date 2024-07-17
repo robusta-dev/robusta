@@ -25,6 +25,7 @@ KUBERNETES_RESOURCES = [
     "NetworkPolicy",
     "ConfigMap",
     "Ingress",
+    "Secret",
 ]
 KUBERNETES_RESOURCES_STR = ",".join(KUBERNETES_RESOURCES)
 NON_NAMESPACED_RESOURCES = ["Node", "ClusterRole", "ClusterRoleBinding", "Namespace", "PersistentVolume"]
