@@ -1,5 +1,3 @@
-try:
-    from more_itertools import batched
 
 def trim_markdown(text: str, max_length: int, suffix: str = "...") -> str:
     suffix_len = len(suffix)
