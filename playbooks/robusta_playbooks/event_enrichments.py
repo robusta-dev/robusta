@@ -273,6 +273,28 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
 
 
 @action
+def enrich_pod_with_node_events(event: PodEvent, params: EventEnricherParams):
+    """
+    Given a Kubernetes pod, fetch related events in the near past for its node
+    """
+    pod = event.get_pod()
+    events_table_block = get_resource_events_table(
+        "*Node events:*",
+        kind="Node",
+        name=pod.spec.nodeName,
+        included_types=params.included_types,
+        max_events=params.max_events,
+    )
+    if events_table_block:
+        event.add_enrichment(
+            [events_table_block],
+            {SlackAnnotations.ATTACHMENT: True},
+            enrichment_type=EnrichmentType.k8s_events,
+            title="Node Events",
+        )
+
+
+@action
 def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnricherParams):
     """
     Given a deployment, fetch related events in the near past.

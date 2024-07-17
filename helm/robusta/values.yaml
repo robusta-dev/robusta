@@ -176,6 +176,14 @@ builtinPlaybooks:
   - image_pull_backoff_reporter: {}
 
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
+- name: "PodEvicted"
+  triggers:
+  - on_pod_evicted: {}
+  actions:
+  - pod_evicted_enricher: {}
+  - pod_events_enricher: {}
+  - enrich_pod_with_node_events: {}
+
 - name: "PodOOMKill"
   triggers:
   - on_pod_oom_killed:
