@@ -1,6 +1,6 @@
 import pytest
 
-from robusta.utils.trim_markdown import trim_markdown
+from robusta.core.sinks.transformer import Transformer
 
 
 @pytest.mark.parametrize(
@@ -42,7 +42,7 @@ from robusta.utils.trim_markdown import trim_markdown
     ])
 def test_trim_markdown(max_length: int, expected_output: str):
     text = "```oh``` hello ```world``` and then ```something```"
-    trimmed = trim_markdown(text, max_length, "##")
+    trimmed = Transformer.trim_markdown(text, max_length, "##")
     assert trimmed == expected_output
     assert len(trimmed) <= max_length
 
