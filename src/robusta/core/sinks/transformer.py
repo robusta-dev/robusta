@@ -61,6 +61,10 @@ class Transformer:
     @staticmethod
     def apply_length_limit_to_markdown(msg: str, max_length: int, truncator: str = "...") -> str:
         try:
+            if len(msg) < max_length:
+                return msg
+            if '```' not in msg:
+                return Transformer.apply_length_limit(msg, max_length, truncator)
             return trim_markdown(msg, max_length, truncator)
         except:
             return Transformer.apply_length_limit(msg, max_length, truncator)
