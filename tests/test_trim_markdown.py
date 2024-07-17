@@ -66,6 +66,6 @@ def test_trim_markdown(max_length: int, expected_output: str):
 )
 def test_trim_markdown_no_code_blocks(max_length: int, expected_output: str):
     text = "No code blocks whatsoever in this text"
-    trimmed = trim_markdown(text, max_length, "$$$")
+    trimmed = Transformer.trim_markdown(text, max_length, "$$$")
     assert trimmed == expected_output
     assert len(trimmed) <= max_length
