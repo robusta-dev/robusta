@@ -1,7 +1,6 @@
 import logging
 import re
 import urllib.parse
-from collections import defaultdict
 from typing import List, Optional, Union
 
 import markdown2
@@ -57,6 +56,39 @@ class Transformer:
             return msg
         truncator = truncator or "..."
         return msg[: max_length - len(truncator)] + truncator
+
+    @staticmethod
+    def trim_markdown(text: str, max_length: int, suffix: str = "...") -> str:
+        if len(text) <= max_length:
+            return text
+        if max_length <= len(suffix):
+            return suffix[:max_length]
+        if '```' not in text:
+            return Transformer.apply_length_limit(text, max_length, suffix)
+
+        suffix_len = len(suffix)
+        code_markdown_len = len('```')
+        truncate_index = max_length - suffix_len
+
+        # edge case, last few characters contains a partial codeblock '`' character
+        # we shorten by a few extra characters so we don't accidentally write ````
+        end_buffer_index = max(truncate_index - code_markdown_len*2 - 1, 0)
+        if '`' in text[truncate_index:max_length] and '```' in text[end_buffer_index:max_length]:
+            truncate_index = end_buffer_index
+
+        count_removed_code_annotation = text.count('```', truncate_index, len(text))
+        needs_end_code_annotation = (count_removed_code_annotation % 2 == 1) # if there is an odd number of ``` removed
+        if needs_end_code_annotation:
+            return text[:truncate_index - code_markdown_len] + suffix + '```'
+        else:
+            return text[:truncate_index] + suffix
+
+    @staticmethod
+    def apply_length_limit_to_markdown(msg: str, max_length: int, truncator: str = "...") -> str:
+        try:
+            return Transformer.trim_markdown(msg, max_length, truncator)
+        except:
+            return Transformer.apply_length_limit(msg, max_length, truncator)
 
     @staticmethod
     def to_markdown_diff(block: KubernetesDiffBlock, use_emoji_sign: bool = False) -> List[ListBlock]:

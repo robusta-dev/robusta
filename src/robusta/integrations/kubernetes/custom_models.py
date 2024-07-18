@@ -334,6 +334,14 @@ class RobustaPod(Pod):
         runtime, container_id = status.containerID.split("://")
         return container_id
 
+    def get_node(self) -> Optional[Node]:
+        try:
+            node = Node.readNode(self.spec.nodeName).obj
+        except Exception as e:
+            logging.error(f"Failed to read pod's node information: {e}")
+            return None
+        return node
+
     def get_processes(self, custom_annotations: Optional[Dict[str, str]] = None) -> List[Process]:
         container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
@@ -374,6 +382,10 @@ class RobustaPod(Pod):
             namespace=self.metadata.namespace,
             container=container,
         )
+
+    def is_pod_in_ready_condition(self) -> str:
+        ready_condition = [condition.status for condition in self.status.conditions if condition.type == "Ready"]
+        return ready_condition[0] if ready_condition else "Unknown"
 
     @staticmethod
     def find_pods_with_direct_owner(namespace: str, owner_uid: str) -> List["RobustaPod"]:
@@ -509,8 +521,9 @@ class RobustaJob(Job):
         finalizers: Optional[
             List[str]
         ] = None,  # Finalizers are used to verify the pod is not deleted before getting the logs
+        custom_pod_labels: Optional[Dict[str, str]] = None,
     ) -> str:
-        pod_meta = ObjectMeta(annotations=custom_annotations)
+        pod_meta = ObjectMeta(annotations=custom_annotations, labels=custom_pod_labels)
         if finalizers:
             pod_meta.finalizers = finalizers
         job_name = to_kubernetes_name(name) if process_name else name

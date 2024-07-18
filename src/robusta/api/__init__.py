@@ -112,6 +112,11 @@ from robusta.core.playbooks.common import get_event_timestamp, get_resource_even
 from robusta.core.playbooks.container_playbook_utils import create_container_graph
 from robusta.core.playbooks.crash_reporter import send_crash_report
 from robusta.core.playbooks.job_utils import CONTROLLER_UID, get_job_all_pods, get_job_latest_pod, get_job_selector
+from robusta.core.playbooks.node_enrichment_utils import (
+    get_node_allocatable_resources_table_block,
+    get_node_running_pods_table_block_or_none,
+    get_node_status_table_block,
+)
 from robusta.core.playbooks.node_playbook_utils import create_node_graph_enrichment
 from robusta.core.playbooks.pod_utils.crashloop_utils import get_crash_report_enrichments
 from robusta.core.playbooks.pod_utils.imagepull_utils import (

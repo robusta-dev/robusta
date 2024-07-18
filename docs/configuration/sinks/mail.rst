@@ -29,6 +29,11 @@ Configuring the mail sink
         - mail_sink:
             name: mail_sink
             mailto: "mailtos://user:password@server&from=a@x&to=b@y,c@z"
+            with_header: false  # optional
+
+The default value of the optional `with_header` parameter is `true`. If set to `false`, mails
+sent by this sink will *not* include header information, such as the finding header, investigate
+button and the source of the notification.
 
 .. note::
 

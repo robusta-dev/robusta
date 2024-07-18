@@ -43,7 +43,9 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
 
 class FindingFields(ActionParams):
     """
-    :var title: Finding title. Title can be templated with name/namespace/kind/node of the resource, if applicable
+    :var title: Finding title. Title can be templated with name/namespace/kind/node of the resource, if applicable.
+        |
+        Additionally, templating with labels and annotations of the resource is supported via $labels.label_name and $annotations.annotation_name.
     :var aggregation_key: Aggregation Keys are used for grouping similar types of notifications together.
         |
         For example, all CrashLoopBackOff notifications should have the same Aggregation Key so that Sinks can group them together.
@@ -54,7 +56,7 @@ class FindingFields(ActionParams):
     :var description: Finding description. Description can be templated
     :var severity: Finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
 
-    :example title: "Job $name on namespace $namespace failed"
+    :example title: "Job $name (importance: $labels.importance) in namespace $namespace failed"
     :example aggregation_key: "JobFailure"
     :example severity: DEBUG
     """

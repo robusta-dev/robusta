@@ -18,7 +18,7 @@ class PodAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Pod",
@@ -42,7 +42,7 @@ class PodCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Pod",
@@ -66,7 +66,7 @@ class PodDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Pod",
@@ -90,7 +90,7 @@ class PodUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Pod",
@@ -115,7 +115,7 @@ class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ReplicaSet",
@@ -139,7 +139,7 @@ class ReplicaSetCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ReplicaSet",
@@ -163,7 +163,7 @@ class ReplicaSetDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ReplicaSet",
@@ -187,7 +187,7 @@ class ReplicaSetUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ReplicaSet",
@@ -212,7 +212,7 @@ class DaemonSetAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="DaemonSet",
@@ -236,7 +236,7 @@ class DaemonSetCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="DaemonSet",
@@ -260,7 +260,7 @@ class DaemonSetDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="DaemonSet",
@@ -284,7 +284,7 @@ class DaemonSetUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="DaemonSet",
@@ -309,7 +309,7 @@ class DeploymentAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Deployment",
@@ -333,7 +333,7 @@ class DeploymentCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Deployment",
@@ -357,7 +357,7 @@ class DeploymentDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Deployment",
@@ -381,7 +381,7 @@ class DeploymentUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Deployment",
@@ -406,7 +406,7 @@ class StatefulSetAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="StatefulSet",
@@ -430,7 +430,7 @@ class StatefulSetCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="StatefulSet",
@@ -454,7 +454,7 @@ class StatefulSetDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="StatefulSet",
@@ -478,7 +478,7 @@ class StatefulSetUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="StatefulSet",
@@ -503,7 +503,7 @@ class ServiceAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Service",
@@ -527,7 +527,7 @@ class ServiceCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Service",
@@ -551,7 +551,7 @@ class ServiceDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Service",
@@ -575,7 +575,7 @@ class ServiceUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Service",
@@ -600,7 +600,7 @@ class EventAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Event",
@@ -624,7 +624,7 @@ class EventCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Event",
@@ -648,7 +648,7 @@ class EventDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Event",
@@ -672,7 +672,7 @@ class EventUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Event",
@@ -697,7 +697,7 @@ class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="HorizontalPodAutoscaler",
@@ -721,7 +721,7 @@ class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="HorizontalPodAutoscaler",
@@ -745,7 +745,7 @@ class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="HorizontalPodAutoscaler",
@@ -769,7 +769,7 @@ class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="HorizontalPodAutoscaler",
@@ -794,7 +794,7 @@ class NodeAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Node",
@@ -818,7 +818,7 @@ class NodeCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Node",
@@ -842,7 +842,7 @@ class NodeDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Node",
@@ -866,7 +866,7 @@ class NodeUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Node",
@@ -891,7 +891,7 @@ class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRole",
@@ -915,7 +915,7 @@ class ClusterRoleCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRole",
@@ -939,7 +939,7 @@ class ClusterRoleDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRole",
@@ -963,7 +963,7 @@ class ClusterRoleUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRole",
@@ -988,7 +988,7 @@ class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRoleBinding",
@@ -1012,7 +1012,7 @@ class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRoleBinding",
@@ -1036,7 +1036,7 @@ class ClusterRoleBindingDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRoleBinding",
@@ -1060,7 +1060,7 @@ class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ClusterRoleBinding",
@@ -1085,7 +1085,7 @@ class JobAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Job",
@@ -1109,7 +1109,7 @@ class JobCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Job",
@@ -1133,7 +1133,7 @@ class JobDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Job",
@@ -1157,7 +1157,7 @@ class JobUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Job",
@@ -1182,7 +1182,7 @@ class NamespaceAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Namespace",
@@ -1206,7 +1206,7 @@ class NamespaceCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Namespace",
@@ -1230,7 +1230,7 @@ class NamespaceDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Namespace",
@@ -1254,7 +1254,7 @@ class NamespaceUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Namespace",
@@ -1279,7 +1279,7 @@ class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ServiceAccount",
@@ -1303,7 +1303,7 @@ class ServiceAccountCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ServiceAccount",
@@ -1327,7 +1327,7 @@ class ServiceAccountDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ServiceAccount",
@@ -1351,7 +1351,7 @@ class ServiceAccountUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ServiceAccount",
@@ -1376,7 +1376,7 @@ class PersistentVolumeAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolume",
@@ -1400,7 +1400,7 @@ class PersistentVolumeCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolume",
@@ -1424,7 +1424,7 @@ class PersistentVolumeDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolume",
@@ -1448,7 +1448,7 @@ class PersistentVolumeUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolume",
@@ -1473,7 +1473,7 @@ class PersistentVolumeClaimAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolumeClaim",
@@ -1497,7 +1497,7 @@ class PersistentVolumeClaimCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolumeClaim",
@@ -1521,7 +1521,7 @@ class PersistentVolumeClaimDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolumeClaim",
@@ -1545,7 +1545,7 @@ class PersistentVolumeClaimUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="PersistentVolumeClaim",
@@ -1570,7 +1570,7 @@ class NetworkPolicyAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="NetworkPolicy",
@@ -1594,7 +1594,7 @@ class NetworkPolicyCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="NetworkPolicy",
@@ -1618,7 +1618,7 @@ class NetworkPolicyDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="NetworkPolicy",
@@ -1642,7 +1642,7 @@ class NetworkPolicyUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="NetworkPolicy",
@@ -1667,7 +1667,7 @@ class ConfigMapAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ConfigMap",
@@ -1691,7 +1691,7 @@ class ConfigMapCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ConfigMap",
@@ -1715,7 +1715,7 @@ class ConfigMapDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ConfigMap",
@@ -1739,7 +1739,7 @@ class ConfigMapUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="ConfigMap",
@@ -1764,7 +1764,7 @@ class IngressAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Ingress",
@@ -1788,7 +1788,7 @@ class IngressCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Ingress",
@@ -1812,7 +1812,7 @@ class IngressDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Ingress",
@@ -1836,7 +1836,7 @@ class IngressUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Ingress",
@@ -1853,6 +1853,103 @@ class IngressUpdateTrigger(K8sBaseTrigger):
         return IngressChangeEvent
 
 
+# Secret Triggers
+class SecretAllChangesTrigger(K8sBaseTrigger):
+    def __init__(
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        change_filters: Dict[str, List[str]] = None,
+        scope: ScopeParams = None,
+    ):
+        super().__init__(
+            kind="Secret",
+            operation=None,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+            change_filters=change_filters,
+            scope=scope,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return SecretChangeEvent
+
+
+class SecretCreateTrigger(K8sBaseTrigger):
+    def __init__(
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        change_filters: Dict[str, List[str]] = None,
+        scope: ScopeParams = None,
+    ):
+        super().__init__(
+            kind="Secret",
+            operation=K8sOperationType.CREATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+            change_filters=change_filters,
+            scope=scope,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return SecretChangeEvent
+
+
+class SecretDeleteTrigger(K8sBaseTrigger):
+    def __init__(
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        change_filters: Dict[str, List[str]] = None,
+        scope: ScopeParams = None,
+    ):
+        super().__init__(
+            kind="Secret",
+            operation=K8sOperationType.DELETE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+            change_filters=change_filters,
+            scope=scope,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return SecretChangeEvent
+
+
+class SecretUpdateTrigger(K8sBaseTrigger):
+    def __init__(
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        change_filters: Dict[str, List[str]] = None,
+        scope: ScopeParams = None,
+    ):
+        super().__init__(
+            kind="Secret",
+            operation=K8sOperationType.UPDATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+            change_filters=change_filters,
+            scope=scope,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return SecretChangeEvent
+
+
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
     def __init__(
@@ -1861,7 +1958,7 @@ class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Any",
@@ -1885,7 +1982,7 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Any",
@@ -1909,7 +2006,7 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Any",
@@ -1933,7 +2030,7 @@ class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         change_filters: Dict[str, List[str]] = None,
-        scope: ScopeParams = None
+        scope: ScopeParams = None,
     ):
         super().__init__(
             kind="Any",
@@ -2021,6 +2118,10 @@ class K8sTriggers(BaseModel):
     on_replicaset_create: Optional[ReplicaSetCreateTrigger]
     on_replicaset_delete: Optional[ReplicaSetDeleteTrigger]
     on_replicaset_update: Optional[ReplicaSetUpdateTrigger]
+    on_secret_all_changes: Optional[SecretAllChangesTrigger]
+    on_secret_create: Optional[SecretCreateTrigger]
+    on_secret_delete: Optional[SecretDeleteTrigger]
+    on_secret_update: Optional[SecretUpdateTrigger]
     on_service_all_changes: Optional[ServiceAllChangesTrigger]
     on_service_create: Optional[ServiceCreateTrigger]
     on_service_delete: Optional[ServiceDeleteTrigger]
