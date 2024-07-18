@@ -120,7 +120,7 @@ Loading Actions from an external Python Package
 ---------------------------------------------------
 
 For external Python packages, just specify an URL starting with http(s), and ending with
-either .tar, .tar.gz, .tgz, .tar.bz2, or .tbz2.
+either .tar.gz or .tgz.
 
 .. code-block:: yaml
 

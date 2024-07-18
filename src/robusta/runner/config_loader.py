@@ -3,15 +3,14 @@ import importlib.util
 import logging
 import os
 import pkgutil
-import shutil
 import signal
 import subprocess
 import sys
+import tarfile
 import tempfile
 import threading
 from inspect import getmembers
 from typing import Dict, Optional
-from urllib.parse import urlparse
 
 import dpath.util
 import requests
@@ -120,65 +119,33 @@ class ConfigLoader:
         for playbook_package, playbooks_repo in playbooks_repos.items():
             try:
                 if playbooks_repo.pip_install:  # skip playbooks that are already in site-packages
-                    remove_pkg_path = None
-                    try:
-                        check_pkg_path = True
-                        # Check that the config specifies an external Python package to be downloaded
-                        # and installed in Robusta.
-                        if (
-                            (
-                                playbooks_repo.url.startswith("https://")
-                                or playbooks_repo.url.startswith("http://")
-                            ) and (
-                                playbooks_repo.url.endswith(".tar")
-                                or playbooks_repo.url.endswith(".tar.gz")
-                                or playbooks_repo.url.endswith(".tgz")
-                                or playbooks_repo.url.endswith(".tar.bz2")
-                                or playbooks_repo.url.endswith(".tbz2")
-                            )
-                        ):
-                            if playbooks_repo.url.startswith("http://"):
-                                logging.warning(
-                                    f"Downloading a playbook package from non-https source f{playbooks_repo.url}"
-                                )
-                            temp_dir = tempfile.mkdtemp()
-                            # after installing the downloaded package, remove it along with its directory
-                            remove_pkg_path = temp_dir
-                            pkg_name = urlparse(playbooks_repo.url).path.rsplit('/', 1)[-1]
-                            filename = os.path.join(temp_dir, pkg_name)
-                            self.download_file(playbooks_repo.url, filename, playbooks_repo.http_headers)
-                            pkg_path = f"file://{filename}"
-                            check_pkg_path = False
-                        elif playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
-                            repo = GitRepo(playbooks_repo.url, playbooks_repo.key.get_secret_value(), playbooks_repo.branch)
-                            pkg_path = repo.repo_local_path
-                        elif playbooks_repo.url.startswith(LOCAL_PATH_URL_PREFIX):
-                            pkg_path = playbooks_repo.url.replace(LOCAL_PATH_URL_PREFIX, "")
-                        else:
-                            raise Exception(
-                                f"Illegal playbook repo url {playbooks_repo.url}. "
-                                f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
-                            )
+                    # Check that the config specifies an external Python package to be downloaded
+                    # and installed in Robusta.
+                    url = playbooks_repo.url
+                    if url.startswith(("https://", "http://")) and url.endswith((".tar.gz", ".tgz")):
+                        if url.startswith("http://"):
+                            logging.warning(f"Downloading a playbook package from non-https source f{url}")
 
-                        if check_pkg_path and not os.path.exists(pkg_path):
-                            # In case the repo url was defined before it was actually loaded. Note we don't
-                            # perform this check when the pkg is sourced from an externally hosted tgz etc.
-                            logging.error(f"Playbook local path {pkg_path} does not exist. Skipping")
-                            continue
+                        playbook_package = self.install_package_remote_tgz(
+                            url=url, headers=playbooks_repo.http_headers, build_isolation=playbooks_repo.build_isolation
+                        )
+                    elif url.startswith((GIT_SSH_PREFIX, GIT_HTTPS_PREFIX)):
+                        repo = GitRepo(url, playbooks_repo.key.get_secret_value(), playbooks_repo.branch)
+                        pkg_path = repo.repo_local_path
+                        self.install_package(
+                            pkg_path=repo.repo_local_path, build_isolation=playbooks_repo.build_isolation
+                        )
+                        playbook_package = self.__get_package_name(local_path=pkg_path)
+                    elif url.startswith(LOCAL_PATH_URL_PREFIX):
+                        pkg_path = url.replace(LOCAL_PATH_URL_PREFIX, "")
+                        self.install_package(pkg_path=pkg_path, build_isolation=playbooks_repo.build_isolation)
+                        playbook_package = self.__get_package_name(local_path=pkg_path)
+                    else:
+                        raise Exception(
+                            f"Illegal playbook repo url {url}. "
+                            f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
+                        )
 
-                        # Adding to pip the playbooks repo from local_path
-                        if playbooks_repo.build_isolation:
-                            extra_pip_args = []
-                        else:
-                            extra_pip_args = ["--no-build-isolation"]
-                        subprocess.check_call([sys.executable, "-m", "pip", "install"] + extra_pip_args + [pkg_path])
-                        playbook_package = self.__get_package_name(local_path=pip_path)
-                    finally:
-                        if remove_pkg_path:
-                            try:
-                                shutil.rmtree(remove_pkg_path)
-                            except:
-                                pass
                 playbook_packages.append(playbook_package)
             except Exception:
                 logging.error(f"Failed to add playbooks repo {playbook_package}", exc_info=True)
@@ -187,15 +154,18 @@ class ConfigLoader:
             self.__import_playbooks_package(actions_registry, package_name)
 
     @classmethod
-    def download_file(cls, url: str, dest_path: str, headers: Optional[Dict[str, str]]) -> None:
-        logging.debug(f"Downloading playbook file from {url} to {dest_path}")
-        # Note we don't need to care about deleting the file if something fails, it's done by
-        # the caller (__load_playbooks_repos above).
-        with requests.get(url, stream=True, headers=headers) as r:
-            r.raise_for_status()
-            f = open(dest_path, 'wb')
-            for chunk in r.iter_content(chunk_size=65536):
-                f.write(chunk)
+    def install_package(cls, pkg_path: str, build_isolation: bool) -> str:
+        logging.debug(f"Installing package {pkg_path}")
+        if not os.path.exists(pkg_path):
+            # In case the repo url was defined before it was actually loaded. Note we don't
+            # perform this check when the pkg is sourced from an externally hosted tgz etc.
+            logging.error(f"Playbook local path {pkg_path} does not exist. Skipping")
+            raise Exception(f"Playbook local path {pkg_path} does not exist. Skipping")
+
+        # Adding to pip the playbooks repo from local_path
+        extra_pip_args = ["--no-build-isolation"] if build_isolation else []
+
+        subprocess.check_call([sys.executable, "-m", "pip", "install"] + extra_pip_args + [pkg_path])
 
     @classmethod
     def __import_playbooks_package(cls, actions_registry: ActionsRegistry, package_name: str):
@@ -347,3 +317,24 @@ class ConfigLoader:
         with open(config_file_path) as file:
             yaml_content = yaml.safe_load(file)
             return RunnerConfig(**yaml_content)
+
+    @classmethod
+    def install_package_remote_tgz(cls, url: str, headers, build_isolation: bool) -> Optional[str]:
+        with tempfile.NamedTemporaryFile(suffix=".tgz") as f:
+            r = requests.get(url, stream=True, headers=headers)
+            r.raise_for_status()
+            for chunk in r.iter_content(chunk_size=65536):
+                f.write(chunk)
+
+            f.flush()
+
+            with tarfile.open(f.name, "r:gz") as tar, tempfile.TemporaryDirectory() as temp_dir:
+                tar.extractall(path=temp_dir)
+                extracted_items = os.listdir(temp_dir)
+
+                pkg_path = temp_dir
+                if len(extracted_items) == 1:
+                    pkg_path = os.path.join(temp_dir, extracted_items[0])
+
+                cls.install_package(pkg_path=pkg_path, build_isolation=build_isolation)
+                return cls.__get_package_name(local_path=pkg_path)
