@@ -41,7 +41,7 @@ CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
 HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
-UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
+UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count_v2"
 SCANS_RESULT_TABLE = "ScansResults"
 SCANS_META_TABLE = "ScansMeta"
 RESOURCE_EVENTS = "ResourceEvents"
@@ -561,9 +561,9 @@ class SupabaseDal(AccountResourceFetcher):
             "_account_id": self.account_id,
             "_cluster_id": self.cluster,
             "_node_count": node_count,
-            "_pod_count": pod_count,
-            "_avg_cpu": avg_cpu,
-            "_avg_mem": avg_mem
+            "_cpu_utilization": avg_cpu,
+            "_memory_utilization": int(avg_mem),
+            "_pod_count": pod_count
         }
         try:
             self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()
