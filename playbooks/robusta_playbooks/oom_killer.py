@@ -8,8 +8,11 @@ import pydantic
 from hikaru.model.rel_1_26 import Node, Pod, PodList, ResourceRequirements
 
 from robusta.api import (
+    EnrichmentType,
     Finding,
     FindingSeverity,
+    OOMGraphEnricherParams,
+    OomKillParams,
     PodContainer,
     PodEvent,
     PodFindingSubject,
@@ -17,18 +20,15 @@ from robusta.api import (
     PrometheusAlert,
     PrometheusKubernetesAlert,
     RendererType,
-    OomKillParams,
-    OOMGraphEnricherParams,
     TableBlock,
     action,
     create_container_graph,
+    create_node_graph_enrichment,
     get_oom_killed_container,
     parse_kubernetes_datetime_to_ms,
     pod_most_recent_oom_killed_container,
-    EnrichmentType,
-    create_node_graph_enrichment,
 )
-from robusta.core.model.base_params import PrometheusParams, LogEnricherParams
+from robusta.core.model.base_params import LogEnricherParams, PrometheusParams
 from robusta.core.playbooks.oom_killer_utils import logs_enricher
 from robusta.core.reporting.blocks import GraphBlock
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer
@@ -53,12 +53,17 @@ CONTAINER_MEMORY_THRESHOLD = 0.92
 NODE_MEMORY_THRESHOLD = 0.95
 
 
-def get_oomkilled_graph(oomkilled_container: PodContainer, pod: Pod, params: OOMGraphEnricherParams,
-                        metrics_legends_labels: Optional[List[str]] = None,) -> GraphBlock:
+def get_oomkilled_graph(
+    oomkilled_container: PodContainer,
+    pod: Pod,
+    params: OOMGraphEnricherParams,
+    metrics_legends_labels: Optional[List[str]] = None,
+) -> GraphBlock:
     if params.delay_graph_s > 0:
         time.sleep(params.delay_graph_s)
-    return create_container_graph(params, pod, oomkilled_container, show_limit=True,
-                                  metrics_legends_labels=metrics_legends_labels)
+    return create_container_graph(
+        params, pod, oomkilled_container, show_limit=True, metrics_legends_labels=metrics_legends_labels
+    )
 
 
 @action
@@ -74,8 +79,7 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: OOMGraphEnricher
     if not oomkilled_container:
         logging.error("Unable to find oomkilled container")
         return
-    container_graph = get_oomkilled_graph(oomkilled_container, pod, params,
-                                          metrics_legends_labels=["container"])
+    container_graph = get_oomkilled_graph(oomkilled_container, pod, params, metrics_legends_labels=["container"])
     event.add_enrichment([container_graph], enrichment_type=EnrichmentType.graph, title="Container Info")
 
 
@@ -96,7 +100,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
         subject=PodFindingSubject(pod),
     )
 
-    node: Node = Node.readNode(pod.spec.nodeName).obj
+    node = pod.get_node()
     labels = [
         ("Pod", pod.metadata.name),
         ("Namespace", pod.metadata.namespace),
@@ -112,13 +116,16 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
             (
                 "Node allocated memory",
                 f"{allocated_precent:.2f}% out of {allocatable_memory}MB allocatable",
-            )]
+            ),
+        ]
 
-        blocks = [TableBlock(
-            [[k, v] for (k, v) in node_labels],
-            ["field", "value"],
-            table_name="*Node Info*",
-        )]
+        blocks = [
+            TableBlock(
+                [[k, v] for (k, v) in node_labels],
+                ["field", "value"],
+                table_name="*Node Info*",
+            )
+        ]
         if params.node_memory_graph:
             node_graph = create_node_graph_enrichment(params, node, metrics_legends_labels=["pod"])
             blocks.append(node_graph)
@@ -151,18 +158,18 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
         if oom_killed_status.terminated.finishedAt:
             container_labels.append(("Container finished at", oom_killed_status.terminated.finishedAt))
 
-        blocks = [TableBlock(
-            [[k, v] for (k, v) in container_labels],
-            ["field", "value"],
-            table_name="*Container Info*",
-        )]
+        blocks = [
+            TableBlock(
+                [[k, v] for (k, v) in container_labels],
+                ["field", "value"],
+                table_name="*Container Info*",
+            )
+        ]
         if params.container_memory_graph and oomkilled_container.container:
-            container_graph = get_oomkilled_graph(oomkilled_container, pod, params,
-                                                  metrics_legends_labels=["pod"])
+            container_graph = get_oomkilled_graph(oomkilled_container, pod, params, metrics_legends_labels=["pod"])
             blocks.append(container_graph)
 
-        finding.add_enrichment(blocks, enrichment_type=EnrichmentType.container_info,
-                               title="Container Info")
+        finding.add_enrichment(blocks, enrichment_type=EnrichmentType.container_info, title="Container Info")
 
     event.add_finding(finding)
     if params.attach_logs and container_name is not None:
