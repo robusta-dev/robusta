@@ -7,7 +7,6 @@ from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
 from prometheus_api_client import PrometheusApiClientException
 from prometrix import PrometheusQueryResult
-from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 from robusta.api import (
     ExecutionBaseEvent,
@@ -20,8 +19,9 @@ from robusta.api import (
     action,
     run_prometheus_query_range,
 )
-from robusta.core.model.base_params import PrometheusParams, ActionParams
+from robusta.core.model.base_params import PrometheusParams
 from robusta.core.reporting import JsonBlock
+from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -64,7 +64,6 @@ def get_prometheus_all_available_metrics(prometheus_params: PrometheusParams) ->
         raise e
 
 
-
 class PrometheusGetSeriesParams(PrometheusParams):
     """
     :var match: List of Prometheus series selectors.
@@ -87,12 +86,43 @@ def prometheus_get_series(event: ExecutionBaseEvent, prometheus_params: Promethe
 def get_prometheus_series(prometheus_params: PrometheusGetSeriesParams) -> dict:
     try:
         prom = get_prometheus_connect(prometheus_params=prometheus_params)
-        return prom.get_series(match=prometheus_params.match, end_time=prometheus_params.end_time,
-                               start_time=prometheus_params.start_time)
+        return prom.get_series(
+            match=prometheus_params.match, end_time=prometheus_params.end_time, start_time=prometheus_params.start_time
+        )
 
     except Exception as e:
-        logging.error(f"Failed to fetch Prometheus series for match criteria {prometheus_params.match} within the time range {prometheus_params.start_time} - {prometheus_params.end_time}", exc_info=True)
+        logging.error(
+            f"Failed to fetch Prometheus series for match criteria {prometheus_params.match} within the time range {prometheus_params.start_time} - {prometheus_params.end_time}",
+            exc_info=True,
+        )
         raise e
+
+
+class PrometheusGetLabelNames(PrometheusParams):
+    """
+    :var match: List of Prometheus series selectors.
+    :var start_time: Optional start time for the query as datetime.
+    :var end_time: Optional end time for the query as datetime.
+    :var linit: Optional maximum number of returned series.
+    """
+
+    match: Optional[List[str]] = None
+    start: Optional[datetime] = None
+    end: Optional[datetime] = None
+    limit: Optional[int] = None
+
+
+@action
+def prometheus_get_label_names(event: ExecutionBaseEvent, prometheus_params: PrometheusGetLabelNames):
+    try:
+        prom = get_prometheus_connect(prometheus_params=prometheus_params)
+        prom_label_names = prom.get_label_names(prometheus_params.dict())
+
+    except Exception as e:
+        logging.error("An error occurred while fetching all available Prometheus metrics", exc_info=True)
+        raise e
+
+    event.add_enrichment([JsonBlock(json.dumps({"labels": prom_label_names}))])
 
 
 @action
