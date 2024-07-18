@@ -1,4 +1,5 @@
 import logging
+import os
 import threading
 import time
 from typing import Optional
@@ -37,12 +38,14 @@ class PrometheusDiscoveryUtils:
     def get_status(self) -> PrometheusHealthStatus:
         return self.status
 
-    def get_cluster_avg_cpu(self, hours_back=1) -> Optional[float]:
-        cpu_query = f'avg_over_time(sum(irate(container_cpu_usage_seconds_total{{}}[5m]))[{hours_back}h:])'
+    def get_cluster_avg_cpu(self) -> Optional[float]:
+        cpu_query = os.getenv("OVERRIDE_CLUSTER_CPU_AVG_QUERY",
+                              f'avg_over_time(sum(irate(container_cpu_usage_seconds_total{{}}[5m]))[1h:])')
         return self._get_query_prometheus_value(query=cpu_query)
 
-    def get_cluster_avg_memory(self, hours_back=1) -> Optional[float]:
-        memory_query = f'avg_over_time(sum(container_memory_usage_bytes{{}})[{hours_back}h:])'
+    def get_cluster_avg_memory(self) -> Optional[float]:
+        memory_query = os.getenv("OVERRIDE_CLUSTER_MEM_AVG_QUERY",
+                                 f'avg_over_time(sum(container_memory_usage_bytes{{}})[1h:])')
         return self._get_query_prometheus_value(query=memory_query)
 
     def _get_query_prometheus_value(self, query: str) -> Optional[float]:
