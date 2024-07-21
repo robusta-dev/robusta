@@ -73,6 +73,7 @@ requests = "^2.32.3"
 certifi = "^2023.7.22"
 regex = "2024.5.15"
 pyjwt = "^2.4.0"
+urllib3 = "1.26.19"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
