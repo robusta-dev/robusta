@@ -99,6 +99,38 @@ def get_prometheus_series(prometheus_params: PrometheusGetSeriesParams) -> dict:
         raise e
 
 
+class PrometheusGetLabelNames(PrometheusParams):
+    """
+    :var match: List of Prometheus series selectors. If this parameter is None or an empty list, the labels won't be filtered by specific series selectors.
+    :var start_time: Optional start time for the query as datetime.If this parameter is None, Prometheus won't filter labels by start time.
+    :var end_time: Optional end time for the query as datetime. If this parameter is None, Prometheus won't filter labels by end time.
+    :var limit: Optional maximum number of returned series. If this parameter is None, the returned list length won't be limited by number.
+    """
+
+    match: Optional[List[str]] = None
+    start: Optional[datetime] = None
+    end: Optional[datetime] = None
+    limit: Optional[int] = None
+
+
+@action
+def prometheus_get_label_names(event: ExecutionBaseEvent, prometheus_params: PrometheusGetLabelNames):
+    """
+    Fetches a list of label names from prometheus instance.
+
+    https://prometheus.io/docs/prometheus/latest/querying/api/#getting-label-names
+    """
+    try:
+        prom = get_prometheus_connect(prometheus_params=prometheus_params)
+        prom_label_names = prom.get_label_names(prometheus_params.dict())
+
+    except Exception as e:
+        logging.error("An error occurred while fetching all available Prometheus metrics", exc_info=True)
+        raise e
+
+    event.add_enrichment([JsonBlock(json.dumps({"labels": prom_label_names}))])
+
+
 @action
 def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams):
     """
