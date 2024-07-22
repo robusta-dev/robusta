@@ -2,7 +2,7 @@ Loading External Actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Robusta can load playbook actions from external git repositories and externally hosted
-Python packages provided as .tar or tar.gz files. This extends Robusta with additional
+Python packages provided as .tgz or .tar.gz files. This extends Robusta with additional
 actions for use in :ref:`customPlaybooks<customPlaybooks>`.
 
 .. warning::
@@ -17,7 +17,7 @@ actions for use in :ref:`customPlaybooks<customPlaybooks>`.
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH
 in the case of git repositories, and appropriate URLs in the case of externally hosted
 Python packages. The way Robusta distinguishes between the case of git repository and an
-external package is to check if the URL ends with `.tar` or `.tar.gz`
+external package is to check if the URL ends with `.tgz` or `.tar.gz`
 - if that is the case, the source is treated as an external package; otherwise the
 URL is treated as a git repository address.
 
