@@ -2,7 +2,7 @@ Loading External Actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Robusta can load playbook actions from external git repositories and externally hosted
-Python packages provided as .tar/.tar.gz files. This extends Robusta with additional
+Python packages provided as .tar or tar.gz files. This extends Robusta with additional
 actions for use in :ref:`customPlaybooks<customPlaybooks>`.
 
 .. warning::
@@ -17,8 +17,8 @@ actions for use in :ref:`customPlaybooks<customPlaybooks>`.
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH
 in the case of git repositories, and appropriate URLs in the case of externally hosted
 Python packages. The way Robusta distinguishes between the case of git repository and an
-external package is to check if the URL ends with `.tar`, `.tar.gz`, `.tar.gz`, `.tar.bz2`,
-or `.tbz2` - if that is the case, the source is treated as an external package; otherwise the
+external package is to check if the URL ends with `.tar` or `.tar.gz`
+- if that is the case, the source is treated as an external package; otherwise the
 URL is treated as a git repository address.
 
 If you are going to be using an external git repository via HTTPS, you just need to configure
@@ -132,11 +132,7 @@ either .tar.gz or .tgz.
         # pip_install: true      # optional: load this playbook's dependencies (default True)
         # build_isolation: false
 
-Note that the `http_headers` option is only available for this method of loading actions. Also,
-the `build_isolation` is optional (defaults to `true`). If specified as `false`, the `pip`
-install command for the package being installed will be run with `--no-build-isolation` (see
-the `pip docs <https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-no-build-isolation>`_
-for details).
+The `http_headers` option is only available for this method of loading actions.
 
 Handling Secrets
 *******************
@@ -158,6 +154,14 @@ Then reference it using an environment variable:
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
         key: "{{env.GITHUB_SSH_KEY}}"
+
+Build Isolation
+*****************
+
+``build_isolation`` is optional (defaults to `true`). If specified as `false`, the `pip`
+install command for the package being installed will be run with `--no-build-isolation` (see
+the `pip docs <https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-no-build-isolation>`_
+for details).
 
 Baking Actions into a Custom Image
 --------------------------------------
