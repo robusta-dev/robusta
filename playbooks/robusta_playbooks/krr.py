@@ -55,7 +55,7 @@ class KRRObject(BaseModel):
     def __init__(self, **data):
         pods = data.pop('pods', [])
         super().__init__(**data)
-        self.current_pod_count = len([pod for pod in pods if not pod.get('deleted', True)])
+        self.current_pod_count = len([pod for pod in pods if not pod.get('deleted', False)])
 
 
 class KRRRecommendedInfo(BaseModel):
