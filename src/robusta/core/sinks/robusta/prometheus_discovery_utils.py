@@ -40,19 +40,19 @@ class PrometheusDiscoveryUtils:
 
     def get_cluster_avg_cpu(self) -> Optional[float]:
         cpu_query = os.getenv("OVERRIDE_CLUSTER_CPU_AVG_QUERY",
-                              f'avg_over_time(sum(irate(container_cpu_usage_seconds_total{{}}[5m]))[1h:])')
+                              f'100 * sum(rate(node_cpu_seconds_total{{mode!="idle"}}[1h])) / sum(machine_cpu_cores{{}})')
         return self._get_query_prometheus_value(query=cpu_query)
 
     def get_cluster_avg_memory(self) -> Optional[float]:
         memory_query = os.getenv("OVERRIDE_CLUSTER_MEM_AVG_QUERY",
-                                 f'avg_over_time(sum(container_memory_usage_bytes{{}})[1h:])')
+                                 f'100 * (1 - sum(avg_over_time(node_memory_MemAvailable_bytes{{}}[1h])) / sum(machine_memory_bytes{{}}))')
         return self._get_query_prometheus_value(query=memory_query)
 
     def _get_query_prometheus_value(self, query: str) -> Optional[float]:
-        global_config = self.__global_config
-        prometheus_params = PrometheusParams(**global_config)
-        query_result = run_prometheus_query(prometheus_params=prometheus_params, query=query)
         try:
+            global_config = self.__global_config
+            prometheus_params = PrometheusParams(**global_config)
+            query_result = run_prometheus_query(prometheus_params=prometheus_params, query=query)
             if query_result.result_type == "error" or query_result.vector_result is None:
                 logging.error(f"PrometheusDiscoveryUtils failed to get prometheus results.")
                 return
