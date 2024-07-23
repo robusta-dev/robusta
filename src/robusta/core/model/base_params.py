@@ -72,9 +72,9 @@ class ActionParams(DocumentedModel):
 
 
 class ResourceInfo(BaseModel):
-    name: str
+    name: Optional[str] = "unresolved"
     namespace: Optional[str]
-    kind: str
+    kind: Optional[str]
     node: Optional[str]
     container: Optional[str]
 
