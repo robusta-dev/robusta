@@ -95,6 +95,9 @@ redirects = {
     "configuration/defining-playbooks/playbook-basics.html": "/master/playbook-reference/defining-playbooks/playbook-basics.html",
     "configuration/defining-playbooks/trigger-action-binding.html": "/master/playbook-reference/defining-playbooks/trigger-action-binding.html",
     "configuration/additional-settings.html": "/master/setup-robusta/additional-settings.html",
+    "developer-guide/writing-playbooks.html": "/master/playbook-reference/defining-playbooks/index.html",
+    "user-guide/slack.html": "/master/configuration/sinks/slack.html",
+    "user-guide/elasticsearch.html": "/master/playbook-reference/triggers/elasticsearch.html"
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja

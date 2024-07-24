@@ -13,6 +13,7 @@ from robusta.core.reporting import (
     MarkdownBlock,
     TableBlock,
 )
+from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
 from robusta.integrations.msteams.msteams_msg import MsTeamsMsg
 
 
@@ -50,8 +51,17 @@ class MsTeamsSender:
 
     @classmethod
     def send_finding_to_ms_teams(
-        cls, webhook_url: str, finding: Finding, platform_enabled: bool, cluster_name: str, account_id: str
+        cls,
+        webhook_url: str,
+        finding: Finding,
+        platform_enabled: bool,
+        cluster_name: str,
+        account_id: str,
+        webhook_override: str,
     ):
+        webhook_url = MsTeamsWebhookUrlTransformer.template(
+            webhook_override=webhook_override, default_webhook_url=webhook_url, annotations=finding.subject.annotations
+        )
         msg = MsTeamsMsg(webhook_url)
         msg.write_title_and_desc(platform_enabled, finding, cluster_name, account_id)
 

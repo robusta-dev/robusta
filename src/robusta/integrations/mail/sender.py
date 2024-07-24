@@ -22,18 +22,20 @@ class MailSender(HTMLBaseSender):
         self.account_id = account_id
         self.cluster_name = cluster_name
 
-    def send_finding(self, finding: Finding, platform_enabled: bool):
+    def send_finding(self, finding: Finding, platform_enabled: bool, include_headers: bool):
         blocks: List[BaseBlock] = []
 
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
-        blocks.append(self.__create_finding_header(finding, status))
 
-        if platform_enabled:
-            blocks.append(self.create_links(finding, html_class="header_links"))
+        if include_headers:
+            blocks.append(self.__create_finding_header(finding, status))
+            if platform_enabled:
+                blocks.append(self.create_links(finding, html_class="header_links"))
 
-        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
+            blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
+
         if finding.description:
             if finding.source == FindingSource.PROMETHEUS:
                 blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))

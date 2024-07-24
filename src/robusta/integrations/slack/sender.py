@@ -146,7 +146,7 @@ class SlackSender:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": Transformer.apply_length_limit(block.text, MAX_BLOCK_CHARS),
+                    "text": Transformer.apply_length_limit_to_markdown(block.text, MAX_BLOCK_CHARS),
                 },
             }
         ]
@@ -328,7 +328,9 @@ class SlackSender:
             }
         )
 
-    def __create_finding_header(self, finding: Finding, status: FindingStatus, platform_enabled: bool) -> MarkdownBlock:
+    def __create_finding_header(
+        self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
+    ) -> MarkdownBlock:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
         if finding.source == FindingSource.PROMETHEUS:
@@ -341,21 +343,22 @@ class SlackSender:
             status_name: str = "👀 *K8s event detected*"
         else:
             status_name: str = "👀 *Notification*"
-        if platform_enabled:
+        if platform_enabled and include_investigate_link:
             title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
         return MarkdownBlock(
             f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*
 {title}"""
         )
 
-    def __create_links(self, finding: Finding):
+    def __create_links(self, finding: Finding, include_investigate_link: bool):
         links: List[LinkProp] = []
-        links.append(
-            LinkProp(
-                text="Investigate 🔎",
-                url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+        if include_investigate_link:
+            links.append(
+                LinkProp(
+                    text="Investigate 🔎",
+                    url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+                )
             )
-        )
 
         if finding.add_silence_url:
             links.append(
@@ -484,10 +487,10 @@ class SlackSender:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
         if finding.title:
-            blocks.append(self.__create_finding_header(finding, status, platform_enabled))
+            blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
 
         if platform_enabled:
-            blocks.append(self.__create_links(finding))
+            blocks.append(self.__create_links(finding, sink_params.investigate_link))
 
         if HOLMES_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
@@ -579,17 +582,18 @@ class SlackSender:
                             "type": "mrkdwn",
                             "text": source_txt,
                         },
-                        "accessory": {
-                            "type": "button",
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Investigate 🔎",
-                            },
-                            "url": investigate_uri,
-                        },
                     }
                 ]
             )
+            if sink_params.investigate_link:
+                blocks[-1]["accessory"] = {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Investigate 🔎",
+                    },
+                    "url": investigate_uri,
+                }
         else:
             blocks.append(MarkdownBlock(text=source_txt))
 

@@ -84,6 +84,7 @@ lightActions:
 - ask_holmes
 - prometheus_all_available_metrics
 - prometheus_get_series
+- prometheus_get_label_names
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -176,6 +177,14 @@ builtinPlaybooks:
   - image_pull_backoff_reporter: {}
 
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
+- name: "PodEvicted"
+  triggers:
+  - on_pod_evicted: {}
+  actions:
+  - pod_evicted_enricher: {}
+  - pod_events_enricher: {}
+  - enrich_pod_with_node_events: {}
+
 - name: "PodOOMKill"
   triggers:
   - on_pod_oom_killed:
@@ -526,7 +535,7 @@ platformPlaybooks:
   actions:
   - create_finding:
       aggregation_key: "JobFailure"
-      title: "Job Failed"
+      title: "Job $name on namespace $namespace failed"
   - job_info_enricher: {}
   - job_events_enricher: {}
   - job_pod_enricher: {}
@@ -551,6 +560,17 @@ platformPlaybooks:
         cron_expression: "0 12 * * 1" # every Monday at 12:00
   actions:
   - krr_scan: {}
+  sinks:
+    - "robusta_ui_sink"
+
+- name: "RobustaMaintenance"
+  triggers:
+  - on_schedule:
+      cron_schedule_repeat:
+        cron_expression: "0 */3 * * *" # every 3 hours
+  actions:
+  - cleanup_robusta_pods:
+      hours_back: 6
   sinks:
     - "robusta_ui_sink"
 

@@ -78,12 +78,12 @@ Better Prometheus Alerts (and more) for Kubernetes
 
         * :doc:`Smart Grouping <configuration/notification-grouping>` - reduce notification spam with Slack threads 🧵
         * :ref:`AI Investigation <AI Analysis>` - Kickstart your alert investigations with AI (optional)
-        * :ref:`Alert Enrichment <Automatically Investigate a Prometheus Alert>` - see pods logs and other data alongside your alerts
+        * :ref:`Alert Enrichment <Automatically Investigate a Prometheus Alert>` - see pods log and other data alongside your alerts
         * :ref:`Self-Healing <Remediate Prometheus Alerts>` - define auto-remediation rules for faster fixes
-        * :ref:`K8s-Native Alert Routing <Notification Routing>` by team, namespace, k8s metadata and more
-        * :ref:`Problem-Detection without PromQL <Triggers Reference>` - alert on OOMKills, failing Jobs, etc
-        * :ref:`Change Tracking <Track Kubernetes Changes>` for Kubernetes Resources to correlate alerts and rollouts
-        * :ref:`Auto-Resolve <Jira>` - send alerts, later update them as resolved (e.g. in Jira)
+        * :ref:`Advanced Routing <Notification Routing>` by team, namespace, k8s metadata and more
+        * :ref:`K8s Problem-Detection <Triggers Reference>` - alert on OOMKills or failing Jobs without PromQL
+        * :ref:`Change Tracking <Track Kubernetes Changes>` - correlate alerts and Kubernetes rollouts
+        * :ref:`Auto-Resolve <Jira>` - send alerts, resolve them when updated (e.g. in Jira)
         * :ref:`Dozens of Integrations <Integrations Overview>` - Slack, Teams, Jira, and more
 
         Bring your own Prometheus or install our :ref:`preconfigured bundle <Embedded Prometheus Stack>`.
@@ -97,14 +97,14 @@ Better Prometheus Alerts (and more) for Kubernetes
                .. image:: /images/prometheus-alert-with-robusta.png
                    :width: 800px
 
-            .. md-tab-item:: Track OOMKills
+            .. md-tab-item:: AI Investigation
 
-               .. image:: /images/oomkillpod.png
+               .. image:: /images/ai-analysis.png
                    :width: 800px
 
-            .. md-tab-item:: Stuck Job
+            .. md-tab-item:: Kubernetes Problems
 
-               .. image:: /images/struckjob.png
+               .. image:: /images/oomkillpod.png
                    :width: 800px
 
             .. md-tab-item:: JIRA Integration

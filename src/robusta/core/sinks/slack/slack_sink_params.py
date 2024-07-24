@@ -11,6 +11,7 @@ class SlackSinkParams(SinkBaseParams):
     api_key: str
     channel_override: Optional[str] = None
     max_log_file_limit_kb: int = 1000
+    investigate_link: bool = True
 
     @classmethod
     def _supports_grouping(cls):
