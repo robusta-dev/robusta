@@ -19,7 +19,7 @@ include_trailing_comma = true
 
 [tool.poetry.dependencies]
 python = "^3.8, <3.12"
-setuptools = "^70.0.0"
+setuptools = "^68.2.2"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
 kubernetes = "^26.1.0"
