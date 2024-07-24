@@ -1,7 +1,7 @@
 import base64
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, SecretStr, validator
+from pydantic import BaseModel, SecretStr, root_validator, validator
 
 from robusta.core.playbooks.playbook_utils import get_env_replacement, replace_env_vars_values
 from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
@@ -36,6 +36,14 @@ class PlaybookRepo(BaseModel):
     key: Optional[SecretStr] = SecretStr("")
     branch: Optional[str] = None  # when url is a git repo
     pip_install: bool = True  # Set to False, if the playbooks package is already in site-packages.
+    http_headers: Optional[Dict[str, str]] = None
+    build_isolation: bool = False
+
+    @root_validator
+    def validate_pip_build_isolation(cls, values: Dict) -> Dict:
+        if values.get("build_isolation") and not values.get("pip_install"):
+            raise ValueError("build_isolation should not be specified for non-pip builds")
+        return values
 
 
 class RunnerConfig(BaseModel):

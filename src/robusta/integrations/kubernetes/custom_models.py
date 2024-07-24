@@ -42,7 +42,7 @@ T = TypeVar("T")
 
 # TODO: import these from the python-tools project
 PYTHON_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/debug-toolkit:v6.0"
-JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit:v1.0.1"
+JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit:v1.0.2"
 
 
 class Process(BaseModel):
@@ -334,6 +334,14 @@ class RobustaPod(Pod):
         runtime, container_id = status.containerID.split("://")
         return container_id
 
+    def get_node(self) -> Optional[Node]:
+        try:
+            node = Node.readNode(self.spec.nodeName).obj
+        except Exception as e:
+            logging.error(f"Failed to read pod's node information: {e}")
+            return None
+        return node
+
     def get_processes(self, custom_annotations: Optional[Dict[str, str]] = None) -> List[Process]:
         container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
@@ -374,6 +382,10 @@ class RobustaPod(Pod):
             namespace=self.metadata.namespace,
             container=container,
         )
+
+    def is_pod_in_ready_condition(self) -> str:
+        ready_condition = [condition.status for condition in self.status.conditions if condition.type == "Ready"]
+        return ready_condition[0] if ready_condition else "Unknown"
 
     @staticmethod
     def find_pods_with_direct_owner(namespace: str, owner_uid: str) -> List["RobustaPod"]:
