@@ -272,13 +272,13 @@ crt = ["awscrt (==0.16.26)"]
 
 [[package]]
 name = "cachetools"
-version = "5.3.3"
+version = "5.4.0"
 description = "Extensible memoizing collections and decorators"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "cachetools-5.3.3-py3-none-any.whl", hash = "sha256:0abad1021d3f8325b2fc1d2e9c8b9c9d57b04c3932657a72465447332c24d945"},
-    {file = "cachetools-5.3.3.tar.gz", hash = "sha256:ba29e2dfa0b8b556606f097407ed1aa62080ee108ab0dc5ec9d6a723a007d105"},
+    {file = "cachetools-5.4.0-py3-none-any.whl", hash = "sha256:3ae3b49a3d5e28a77a0be2b37dbcb89005058959cb2323858c2657c4a8cab474"},
+    {file = "cachetools-5.4.0.tar.gz", hash = "sha256:b8adc2e7c07f105ced7bc56dbb6dfbe7c4a00acce20e2227b3f355be89bc6827"},
 ]
 
 [[package]]
@@ -833,13 +833,13 @@ files = [
 
 [[package]]
 name = "exceptiongroup"
-version = "1.2.1"
+version = "1.2.2"
 description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "exceptiongroup-1.2.1-py3-none-any.whl", hash = "sha256:5258b9ed329c5bbdd31a309f53cbfb0b155341807f6ff7606a1e801a891b29ad"},
-    {file = "exceptiongroup-1.2.1.tar.gz", hash = "sha256:a4785e48b045528f5bfe627b6ad554ff32def154f42372786903b7abcfe1aa16"},
+    {file = "exceptiongroup-1.2.2-py3-none-any.whl", hash = "sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b"},
+    {file = "exceptiongroup-1.2.2.tar.gz", hash = "sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc"},
 ]
 
 [package.extras]
@@ -992,13 +992,13 @@ files = [
 
 [[package]]
 name = "google-auth"
-version = "2.31.0"
+version = "2.32.0"
 description = "Google Authentication Library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-auth-2.31.0.tar.gz", hash = "sha256:87805c36970047247c8afe614d4e3af8eceafc1ebba0c679fe75ddd1d575e871"},
-    {file = "google_auth-2.31.0-py2.py3-none-any.whl", hash = "sha256:042c4702efa9f7d3c48d3a69341c209381b125faa6dbf3ebe56bc7e40ae05c23"},
+    {file = "google_auth-2.32.0-py2.py3-none-any.whl", hash = "sha256:53326ea2ebec768070a94bee4e1b9194c9646ea0c2bd72422785bd0f9abfad7b"},
+    {file = "google_auth-2.32.0.tar.gz", hash = "sha256:49315be72c55a6a37d62819e3573f6b416aca00721f7e3e31a008d928bf64022"},
 ]
 
 [package.dependencies]
@@ -1015,17 +1015,17 @@ requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
 
 [[package]]
 name = "gotrue"
-version = "2.5.4"
+version = "2.6.0"
 description = "Python Client Library for Supabase Auth"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "gotrue-2.5.4-py3-none-any.whl", hash = "sha256:6f45003bc73cdee612a2d0be79cffed39c91cc8ad43a7440c02c320c7ad03a8e"},
-    {file = "gotrue-2.5.4.tar.gz", hash = "sha256:acf0644a2e5d1bd70f66452361bfea4ba9621a0354a13154a333671a4c751c53"},
+    {file = "gotrue-2.6.0-py3-none-any.whl", hash = "sha256:950df07fd9492fcbbda61f7230a26d76dcf9a361c362f29f6348c09a5931c6df"},
+    {file = "gotrue-2.6.0.tar.gz", hash = "sha256:a01a9e7156ee9493f351b35c70663b4ba99e3e8b241730ca88e1da477ff88d11"},
 ]
 
 [package.dependencies]
-httpx = ">=0.23,<0.28"
+httpx = {version = ">=0.24,<0.28", extras = ["http2"]}
 pydantic = ">=1.10,<3"
 
 [[package]]
@@ -1057,6 +1057,21 @@ files = [
 ]
 
 [[package]]
+name = "h2"
+version = "4.1.0"
+description = "HTTP/2 State-Machine based protocol implementation"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "h2-4.1.0-py3-none-any.whl", hash = "sha256:03a46bcf682256c95b5fd9e9a99c1323584c3eec6440d379b9903d709476bc6d"},
+    {file = "h2-4.1.0.tar.gz", hash = "sha256:a83aca08fbe7aacb79fec788c9c0bac936343560ed9ec18b82a13a12c28d2abb"},
+]
+
+[package.dependencies]
+hpack = ">=4.0,<5"
+hyperframe = ">=6.0,<7"
+
+[[package]]
 name = "hikaru-core"
 version = "1.1.2"
 description = "Hikaru allows you to smoothly move between Kubernetes YAML, Python objects, and Python source, in any direction. Hikaru-core provides the basic machinery for all Hikaru model packages to work with Kubernetes."
@@ -1083,6 +1098,17 @@ files = [
 [package.dependencies]
 hikaru-core = ">=1.1.0"
 kubernetes = ">=26.1.0"
+
+[[package]]
+name = "hpack"
+version = "4.0.0"
+description = "Pure-Python HPACK header compression"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "hpack-4.0.0-py3-none-any.whl", hash = "sha256:84a076fad3dc9a9f8063ccb8041ef100867b1878b25ef0ee63847a5d53818a6c"},
+    {file = "hpack-4.0.0.tar.gz", hash = "sha256:fc41de0c63e687ebffde81187a948221294896f6bdc0ae2312708df339430095"},
+]
 
 [[package]]
 name = "httmock"
@@ -1133,6 +1159,7 @@ files = [
 [package.dependencies]
 anyio = "*"
 certifi = "*"
+h2 = {version = ">=3,<5", optional = true, markers = "extra == \"http2\""}
 httpcore = "==1.*"
 idna = "*"
 sniffio = "*"
@@ -1156,6 +1183,17 @@ files = [
 
 [package.extras]
 tests = ["freezegun", "pytest", "pytest-cov"]
+
+[[package]]
+name = "hyperframe"
+version = "6.0.1"
+description = "HTTP/2 framing layer for Python"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "hyperframe-6.0.1-py3-none-any.whl", hash = "sha256:0ec6bafd80d8ad2195c4f03aacba3a8265e57bc4cff261e802bf39970ed02a15"},
+    {file = "hyperframe-6.0.1.tar.gz", hash = "sha256:ae510046231dc8e9ecb1a6586f63d2347bf4c8905914aa84ba585ae85f28a914"},
+]
 
 [[package]]
 name = "identify"
@@ -1195,13 +1233,13 @@ files = [
 
 [[package]]
 name = "importlib-metadata"
-version = "8.0.0"
+version = "8.2.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_metadata-8.0.0-py3-none-any.whl", hash = "sha256:15584cf2b1bf449d98ff8a6ff1abef57bf20f3ac6454f431736cd3e660921b2f"},
-    {file = "importlib_metadata-8.0.0.tar.gz", hash = "sha256:188bd24e4c346d3f0a933f275c2fec67050326a856b9a359881d7c2a697e8812"},
+    {file = "importlib_metadata-8.2.0-py3-none-any.whl", hash = "sha256:11901fa0c2f97919b288679932bb64febaeacf289d18ac84dd68cb2e74213369"},
+    {file = "importlib_metadata-8.2.0.tar.gz", hash = "sha256:72e8d4399996132204f9a16dcc751af254a48f8d1b20b9ff0f98d4a8f901e73d"},
 ]
 
 [package.dependencies]
@@ -1495,18 +1533,19 @@ testing = ["coverage", "pyyaml"]
 
 [[package]]
 name = "markdown2"
-version = "2.4.13"
+version = "2.5.0"
 description = "A fast and complete Python implementation of Markdown"
 optional = false
-python-versions = ">=3.5, <4"
+python-versions = "<4,>=3.8"
 files = [
-    {file = "markdown2-2.4.13-py2.py3-none-any.whl", hash = "sha256:855bde5cbcceb9beda7c80efdf7f406c23e6079172c497fcfce22fdce998e892"},
-    {file = "markdown2-2.4.13.tar.gz", hash = "sha256:18ceb56590da77f2c22382e55be48c15b3c8f0c71d6398def387275e6c347a9f"},
+    {file = "markdown2-2.5.0-py2.py3-none-any.whl", hash = "sha256:300d4429b620ebc974ef512339a9e08bc080473f95135a91f33906e24e8280c1"},
+    {file = "markdown2-2.5.0.tar.gz", hash = "sha256:9bff02911f8b617b61eb269c4c1a5f9b2087d7ff051604f66a61b63cab30adc2"},
 ]
 
 [package.extras]
-all = ["pygments (>=2.7.3)", "wavedrom"]
+all = ["latex2mathml", "pygments (>=2.7.3)", "wavedrom"]
 code-syntax-highlighting = ["pygments (>=2.7.3)"]
+latex = ["latex2mathml"]
 wavedrom = ["wavedrom"]
 
 [[package]]
@@ -1838,8 +1877,8 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.20.3", markers = "python_version < \"3.10\""},
-    {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
     {version = ">=1.21.0", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
+    {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -2020,18 +2059,18 @@ files = [
 
 [[package]]
 name = "postgrest"
-version = "0.16.8"
+version = "0.16.9"
 description = "PostgREST client for Python. This library provides an ORM interface to PostgREST."
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "postgrest-0.16.8-py3-none-any.whl", hash = "sha256:c353a24452f51ab9760cf2b884c4b7457a2653ff36444e66b12615bc4cc8e23e"},
-    {file = "postgrest-0.16.8.tar.gz", hash = "sha256:7b3802a514dc1e0fc8b5bbdeb2c99af35a0bd910e4ddb17855ca4e3422350c84"},
+    {file = "postgrest-0.16.9-py3-none-any.whl", hash = "sha256:8a20a256e86c4181575d271ddd77152b305313890ecc7d2df5b25aeb330bd9a4"},
+    {file = "postgrest-0.16.9.tar.gz", hash = "sha256:fee42e89d265e904e823d9602803980016128ff7dde0ce1e869014cf1fd2c19d"},
 ]
 
 [package.dependencies]
 deprecation = ">=2.1.0,<3.0.0"
-httpx = ">=0.24,<0.28"
+httpx = {version = ">=0.24,<0.28", extras = ["http2"]}
 pydantic = ">=1.9,<3.0"
 strenum = ">=0.4.9,<0.5.0"
 
@@ -3128,17 +3167,17 @@ test = ["pytest"]
 
 [[package]]
 name = "storage3"
-version = "0.7.6"
+version = "0.7.7"
 description = "Supabase Storage client for Python."
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "storage3-0.7.6-py3-none-any.whl", hash = "sha256:d8c23bf87b3a88cafb03761b7f936e4e49daca67741d571513edf746e0f8ba72"},
-    {file = "storage3-0.7.6.tar.gz", hash = "sha256:0b7781cea7fe6382e6b9349b84395808c5f4203dfcac31478304eedc2f81acf6"},
+    {file = "storage3-0.7.7-py3-none-any.whl", hash = "sha256:ed80a2546cd0b5c22e2c30ea71096db6c99268daf2958c603488e7d72efb8426"},
+    {file = "storage3-0.7.7.tar.gz", hash = "sha256:9fba680cf761d139ad764f43f0e91c245d1ce1af2cc3afe716652f835f48f83e"},
 ]
 
 [package.dependencies]
-httpx = ">=0.24,<0.28"
+httpx = {version = ">=0.24,<0.28", extras = ["http2"]}
 python-dateutil = ">=2.8.2,<3.0.0"
 typing-extensions = ">=4.2.0,<5.0.0"
 
@@ -3160,13 +3199,13 @@ test = ["pylint", "pytest", "pytest-black", "pytest-cov", "pytest-pylint"]
 
 [[package]]
 name = "supabase"
-version = "2.5.1"
+version = "2.6.0"
 description = "Supabase client for Python."
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "supabase-2.5.1-py3-none-any.whl", hash = "sha256:74a1f24f04fede1967ef084b50dea688228f7b10eb2f9d73350fe2251a865188"},
-    {file = "supabase-2.5.1.tar.gz", hash = "sha256:c50e0eba5b03de3abd5ac0f887957ca43558ba44c4d17bb44e73ec454b41734c"},
+    {file = "supabase-2.6.0-py3-none-any.whl", hash = "sha256:3981016022511e5e58d8fb15d31b24991138eb85fb4be59344db5e8f61b9f92b"},
+    {file = "supabase-2.6.0.tar.gz", hash = "sha256:e8ade712b56919eb37724d4de90ee89f2d8f05393acb3e6470ab53ac95f9196e"},
 ]
 
 [package.dependencies]
@@ -3175,21 +3214,21 @@ httpx = ">=0.24,<0.28"
 postgrest = ">=0.14,<0.17.0"
 realtime = ">=1.0.0,<2.0.0"
 storage3 = ">=0.5.3,<0.8.0"
-supafunc = ">=0.3.1,<0.5.0"
+supafunc = ">=0.3.1,<0.6.0"
 
 [[package]]
 name = "supafunc"
-version = "0.4.6"
+version = "0.5.0"
 description = "Library for Supabase Functions"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "supafunc-0.4.6-py3-none-any.whl", hash = "sha256:f7ca7b244365e171da7055a64edb462c2ec449cdaa210fc418cfccd132f4cf98"},
-    {file = "supafunc-0.4.6.tar.gz", hash = "sha256:92db51f8f8568d1430285219c9c0072e44207409c416622d7387f609e31928a6"},
+    {file = "supafunc-0.5.0-py3-none-any.whl", hash = "sha256:6e6802c9a9d97a2cead3c778004ab43102b52d70c34899d903539066c5cfa43f"},
+    {file = "supafunc-0.5.0.tar.gz", hash = "sha256:a20ec28e90b4b3191b149c30d1020d9f18491d0b8b86d0a29c60935169dd4dbe"},
 ]
 
 [package.dependencies]
-httpx = ">=0.24,<0.28"
+httpx = {version = ">=0.24,<0.28", extras = ["http2"]}
 
 [[package]]
 name = "tabulate"
@@ -3295,13 +3334,13 @@ files = [
 
 [[package]]
 name = "types-cachetools"
-version = "5.3.0.7"
+version = "5.4.0.20240717"
 description = "Typing stubs for cachetools"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "types-cachetools-5.3.0.7.tar.gz", hash = "sha256:27c982cdb9cf3fead8b0089ee6b895715ecc99dac90ec29e2cab56eb1aaf4199"},
-    {file = "types_cachetools-5.3.0.7-py3-none-any.whl", hash = "sha256:98c069dc7fc087b1b061703369c80751b0a0fc561f6fb072b554e5eee23773a0"},
+    {file = "types-cachetools-5.4.0.20240717.tar.gz", hash = "sha256:1eae90c48760bac44ab89108be938e8ce1d740910f2d4b68446dcdc82763f186"},
+    {file = "types_cachetools-5.4.0.20240717-py3-none-any.whl", hash = "sha256:67c84c26df988039be68344b162afd2dd7cd3741dc08e7d67aa1954782fd2d2a"},
 ]
 
 [[package]]
@@ -3317,13 +3356,13 @@ files = [
 
 [[package]]
 name = "types-pyyaml"
-version = "6.0.12.20240311"
+version = "6.0.12.20240724"
 description = "Typing stubs for PyYAML"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "types-PyYAML-6.0.12.20240311.tar.gz", hash = "sha256:a9e0f0f88dc835739b0c1ca51ee90d04ca2a897a71af79de9aec5f38cb0a5342"},
-    {file = "types_PyYAML-6.0.12.20240311-py3-none-any.whl", hash = "sha256:b845b06a1c7e54b8e5b4c683043de0d9caf205e7434b3edc678ff2411979b8f6"},
+    {file = "types-PyYAML-6.0.12.20240724.tar.gz", hash = "sha256:cf7b31ae67e0c5b2919c703d2affc415485099d3fe6666a6912f040fd05cb67f"},
+    {file = "types_PyYAML-6.0.12.20240724-py3-none-any.whl", hash = "sha256:e5becec598f3aa3a2ddf671de4a75fa1c6856fbf73b2840286c9d50fae2d5d48"},
 ]
 
 [[package]]
