@@ -26,13 +26,22 @@ Configuration
 
 In order to include ``Holmes GPT`` with you Robusta installation, add the following to your ``generated_values.yaml``
 
+In the examples below, we're assuming you created a Kubernetes ``secret`` named ``holmes-secrets`` to store sensitive variables.
+
 To use Open AI (this is the default llm):
 
 .. code-block:: yaml
 
     enableHolmesGPT: true
     holmes:
-      openaiKey: <YOUR OPEN AI KEY>
+      additionalEnvVars:
+      - name: MODEL
+        value: gpt-4o
+      - name: OPENAI_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: holmes-secrets
+            key: openAiKey
 
 
 To use Azure Open AI:
@@ -41,6 +50,39 @@ To use Azure Open AI:
 
     enableHolmesGPT: true
     holmes:
-      llm: azure
-      azureOpenaiKey: <YOUR AZURE OPEN AI KEY>
-      azureEndpoint: <YOUR AZURE OPEN AI ENDPOINT>  # For example: ‘https://some-azure-org.openai.azure.com/openai/deployments/gpt4-1106/chat/completions?api-version=2023-07-01-preview’
+      additionalEnvVars:
+      - name: MODEL
+        value: azure/my-azure-deployment  # the name of your azure deployment
+      - name: AZURE_API_VERSION
+        value: 2024-02-15-preview
+      - name: AZURE_API_BASE
+        value: https://my-org.openai.azure.com/  # base url of you azure deployment
+      - name: AZURE_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: holmes-secrets
+            key: azureOpenAiKey
+
+
+To use AWS Bedrock:
+
+.. code-block:: yaml
+
+    enableHolmesGPT: true
+    holmes:
+      enablePostProcessing: true
+      additionalEnvVars:
+      - name: MODEL
+        value: bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0  # your bedrock model
+      - name: AWS_REGION_NAME
+        value: us-east-1
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: holmes-secrets
+            key: awsAccessKeyId
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: holmes-secrets
+            key: awsSecretAccessKey
