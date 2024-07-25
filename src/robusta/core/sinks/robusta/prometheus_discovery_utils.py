@@ -57,7 +57,8 @@ class PrometheusDiscoveryUtils:
                 logging.error(f"PrometheusDiscoveryUtils failed to get prometheus results.")
                 return
             value = query_result.vector_result[0].value.value
-            return max(float('%.2f' % float(value)), 0)
+            return_value = float('%.2f' % float(value))
+            return return_value if return_value >= 0 else None
         except:
             logging.exception(f"PrometheusDiscoveryUtils failed to get prometheus results.")
             return
