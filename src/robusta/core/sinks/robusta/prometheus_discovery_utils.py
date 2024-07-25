@@ -40,12 +40,12 @@ class PrometheusDiscoveryUtils:
 
     def get_cluster_avg_cpu(self) -> Optional[float]:
         cpu_query = os.getenv("OVERRIDE_CLUSTER_CPU_AVG_QUERY",
-                              f'100 * sum(rate(node_cpu_seconds_total{{mode!="idle"}}[1h])) / sum(machine_cpu_cores{{}})')
+                              f'100 * (sum(rate(node_cpu_seconds_total{{mode!="idle"}}[1h])) / sum(machine_cpu_cores{{}}))')
         return self._get_query_prometheus_value(query=cpu_query)
 
     def get_cluster_avg_memory(self) -> Optional[float]:
         memory_query = os.getenv("OVERRIDE_CLUSTER_MEM_AVG_QUERY",
-                                 f'100 * (1 - sum(avg_over_time(node_memory_MemAvailable_bytes{{}}[1h])) / sum(machine_memory_bytes{{}}))')
+                                 f'100 * (1 - (sum(avg_over_time(node_memory_MemAvailable_bytes{{}}[1h])) / sum(machine_memory_bytes{{}})))')
         return self._get_query_prometheus_value(query=memory_query)
 
     def _get_query_prometheus_value(self, query: str) -> Optional[float]:
@@ -57,7 +57,7 @@ class PrometheusDiscoveryUtils:
                 logging.error(f"PrometheusDiscoveryUtils failed to get prometheus results.")
                 return
             value = query_result.vector_result[0].value.value
-            return float('%.2f' % float(value))
+            return max(float('%.2f' % float(value)), 0)
         except:
             logging.exception(f"PrometheusDiscoveryUtils failed to get prometheus results.")
             return
