@@ -16,6 +16,7 @@ from robusta.core.sinks.sink_factory import SinkFactory
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.integrations.scheduled.playbook_scheduler_manager import PlaybooksSchedulerManager
 from robusta.model.alert_relabel_config import AlertRelabel
+from robusta.model.global_config import GlobalConfig
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.function_hashes import get_function_hash
@@ -101,6 +102,9 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
         self.default_sinks = default_sinks
         self.triggers_to_playbooks = defaultdict(list)
         self.global_config = global_config
+
+        #initializing global config
+        GlobalConfig(global_config=global_config)
         for playbook_def in active_playbooks:
             # Merge playbooks params with global params and default sinks
             if not playbook_def.sinks:
