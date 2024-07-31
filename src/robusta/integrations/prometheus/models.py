@@ -209,7 +209,6 @@ class PrometheusKubernetesAlert(
         # AlertManager sends 0001-01-01T00:00:00Z when there's no end date
         ends_at = self.alert.endsAt if self.alert.endsAt.timestamp() > 0 else None
         alert_severity = self.alert.labels.get("severity", "info").lower()
-        logging.warning(f"{alert_severity} {SEVERITY_MAP.get(alert_severity, FindingSeverity.INFO),}")
         return Finding(
             title=title,
             description=self.get_description(),

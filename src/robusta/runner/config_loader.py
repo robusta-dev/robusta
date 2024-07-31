@@ -198,7 +198,6 @@ class ConfigLoader:
                 self.registry.set_relabel_config(runner_config.alert_relabel)
                 update_severity_map(runner_config.global_config)
 
-
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
