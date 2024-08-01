@@ -73,11 +73,12 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     Create a new notification message. This is the primary way that custom playbooks generate messages.
     """
     subject = event.get_subject()
+    aggregation_key = format_event_templated_string(subject, params.aggregation_key) if params.aggregation_key else None
     event.add_finding(
         Finding(
             title=format_event_templated_string(subject, params.title),
             description=format_event_templated_string(subject, params.description) if params.description else None,
-            aggregation_key=params.aggregation_key,
+            aggregation_key=aggregation_key,
             severity=FindingSeverity.from_severity(params.severity),
             subject=event.get_subject(),
             source=event.get_source(),
