@@ -15,6 +15,18 @@ class HolmesRequest(BaseModel):
     include_tool_call_results: bool = False
 
 
+class HolmesWorkloadHealthRequest(BaseModel):
+    ask: str
+    subject: dict
+    context: Dict[str, Any]
+    include_tool_calls: bool = False
+    include_tool_call_results: bool = False
+    alert_history_since: str = "24h"
+    alert_history: bool = True
+    stored_instrucitons: bool = True
+    instructions: List[str] = []
+
+
 class ToolCallResult(BaseModel):
     tool_name: str
     description: str
@@ -24,6 +36,7 @@ class ToolCallResult(BaseModel):
 class HolmesResult(BaseModel):
     tool_calls: Optional[List[ToolCallResult]] = None
     analysis: Optional[str] = None
+    instructions: List[str] = []
 
 
 class HolmesResultsBlock(BaseBlock):

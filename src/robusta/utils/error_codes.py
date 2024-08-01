@@ -32,6 +32,8 @@ class ErrorCodes(Enum):
 
     PROMETHEUS_DISCOVERY_FAILED = 5100
 
+    HOLMES_UNEXPECTED_ERROR = 5200
+
 
 class ActionException(Exception):
     def __init__(self, error: ErrorCodes, msg: Optional[str] = None):
