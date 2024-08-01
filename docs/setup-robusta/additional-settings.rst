@@ -76,6 +76,20 @@ For example:
       - source: "job_name"
         target: "job"
 
+Mapping Custom Alert Severity
+----------------
+To correctly map your custom alert severity, you need to add ``custom_severity_map``. The values for each alert should be: high, medium, low, info, and debug.
+
+For example:
+
+.. code-block:: yaml
+
+    globalConfig:
+      custom_severity_map:
+        devs_high: high
+        ops_high: high
+        devs_low: low
+
 
 Two-way Interactivity
 ------------------------
