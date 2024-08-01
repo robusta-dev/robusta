@@ -77,6 +77,7 @@ class ResourceInfo(BaseModel):
     kind: Optional[str]
     node: Optional[str]
     container: Optional[str]
+    cluster: Optional[str]
 
 
 class HolmesParams(ActionParams):
