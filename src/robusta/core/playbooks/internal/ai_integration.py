@@ -9,9 +9,9 @@ from robusta.core.playbooks.actions_registry import action
 from robusta.core.reporting import Finding, FindingSubject
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
-from robusta.core.reporting.holmes import HolmesRequest, HolmesResult, HolmesResultsBlock, HolmesWorkloadHealthRequest
+from robusta.core.reporting.holmes import HolmesRequest, HolmesResult, HolmesResultsBlock
 from robusta.integrations.prometheus.utils import HolmesDiscovery
-from robusta.api import ActionException, ErrorCodes
+
 
 def build_investigation_title(params: AIInvestigateParams) -> str:
     if params.investigation_type == "analyze_problems":
@@ -27,7 +27,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         logging.error("Holmes url not found")
         return
 
-    investigation__title = build_investigation_title(params.investigation_type, params)
+    investigation__title = build_investigation_title(params)
     subject = params.resource.dict() if params.resource else {}
 
     try:
@@ -70,7 +70,6 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
     except Exception as e:
         logging.exception(f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}")
-        raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, f"{e}")
 
 
 @action
@@ -108,4 +107,3 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
 
     except Exception as e:
         logging.exception(f"Failed to get holmes analysis for {params.resource}, {params.ask}")
-        raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, f"{e}")
