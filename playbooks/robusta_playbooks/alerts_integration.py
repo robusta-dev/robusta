@@ -58,12 +58,12 @@ class SeverityParams(ActionParams):
 
 class DefaultEnricherParams(ActionParams):
     """
-    :var show_alert_annotations: will add the alert annotations to the default alerts if true
+    :var alert_annotations_enrichment: will add the alert annotations to the default alerts if true
 
     :example severity: warning
     """
 
-    show_alert_annotations: bool = False
+    alert_annotations_enrichment: bool = False
 
 
 @action
@@ -228,7 +228,7 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
         title="Alert labels"
     )
 
-    if not params.show_alert_annotations:
+    if not params.alert_annotations_enrichment:
         return
 
     annotations = alert.alert.annotations
