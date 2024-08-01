@@ -115,6 +115,10 @@ If you are having performance issues, specifically with Prometheus using a lot o
      - TEXT
      - The number of data points required to make a recommendation for a resource.
      - 100
+   * - ``--use_oomkill_data``
+     - BOOL
+     - Whether to bump the memory when OOMKills are detected.
+     - FALSE
 
 Configuring KRR Job Memory Requests and Limits
 ======================================================
