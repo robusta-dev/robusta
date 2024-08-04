@@ -74,7 +74,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
 @action
 def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHealthParams):
-    holmes_url = params.holmes_url or HolmesDiscovery.find_holmes_url()
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
         logging.error("Holmes url not found")
         return
