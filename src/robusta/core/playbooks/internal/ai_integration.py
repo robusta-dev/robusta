@@ -11,7 +11,7 @@ from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
 from robusta.core.reporting.holmes import HolmesRequest, HolmesResult, HolmesResultsBlock
 from robusta.integrations.prometheus.utils import HolmesDiscovery
-
+from robusta.utils.error_codes import ActionException, ErrorCodes
 
 def build_investigation_title(params: AIInvestigateParams) -> str:
     if params.investigation_type == "analyze_problems":
@@ -70,6 +70,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
     except Exception as e:
         logging.exception(f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}")
+        raise ActionException(ErrorCodes.ACTION_NOT_FOUND, f"{e}")
 
 
 @action
