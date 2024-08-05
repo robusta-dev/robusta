@@ -108,3 +108,4 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
 
     except Exception as e:
         logging.exception(f"Failed to get holmes analysis for {params.resource}, {params.ask}")
+        raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, f"{e}")
