@@ -102,6 +102,8 @@ class ModelConversion:
             data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
             structured_data.append(data_obj)
 
+        structured_data.append({"type": "list", "data": block.holmes_result.instructions})
+
     @staticmethod
     def to_evidence_json(
         account_id: str,
