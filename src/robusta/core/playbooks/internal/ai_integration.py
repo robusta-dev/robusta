@@ -85,7 +85,6 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
         logging.error("Holmes url not found")
         return
 
-    resource = params.resource
     try:
         result = requests.post(f"{holmes_url}/api/workload_health_check", data=params.json())
         result.raise_for_status()
@@ -93,7 +92,7 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
         holmes_result = HolmesResult(**json.loads(result.text))
 
         finding = Finding(
-            title=f"AI Analysis of {resource}",
+            title=f"AI Analysis of {params.resource}",
             aggregation_key="HolmesInvestigationResult",
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
