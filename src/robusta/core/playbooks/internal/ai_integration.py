@@ -70,7 +70,12 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
     except Exception as e:
         logging.exception(f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}")
-        raise ActionException(ErrorCodes.ACTION_NOT_FOUND, f"{e}")
+        if isinstance(e, requests.ConnectionError):
+            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
+        elif isinstance(e, requests.HTTPError):
+            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
+        else:
+            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
 
 
 @action
