@@ -1,5 +1,5 @@
-import logging
 import math
+import re
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from string import Template
@@ -25,6 +25,7 @@ from robusta.integrations.prometheus.utils import get_prometheus_connect
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
 ChartLabelFactory = Callable[[int], str]
 ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
+BRACKETS_COMMA_PATTERN = r"\{\s*,"
 
 
 class XAxisLine(BaseModel):
@@ -87,8 +88,9 @@ def run_prometheus_query_range(
     prom = get_prometheus_connect(prometheus_params)
     params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
     prom.check_prometheus_connection(params)
-    result = prom.safe_custom_query_range(query=promql_query, start_time=starts_at, end_time=ends_at, step=step,
-                                          params=params)
+    result = prom.safe_custom_query_range(
+        query=promql_query, start_time=starts_at, end_time=ends_at, step=step, params=params
+    )
 
     return PrometheusQueryResult(data=result)
 
@@ -378,7 +380,11 @@ def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> Pro
 def __add_additional_labels(query: str, prometheus_params: PrometheusParams) -> str:
     if not prometheus_params.prometheus_additional_labels or not prometheus_params.add_additional_labels:
         return query
-    return query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
+    fixed_query = query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
+    fixed_query = re.sub(
+        BRACKETS_COMMA_PATTERN, "{", fixed_query
+    )  # fix the case no labels in query, which results in " {, cluster="bla"} which is illegal
+    return fixed_query
 
 
 def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
