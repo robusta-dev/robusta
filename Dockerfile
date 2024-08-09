@@ -54,6 +54,9 @@ COPY --from=builder /etc/robusta/playbooks/defaults /etc/robusta/playbooks/defau
 # Copy virtual environment and application files from the build stage
 COPY --from=builder /app /app
 
+# Remove setuptools-65.5.1 installed from python:3.11-slim as fix for CVE-2024-6345 until image will be updated
+RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
+
 # Install necessary packages for the runtime environment
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
