@@ -40,7 +40,8 @@ jobs:
 
     - name: Update package version
       run: |
-        sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py pyproject.toml helm/robusta/Chart.yaml helm/robusta/values.yaml
+        sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py helm/robusta/Chart.yaml helm/robusta/values.yaml
+        sed -i 's/version = "0.0.0"/version = "${{env.RELEASE_VER}}"/g' pyproject.toml
         sed -i 's/0.0.1/${{env.RELEASE_VER}}/g' helm/robusta/Chart.yaml
 
     # Set up the buildx to run build for multiple platforms

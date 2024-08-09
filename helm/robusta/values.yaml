@@ -33,6 +33,7 @@ globalConfig:
   account_id: ""
   signing_key: ""
   custom_annotations: []
+  custom_severity_map: {}
 
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []

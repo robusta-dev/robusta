@@ -101,6 +101,7 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
         self.default_sinks = default_sinks
         self.triggers_to_playbooks = defaultdict(list)
         self.global_config = global_config
+
         for playbook_def in active_playbooks:
             # Merge playbooks params with global params and default sinks
             if not playbook_def.sinks:

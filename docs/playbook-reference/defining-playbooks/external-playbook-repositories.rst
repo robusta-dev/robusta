@@ -1,20 +1,27 @@
 Loading External Actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta can load playbook actions from external git repositories. This extends Robusta with additional actions for
-use in :ref:`customPlaybooks<customPlaybooks>`.
+Robusta can load playbook actions from external git repositories and externally hosted
+Python packages provided as .tgz or .tar.gz files. This extends Robusta with additional
+actions for use in :ref:`customPlaybooks<customPlaybooks>`.
 
 .. warning::
 
-    Robusta does not watch for changes in git repositories. Playbooks are reloaded when:
+    Robusta does not watch for changes in git repositories/externally hosted Python packages.
+    Playbooks are reloaded when:
 
     * Robusta starts
     * Robusta's configuration changes
     * ``robusta playbooks reload`` is run
 
-External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH.
+External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH
+in the case of git repositories, and appropriate URLs in the case of externally hosted
+Python packages. The way Robusta distinguishes between the case of git repository and an
+external package is to check if the URL ends with `.tgz` or `.tar.gz`
+- if that is the case, the source is treated as an external package; otherwise the
+URL is treated as a git repository address.
 
-If you are going to be using an external repository via HTTPS, you just need to configure
+If you are going to be using an external git repository via HTTPS, you just need to configure
 correct read access credentials (see below). When connecting via SSH, however, there is an
 additional requirement to verify the remote host's identity on the client side, as SSH
 generally does not provide any method of doing that automatically (in contrast with HTTPS,
@@ -109,6 +116,23 @@ The ``key`` parameter must contain a ``base64`` encoded deployment key with ``re
         ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
         -----END OPENSSH PRIVATE KEY-----
 
+Loading Actions from an external Python Package
+---------------------------------------------------
+
+For external Python packages, just specify an URL starting with http(s), and ending with
+either .tar.gz or .tgz.
+
+.. code-block:: yaml
+
+    playbookRepos:
+      web_playbooks:
+        url: "https://my-domain.com/bla/web-playbooks.tgz"
+        http_headers: # optional, may be used for auth
+          Authorization: Bearer XXXYYY
+        # pip_install: true      # optional: load this playbook's dependencies (default True)
+        # build_isolation: false
+
+The `http_headers` option is only available for this method of loading actions.
 
 Handling Secrets
 *******************
@@ -130,6 +154,14 @@ Then reference it using an environment variable:
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
         key: "{{env.GITHUB_SSH_KEY}}"
+
+Build Isolation
+*****************
+
+``build_isolation`` is optional (defaults to `true`). If specified as `false`, the `pip`
+install command for the package being installed will be run with `--no-build-isolation` (see
+the `pip docs <https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-no-build-isolation>`_
+for details).
 
 Baking Actions into a Custom Image
 --------------------------------------

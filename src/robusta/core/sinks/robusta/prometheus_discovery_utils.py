@@ -1,17 +1,16 @@
 import logging
+import os
 import threading
 import time
+from typing import Optional
 
-from prometrix import PrometheusNotFound, VictoriaMetricsNotFound, PrometheusFlagsConnectionError
+from prometrix import PrometheusFlagsConnectionError, PrometheusNotFound, VictoriaMetricsNotFound
 from pydantic import BaseModel
 
-from robusta.core.exceptions import (
-    AlertsManagerNotFound,
-    NoAlertManagerUrlFound,
-    NoPrometheusUrlFound,
-)
+from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound, NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
+from robusta.core.playbooks.prometheus_enrichment_utils import run_prometheus_query
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags
 from robusta.utils.silence_utils import AlertManagerParams, get_alertmanager_silences_connection
 
@@ -22,7 +21,7 @@ class PrometheusHealthStatus(BaseModel):
     alertmanager: bool = True
 
 
-class PrometheusHealthChecker:
+class PrometheusDiscoveryUtils:
     def __init__(self, discovery_period_sec: int, global_config: dict):
         self.status: PrometheusHealthStatus = PrometheusHealthStatus()
         self.__discovery_period_sec = discovery_period_sec
@@ -38,6 +37,31 @@ class PrometheusHealthChecker:
 
     def get_status(self) -> PrometheusHealthStatus:
         return self.status
+
+    def get_cluster_avg_cpu(self) -> Optional[float]:
+        cpu_query = os.getenv("OVERRIDE_CLUSTER_CPU_AVG_QUERY",
+                              f'100 * (sum(rate(node_cpu_seconds_total{{mode!="idle"}}[1h])) / sum(machine_cpu_cores{{}}))')
+        return self._get_query_prometheus_value(query=cpu_query)
+
+    def get_cluster_avg_memory(self) -> Optional[float]:
+        memory_query = os.getenv("OVERRIDE_CLUSTER_MEM_AVG_QUERY",
+                                 f'100 * (1 - (sum(avg_over_time(node_memory_MemAvailable_bytes{{}}[1h])) / sum(machine_memory_bytes{{}})))')
+        return self._get_query_prometheus_value(query=memory_query)
+
+    def _get_query_prometheus_value(self, query: str) -> Optional[float]:
+        try:
+            global_config = self.__global_config
+            prometheus_params = PrometheusParams(**global_config)
+            query_result = run_prometheus_query(prometheus_params=prometheus_params, query=query)
+            if query_result.result_type == "error" or query_result.vector_result is None:
+                logging.error(f"PrometheusDiscoveryUtils failed to get prometheus results.")
+                return
+            value = query_result.vector_result[0].value.value
+            return_value = float('%.2f' % float(value))
+            return return_value if return_value >= 0 else None
+        except:
+            logging.exception(f"PrometheusDiscoveryUtils failed to get prometheus results.")
+            return
 
     def __run_checks(self):
         while True:

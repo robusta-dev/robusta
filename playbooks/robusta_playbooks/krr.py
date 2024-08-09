@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     IMAGE_REGISTRY,
     RUNNER_SERVICE_ACCOUNT,
@@ -33,7 +32,7 @@ from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.11.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.13.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 
@@ -50,6 +49,12 @@ class KRRObject(BaseModel):
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
     warnings: List[str] = []
+    current_pod_count: Optional[int]
+
+    def __init__(self, **data):
+        pods = data.pop('pods', [])
+        super().__init__(**data)
+        self.current_pod_count = len([pod for pod in pods if not pod.get('deleted', False)])
 
 
 class KRRRecommendedInfo(BaseModel):
@@ -98,6 +103,7 @@ class KRRResponse(BaseModel):
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
     errors: List[Dict[str, Any]] = []  # This field is not returned by KRR < v1.7.1
     config: Optional[Dict[str, Any]] = None  # This field is not returned by KRR < v1.9.0
+    clusterSummary: Optional[Dict[str, Any]] = None  # This field is not returned by KRR < v1.12.0
 
 
 class KRRParams(PrometheusParams, PodRunningParams):
@@ -392,6 +398,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         metadata["description"] = krr_scan.description
         metadata["errors"] = krr_scan.errors
         metadata["config"] = krr_scan.config
+        metadata["cluster_summary"] = krr_scan.clusterSummary
 
     scan_block = KRRScanReportBlock(
         title="KRR scan",
@@ -430,6 +437,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                         "description": krr_scan.description,
                         "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
                         "warnings": scan.object.warnings,
+                        "current_pod_count": scan.object.current_pod_count
                     }
                     for resource in krr_scan.resources
                 ],

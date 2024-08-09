@@ -56,6 +56,16 @@ class SeverityParams(ActionParams):
     severity: str = "none"
 
 
+class DefaultEnricherParams(ActionParams):
+    """
+    :var alert_annotations_enrichment: will add the alert annotations to the default alerts if true
+
+    :example severity: warning
+    """
+
+    alert_annotations_enrichment: bool = False
+
+
 @action
 def severity_silencer(alert: PrometheusKubernetesAlert, params: SeverityParams):
     """
@@ -197,7 +207,7 @@ def alert_explanation_enricher(alert: PrometheusKubernetesAlert, params: AlertEx
 
 
 @action
-def default_enricher(alert: PrometheusKubernetesAlert):
+def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherParams):
     """
     Enrich an alert with the original message and labels.
 
@@ -217,6 +227,28 @@ def default_enricher(alert: PrometheusKubernetesAlert):
         enrichment_type=EnrichmentType.alert_labels,
         title="Alert labels"
     )
+
+    if not params.alert_annotations_enrichment:
+        return
+
+    annotations = alert.alert.annotations
+    if not annotations:
+        return
+
+    alert.add_enrichment(
+        [
+            TableBlock(
+                [[k, v] for (k, v) in annotations.items()],
+                ["label", "value"],
+                table_format=TableBlockFormat.vertical,
+                table_name="*Alert annotations*",
+            ),
+        ],
+        annotations={SlackAnnotations.ATTACHMENT: True},
+        enrichment_type=EnrichmentType.alert_labels,
+        title="Alert annotations"
+    )
+
 
 
 @action
