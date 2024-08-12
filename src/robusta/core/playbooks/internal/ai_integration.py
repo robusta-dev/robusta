@@ -24,8 +24,7 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
 def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
-        logging.error("Holmes url not found")
-        return
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     investigation__title = build_investigation_title(params)
     subject = params.resource.dict() if params.resource else {}
@@ -73,6 +72,9 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):
+            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
+                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
+
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
@@ -82,8 +84,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHealthParams):
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
-        logging.error("Holmes url not found")
-        return
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     try:
         result = requests.post(f"{holmes_url}/api/workload_health_check", data=params.json())
@@ -114,6 +115,9 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):
+            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
+                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
+
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
