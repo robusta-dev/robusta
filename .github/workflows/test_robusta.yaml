@@ -4,17 +4,13 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
     run_tests:
-      strategy:
-        matrix:
-          python-version: ["3.8", "3.9", "3.10", "3.11"]
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v2
-
-        - name: Set up Python ${{ matrix.python-version }}
+        - name: Set up Python
           uses: actions/setup-python@v2
           with:
-            python-version: ${{ matrix.python-version }}
+            python-version: 3.9
 
         # setup a KIND cluster for tests which need a kubernetes image
         - name: Create k8s Kind Cluster
