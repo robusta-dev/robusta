@@ -132,7 +132,6 @@ class HolmesWorkloadHealthParams(HolmesParams):
     instructions: List[str] = []
     include_tool_calls: bool = True
     include_tool_call_results: bool = True
-    prompt_template: str = "builtin://generic_ask.jinja2"
 
 
 class PodRunningParams(ActionParams):
