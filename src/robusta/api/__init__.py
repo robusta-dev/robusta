@@ -117,7 +117,7 @@ from robusta.core.playbooks.node_enrichment_utils import (
     get_node_running_pods_table_block_or_none,
     get_node_status_table_block,
 )
-from robusta.core.playbooks.node_playbook_utils import create_node_graph_enrichment
+from robusta.core.playbooks.node_playbook_utils import create_node_graph_enrichment, dmesg_enricher
 from robusta.core.playbooks.pod_utils.crashloop_utils import get_crash_report_enrichments
 from robusta.core.playbooks.pod_utils.imagepull_utils import (
     get_image_pull_backoff_container_statuses,

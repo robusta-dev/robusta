@@ -1,11 +1,13 @@
+import logging
 from datetime import datetime
-from typing import Optional, List
+from typing import Dict, List, Optional
 
 from hikaru.model.rel_1_26 import Node
 
 from robusta.core.model.base_params import ResourceChartItemType, ResourceChartResourceType, ResourceGraphEnricherParams
 from robusta.core.playbooks.prometheus_enrichment_utils import create_resource_enrichment, get_node_internal_ip
 from robusta.core.reporting.blocks import GraphBlock
+from robusta.integrations.kubernetes.custom_models import RobustaPod
 
 
 def create_node_graph_enrichment(params: ResourceGraphEnricherParams, node: Node,
@@ -26,3 +28,13 @@ def create_node_graph_enrichment(params: ResourceGraphEnricherParams, node: Node
         metrics_legends_labels=metrics_legends_labels,
     )
     return graph_enrichment
+
+
+def dmesg_enricher(node: Node, custom_annotations: Optional[Dict[str, str]] = None):
+    if not node:
+        logging.error(f"_dmesg_enricher was called on event without node")
+        return
+    exec_result = RobustaPod.exec_on_node(
+        pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg", custom_annotations=custom_annotations
+    )
+    return exec_result

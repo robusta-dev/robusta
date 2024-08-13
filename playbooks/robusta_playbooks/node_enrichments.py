@@ -1,8 +1,7 @@
 import logging
 from typing import List
 
-from hikaru.model.rel_1_26 import Pod, PodList
-
+from hikaru.model.rel_1_26 import Node, Pod, PodList
 from robusta.api import (
     BaseBlock,
     EnrichmentType,
@@ -20,6 +19,7 @@ from robusta.api import (
     RobustaPod,
     action,
     create_node_graph_enrichment,
+    dmesg_enricher,
     get_node_allocatable_resources_table_block,
     get_node_running_pods_table_block_or_none,
     get_node_status_table_block,
@@ -128,16 +128,13 @@ def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     if not node:
         logging.error(f"node_dmesg_enricher was called on event without node : {event}")
         return
-    exec_result = RobustaPod.exec_on_node(
-        pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg", custom_annotations=params.custom_annotations
-    )
+    exec_result = dmesg_enricher(node, params.custom_annotations)
     if exec_result:
         event.add_enrichment(
             [FileBlock("dmesg.log", exec_result.encode())],
             enrichment_type=EnrichmentType.text_file,
             title="DMESG Info",
         )
-
 
 @action
 def node_health_watcher(event: NodeChangeEvent):

@@ -3,8 +3,10 @@ from datetime import datetime
 
 from robusta.api import (
     EnrichmentType,
+    FileBlock,
     PodEvent,
     PodResourceGraphEnricherParams,
+    PodRunningParams,
     ResourceChartItemType,
     ResourceChartResourceType,
     ResourceGraphEnricherParams,
@@ -12,6 +14,7 @@ from robusta.api import (
     action,
     create_node_graph_enrichment,
     create_resource_enrichment,
+    dmesg_enricher,
     pod_limits,
 )
 from robusta.core.model.pods import pod_requests
@@ -83,3 +86,24 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
         return
     graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["instance"])
     pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")
+
+@action
+def pod_dmesg_enricher(pod_event: PodEvent, params: PodRunningParams):
+    """
+    Gets the dmesg from a node
+    """
+    pod = pod_event.get_pod()
+    if not pod:
+        logging.error(f"cannot run pod_node_graph_enricher on event with no pod: {pod_event}")
+        return
+    node = pod.get_node()
+    if not node:
+        logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
+        return
+    exec_result = dmesg_enricher(node, params.custom_annotations)
+    if exec_result:
+        pod_event.add_enrichment(
+            [FileBlock("dmesg.log", exec_result.encode())],
+            enrichment_type=EnrichmentType.text_file,
+            title="DMESG Info",
+        )
