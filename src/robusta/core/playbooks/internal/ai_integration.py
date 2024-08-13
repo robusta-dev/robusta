@@ -48,13 +48,14 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             else ""
         )
 
+        kind = params.resource.kind if params.resource else None
         finding = Finding(
             title=f"AI Analysis of {investigation__title}{title_suffix}",
             aggregation_key="HolmesInvestigationResult",
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(params.resource.kind) if params.resource else FindingSubjectType.TYPE_NONE,
+                subject_type=FindingSubjectType.from_kind(kind) if kind else FindingSubjectType.TYPE_NONE,
                 node=params.resource.node if params.resource else "",
                 container=params.resource.container if params.resource else "",
             ),
