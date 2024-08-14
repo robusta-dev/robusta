@@ -1,11 +1,11 @@
 import logging
 from typing import List
 
-from hikaru.model.rel_1_26 import Node, Pod, PodList
+from hikaru.model.rel_1_26 import Pod, PodList
+
 from robusta.api import (
     BaseBlock,
     EnrichmentType,
-    FileBlock,
     Finding,
     FindingSeverity,
     FindingSource,
@@ -16,7 +16,6 @@ from robusta.api import (
     NodeEvent,
     PodRunningParams,
     ResourceGraphEnricherParams,
-    RobustaPod,
     action,
     create_node_graph_enrichment,
     dmesg_enricher,
@@ -116,7 +115,7 @@ def node_status_enricher(event: NodeEvent):
 
     logging.info("node_status_enricher is depricated, use status_enricher instead")
 
-    event.add_enrichment(get_node_status_table_block(node))
+    event.add_enrichment([get_node_status_table_block(node)])
 
 
 @action
@@ -128,13 +127,8 @@ def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     if not node:
         logging.error(f"node_dmesg_enricher was called on event without node : {event}")
         return
-    exec_result = dmesg_enricher(node, params.custom_annotations)
-    if exec_result:
-        event.add_enrichment(
-            [FileBlock("dmesg.log", exec_result.encode())],
-            enrichment_type=EnrichmentType.text_file,
-            title="DMESG Info",
-        )
+    dmesg_enricher(event, node, params.custom_annotations)
+
 
 @action
 def node_health_watcher(event: NodeChangeEvent):
