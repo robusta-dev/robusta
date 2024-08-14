@@ -86,6 +86,8 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
     if not holmes_url:
         raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
+    params.resource.cluster = event.get_context().cluster_name
+
     try:
         result = requests.post(f"{holmes_url}/api/workload_health_check", data=params.json())
         result.raise_for_status()
