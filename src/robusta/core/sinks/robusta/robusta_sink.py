@@ -502,6 +502,7 @@ class RobustaSink(SinkBase, EventHandler):
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
             managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED,
             holmesEnabled=HOLMES_ENABLED,
+            clusterTimeZone=str(datetime.now().astimezone().tzinfo),
         )
 
         # checking the status of relay connection
