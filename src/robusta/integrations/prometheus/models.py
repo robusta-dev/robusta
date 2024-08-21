@@ -23,10 +23,24 @@ from robusta.integrations.kubernetes.custom_models import RobustaDeployment, Rob
 
 SEVERITY_MAP = {
     "critical": FindingSeverity.HIGH,
+    "high": FindingSeverity.HIGH,
+    "medium": FindingSeverity.MEDIUM,
     "error": FindingSeverity.MEDIUM,
     "warning": FindingSeverity.LOW,
+    "low": FindingSeverity.LOW,
     "info": FindingSeverity.INFO,
+    "debug": FindingSeverity.DEBUG,
 }
+
+
+def update_severity_map(global_config):
+    try:
+        global SEVERITY_MAP
+        custom_severity_map = global_config.get("custom_severity_map", {})
+        for key in custom_severity_map.keys():
+            SEVERITY_MAP[key] = FindingSeverity.from_severity(custom_severity_map[key].upper())
+    except:
+        logging.exception("Failed to map custom severities")
 
 
 # for parsing incoming data

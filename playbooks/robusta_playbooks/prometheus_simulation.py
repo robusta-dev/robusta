@@ -1,12 +1,27 @@
 import json
 import logging
+import random
+import string
 from datetime import datetime
 from typing import Dict, Optional
 
 import requests
+
 from robusta.api import PORT, ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
 from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.silence_utils import AlertManagerParams, gen_alertmanager_headers, get_alertmanager_url
+
+
+def parse_by_operator(pairs: str, operator: str) -> Dict[str, str]:
+    if not pairs:
+        return {}
+
+    results: Dict[str, str] = {}
+    for pairs in pairs.split(","):
+        key, val = pairs.split(operator)
+        results[key.strip()] = val.strip()
+
+    return results
 
 
 class PrometheusAlertParams(ActionParams):
@@ -25,6 +40,7 @@ class PrometheusAlertParams(ActionParams):
     :var description: Simulated alert description.
     :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
     :var labels: Additional alert labels. For example: "key1: val1, key2: val2"
+    :var annotations: Additional alert labels. For example: "key1=val1, key2=val2". Note that annotation separator is `=`
     :var runbook_url: Simulated alert runbook_url. For example: "https://my-runbook-url.dev"
     :var fingerprint: Simulated alert fingerprint. For example: "my-unique-fingerprint"
     """
@@ -49,8 +65,10 @@ class PrometheusAlertParams(ActionParams):
     runbook_url: Optional[str] = ""
     fingerprint: Optional[str] = ""
     labels: Optional[str] = None
+    annotations: Optional[str] = None
     starts_at: Optional[datetime] = None
     ends_at: Optional[datetime] = None
+
 
 @action
 def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: PrometheusAlertParams):
@@ -86,10 +104,9 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
     if prometheus_event_data.daemonset_name is not None:
         labels["daemonset"] = prometheus_event_data.daemonset_name
     if prometheus_event_data.labels is not None:
-        for label in prometheus_event_data.labels.split(","):
-            key, val = label.split(":")
-            labels[key.strip()] = val.strip()
-    starts_at = prometheus_event_data.starts_at if prometheus_event_data.starts_at else datetime.now()
+        labels.update(parse_by_operator(prometheus_event_data.labels, ":"))
+
+    starts_at = prometheus_event_data.starts_at if prometheus_event_data.starts_at else datetime.now().astimezone()
 
     if prometheus_event_data.ends_at is not None:
         ends_at = prometheus_event_data.ends_at
@@ -104,6 +121,12 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         "summary": prometheus_event_data.summary if prometheus_event_data.summary else prometheus_event_data.alert_name,
         "runbook_url": prometheus_event_data.runbook_url,
     }
+    annotations.update(parse_by_operator(prometheus_event_data.annotations, "="))
+
+    fingerprint = prometheus_event_data.fingerprint
+    if not fingerprint:  # if user didn't provide fingerprint, generate random one, to avoid runner deduplication
+        fingerprint = "".join(random.choices(string.ascii_lowercase, k=8))
+
     prometheus_event = AlertManagerEvent(
         **{
             "status": prometheus_event_data.status,
@@ -118,7 +141,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
                     "endsAt": ends_at,
                     "startsAt": starts_at,
                     "generatorURL": prometheus_event_data.generator_url,
-                    "fingerprint": prometheus_event_data.fingerprint,
+                    "fingerprint": fingerprint,
                     "labels": labels,
                     "annotations": annotations,
                 }
@@ -140,7 +163,8 @@ class AlertmanagerAlertParams(AlertManagerParams):
     :var status: Simulated alert status. firing/resolved.
     :var severity: Simulated alert severity.
     :var description: Simulated alert description.
-    :var labels: Additional alert labels. For example: "key1: val1, key2: val2"
+    :var labels: Additional alert labels. For example: "key1=val1, key2=val2"
+    :var annotations: Additional alert labels. For example: "key1=val1, key2=val2"
     :var namespace: Pod namespace, for a simulated pod alert.
     :var summary: Simulated alert summary.
     """
@@ -153,6 +177,7 @@ class AlertmanagerAlertParams(AlertManagerParams):
     description: Optional[str] = "simulated alert manager alert"
     summary: Optional[str] = "alert manager alert created by Robusta"
     labels: Optional[str] = None
+    annotations: Optional[str] = None
 
 
 @action
@@ -168,19 +193,21 @@ def alertmanager_alert(event: ExecutionBaseEvent, action_params: AlertmanagerAle
 
     labels = action_params.labels
     if labels:
-        for label in labels.split(","):
-            label_key = label.split("=")[0].strip()
-            label_value = label.split("=")[1].strip()
-            alert_labels[label_key] = label_value
+        alert_labels.update(parse_by_operator(labels, "="))
+
+    annotations = {
+        "summary": action_params.summary,
+        "description": action_params.description,
+    }
+
+    if action_params.annotations:
+        annotations.update(parse_by_operator(action_params.annotations, "="))
 
     alerts = [
         {
             "status": action_params.status,
             "labels": alert_labels,
-            "annotations": {
-                "summary": action_params.summary,
-                "description": action_params.description,
-            },
+            "annotations": annotations,
         }
     ]
 

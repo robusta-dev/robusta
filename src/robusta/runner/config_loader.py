@@ -35,6 +35,7 @@ from robusta.integrations.git.git_repo import (
     GitRepo,
     GitRepoManager,
 )
+from robusta.integrations.prometheus.models import update_severity_map
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.integrations.scheduled.playbook_scheduler_manager_impl import PlaybooksSchedulerManagerImpl
 from robusta.integrations.scheduled.trigger import ScheduledTriggerEvent
@@ -195,6 +196,8 @@ class ConfigLoader:
                 cluster_provider.init_provider_discovery()
                 self.registry.set_global_config(runner_config.global_config)
                 self.registry.set_relabel_config(runner_config.alert_relabel)
+                update_severity_map(runner_config.global_config)
+
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards

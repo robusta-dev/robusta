@@ -20,6 +20,7 @@ class ActivityStats(BaseModel):
     prometheusRetentionTime: str
     managedPrometheusAlerts: bool
     holmesEnabled: bool
+    clusterTimeZone: str
 
 
 class ClusterStatus(BaseModel):
