@@ -24,6 +24,7 @@ class ToolCallResult(BaseModel):
 class HolmesResult(BaseModel):
     tool_calls: Optional[List[ToolCallResult]] = None
     analysis: Optional[str] = None
+    instructions: List[str] = []
 
 
 class HolmesResultsBlock(BaseBlock):
