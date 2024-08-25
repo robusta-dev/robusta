@@ -53,6 +53,7 @@ from robusta.core.model.env_vars import (
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
+from robusta.core.model.openshift_group import OpenshiftGroup
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj, Rollout
 from robusta.patch.patch import create_monkey_patches
@@ -74,6 +75,7 @@ class DiscoveryResults(BaseModel):
     namespaces: List[NamespaceInfo] = []
     helm_releases: List[HelmRelease] = []
     pods_running_count: int = 0
+    openshift_groups: List[OpenshiftGroup] = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -185,6 +187,7 @@ class Discovery:
         pods_metadata: List[V1ObjectMeta] = []
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
+        openshift_groups: List[OpenshiftGroup] = []
 
         # discover micro services
         try:
@@ -229,6 +232,41 @@ class Discovery:
                             continue
 
                     continue_ref = deployconfigs_res.get("metadata", {}).get("continue")
+                    if not continue_ref:
+                        break
+
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    try:
+                        os_groups = client.CustomObjectsApi().list_cluster_custom_object(
+                            group="user.openshift.io",
+                            version="v1",
+                            plural="groups",
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                    except Exception:
+                        logging.exception(msg="Failed to list Openshift groups from api.")
+                        break
+
+                    for os_group in os_groups.get("items", []):
+                        try:
+                            meta = os_group.get("metadata", {})
+                            openshift_groups.extend(
+                                [
+                                    OpenshiftGroup(
+                                        name=meta.get("name"),
+                                        users=os_group.get("users", []) or [],
+                                        labels=meta.get("labels"),
+                                        annotations=meta.get("annotations"),
+                                        resource_version=meta.get("resourceVersion"),
+                                    )
+                                ]
+                            )
+                        except Exception:
+                            logging.exception(msg=f"Failed to parse Openshift Group/n {os_group}")
+                            continue
+
+                    continue_ref = os_groups.get("metadata", {}).get("continue")
                     if not continue_ref:
                         break
 
@@ -531,6 +569,7 @@ class Discovery:
             namespaces=namespaces,
             helm_releases=list(helm_releases_map.values()),
             pods_running_count=pods_running_count,
+            openshift_groups=openshift_groups,
         )
 
     @staticmethod
