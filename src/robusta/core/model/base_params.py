@@ -141,7 +141,7 @@ class HolmesConversationIssueContext(BaseModel):
     :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
     :var issue_type: aggregation key of the issue
     :var robusta_issue_id: id of the issue
-    :var source: source of the request
+    :var source: source of the issue
     """
 
     investigation_result: HolmesInvestigationResult
