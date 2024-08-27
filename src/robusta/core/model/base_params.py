@@ -110,6 +110,62 @@ class AIInvestigateParams(HolmesParams):
     context: Optional[Dict[str, Any]]
 
 
+class IssueInvestigationResult(BaseModel):
+    """
+    :var result: A dictionary containing the summary of the issue investigation.
+    :var tools: A list of dictionaries where each dictionary contains information
+                about the tool, its name, description and output.
+
+    It is based on the holmes investigation saved to Evidence table.
+    """
+
+    result: str
+    tools: list[dict]
+
+
+class HolmesConversationResult(BaseModel):
+    """
+    :var result: A dictionary containing the summary of the issue investigation.
+    :var tools: A list of dictionaries where each dictionary contains information
+                about the tool, its name, description and output.
+
+    It is based on the holmes investigation saved to Evidence table.
+    """
+
+    result: str
+    tools: list[dict]
+
+
+class HolmesConversationHistory(BaseModel):
+    """ """
+
+    ask: str
+    answer: HolmesConversationResult
+
+
+class HolmesConversationIssueContext(BaseModel):
+    investigation_result: IssueInvestigationResult
+    conversation_history: list[HolmesConversationHistory]
+    issue_type: str
+    robusta_issue_id: str
+    source: str
+
+
+class HolmesConversationParams(HolmesParams):
+    """
+    :var resource: The resource related to this investigation. A resource has a `name` and `kind`, and may have `namespace` and `node`
+    :var ask: Override question to ask holmes
+    :var context: Additional information that can assist with the investigation
+    :var conversation_type: Type of a conversation issue/service/generic_ask
+    """
+
+    ask: Optional[str]
+    resource: Optional[ResourceInfo]
+    # for now context supports only params for issue
+    context: Optional[HolmesConversationIssueContext]
+    conversation_type: str
+
+
 class PodRunningParams(ActionParams):
     """
     :var custom_annotations: custom annotations to be used for the running pod/job

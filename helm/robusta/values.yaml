@@ -86,6 +86,7 @@ lightActions:
 - prometheus_all_available_metrics
 - prometheus_get_series
 - prometheus_get_label_names
+- holmes_conversation
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false

@@ -15,6 +15,16 @@ class HolmesRequest(BaseModel):
     include_tool_call_results: bool = False
 
 
+class HolmesConversationRequest(BaseModel):
+    user_prompt: str
+    source: str  # "prometheus" etc
+    conversation_type: str = ""
+    resource: dict
+    context: Dict[str, Any]
+    include_tool_calls: bool = False
+    include_tool_call_results: bool = False
+
+
 class ToolCallResult(BaseModel):
     tool_name: str
     description: str
@@ -22,6 +32,11 @@ class ToolCallResult(BaseModel):
 
 
 class HolmesResult(BaseModel):
+    tool_calls: Optional[List[ToolCallResult]] = None
+    analysis: Optional[str] = None
+
+
+class HolmesConversationResult(BaseModel):
     tool_calls: Optional[List[ToolCallResult]] = None
     analysis: Optional[str] = None
 
