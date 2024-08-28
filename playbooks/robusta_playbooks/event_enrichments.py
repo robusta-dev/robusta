@@ -66,7 +66,20 @@ class WarningEventReportParams(ActionParams):
     warning_event_groups: List[WarningEventGroupParams]
 
 
-def create_event_finding(event, aggregation_key, description):
+class EventFindingParams(ActionParams):
+    aggregation_key: str
+
+
+@action
+def create_event_finding(event: EventChangeEvent, params: EventFindingParams):
+    """
+    Create a new notification message based on a Kubernetes event fields.
+    Specifically, based on the reason, messsage, and the resource related to the event
+    """
+    event.add_finding(build_event_finding(event, params.aggregation_key, event.obj.note))
+
+
+def build_event_finding(event, aggregation_key, description) -> Finding:
     k8s_obj = event.obj.regarding
     title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
     return Finding(
@@ -97,7 +110,7 @@ def warning_events_report(event: EventChangeEvent, params: WarningEventReportPar
         if event_group_param.description:
             description = format_event_templated_string(subject, event_group_param.description)
         break
-    finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=description)
+    finding = build_event_finding(event=event, aggregation_key=aggregation_key, description=description)
     event.add_finding(finding)
 
 
@@ -107,7 +120,7 @@ def event_report(event: EventChangeEvent):
     Create finding based on the kubernetes event
     """
     aggregation_key = f"Kubernetes{event.obj.type}Event"
-    finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=event.obj.note)
+    finding = build_event_finding(event=event, aggregation_key=aggregation_key, description=event.obj.note)
     event.add_finding(finding)
 
 
