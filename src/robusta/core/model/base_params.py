@@ -111,6 +111,18 @@ class AIInvestigateParams(HolmesParams):
     context: Optional[Dict[str, Any]]
 
 
+class HolmesToolsResult(BaseModel):
+    """
+    :var name: Name of the tool.
+    :var description: Description of the tool.
+    :var output: Output of the tool.
+    """
+
+    name: str
+    description: str
+    output: str
+
+
 class HolmesInvestigationResult(BaseModel):
     """
     :var result: A dictionary containing the summary of the issue investigation.
@@ -121,7 +133,7 @@ class HolmesInvestigationResult(BaseModel):
     """
 
     result: str
-    tools: list[dict]
+    tools: List[HolmesToolsResult]
 
 
 class HolmesConversationHistory(BaseModel):
