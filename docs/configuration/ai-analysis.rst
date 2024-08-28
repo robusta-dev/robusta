@@ -65,7 +65,7 @@ To use Azure Open AI:
 
 .. details:: Getting Azure_API_VERSION and Preventing Rate Limit
 
-  The following instructions cover how to get the correct AZURE_API_VERSION value and also how to increase the token limit to prevent rate limiting.
+  The following instructions cover how to get the correct AZURE_API_VERSION value and also how to increase the token limit to prevent any rate limits.
 
   1. Go to your azure portal and choose `Azure OpenAI`
     .. image:: /images/AzureAI/AzureAI_HolmesStep1.png
