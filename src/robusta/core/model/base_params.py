@@ -151,12 +151,12 @@ class HolmesConversationIssueContext(BaseModel):
     source: str
 
 
-class ConversationType(Enum):
+class ConversationType(str, Enum):
     """
     Conversation types for holmes_conversation action
     """
 
-    ISSUE = auto()
+    ISSUE = "issue"
 
 
 class HolmesConversationParams(HolmesParams):
