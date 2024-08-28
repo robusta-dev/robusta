@@ -63,6 +63,41 @@ To use Azure Open AI:
             name: holmes-secrets
             key: azureOpenAiKey
 
+.. details:: Getting Azure_API_VERSION and Preventing Rate Limit
+
+  The following instructions cover how to get the correct AZURE_API_VERSION value and also how to increase the token limit to prevent rate limiting.
+
+  1. Go to your azure portal and choose `Azure OpenAI`
+    .. image:: /images/AzureAI/AzureAI_HolmesStep1.png
+        :width: 600px
+  2. Click your AI service
+    .. image:: /images/AzureAI/AzureAI_HolmesStep2.png
+        :width: 600px
+  3. Click Go to Azure Open AI Studio
+    .. image:: /images/AzureAI/AzureAI_HolmesStep3.png
+        :width: 600px
+  4. Choose Deployments
+    .. image:: /images/AzureAI/AzureAI_HolmesStep4.png
+        :width: 600px
+  5. Select your Deployment
+    .. image:: /images/AzureAI/AzureAI_HolmesStep5.png
+        :width: 600px
+  6. Open in Playground
+    .. image:: /images/AzureAI/AzureAI_HolmesStep6.png
+        :width: 600px
+  7. Go to View Code
+    .. image:: /images/AzureAI/AzureAI_HolmesStep7.png
+        :width: 600px
+  8. Choose Python and scroll to find the API VERSION
+    .. image:: /images/AzureAI/AzureAI_HolmesStep8.png
+        :width: 600px
+  9. Go back to Deployments, and click Edit Deployment
+    .. image:: /images/AzureAI/AzureAI_HolmesStep9.png
+        :width: 600px
+  10. Increase the token limit (this prevents rate limiting)
+    .. image:: /images/AzureAI/AzureAI_HolmesStep10.png
+        :width: 600px
+
 
 To use AWS Bedrock:
 
