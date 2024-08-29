@@ -63,11 +63,14 @@ To use Azure Open AI:
             name: holmes-secrets
             key: azureOpenAiKey
 
-.. details:: Getting Azure_API_VERSION and Preventing Rate Limit
 
-  The following instructions cover how to get the correct AZURE_API_VERSION value and also how to increase the token limit to prevent any rate limits.
+To use Azure AI, follow the setup instructions below and then edit Robusta's Helm values. Do NOT skip the setup instructions, as they include a mandatory change rate-limits. Without this change, Holmes wont work.
 
-  1. Go to your azure portal and choose `Azure OpenAI`
+.. details:: Mandatory Setup for Azure AI
+
+  The following steps cover how to obtain the correct AZURE_API_VERSION value and how to increase the token limit to prevent rate limiting.
+
+  1. Go to your Azure portal and choose `Azure OpenAI`
     .. image:: /images/AzureAI/AzureAI_HolmesStep1.png
         :width: 600px
   2. Click your AI service
@@ -82,19 +85,19 @@ To use Azure Open AI:
   5. Select your Deployment
     .. image:: /images/AzureAI/AzureAI_HolmesStep5.png
         :width: 600px
-  6. Open in Playground
+  6. Click Open in Playground
     .. image:: /images/AzureAI/AzureAI_HolmesStep6.png
         :width: 600px
   7. Go to View Code
     .. image:: /images/AzureAI/AzureAI_HolmesStep7.png
         :width: 600px
-  8. Choose Python and scroll to find the API VERSION
+  8. Choose Python and scroll to find the API VERSION. Copy this! You will need it for Robusta's Helm values.
     .. image:: /images/AzureAI/AzureAI_HolmesStep8.png
         :width: 600px
   9. Go back to Deployments, and click Edit Deployment
     .. image:: /images/AzureAI/AzureAI_HolmesStep9.png
         :width: 600px
-  10. Increase the token limit (this prevents rate limiting)
+  10. MANDATORY: Increase the token limit. Change this value to at least 450K tokens for Holmes to work properly. We recommend choosing the highest value available. (Holmes queries Azure AI infrequently but in bursts. Therefore the overall cost of using Holmes with Azure AI is very low, but you must increase the quota to avoid getting rate-limited on a single burst of requests.)
     .. image:: /images/AzureAI/AzureAI_HolmesStep10.png
         :width: 600px
 
