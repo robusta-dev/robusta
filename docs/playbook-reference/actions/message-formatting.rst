@@ -10,6 +10,8 @@ Create finding
 
 .. robusta-action:: playbooks.robusta_playbooks.common_actions.create_finding on_job_failure
 
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.create_event_finding on_event_create
+
 Finding attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
