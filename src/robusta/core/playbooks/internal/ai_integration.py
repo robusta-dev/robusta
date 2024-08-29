@@ -156,7 +156,7 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
             source=params.context.source if params.context else "unknown source",
             resource=params.resource,
             conversation_type=params.conversation_type,
-            context=params.context if params.context else {},
+            context=params.context,
             include_tool_calls=True,
             include_tool_call_results=True,
         )

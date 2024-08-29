@@ -179,10 +179,10 @@ class HolmesConversationParams(HolmesParams):
     :var conversation_type: Type of a conversation issue/service/generic_ask (ConversationType)
     """
 
-    ask: Optional[str]
+    ask: str
     resource: Optional[ResourceInfo]
     # for now context supports only params for issue
-    context: Optional[HolmesConversationIssueContext]
+    context: HolmesConversationIssueContext
     conversation_type: ConversationType
     include_tool_calls: bool = True
     include_tool_call_results: bool = True
