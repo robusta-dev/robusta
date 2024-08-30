@@ -13,6 +13,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
+from robusta.core.model.base_params import HolmesParams
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import (
     CLUSTER_STATUS_PERIOD_SEC,
@@ -495,7 +496,9 @@ class RobustaSink(SinkBase, EventHandler):
         self.dal.publish_helm_releases(helm_releases)
 
     def get_holmes_model(self) -> Optional[str]:
-        holmes_url = HolmesDiscovery().find_holmes_url()
+        global_config = self.get_global_config()
+        params: HolmesParams = HolmesParams(**global_config)
+        holmes_url = HolmesDiscovery().find_holmes_url(params.holmes_url)
         if not holmes_url:
             return None
 
