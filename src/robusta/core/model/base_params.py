@@ -134,6 +134,16 @@ class HolmesWorkloadHealthParams(HolmesParams):
     include_tool_call_results: bool = True
 
 
+class NamespacedResourcesParams(ActionParams):
+    """
+    :var name: Resource name
+    :var namespace: Resource namespace
+    """
+
+    name: str
+    namespace: str
+
+
 class PodRunningParams(ActionParams):
     """
     :var custom_annotations: custom annotations to be used for the running pod/job
