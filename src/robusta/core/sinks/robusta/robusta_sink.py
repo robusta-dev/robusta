@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
+import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
@@ -36,6 +37,7 @@ from robusta.core.sinks.robusta.prometheus_discovery_utils import PrometheusDisc
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.robusta.rrm.rrm import RRM
 from robusta.core.sinks.sink_base import SinkBase
+from robusta.integrations.prometheus.utils import HolmesDiscovery
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
@@ -492,9 +494,25 @@ class RobustaSink(SinkBase, EventHandler):
 
         self.dal.publish_helm_releases(helm_releases)
 
+    def get_holmes_model(self) -> Optional[str]:
+        holmes_url = HolmesDiscovery().find_holmes_url("http://0.0.0.0:5050")
+        if not holmes_url:
+            return None
+
+        try:
+            res = requests.get(f"{holmes_url}{HolmesDiscovery.MODEL_NAME_URL}")
+            res.raise_for_status()
+            model_name = res.json()["model_name"]
+            return model_name
+        except Exception as e:
+            logging.info("Failed to retrieve holmes' model name", exc_info=True)
+        return None
+
     def __update_cluster_status(self):
         self.last_send_time = time.time()
         prometheus_health_checker_status = self.__prometheus_discovery_util.get_status()
+        holmes_model = self.get_holmes_model()
+
         activity_stats = ActivityStats(
             relayConnection=False,
             alertManagerConnection=prometheus_health_checker_status.alertmanager,
@@ -502,6 +520,7 @@ class RobustaSink(SinkBase, EventHandler):
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
             managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED,
             holmesEnabled=HOLMES_ENABLED,
+            holmesModel=holmes_model,
             clusterTimeZone=str(datetime.now().astimezone().tzinfo),
         )
 
