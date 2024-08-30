@@ -495,7 +495,7 @@ class RobustaSink(SinkBase, EventHandler):
         self.dal.publish_helm_releases(helm_releases)
 
     def get_holmes_model(self) -> Optional[str]:
-        holmes_url = HolmesDiscovery().find_holmes_url("http://0.0.0.0:5050")
+        holmes_url = HolmesDiscovery().find_holmes_url()
         if not holmes_url:
             return None
 
@@ -504,9 +504,8 @@ class RobustaSink(SinkBase, EventHandler):
             res.raise_for_status()
             model_name = res.json()["model_name"]
             return model_name
-        except Exception as e:
-            logging.info("Failed to retrieve holmes' model name", exc_info=True)
-        return None
+        except Exception:
+            return None
 
     def __update_cluster_status(self):
         self.last_send_time = time.time()
