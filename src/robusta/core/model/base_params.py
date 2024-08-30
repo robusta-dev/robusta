@@ -133,7 +133,7 @@ class HolmesInvestigationResult(BaseModel):
     """
 
     result: str
-    tools: List[HolmesToolsResult]
+    tools: Optional[List[HolmesToolsResult]] = []
 
 
 class HolmesConversationHistory(BaseModel):
@@ -157,10 +157,10 @@ class HolmesConversationIssueContext(BaseModel):
     """
 
     investigation_result: HolmesInvestigationResult
-    conversation_history: list[HolmesConversationHistory]
+    conversation_history: Optional[list[HolmesConversationHistory]] = []
     issue_type: str
-    robusta_issue_id: str
-    source: str
+    robusta_issue_id: Optional[str] = None
+    source: Optional[str] = None
 
 
 class ConversationType(str, Enum):
@@ -180,7 +180,7 @@ class HolmesConversationParams(HolmesParams):
     """
 
     ask: str
-    resource: Optional[ResourceInfo]
+    resource: Optional[ResourceInfo] = ResourceInfo()
     # for now context supports only params for issue
     context: HolmesConversationIssueContext
     conversation_type: ConversationType
