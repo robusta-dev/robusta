@@ -23,6 +23,7 @@ from robusta.core.model.base_params import (
     GrafanaParams,
     LogEnricherParams,
     NamedRegexPattern,
+    NamespacedResourcesParams,
     OOMGraphEnricherParams,
     OomKillParams,
     PodResourceGraphEnricherParams,
