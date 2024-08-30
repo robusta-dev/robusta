@@ -164,13 +164,14 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
         result.raise_for_status()
         holmes_result = HolmesConversationResult(**json.loads(result.text))
 
+        params_resource_kind = params.resource.kind or ""
         finding = Finding(
             title=f"AI Analysis of {conversation_title}",
             aggregation_key="HolmesConversationResult",
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(params.resource.kind)
+                subject_type=FindingSubjectType.from_kind(params_resource_kind)
                 if params.resource
                 else FindingSubjectType.TYPE_NONE,
                 node=params.resource.node if params.resource else "",

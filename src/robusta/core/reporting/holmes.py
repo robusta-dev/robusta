@@ -18,7 +18,7 @@ class HolmesRequest(BaseModel):
 
 class HolmesConversationRequest(BaseModel):
     user_prompt: str
-    source: Optional[str]  # "prometheus" etc
+    source: Optional[str] = None  # "prometheus" etc
     conversation_type: ConversationType
     resource: Optional[ResourceInfo] = ResourceInfo()
     context: HolmesConversationIssueContext
