@@ -3,7 +3,12 @@ import logging
 
 import requests
 
-from robusta.core.model.base_params import AIInvestigateParams, HolmesWorkloadHealthParams, ResourceInfo
+from robusta.core.model.base_params import (
+    AIInvestigateParams,
+    HolmesConversationParams,
+    HolmesWorkloadHealthParams,
+    ResourceInfo,
+)
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import action
 from robusta.core.reporting import Finding, FindingSubject
