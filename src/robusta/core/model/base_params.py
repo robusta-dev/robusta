@@ -111,6 +111,83 @@ class AIInvestigateParams(HolmesParams):
     context: Optional[Dict[str, Any]]
 
 
+class HolmesToolsResult(BaseModel):
+    """
+    :var name: Name of the tool.
+    :var description: Description of the tool.
+    :var output: Output of the tool.
+    """
+
+    name: str
+    description: str
+    output: str
+
+
+class HolmesInvestigationResult(BaseModel):
+    """
+    :var result: A dictionary containing the summary of the issue investigation.
+    :var tools: A list of dictionaries where each dictionary contains information
+                about the tool, its name, description and output.
+
+    It is based on the holmes investigation saved to Evidence table.
+    """
+
+    result: str
+    tools: Optional[List[HolmesToolsResult]] = []
+
+
+class HolmesConversationHistory(BaseModel):
+    """
+    :var ask: A prompt sent by user.
+    :var answer: HolmesInvestigationResult object that contains result of holmes_conversation action investigation
+                 for the prompt.
+    """
+
+    ask: str
+    answer: HolmesInvestigationResult
+
+
+class HolmesConversationIssueContext(BaseModel):
+    """
+    :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
+    :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
+    :var issue_type: aggregation key of the issue
+    :var robusta_issue_id: id of the issue
+    :var source: source of the issue
+    """
+
+    investigation_result: HolmesInvestigationResult
+    conversation_history: Optional[list[HolmesConversationHistory]] = []
+    issue_type: str
+    robusta_issue_id: Optional[str] = None
+    source: Optional[str] = None
+
+
+class ConversationType(str, Enum):
+    """
+    Conversation types for holmes_conversation action
+    """
+
+    ISSUE = "issue"
+
+
+class HolmesConversationParams(HolmesParams):
+    """
+    :var resource: The resource related to this investigation. A resource has a `name` and `kind`, and may have `namespace` and `node`
+    :var ask: Override question to ask holmes
+    :var context: Additional information that can assist with the investigation
+    :var conversation_type: Type of a conversation issue/service/generic_ask (ConversationType)
+    """
+
+    ask: str
+    resource: Optional[ResourceInfo] = ResourceInfo()
+    # for now context supports only params for issue
+    context: HolmesConversationIssueContext
+    conversation_type: ConversationType
+    include_tool_calls: bool = True
+    include_tool_call_results: bool = True
+
+
 class HolmesWorkloadHealthParams(HolmesParams):
     """
     :var ask: Override question to ask holmes

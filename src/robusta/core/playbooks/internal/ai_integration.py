@@ -3,15 +3,22 @@ import logging
 
 import requests
 
-from robusta.core.model.base_params import AIInvestigateParams, HolmesWorkloadHealthParams
+from robusta.core.model.base_params import AIInvestigateParams, HolmesConversationParams, HolmesWorkloadHealthParams
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import action
 from robusta.core.reporting import Finding, FindingSubject
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
-from robusta.core.reporting.holmes import HolmesRequest, HolmesResult, HolmesResultsBlock
+from robusta.core.reporting.holmes import (
+    HolmesConversationRequest,
+    HolmesConversationResult,
+    HolmesRequest,
+    HolmesResult,
+    HolmesResultsBlock,
+)
 from robusta.integrations.prometheus.utils import HolmesDiscovery
 from robusta.utils.error_codes import ActionException, ErrorCodes
+
 
 def build_investigation_title(params: AIInvestigateParams) -> str:
     if params.investigation_type == "analyze_problems":
@@ -101,7 +108,9 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(params.resource.kind) if params.resource else FindingSubjectType.TYPE_NONE,
+                subject_type=FindingSubjectType.from_kind(params.resource.kind)
+                if params.resource
+                else FindingSubjectType.TYPE_NONE,
                 node=params.resource.node if params.resource else "",
                 container=params.resource.container if params.resource else "",
             ),
@@ -115,6 +124,70 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
         event.add_finding(finding)
     except Exception as e:
         logging.exception(f"Failed to get holmes analysis for {params.resource}, {params.ask}")
+        if isinstance(e, requests.ConnectionError):
+            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
+        elif isinstance(e, requests.HTTPError):
+            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
+                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
+
+            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
+        else:
+            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+
+
+def build_conversation_title(params: HolmesConversationParams):
+    if params.conversation_type == "issue":
+        return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id}"
+
+    return ""
+
+
+@action
+def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationParams):
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+
+    conversation_title = build_conversation_title(params)
+
+    try:
+        holmes_req = HolmesConversationRequest(
+            user_prompt=params.ask,
+            source=params.context.source if params.context else "unknown source",
+            resource=params.resource,
+            conversation_type=params.conversation_type,
+            context=params.context,
+            include_tool_calls=True,
+            include_tool_call_results=True,
+        )
+        result = requests.post(f"{holmes_url}/api/conversation", data=holmes_req.json())
+        result.raise_for_status()
+        holmes_result = HolmesConversationResult(**json.loads(result.text))
+
+        params_resource_kind = params.resource.kind or ""
+        finding = Finding(
+            title=f"AI Analysis of {conversation_title}",
+            aggregation_key="HolmesConversationResult",
+            subject=FindingSubject(
+                name=params.resource.name if params.resource else "",
+                namespace=params.resource.namespace if params.resource else "",
+                subject_type=FindingSubjectType.from_kind(params_resource_kind)
+                if params.resource
+                else FindingSubjectType.TYPE_NONE,
+                node=params.resource.node if params.resource else "",
+                container=params.resource.container if params.resource else "",
+            ),
+            finding_type=FindingType.AI_ANALYSIS,
+            failure=False,
+        )
+        finding.add_enrichment(
+            [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
+        )
+
+        event.add_finding(finding)
+
+    except Exception as e:
+        logging.exception(f"Failed to get holmes chat for {conversation_title}")
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):

@@ -179,8 +179,10 @@ class AlertManagerDiscovery(ServiceDiscovery):
 
 
 class HolmesDiscovery(ServiceDiscovery):
+    MODEL_NAME_URL = "/api/model"
+
     @classmethod
-    def find_holmes_url(cls, holmes_url: str) -> Optional[str]:
+    def find_holmes_url(cls, holmes_url: Optional[str] = None) -> Optional[str]:
         if holmes_url:
             return holmes_url
 
