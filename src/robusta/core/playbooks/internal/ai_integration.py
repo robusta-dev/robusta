@@ -114,7 +114,7 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
             analysis = json.loads(holmes_result.analysis)
             healthy = analysis.get("workload_healthy")
         except Exception:
-            healthy = False
+            logging.exception("Error in holmes response format, analysis did not return valid json format.")
             pass
 
         if params.silent_healthy and healthy:
