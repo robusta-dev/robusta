@@ -109,9 +109,20 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
 
         holmes_result = HolmesResult(**json.loads(result.text))
 
+        healthy = True
+        try:
+            analysis = json.loads(holmes_result.analysis)
+            healthy = analysis.get("workload_healthy")
+        except Exception:
+            healthy = False
+            pass
+
+        if params.silent_healthy and healthy:
+            return
+
         finding = Finding(
-            title=f"AI Analysis of {params.resource}",
-            aggregation_key="HolmesInvestigationResult",
+            title=f"AI Health check of {params.resource}",
+            aggregation_key="HolmesHealthCheck",
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",

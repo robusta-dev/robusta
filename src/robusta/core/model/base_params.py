@@ -196,7 +196,7 @@ class HolmesWorkloadHealthParams(HolmesParams):
     :var alert_history_since_hours: Timespan of historic data to use in hours. 24 by default.
     :var stored_instrucitons: Use remote instructions specified for the workload.
     :var instructions: List of extra instructions to supply.
-
+    :var silent_healthy: Does not create findings in the case of healthy workload.
 
     :example ask: What are all the issues in my cluster right now?
     """
@@ -209,6 +209,7 @@ class HolmesWorkloadHealthParams(HolmesParams):
     instructions: List[str] = []
     include_tool_calls: bool = True
     include_tool_call_results: bool = True
+    silent_healthy: bool = False
 
 
 class NamespacedResourcesParams(ActionParams):
