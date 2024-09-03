@@ -74,7 +74,7 @@ If you are having performance issues, specifically with Prometheus using a lot o
 .. code-block:: yaml
 
     globalConfig:
-      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
+      krr_args: "--allow-hpa --cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
       max_workers: 2
 
 **Common KRR Settings**
@@ -87,6 +87,10 @@ If you are having performance issues, specifically with Prometheus using a lot o
      - Type
      - Used for
      - Default value
+   * - ``--allow-hpa``
+     - 
+     - Get recommendations for applications with `HPA <https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/>`_. (Disabled by default)
+     - 
    * - ``--cpu-min``
      - INTEGER
      - Sets the minimum recommended CPU value in millicores.
