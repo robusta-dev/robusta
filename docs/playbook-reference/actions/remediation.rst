@@ -16,6 +16,8 @@ Robusta includes actions that modify Kubernetes resources in your cluster. See a
 
 .. robusta-action:: playbooks.robusta_playbooks.workload_actions.rollout_restart on_prometheus_alert
 
+.. robusta-action:: playbooks.robusta_playbooks.workload_actions.restart_named_rollout on_prometheus_alert
+
 Node
 *****************
 
