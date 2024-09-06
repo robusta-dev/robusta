@@ -4,7 +4,7 @@ Deploying to Specific Nodes
 You can run Robusta on specific nodes in your cluster. For example, on a hybrid Windows and Linux cluster, you'll want
 to ensure Robusta runs on Linux nodes.
 
-You can configure this using either ``nodeSelectors`` or ``affinities``.
+You can configure this using either ``nodeSelectors``, ``affinities`` or ``taints`` and ``tolerations``
 
 Running Robusta on Linux Nodes
 -------------------------------------
@@ -101,6 +101,71 @@ Alternatively, you can configure this with nodeAffinities:
           affinity:
             nodeAffinity: ... # copy from above
 
+
+Running Robusta on Nodes with Taints
+-------------------------------------------------
+
+To run all the Robusta components on nodes with taints you must add tolerations to each one of them. This includes the Kube Prometheus Stack components if you have ``enablePrometheusStack: true`` in your Helm values file.
+
+
+Add the following to your Helm values:
+
+.. code-block:: yaml
+
+
+    globalConfig:
+      popeye_job_spec:
+        tolerations: ... # Your Toleration
+        - key: "appname"
+          operator: "Equal"
+          value: "robusta"
+          effect: "NoSchedule"
+      krr_job_spec:
+        tolerations:
+        - key: "appname"
+          operator: "Equal"
+          value: "robusta"
+          effect: "NoSchedule"
+          
+    holmes:
+      tolerations:  ... # copy from above
+
+    runner:
+      tolerations:  ... # copy from above
+
+    kubewatch:
+      tolerations:  ... # copy from above
+
+
+    kube-prometheus-stack:
+
+      prometheus:
+        prometheusSpec:
+          tolerations:  ... # copy from above
+
+      alertmanager:
+        alertmanagerSpec:
+          tolerations:  ... # copy from above
+
+      prometheusOperator:
+        tolerations:  ... # copy from above
+
+        admissionWebhooks:
+          deployment:
+            tolerations:  ... # copy from above
+
+          patch:
+            tolerations:  ... # copy from above
+
+      kube-state-metrics:
+        tolerations:  ... # copy from above
+
+      grafana:
+        tolerations:  ... # copy from above
+
+      thanosRuler:
+        thanosRulerSpec:
+          tolerations:  ... # copy from above
 
 General Tips
 ---------------
