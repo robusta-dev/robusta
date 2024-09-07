@@ -102,8 +102,8 @@ def get_prometheus_series(prometheus_params: PrometheusGetSeriesParams) -> dict:
 class PrometheusGetLabelNames(PrometheusParams):
     """
     :var match: List of Prometheus series selectors. If this parameter is None or an empty list, the labels won't be filtered by specific series selectors.
-    :var start_time: Optional start time for the query as datetime.If this parameter is None, Prometheus won't filter labels by start time.
-    :var end_time: Optional end time for the query as datetime. If this parameter is None, Prometheus won't filter labels by end time.
+    :var start: Optional start time for the query as datetime.If this parameter is None, Prometheus won't filter labels by start time.
+    :var end: Optional end time for the query as datetime. If this parameter is None, Prometheus won't filter labels by end time.
     :var limit: Optional maximum number of returned series. If this parameter is None, the returned list length won't be limited by number.
     """
 
