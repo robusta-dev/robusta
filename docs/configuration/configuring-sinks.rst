@@ -69,7 +69,7 @@ For example, **Slack**  can be integrated to receive high-severity messages in a
             - namespace: [prod]
               severity: HIGH
 
-Each attribute expression used in the ``scope`` specification can be 1 item, or a list, where each is either a regex or an exact match
+Each attribute expression used in the ``scope`` specification can be 1 item, or a list, where each is either a `regex <https://docs.python.org/3/library/re.html#re.match>`_ or an exact match.
 
 ``Scope`` allows specifying a set of ``include`` and ``exclude`` sections:
 
