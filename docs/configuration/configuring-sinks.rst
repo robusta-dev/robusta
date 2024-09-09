@@ -19,7 +19,6 @@ Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
         webhook_url: <placeholder>    # a sink-specific parameter
         stop: false                   # optional (see `Routing Alerts to only one Sink`)
         scope: {}                     # optional routing rules
-        match: {}                     # optional routing rules (deprecated; see below)
         default: true                 # optional (see below)
 
 To add a sink, update ``sinksConfig`` according to the instructions in :ref:`Sinks Reference`. Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
@@ -52,7 +51,7 @@ The sinks evaluation order, is the order defined in ``generated_values.yaml``.
 .. _sink-scope-matching:
 
 Routing Alerts To Specific Sinks
-***************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Define which messages a sink accepts using ``scope``.
 
@@ -70,7 +69,7 @@ For example, **Slack**  can be integrated to receive high-severity messages in a
             - namespace: [prod]
               severity: HIGH
 
-Each attribute expression used in the ``scope`` specification can be 1 item, or a list, where each is either a regex or an exact match
+Each attribute expression used in the ``scope`` specification can be 1 item, or a list, where each is either a `regex <https://docs.python.org/3/library/re.html#re.match>`_ or an exact match.
 
 ``Scope`` allows specifying a set of ``include`` and ``exclude`` sections:
 
@@ -99,6 +98,10 @@ Each attribute expression used in the ``scope`` specification can be 1 item, or 
 In order for a message to be sent to a ``Sink``, it must match **one of** the ``include`` sections, and **must not** match **all** the ``exclude`` sections.
 
 When multiple attributes conditions are present, all must be satisfied.
+
+.. tip::
+
+    If you're using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/robusta-demo/simulate-alert/>`_.
 
 The following attributes can be included in an ``include``/``excluded`` block:
 
@@ -168,120 +171,6 @@ Within a specific ``labels`` or ``annotations`` expression, the logic is ``AND``
 
 The above requires that the ``instance`` will have a value of ``1`` **AND** the ``foo`` label values starts with ``x``
 
-Match Section (Deprecated)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Define which messages a sink accepts using *matchers*.
-
-For example, Slack can be integrated to receive high-severity messages in a specific
-namespace. Other messages will not be sent to Slack.
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: test_sink
-        slack_channel: test-notifications
-        api_key: secret-key
-        match:
-          namespace: [prod]
-          severity: [HIGH]
-          # more options available - see below
-
-When multiple match conditions are present, all must be satisfied.
-
-The following attributes can be included in a *match* block:
-
-- ``title``: e.g. ``Crashing pod foo in namespace default``
-- ``name`` : the Kubernetes object name
-- ``namespace``: the Kubernetes object namespace
-- ``node`` : the Kubernetes node name
-- ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
-- ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
-- ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
-- ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
-- ``identifier``: e.g. ``CrashLoopBackoff``
-- ``labels``: A comma separated list of ``key=val`` e.g. ``foo=bar,instance=123``
-- ``annotations``: A comma separated list of ``key=val`` e.g. ``app.kubernetes.io/name=prometheus``
-
-.. note::
-
-    ``labels`` and ``annotations`` are both the Kubernetes resource labels and annotations
-    (e.g. pod labels) and the Prometheus alert labels and annotations. If both contains the
-    same label/annotation, the value from the Prometheus alert is preferred.
-
-
-.. details:: How do I find the ``identifier`` value to use in a match block? (deprecated)
-
-    For Prometheus alerts, it's always the alert name.
-
-    .. TODO: update after we finish our improvements here:
-    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoff``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
-
-    For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
-
-    Ask us in Slack if you need help.
-
-By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
-
-Match Section (Deprecated): Matches Can Be Lists or Regexes
-***********************************************************
-
-*match* rules support both regular expressions and lists of exact values:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        # AND between namespace and severity
-        match:
-          namespace: ^prod$                # match the "prod" namespace exactly
-          severity: [HIGH, LOW]            # either HIGH or LOW (OR logic)
-
-Regular expressions must be in `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
-
-Match Section (Deprecated): Matching Labels and Annotations
-***********************************************************
-
-Special syntax is used for matching labels and annotations:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        match:
-          labels: "foo=bar,instance=123"   # both labels must match
-
-The syntax is similar to Kubernetes selectors, but only `=` conditions are allowed, not `!=`
-
-Match Section (Deprecated): Or Between Matches
-**********************************************
-
-You can use `Or` between *match* rules:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        # AND between namespace and labels, but or within each selector
-        match:
-          namespace:
-          - default
-          - robusta
-          labels:
-          - "instance=123"
-          - "instance=456"
-
-The above will match a resource from namespace (default *or* robusta) *and* label (instance=123 *or* instance=456)
 
 Alternative Routing Methods
 ************************************************
