@@ -167,6 +167,8 @@ def pod_restarts(pod: Union[V1Pod, Pod]) -> int:
         return sum([status.restartCount for status in pod.status.containerStatuses])
     elif isinstance(pod, V1Pod):
         status: V1PodStatus = pod.status
+        if not status.container_statuses:
+            return 0
         return sum([status.restart_count for status in status.container_statuses])
     else:
         raise Exception(f"Unsupported pod type {type(pod)}")
