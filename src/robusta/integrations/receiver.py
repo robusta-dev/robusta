@@ -9,6 +9,8 @@ from threading import Thread
 from typing import Dict, Optional, List, Union
 from uuid import UUID
 
+import yappi
+from contextlib import nullcontext
 from concurrent.futures import ThreadPoolExecutor
 
 import websocket
@@ -141,6 +143,17 @@ class ActionRequestReceiver:
                 )
             return
 
+        if action_request.body.action_params.get("profile", False):
+            # TODO: warning - we have reentrancy problems here
+            logging.error(f"Starting to profile for {action_request.body.action_name}: {action_request.body.action_name}")
+            profile = True
+            profile_type = action_request.body.action_params.get("profile_type", "cpu")
+            yappi.set_clock_type(profile_type) # Use set_clock_type("wall") for wall time
+            yappi.start()
+        else:
+            profile = False
+            
+        logging.info(f"Before running external action `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         response = self.event_handler.run_external_action(
             action_request.body.action_name,
             action_request.body.action_params,
@@ -148,10 +161,44 @@ class ActionRequestReceiver:
             sync_response,
             action_request.no_sinks,
         )
+        logging.info(f"After running external action `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+        
+        
+        if profile:
+            def print_all(stats, out, limit=None):
+                if stats.empty():
+                    return
+                sizes = [90, 5, 8, 8, 8]
+                columns = dict(zip(range(len(yappi.COLUMNS_FUNCSTATS)), zip(yappi.COLUMNS_FUNCSTATS, sizes)))
+                show_stats = stats
+                if limit:
+                    show_stats = stats[:limit]
+                print(columns)
+                # write out the headers for the func_stats
+                # write out stats with exclusions applied.
+                for stat in show_stats:
+                    stat._print(out, columns)
+
+            logging.error(f"About to stop profiling")
+            yappi.stop()
+            import threading
+            current_thread = threading.current_thread()
+            logging.error(f"Stopping to profile for {action_request.body.action_name}: {action_request.body.action_name} in thread {current_thread} (thread native id {current_thread.native_id} and name {current_thread.name})")
+            threads = yappi.get_thread_stats()
+            for thread in threads:
+                print(
+                    f"Function stats for name={thread.name} id={thread.id} and thread={thread}"
+                )  # it is the Thread.__class__.__name__
+                stats = yappi.get_func_stats(ctx_id=thread.id).sort(sort_type='totaltime', sort_order='desc')
+                import sys
+                print_all(stats, sys.stdout, limit=20)
+            yappi.clear_stats()
 
         if sync_response:
             http_code = 200 if response.get("success") else 500
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
+            logging.info(f"Done sending response for `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+
 
     def _process_action(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
         self._executor.submit(self._process_action_sync, action, validate_timestamp)
