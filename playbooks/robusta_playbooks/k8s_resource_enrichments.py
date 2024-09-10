@@ -149,6 +149,7 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
             _continue=_continue,
         )
     else:
+        start_time = time.time()
         selector = build_selector_query(resource.spec.selector)
         logging.error(f"listing pods for selector: {selector}")
         result = client.CoreV1Api().list_namespaced_pod(
@@ -157,6 +158,8 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
             limit=limit,
             _continue=_continue,
         )
+        end_time = time.time()
+        logging.error(f"done listing pods for selector: {selector}; elapsed = {end_time - start_time:.2f}; pods_count={len(result.items)}")
         return result
     
 
