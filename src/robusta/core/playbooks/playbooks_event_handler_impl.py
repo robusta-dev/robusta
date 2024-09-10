@@ -149,6 +149,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         sync_response: bool = False,
         no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
+        logging.info(f"Running external action {action_name} with params {action_params}")
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
