@@ -3,10 +3,22 @@ import logging
 from typing import Any, List, Optional
 
 import hikaru
+import time
 import kubernetes.client.exceptions
 from hikaru.model.rel_1_26 import ContainerState, ContainerStateTerminated, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
 from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
+from kubernetes import client
+from kubernetes.client import (
+    V1Pod,
+    V1PodSpec,
+    V1PodStatus,
+    V1ObjectMeta,
+    V1Container,
+    V1ContainerStatus,
+    V1ContainerState,
+    V1ContainerStateTerminated
+)
 
 from robusta.api import (
     ActionException,
@@ -21,9 +33,11 @@ from robusta.api import (
     PodContainer,
     ResourceNameLister,
     TableBlock,
+    ContainerResources,
     action,
     build_selector_query,
     get_job_all_pods,
+    get_job_selector,
     pod_limits,
     pod_requests,
     pod_restarts,
@@ -36,6 +50,9 @@ class RelatedPodParams(ActionParams):
     """
 
     output_format: str = "table"
+    include_raw_data: bool = False
+    limit: Optional[int] = None
+    _continue: Optional[str] = None
 
 
 class RelatedContainer(BaseModel):
@@ -71,82 +88,122 @@ class RelatedPod(BaseModel):
     containers: List[RelatedContainer]
     status: Optional[str] = None
     statusReason: Optional[str] = None
+    raw_data: Optional[dict] = None
 
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node", "DeploymentConfig", "Rollout"]
 
 
-def to_pod_row(pod: Pod, cluster_name: str) -> List:
+def to_pod_row(pod: V1Pod, cluster_name: str) -> List:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
-    addresses = ",".join([address.ip for address in pod.status.podIPs])
+    meta: V1ObjectMeta = pod.metadata
+    spec: V1PodSpec = pod.spec
+    status: V1PodStatus = pod.status
+    logging.info(f"all pod status fields: {status.to_dict()}")
+    addresses = ",".join([address.ip for address in (status.pod_i_ps or [])])
     return [
-        pod.metadata.name,
-        pod.metadata.namespace,
+        meta.name,
+        meta.namespace,
         cluster_name,
-        pod.spec.nodeName,
+        spec.node_name,
         resource_limits.cpu,
         resource_requests.cpu,
         resource_limits.memory,
         resource_requests.memory,
-        pod.metadata.creationTimestamp,
+        meta.creation_timestamp,
         pod_restarts(pod),
         addresses,
-        len(pod.spec.containers),
-        pod.status.phase,
-        pod.status.reason,
+        len(spec.containers),
+        status.phase,
+        status.reason,
     ]
 
 
-def get_related_pods(resource) -> List[Pod]:
+def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _continue: Optional[str]=None) -> List[V1Pod]:
     kind: str = resource.kind or ""
     if kind not in supported_resources:
         raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}")
 
     if kind == "Job":
-        job_pods = get_job_all_pods(resource)
-        pods = job_pods if job_pods else []
+        job_selector = get_job_selector(resource)
+        if not job_selector:
+            return []
+        return client.CoreV1Api().list_namespaced_pod(
+            namespace=resource.metadata.namespace,
+            label_selector=job_selector,
+            limit=limit,
+            _continue=_continue,
+        )
+    
     elif kind == "Pod":
-        pods = [resource]
+        return {"items" : [client.CoreV1Api().read_namespaced_pod(
+            namespace=resource.metadata.namespace,
+            name=resource.metadata.name,
+        )]}
+    
     elif kind == "Node":
-        pods = PodList.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
+        return client.CoreV1Api().list_pod_for_all_namespaces(
+            field_selector=f"spec.nodeName={resource.metadata.name}",
+            limit=limit,
+            _continue=_continue,
+        )
     else:
         selector = build_selector_query(resource.spec.selector)
-        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
+        logging.error(f"listing pods for selector: {selector}")
+        result = client.CoreV1Api().list_namespaced_pod(
+            namespace=resource.metadata.namespace,
+            label_selector=selector,
+            limit=limit,
+            _continue=_continue,
+        )
+        return result
+    
 
-    return pods
+def get_related_pods(resource, limit=None) -> List[V1Pod]:
+    return get_related_pods_with_extra_info(resource, limit=limit).items
 
 
-def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
+def to_pod_obj(pod: V1Pod, cluster: str, include_raw_data: bool = False) -> RelatedPod:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
-    addresses = ",".join([address.ip for address in pod.status.podIPs])
+    meta: V1ObjectMeta = pod.metadata
+    spec: V1PodSpec = pod.spec
+    status: V1PodStatus = pod.status
+    addresses = ",".join([address.ip for address in (status.pod_i_ps or [])])
+    if include_raw_data:
+        raw_data = pod.to_dict()
+    else:
+        raw_data = None
     return RelatedPod(
-        name=pod.metadata.name,
-        namespace=pod.metadata.namespace,
-        node=pod.spec.nodeName,
+        name=meta.name,
+        namespace=meta.namespace,
+        node=spec.node_name,
         clusterName=cluster,
         cpuLimit=resource_limits.cpu,
         cpuRequest=resource_requests.cpu,
         memoryLimit=resource_limits.memory,
         memoryRequest=resource_requests.memory,
-        creationTime=pod.metadata.creationTimestamp,
+        creationTime=str(meta.creation_timestamp),
         restarts=pod_restarts(pod),
         addresses=addresses,
         containers=get_pod_containers(pod),
-        status=pod.status.phase,
-        statusReason=pod.status.reason,
+        status=status.phase,
+        statusReason=status.reason,
+        raw_data=raw_data,
     )
 
 
-def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
+def get_pod_containers(pod: V1Pod) -> List[RelatedContainer]:
     containers: List[RelatedContainer] = []
-    for container in pod.spec.containers:
+    spec: V1PodSpec = pod.spec
+    for container in spec.containers:
+        container: V1Container = container
         requests = PodContainer.get_requests(container)
         limits = PodContainer.get_limits(container)
-        containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)
-        currentState: Optional[ContainerState] = getattr(containerStatus, "state", None)
-        lastState: Optional[ContainerStateTerminated] = getattr(containerStatus, "lastState", None)
+        containerStatus: Optional[V1ContainerStatus] = PodContainer.get_status(pod, container.name)
+        currentState: Optional[V1ContainerState] = getattr(containerStatus, "state", None)
+        lastState: Optional[V1ContainerStateTerminated] = getattr(containerStatus, "last_state", None)
         terminated_state = getattr(lastState, "terminated", None)
         stateStr: str = "waiting"
         state = None
@@ -188,12 +245,20 @@ def related_pods(event: KubernetesResourceEvent, params: RelatedPodParams):
 
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
-    pods = get_related_pods(event.get_resource())
     cluster = event.get_context().cluster_name
 
     if params.output_format == "json":
-        event.add_enrichment([JsonBlock(json.dumps([to_pod_obj(pod, cluster).dict() for pod in pods]))])
+        pods = get_related_pods(event.get_resource(), limit=params.limit)
+        event.add_enrichment([JsonBlock(json.dumps([to_pod_obj(pod, cluster, include_raw_data=params.include_raw_data).dict() for pod in pods], default=str))])
+    elif params.output_format == "json2":
+        data = get_related_pods_with_extra_info(event.get_resource(), limit=params.limit, _continue=params._continue)
+        result = {
+            "pods": [to_pod_obj(pod, cluster, include_raw_data=params.include_raw_data).dict() for pod in data["pods"]],
+            "continue": getattr(getattr(data, "_metadata", None), "_continue", None),
+        }
+        event.add_enrichment([JsonBlock(json.dumps(result, default=str))])
     else:
+        pods = get_related_pods(event.get_resource(), limit=params.limit)
         rows = [to_pod_row(pod, cluster) for pod in pods]
         event.add_enrichment(
             [
