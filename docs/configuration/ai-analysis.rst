@@ -124,3 +124,58 @@ To use AWS Bedrock:
           secretKeyRef:
             name: holmes-secrets
             key: awsSecretAccessKey
+
+
+Configure and Test Holmes Integration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this guide you will configure HolmesGPT with OpenAI and test the AI analysis of an alert. You can modify steps 1 and 2 to follow along with other supported AI integrations.
+
+Before we proceed, you should have the Robusta ``generated_values.yaml`` (Helm values) file and an OpenAI API key.
+
+1. Create a secret with the OpenAI API key.
+
+.. code-block:: yaml
+
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: holmes-secrets
+    namespace: default  # Change to the appropriate namespace if needed
+  type: Opaque
+  data:
+    openAiKey: <YOUR_OPEN_AI_KEY>
+
+
+2. Next in your generated_values.yaml file add the following configuration and run a ``helm install`` or ``helm upgrade`` if you already installed Robusta. 
+
+.. code-block:: yaml
+
+    enableHolmesGPT: true
+    holmes:
+      additionalEnvVars:
+      - name: MODEL
+        value: gpt-4o
+      - name: OPENAI_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: holmes-secrets
+            key: openAiKey
+
+3. Let's deploy a crashing pod to simulate an issue.
+
+.. code-block:: yaml
+
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/crashpod/broken.yaml
+
+4. Go to the **Timeline** in `platform.robusta.dev  <https://platform.robusta.dev/>`_ and click on the ``CrashLoopBackOff`` alert
+
+.. image:: /images/AI_Analysis_demo.png
+    :width: 1000px
+
+5. Click the "Root Cause" tab on the top. This gives you the result of an investigation done by HolmesGPT based on the alert.
+
+.. image:: /images/AI_Analysis_demo2.png
+    :width: 1000px
+
+Additionally your alerts on Slack will have an "Ask Holmes" button. Clicking it will give you the same results in the Slack channel itself.
