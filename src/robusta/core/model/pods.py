@@ -112,6 +112,8 @@ class PodContainer:
 
     @staticmethod
     def get_status(pod: V1Pod, container_name: str) -> Optional[V1ContainerStatus]:
+        if not pod.status or not pod.status.container_statuses:
+            return None
         for status in pod.status.container_statuses:
             if container_name == status.name:
                 return status
