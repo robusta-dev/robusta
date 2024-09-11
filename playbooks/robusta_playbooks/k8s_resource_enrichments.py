@@ -151,7 +151,6 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
     else:
         start_time = time.time()
         selector = build_selector_query(resource.spec.selector)
-        logging.error(f"listing pods for selector: {selector}")
         result = client.CoreV1Api().list_namespaced_pod(
             namespace=resource.metadata.namespace,
             label_selector=selector,
