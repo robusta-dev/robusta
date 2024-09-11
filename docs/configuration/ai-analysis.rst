@@ -178,4 +178,4 @@ Before we proceed, you should have the Robusta ``generated_values.yaml`` (Helm v
 .. image:: /images/AI_Analysis_demo2.png
     :width: 1000px
 
-Clicking it will give you results in the Slack channel itself. Note that due to technical limitations with Slack-buttons, alerts analyzed from Slack will be sent to the AI without alert-labels. For the most accurate results, it is best to use the UI.
+Additionally your alerts on Slack will have an "Ask Holmes" button. Clicking it will give you results in the Slack channel itself. Note that due to technical limitations with Slack-buttons, alerts analyzed from Slack will be sent to the AI without alert-labels. For the most accurate results, it is best to use the UI.
