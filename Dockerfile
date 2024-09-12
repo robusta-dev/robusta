@@ -4,7 +4,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
-    && apt-get install -y --no-install-recommends curl gcc \
+    && apt-get install -y --no-install-recommends curl gcc patch \
     && pip3 install --no-cache-dir --upgrade pip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -42,6 +42,13 @@ RUN pip install --no-cache-dir /etc/robusta/playbooks/defaults
 # Fixes k8s library bug - see https://github.com/kubernetes-client/python/issues/1867#issuecomment-1353813412
 RUN find /app/venv/lib/python*/site-packages/kubernetes/client/rest.py -type f -exec sed -i 's:^\(.*logger.*\)$:#\1:' {} \;
 
+# See https://github.com/kubernetes-client/python/issues/1921 and https://github.com/tomplus/kubernetes_asyncio/issues/247
+# Fix based on files at end of https://github.com/tomplus/kubernetes_asyncio/pull/300/files
+RUN echo ">>> don't deep-copy configuration for local_vars_configuration in models"
+COPY scripts/client_configuration_get_default_patch.diff /app/client_configuration_get_default_patch.diff
+RUN patch "/app/venv/lib/python3.11/site-packages/kubernetes/client/configuration.py" "/app/client_configuration_get_default_patch.diff"
+RUN find "/app/venv/lib/python3.11/site-packages/kubernetes/client/models/" -type f -print0 | xargs -0 sed -i 's/local_vars_configuration = Configuration.get_default_copy()/local_vars_configuration = Configuration.get_default()/g'
+RUN find "/app/venv/lib/python3.11/site-packages/kubernetes/client/models/" -type f -print0 | xargs -0 sed -i 's/local_vars_configuration = Configuration()/local_vars_configuration = Configuration.get_default()/g'
 # Final stage
 FROM python:3.11-slim
 
