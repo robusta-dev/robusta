@@ -59,8 +59,6 @@ class SeverityParams(ActionParams):
 class DefaultEnricherParams(ActionParams):
     """
     :var alert_annotations_enrichment: will add the alert annotations to the default alerts if true
-
-    :example severity: warning
     """
 
     alert_annotations_enrichment: bool = False
