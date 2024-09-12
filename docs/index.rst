@@ -71,9 +71,6 @@ Better Prometheus Alerts (and more) for Kubernetes
 
     .. grid-item::
 
-        What Does Robusta Add to Prometheus?
-        -------------------------------------
-
         Robusta extends Prometheus/VictoriaMetrics/Coralogix (and more) with features like:
 
         * :doc:`Smart Grouping <configuration/notification-grouping>` - reduce notification spam with Slack threads 🧵
