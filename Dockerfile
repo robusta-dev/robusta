@@ -39,6 +39,9 @@ RUN poetry install --without dev --extras "all"
 COPY playbooks/ /etc/robusta/playbooks/defaults
 RUN pip install --no-cache-dir /etc/robusta/playbooks/defaults
 
+# Fixes k8s library bug - see https://github.com/kubernetes-client/python/issues/1867#issuecomment-1353813412
+RUN find /app/venv/lib/python*/site-packages/kubernetes/client/rest.py -type f -exec sed -i 's:^\(.*logger.*\)$:#\1:' {} \;
+
 # Final stage
 FROM python:3.11-slim
 
