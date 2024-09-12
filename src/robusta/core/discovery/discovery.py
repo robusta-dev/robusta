@@ -523,9 +523,12 @@ class Discovery:
             )
             raise e
         Discovery.stacktrace_thread_active = False
-        return DiscoveryResults(
+
+        # very likely it is nodes that are the problem and we can fix by converting here away from k8s format
+        result = DiscoveryResults(
             services=active_services,
-            nodes=current_nodes,
+            # TODO: FIXME
+            nodes=None,
             node_requests=node_requests,
             jobs=active_jobs,
             namespaces=namespaces,
