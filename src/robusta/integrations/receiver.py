@@ -189,9 +189,11 @@ class ActionRequestReceiver:
                 print(
                     f"Function stats for name={thread.name} id={thread.id} and thread={thread}"
                 )  # it is the Thread.__class__.__name__
-                stats = yappi.get_func_stats(ctx_id=thread.id).sort(sort_type='totaltime', sort_order='desc')
                 import sys
-                print_all(stats, sys.stdout, limit=20)
+                sort_by = action_request.body.action_params.get("profile_sort_by", "totaltime")
+                limit = int(action_request.body.action_params.get("profile_limit", 20))
+                stats = yappi.get_func_stats(ctx_id=thread.id).sort(sort_type=sort_by, sort_order='desc')
+                print_all(stats, sys.stdout, limit=limit)
             yappi.clear_stats()
 
         if sync_response:
