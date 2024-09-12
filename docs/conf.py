@@ -97,7 +97,8 @@ redirects = {
     "configuration/additional-settings.html": "/master/setup-robusta/additional-settings.html",
     "developer-guide/writing-playbooks.html": "/master/playbook-reference/defining-playbooks/index.html",
     "user-guide/slack.html": "/master/configuration/sinks/slack.html",
-    "user-guide/elasticsearch.html": "/master/playbook-reference/triggers/elasticsearch.html"
+    "user-guide/elasticsearch.html": "/master/playbook-reference/triggers/elasticsearch.html",
+    "catalog/actions/python-troubleshooting.html": "/master/playbook-reference/actions/python-troubleshooting.html"
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
