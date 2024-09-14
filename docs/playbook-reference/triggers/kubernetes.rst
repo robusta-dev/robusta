@@ -336,6 +336,17 @@ For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
   :header_update_levels:
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
+Secret triggers
+*********************
+Secret triggers fire when secret resource changes. They are equivalent to a *union* of all other
+low-level triggers.
+
+
+.. jinja::
+  :header_update_levels:
+  :file: playbook-reference/triggers/_k8s-secret-triggers.jinja
+
+
 Wildcard triggers
 *********************
 
