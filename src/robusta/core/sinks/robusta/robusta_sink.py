@@ -312,7 +312,7 @@ class RobustaSink(SinkBase, EventHandler):
             self.__publish_new_services(results.services)
             if results.nodes:
                 self.__assert_node_cache_initialized()
-                self.__publish_new_nodes(results.nodes, results.node_requests)
+                self.__publish_new_nodes(results.nodes)
 
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
@@ -339,7 +339,7 @@ class RobustaSink(SinkBase, EventHandler):
                 exc_info=True,
             )
 
-    def __publish_new_nodes(self, current_nodes: List[NodeInfo], node_requests: Dict[str, List[PodResources]]):
+    def __publish_new_nodes(self, current_nodes: List[NodeInfo]):
         # convert to map
         curr_nodes = {}
         for node in current_nodes:

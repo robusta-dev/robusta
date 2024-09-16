@@ -1,6 +1,5 @@
 import inspect
 import logging
-import traceback
 from dataclasses import InitVar, is_dataclass
 from inspect import getmodule, signature
 from typing import Dict, List, Optional, Union, get_type_hints
@@ -69,21 +68,28 @@ def patch_kubernetes_models():
     See https://github.com/kubernetes-client/python/issues/1921 and https://github.com/tomplus/kubernetes_asyncio/issues/247
     Fix based on files at end of https://github.com/tomplus/kubernetes_asyncio/pull/300/files
     """
-    # add get_default to kubernetes Configuration
-    setattr(Configuration, 'get_default', classmethod(get_default))
+    try:
+        setattr(Configuration, 'get_default', classmethod(get_default))
+    except Exception as e:
+        logging.error(f"Failed to add 'get_default' method to Configuration: {e}")
+        return
 
     # Loop over all model classes in the kubernetes.client.models package
     for name, obj in inspect.getmembers(kubernetes.client.models):
-        if inspect.isclass(obj):  # Check if the object is a class
+        try:
+            if not inspect.isclass(obj):  # Only patching the classes
+                continue
+
             # Get the class source code as a string
             source_code = inspect.getsource(obj)
             if 'local_vars_configuration = Configuration.get_default_copy()' in source_code:
-                # Monkey patching: Replace Configuration() with Configuration.get_default()
                 obj.local_vars_configuration = Configuration.get_default()
-            # Check if the pattern is present
+
             if 'local_vars_configuration = Configuration()' in source_code:
-                # Monkey patching: Replace Configuration() with Configuration.get_default()
                 obj.local_vars_configuration = Configuration.get_default()
+        except Exception as e:
+            logging.error(f"Failed to patch {name}: {e}")
+    logging.info("Patching kubernetes_models completed.")
 
 
 def get_default(cls):

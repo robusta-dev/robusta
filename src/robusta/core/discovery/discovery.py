@@ -529,7 +529,6 @@ class Discovery:
         # very likely it is nodes that are the problem and we can fix by converting here away from k8s format
         return DiscoveryResults(
             services=active_services,
-            # TODO: FIXME
             nodes=nodes,
             node_requests=node_requests,
             jobs=active_jobs,
