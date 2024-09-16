@@ -4,7 +4,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
-    && apt-get install -y --no-install-recommends curl gcc patch \
+    && apt-get install -y --no-install-recommends curl gcc \
     && pip3 install --no-cache-dir --upgrade pip \
     && rm -rf /var/lib/apt/lists/*
 
