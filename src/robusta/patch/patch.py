@@ -1,9 +1,13 @@
+import inspect
 import logging
+import traceback
 from dataclasses import InitVar, is_dataclass
 from inspect import getmodule, signature
 from typing import Dict, List, Optional, Union, get_type_hints
 
+import kubernetes.client.models
 from hikaru import HikaruBase, HikaruDocumentBase
+from kubernetes.client.configuration import Configuration
 from kubernetes.client.models.events_v1_event import EventsV1Event
 from kubernetes.client.models.v1_pod_failure_policy_rule import V1PodFailurePolicyRule
 from ruamel.yaml import YAML
@@ -45,6 +49,7 @@ def create_monkey_patches():
     EventsV1Event.event_time = EventsV1Event.event_time.setter(event_time)
     patch_on_pod_conditions()
     monkey_patches_applied = True
+    patch_kubernetes_models()
 
 
 def patch_on_pod_conditions():
@@ -57,6 +62,39 @@ def patch_on_pod_conditions():
         self._on_pod_conditions = on_pod_conditions
 
     V1PodFailurePolicyRule.on_pod_conditions = V1PodFailurePolicyRule.on_pod_conditions.setter(patched_setter)
+
+
+def patch_kubernetes_models():
+    """
+    See https://github.com/kubernetes-client/python/issues/1921 and https://github.com/tomplus/kubernetes_asyncio/issues/247
+    Fix based on files at end of https://github.com/tomplus/kubernetes_asyncio/pull/300/files
+    """
+    # add get_default to kubernetes Configuration
+    setattr(Configuration, 'get_default', classmethod(get_default))
+
+    # Loop over all model classes in the kubernetes.client.models package
+    for name, obj in inspect.getmembers(kubernetes.client.models):
+        if inspect.isclass(obj):  # Check if the object is a class
+            # Get the class source code as a string
+            source_code = inspect.getsource(obj)
+            if 'local_vars_configuration = Configuration.get_default_copy()' in source_code:
+                # Monkey patching: Replace Configuration() with Configuration.get_default()
+                obj.local_vars_configuration = Configuration.get_default()
+            # Check if the pattern is present
+            if 'local_vars_configuration = Configuration()' in source_code:
+                # Monkey patching: Replace Configuration() with Configuration.get_default()
+                obj.local_vars_configuration = Configuration.get_default()
+
+
+def get_default(cls):
+    """Get default instance of configuration.
+
+    :return: The Configuration object.
+    """
+    logging.debug("get_default patch called")
+    if cls._default is None:
+        cls.set_default(Configuration())
+    return cls._default
 
 
 def event_time(self, event_time):
