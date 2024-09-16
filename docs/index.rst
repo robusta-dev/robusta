@@ -42,6 +42,16 @@
    configuration/alertmanager-integration/index
    configuration/additional-settings
 
+.. toctree::
+   :maxdepth: 4
+   :caption: 🔔 Notifications & Routing
+   :hidden:
+
+   🆕 Notification Grouping <notification-routing/notification-grouping>
+   notification-routing/routing-by-namespace
+   notification-routing/routing-by-type
+   notification-routing/routing-exclusion
+   notification-routing/routing-silencing
 
 .. toctree::
    :maxdepth: 4
