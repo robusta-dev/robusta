@@ -2,9 +2,16 @@ Kubernetes Misconfigurations (Popeye)
 ************************************************
 
 `Popeye <https://github.com/derailed/popeye>`_ is a utility that scans live Kubernetes clusters and reports potential issues with resources and configurations.
-By default, every instance of Robusta that's connected to the UI will run a Popeye scan on startup. Further Popeye scans can be triggered in the UI, and all scans can be viewed there.
 
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>` as shown below.
+By optionally integrating Popeye with Robusta you can:
+
+1. Get weekly Popeye scan reports in Slack via Robusta OSS (disabled by default, see below to configure)
+2. View Popeye scans from all your clusters in the Robusta UI (enabled by default for UI users)
+
+Sending Weekly Popeye Scan Reports to Slack
+===========================================
+With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>` as shown below. The results can be sent as a PDF to Slack or to the Robusta UI.
+
 
 .. code-block:: yaml
     :name: cb-popeye-set-periodic-scan
@@ -25,7 +32,6 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
       sinks:
       - "robusta_ui_sink"
 
-The results can be sent as a PDF to Slack or to the Robusta UI.
 
 .. grid:: 1 1 1 1
 
@@ -48,18 +54,10 @@ The results can be sent as a PDF to Slack or to the Robusta UI.
 
     Other sinks like MSTeams are not supported yet.
 
-.. robusta-action:: playbooks.robusta_playbooks.popeye.popeye_scan on_schedule
-
-    You can trigger a Popeye scan at any time, by running the following command:
-
-    .. code-block:: bash
-
-        robusta playbooks trigger popeye_scan
-
 Taints, Tolerations and NodeSelectors
 ============================================
 
-To set custom tolerations or a nodeSelector update your ``generated_values.yaml`` file as follows:
+To run Popeye on a GPU enabled cluster or on specific nodes you can set custom tolerations or a nodeSelector in your ``generated_values.yaml`` file as follows:
 
 .. code-block:: yaml
     :name: cb-popeye-set-custom-taints
@@ -116,3 +114,13 @@ Read more about it `here <https://github.com/kedacore/keda/issues/4224#issuecomm
 
 At the moment, Popeye docker images are only compiled for linux/amd64 os/arch.
 This error suggests you are running the Popeye image on a different os/arch node.
+
+Reference
+======================================
+.. robusta-action:: playbooks.robusta_playbooks.popeye.popeye_scan on_schedule
+
+    You can trigger a Popeye scan at any time, by running the following command:
+
+    .. code-block:: bash
+
+        robusta playbooks trigger popeye_scan

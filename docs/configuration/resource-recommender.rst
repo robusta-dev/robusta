@@ -2,12 +2,37 @@ Cost Savings (KRR)
 ************************************************************
 
 Robustas `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool for optimizing resource allocation in Kubernetes clusters.
-It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory.
-This reduces costs and improves performance.
-By default, every instance of Robusta that's connected to the UI will run a KRR scan on startup. Further KRR scans can be triggered in the UI, and all scans can be viewed there.
+It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory. This reduces costs and improves performance.
 
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`.
-The results can be sent as a PDF to Slack or to the Robusta UI.
+By optionally integrating KRR with Robusta you can:
+
+1. Get weekly KRR scan reports in Slack via Robusta OSS (disabled by default, see below to configure)
+2. View KRR scans from all your clusters in the Robusta UI (enabled by default for UI users)
+
+
+Sending Weekly KRR Scan Reports to Slack
+===========================================
+With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
+
+1. Install Robusta with Helm to your cluster and configure Slack sink.
+2. Create your KRR slack playbook by adding the following to ``generated_values.yaml``:
+
+.. code-block:: yaml
+
+    # Runs a weekly krr scan on the namespace devs-namespace and sends it to the configured slack channel
+    customPlaybooks:
+    - triggers:
+      - on_schedule:
+          fixed_delay_repeat:
+            repeat: -1 # number of times to run or -1 to run forever
+            seconds_delay: 604800 # 1 week
+      actions:
+      - krr_scan:
+          args: "--namespace devs-namespace" ## KRR args here
+      sinks:
+          - "main_slack_sink" # slack sink you want to send the report to here
+
+3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 
 .. grid:: 1 1 1 1
 
@@ -25,20 +50,10 @@ The results can be sent as a PDF to Slack or to the Robusta UI.
                 .. image:: /images/krr_example.png
                     :width: 1000px
 
-
-.. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
-
-    You can trigger a KRR scan at any time, by running the following command:
-
-    .. code-block:: bash
-
-        robusta playbooks trigger krr_scan
-
-
 Taints, Tolerations and NodeSelectors
 ============================================
 
-To set custom tolerations or a nodeSelector update your ``generated_values.yaml`` file as follows:
+To run KRR on an ARM cluster or on specific nodes you can set custom tolerations or a nodeSelector in your ``generated_values.yaml`` file as follows:
 
 .. code-block:: yaml
     :name: cb-krr-set-custom-taints
@@ -124,3 +139,13 @@ To prevent the KRR job from OOMKill (Out of Memory), you can configure the memor
         value: "3Gi"
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
+
+Reference
+======================================
+.. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
+
+    You can trigger a KRR scan at any time, by running the following command:
+
+    .. code-block:: bash
+
+        robusta playbooks trigger krr_scan
