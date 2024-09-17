@@ -10,6 +10,7 @@ from robusta.core.discovery.discovery import (
     should_report_pod,
 )
 from robusta.core.discovery.resource_names import ResourceNameLister
+from robusta.core.discovery.utils import k8s_pod_limits, k8s_pod_requests
 from robusta.core.model.base_params import (
     ActionParams,
     AIInvestigateParams,
