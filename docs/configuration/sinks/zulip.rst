@@ -18,7 +18,7 @@ Creating a bot account
 4. On the left, click **Bots**
 5. Click **Add a new bot**
 6. Fill out the fields, and click **Add**
-4. Copy email and token
+7. Copy email and token
 
 Settings
 ------------------
