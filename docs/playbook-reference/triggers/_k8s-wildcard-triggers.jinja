@@ -1,5 +1,5 @@
 {% from "playbook-reference//triggers/_k8s-generic-macro.jinja" import render_generic_trigger %}
-{{ render_generic_trigger("resource", "on_kubernetes_any_resource_create", 'Fires when any Kubernetes resource is created', 'created', related_actions ) }}
-{{ render_generic_trigger("resource", "on_kubernetes_any_resource_update", 'Fires when any Kubernetes resource is updated', 'updated', related_actions ) }}
-{{ render_generic_trigger("resource", "on_kubernetes_any_resource_delete", 'Fires when any Kubernetes resource is deleted', 'deleted', related_actions ) }}
-{{ render_generic_trigger("resource", "on_kubernetes_any_resource_all_changes", 'Fires when any Kubernetes resource is created, updated, or deleted', 'modified', related_actions ) }}
+{{ render_generic_trigger("resource", "on_kubernetes_any_resource_create", 'Fires when any Kubernetes resource is created', 'created' ) }}
+{{ render_generic_trigger("resource", "on_kubernetes_any_resource_update", 'Fires when any Kubernetes resource is updated', 'updated' ) }}
+{{ render_generic_trigger("resource", "on_kubernetes_any_resource_delete", 'Fires when any Kubernetes resource is deleted', 'deleted' ) }}
+{{ render_generic_trigger("resource", "on_kubernetes_any_resource_all_changes", 'Fires when any Kubernetes resource is created, updated, or deleted', 'modified') }}
