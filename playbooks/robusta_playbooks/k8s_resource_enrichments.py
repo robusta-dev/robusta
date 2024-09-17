@@ -14,6 +14,7 @@ from kubernetes.client import (
     V1ContainerStatus,
     V1ObjectMeta,
     V1Pod,
+    V1PodList,
     V1PodSpec,
     V1PodStatus,
 )
@@ -121,7 +122,7 @@ def to_pod_row(pod: V1Pod, cluster_name: str) -> List:
     ]
 
 
-def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _continue: Optional[str]=None) -> List[V1Pod]:
+def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _continue: Optional[str]=None) -> V1PodList:
     kind: str = resource.kind or ""
     if kind not in supported_resources:
         raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}")
@@ -137,10 +138,11 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
         )
     
     elif kind == "Pod":
-        return {"items" : [client.CoreV1Api().read_namespaced_pod(
+        pod: V1Pod = client.CoreV1Api().read_namespaced_pod(
             namespace=resource.metadata.namespace,
             name=resource.metadata.name,
-        )]}
+        )
+        return V1PodList(items=[pod])
     
     elif kind == "Node":
         return client.CoreV1Api().list_pod_for_all_namespaces(
