@@ -1,28 +1,27 @@
 import json
 import logging
+import time
 from typing import Any, List, Optional
 
 import hikaru
-import time
 import kubernetes.client.exceptions
 from hikaru.model.rel_1_26 import ContainerState, ContainerStateTerminated, ContainerStatus, Pod, PodList
-from pydantic import BaseModel
-from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
 from kubernetes import client
 from kubernetes.client import (
+    V1Container,
+    V1ContainerState,
+    V1ContainerStateTerminated,
+    V1ContainerStatus,
+    V1ObjectMeta,
     V1Pod,
     V1PodSpec,
     V1PodStatus,
-    V1ObjectMeta,
-    V1Container,
-    V1ContainerStatus,
-    V1ContainerState,
-    V1ContainerStateTerminated
 )
-
+from pydantic import BaseModel
 from robusta.api import (
     ActionException,
     ActionParams,
+    ContainerResources,
     ErrorCodes,
     ExecutionBaseEvent,
     FileBlock,
@@ -33,15 +32,17 @@ from robusta.api import (
     PodContainer,
     ResourceNameLister,
     TableBlock,
-    ContainerResources,
     action,
     build_selector_query,
     get_job_all_pods,
     get_job_selector,
+    k8s_pod_limits,
+    k8s_pod_requests,
     pod_limits,
     pod_requests,
     pod_restarts,
 )
+from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
 
 
 class RelatedPodParams(ActionParams):
@@ -95,8 +96,8 @@ supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "Stateful
 
 
 def to_pod_row(pod: V1Pod, cluster_name: str) -> List:
-    resource_requests = pod_requests(pod)
-    resource_limits = pod_limits(pod)
+    resource_requests = k8s_pod_requests(pod)
+    resource_limits = k8s_pod_limits(pod)
     meta: V1ObjectMeta = pod.metadata
     spec: V1PodSpec = pod.spec
     status: V1PodStatus = pod.status
@@ -124,7 +125,6 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
     kind: str = resource.kind or ""
     if kind not in supported_resources:
         raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}")
-
     if kind == "Job":
         job_selector = get_job_selector(resource)
         if not job_selector:
@@ -165,8 +165,8 @@ def get_related_pods(resource, limit=None) -> List[V1Pod]:
 
 
 def to_pod_obj(pod: V1Pod, cluster: str, include_raw_data: bool = False) -> RelatedPod:
-    resource_requests = pod_requests(pod)
-    resource_limits = pod_limits(pod)
+    resource_requests = k8s_pod_requests(pod)
+    resource_limits = k8s_pod_limits(pod)
     meta: V1ObjectMeta = pod.metadata
     spec: V1PodSpec = pod.spec
     status: V1PodStatus = pod.status

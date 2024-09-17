@@ -12,6 +12,11 @@ def k8s_pod_requests(pod: V1Pod) -> PodResources:
     return __pod_resources(pod, ResourceAttributes.requests)
 
 
+def k8s_pod_limits(pod: V1Pod) -> PodResources:
+    """Extract requests from k8s python api pod (not hikaru)"""
+    return __pod_resources(pod, ResourceAttributes.limits)
+
+
 def __pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodResources:
     containers_resources = containers_resources_sum(pod.spec.containers, resource_attribute)
     return PodResources(
