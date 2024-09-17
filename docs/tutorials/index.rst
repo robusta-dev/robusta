@@ -34,6 +34,7 @@ Define your own alerts. Customize the data shown in alert notifications.
    playbook-failed-liveness
    alert-custom-prometheus
    alert-custom-enrichment
+   playbook-track-secrets.rst
 
 .. _tutorials-notification-routing:
 

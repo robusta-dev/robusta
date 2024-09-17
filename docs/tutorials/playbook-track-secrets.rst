@@ -141,17 +141,3 @@ To stop monitoring Secret changes:
        kubectl delete -f kubewatch-secret-permissions.yaml
 
 Then, perform a :ref:`Helm Upgrade <Simple Upgrade>`.
-
-Additional Notes
------------------------------------------
-
-- **Security Considerations**: Monitoring Secret changes can be sensitive. Ensure that only authorized personnel have access to the sinks where notifications are sent.
-- **Namespace Filtering**: By default, Kubewatch monitors all namespaces. You can limit monitoring to specific namespaces by adjusting the configuration:
-
-  .. code-block:: yaml
-
-      kubewatch:
-        config:
-          namespace: your-namespace
-
-- **Advanced Filtering**: If you want to ignore certain Secrets or only monitor specific ones, consider using label selectors or enhancing your playbook with :ref:`change filters<change-filters>`.
