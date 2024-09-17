@@ -1,7 +1,8 @@
 Track Kubernetes Secret Changes
 ############################################
 
-By default Robusta is not configured to track secret changes, but it is possible by comf
+By default Robusta is not configured to track secret changes, but it is possible to configure it
+by giving permissions to Robusta to read secrets and configuring kubewatch.
 
 How to Track Changes in Kubernetes Secrets
 ------------------------------------------------
