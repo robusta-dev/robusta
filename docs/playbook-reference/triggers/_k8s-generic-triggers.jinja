@@ -4,13 +4,13 @@
 ************************************
 
 {% if custom_description %}
-    {{ custom_description }}
+{{ custom_description }}
 {% else %}
-    {% if resource_name == "Ingress" %}
-    The following triggers are available for {{ resource_name }}es.
-    {% else %}
-    The following triggers are available for {{ resource_name }}s.
-    {% endif %}
+{% if resource_name == "Ingress" %}
+The following triggers are available for {{ resource_name }}es.
+{% else %}
+The following triggers are available for {{ resource_name }}s.
+{% endif %}
 {% endif %}
 
 {% set trigger_name = 'on_' + resource_name.lower() + '_create' %}
