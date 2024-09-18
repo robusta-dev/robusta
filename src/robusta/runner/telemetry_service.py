@@ -35,8 +35,8 @@ class TelemetryService:
                 sentry_sdk.init(
                     SENTRY_DSN,
                     enable_tracing=True,
-                    traces_sample_rate=1.0,
-                    profiles_sample_rate=1.0, 
+                    traces_sample_rate=0.01,
+                    profiles_sample_rate=0.01, 
                     release=RUNNER_VERSION,
                     integrations=[
                         ThreadingIntegration(propagate_scope=True),
