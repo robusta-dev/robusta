@@ -63,6 +63,7 @@ ROBUSTA_UI_DOMAIN = os.environ.get("ROBUSTA_UI_DOMAIN", "https://platform.robust
 ROBUSTA_TELEMETRY_ENDPOINT = os.environ.get("ROBUSTA_TELEMETRY_ENDPOINT", "https://api.robusta.dev/telemetry")
 ENABLE_TELEMETRY = os.environ.get("ENABLE_TELEMETRY", "true").lower() == "true"
 SEND_ADDITIONAL_TELEMETRY = os.environ.get("SEND_ADDITIONAL_TELEMETRY", "false").lower() == "true"
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 RELEASE_NAME = os.environ.get("RELEASE_NAME", "robusta")
 
 RUNNER_SERVICE_ACCOUNT = os.environ.get("RUNNER_SERVICE_ACCOUNT", f"{RELEASE_NAME}-runner-service-account")
@@ -128,3 +129,6 @@ POD_WAIT_RETRIES = int(os.environ.get("POD_WAIT_RETRIES", 10))
 POD_WAIT_RETRIES_SECONDS = int(os.environ.get("POD_WAIT_RETRIES_SECONDS", 5))
 
 HOLMES_ENABLED = load_bool("HOLMES_ENABLED", False)
+
+# simple calculated values (not direct environment vars)
+SENTRY_ENABLED = SEND_ADDITIONAL_TELEMETRY and SENTRY_DSN

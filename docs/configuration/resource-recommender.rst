@@ -81,7 +81,17 @@ If you are having performance issues, specifically with Prometheus using a lot o
       krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
       max_workers: 2
 
-**Common KRR Settings**
+Enabling HPA Recommendations in the Robusta UI
+------------------------------------------------------------
+To enable Horizontal Pod Autoscaler (HPA) recommendations in the Robusta UI, add the following to your ``generated_values.yaml`` file:
+
+.. code-block:: yaml
+
+    globalConfig:
+      krr_args: "--enable-hpa"
+
+Common KRR Settings
+---------------------
 
 .. list-table::
    :widths: 25 10 40 25
@@ -91,6 +101,10 @@ If you are having performance issues, specifically with Prometheus using a lot o
      - Type
      - Used for
      - Default value
+   * - ``--allow-hpa``
+     - BOOLEAN
+     - Get recommendations for applications with `HPA <https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/>`_
+     - FALSE
    * - ``--cpu-min``
      - INTEGER
      - Sets the minimum recommended CPU value in millicores.
