@@ -103,7 +103,8 @@ redirects = {
     "tutorials/routing-by-namespace.html": "/master/notification-routing/routing-by-namespace.html",
     "tutorials/routing-by-type.html": "/master/notification-routing/routing-by-type.html",
     "tutorials/routing-exclusion.html": "/master/notification-routing/routing-exclusion.html",
-    "tutorials/routing-silencing.html": "/master/notification-routing/routing-silencing.html"
+    "tutorials/routing-silencing.html": "/master/notification-routing/routing-silencing.html",
+    "configuration/configuring-sinks.html": "/master/notification-routing/configuring-sinks.html"
 }
 
 

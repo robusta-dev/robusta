@@ -48,6 +48,7 @@
    :caption: 🔔 Notifications & Routing
    :hidden:
 
+   notification-routing/configuring-sinks
    🆕 Notification Grouping <notification-routing/notification-grouping>
    notification-routing/routing-by-namespace
    notification-routing/routing-by-type
