@@ -3,12 +3,12 @@
 Exporting Alert History
 ==========================
 
-Robusta allows you to export alert history data using a simple API call. This feature helps in fetching historical alert details based on specific criteria such as `alert_name`, `account_id`, and time range.
+Robusta allows you to export alert history data using a simple API call. This feature helps in fetching historical alert details based on specific criteria such as ``alert_name``, ``account_id``, and time range.
 
 Example Request
 ^^^^^^^^^^^^^^^^
 
-The following `curl` command demonstrates how to export alert history data for the `CrashLoopBackoff` alert:
+The following ``curl`` command demonstrates how to export alert history data for the ``CrashLoopBackoff`` alert:
 
 .. code-block:: bash
 
@@ -17,8 +17,8 @@ The following `curl` command demonstrates how to export alert history data for t
 
 In the command, make sure to replace the following placeholders:
 
-- `ACCOUNT_ID`: Your account ID, which can be found in your generated values file.
-- `TOKEN_HERE`: Your API token for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
+- ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
+- ``TOKEN_HERE``: Your API token for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
 
 Response Format
 ^^^^^^^^^^^^^^^^
