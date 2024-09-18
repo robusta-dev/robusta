@@ -40,6 +40,7 @@
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/alertmanager-integration/index
+   configuration/exporting/exporting-data
    configuration/additional-settings
 
 
