@@ -1,15 +1,13 @@
-{% from "playbook-reference//triggers/_k8s-generic-macro.jinja" import render_generic_trigger %}
-
 {{ resource_name }} Triggers
 ************************************
 
 {% if custom_description %}
-{{ custom_description }}
+<p>{{ custom_description }}</p>
 {% else %}
 {% if resource_name == "Ingress" %}
-The following triggers are available for {{ resource_name }}es.
+<p>The following triggers are available for {{ resource_name }}es.</p>
 {% else %}
-The following triggers are available for {{ resource_name }}s.
+<p>The following triggers are available for {{ resource_name }}s.</p>
 {% endif %}
 {% endif %}
 
