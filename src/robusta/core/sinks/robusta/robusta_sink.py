@@ -354,9 +354,7 @@ class RobustaSink(SinkBase, EventHandler):
 
         # new or changed nodes
         for node_name in curr_nodes.keys():
-            # if all the pods on the node have no requests
             updated_node = curr_nodes.get(node_name)
-            # TODO: uodateRequests
             if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
                 updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node

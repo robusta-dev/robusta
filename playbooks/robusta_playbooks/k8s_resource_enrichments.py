@@ -152,7 +152,6 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
         )
     else:
         selector = build_selector_query(resource.spec.selector)
-        logging.error(f"start listing pods for selector: {selector};")
         result = client.CoreV1Api().list_namespaced_pod(
             namespace=resource.metadata.namespace,
             label_selector=selector,
@@ -252,13 +251,6 @@ def related_pods(event: KubernetesResourceEvent, params: RelatedPodParams):
     if params.output_format == "json":
         pods = get_related_pods(event.get_resource(), limit=params.limit)
         event.add_enrichment([JsonBlock(json.dumps([to_pod_obj(pod, cluster, include_raw_data=params.include_raw_data).dict() for pod in pods], default=str))])
-    elif params.output_format == "json2":
-        data = get_related_pods_with_extra_info(event.get_resource(), limit=params.limit, _continue=params._continue)
-        result = {
-            "pods": [to_pod_obj(pod, cluster, include_raw_data=params.include_raw_data).dict() for pod in data["pods"]],
-            "continue": getattr(getattr(data, "_metadata", None), "_continue", None),
-        }
-        event.add_enrichment([JsonBlock(json.dumps(result, default=str))])
     else:
         pods = get_related_pods(event.get_resource(), limit=params.limit)
         rows = [to_pod_row(pod, cluster) for pod in pods]
