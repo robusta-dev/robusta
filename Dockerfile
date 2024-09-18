@@ -49,10 +49,6 @@ ENV PATH="/venv/bin:$PATH"
 ENV PYTHONPATH=$PYTHONPATH:.:/app/src
 
 WORKDIR /app
-COPY --from=builder /app/venv /venv
-COPY --from=builder /etc/robusta/playbooks/defaults /etc/robusta/playbooks/defaults
-# Copy virtual environment and application files from the build stage
-COPY --from=builder /app /app
 
 # Install necessary packages for the runtime environment
 RUN apt-get update \
@@ -66,6 +62,11 @@ RUN git config --global core.symlinks false
 
 # Remove setuptools-65.5.1 installed from python:3.11-slim base image as fix for CVE-2024-6345 until image will be updated
 RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
+
+COPY --from=builder /app/venv /venv
+COPY --from=builder /etc/robusta/playbooks/defaults /etc/robusta/playbooks/defaults
+# Copy virtual environment and application files from the build stage
+COPY --from=builder /app /app
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
