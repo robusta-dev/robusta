@@ -3,10 +3,7 @@
 OpenShift
 ========================================
 
-Robusta supports OpenShift. To use Robusta on OpenShift, you should enable the following Helm values:
-
-
-Update the ``generated_values.yaml`` file to enable OpenShift support:
+Robusta supports OpenShift. To use Robusta on OpenShift, update your Helm values (``generated_values.yaml``) as follows:
 
 .. code-block:: yaml
 
@@ -14,37 +11,37 @@ Update the ``generated_values.yaml`` file to enable OpenShift support:
       enabled: true
       createScc: true
 
+    globalConfig:
+      prometheus_url: https://<PROM_HOST> # get the value for <PROM_HOST> by running    oc get routes -n openshift-monitoring prometheus-k8s -o jsonpath='{.spec.host}'
+      alertmanager_url: https://<AM_HOST> # get the value for <AM_HOST> by running      oc get routes -n openshift-monitoring alertmanager-main -o jsonpath='{.spec.host}'
+
 .. warning::
 
       Do **not** install Robusta in the ``default`` OpenShift project.
 
-For users that do not have access to create their own SCCs in the cluster, see the
+Installing Robusta without full admin permissions
+-------------------------------------------------------
+
+If you are installing Robusta via a user that doesn't have full admin permissions on the cluster, you can
+ask an admin to create the Robusta SCC for you in advance, so that you can reference it in your Helm values.
+
+First create an SCC based on
 `openshift-scc-baseline.yaml <https://github.com/robusta-dev/robusta/blob/master/helm/robusta/templates/openshift-scc-baseline.yaml>`_ file for the baseline SCC for the product. This SCC can be
-created in advance by administrators and referenced using the following set of values:
+and then update your Helm values with:
 
 .. code-block:: yaml
 
     openshift:
       enabled: true
-      sccName: my-admins-scc
+      createScc: false
+      sccName: my-admins-scc # reference the existing SCC your admin created
 
 A test installation in OpenShift can use the existing SCC ``anyuid``.
 
-OpenShift Prometheus Stack
---------------------------
+Optional: Giving Robusta extra debug permissions
+---------------------------------------------------------
 
-OpenShift comes with an existing Prometheus installation. In order to point
-to the preconfigued stack, update the ``globalConfig`` in the Helm values with
-the following:
-
-.. code-block:: yaml
-
-    globalConfig:
-      prometheus_url: http://prometheus-operated.openshift-monitoring.svc.cluster.local:9090
-
-
-Robusta Advanced Debug Features
---------------------------------
+Some lesser used Robusta features require more permissions than the baseline SCC provides.
 
 In order to support the ``python_debugger``, ``java_debugger`` and ``node_disk_analyzer``
 playbooks, permission to run a far more privileged container needs to be granted to

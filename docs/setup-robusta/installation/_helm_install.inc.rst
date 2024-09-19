@@ -64,8 +64,10 @@ On some clusters this can take a while, so don't panic if it appears stuck:
     .. tab-item:: OpenShift
         :name: install-openshift
 
-        Install as usual, :ref:`then grant relevant permissions<openshift-permissions>`.
+        First :ref:`modify the Helm values to enable OpenShift support<openshift-permissions>`.
 
+        Then install Robusta as usual with Helm:
+        
         .. code-block:: bash
             :name: cb-helm-install-openshift
 
