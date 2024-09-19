@@ -1,11 +1,11 @@
 .. _sinks-overview:
 
-Integrating Sinks
+Notification 101
 ==========================
 
-Robusta can send notifications to various destinations, called sinks. These are general settings for all sinks, please take a look at the specific sink guide for detailed instructions.
+Robusta can send notifications to various destinations, called sinks. These notifications are enriched with issue logs, graphs, :ref:`AI Analysis` and more.
 
-For a list of all sinks, refer to :ref:`Sinks Reference`.
+The following guide is explains general settings for all sinks, please take a look at the specific sink guide for detailed instructions. For a list of all sinks, refer to :ref:`Sinks Reference`.
 
 Defining Sinks
 ^^^^^^^^^^^^^^^^^^
