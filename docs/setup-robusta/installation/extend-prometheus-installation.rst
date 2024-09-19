@@ -16,8 +16,6 @@ Prerequisites
 * A Prometheus installation
 * Helm
 
-.. include:: ../_questions.rst
-
 .. jinja::
    :inline-ctx: {"gen_config_flags": "--no-enable-prometheus-stack"}
    :header_update_levels:
