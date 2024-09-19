@@ -98,8 +98,15 @@ redirects = {
     "developer-guide/writing-playbooks.html": "/master/playbook-reference/defining-playbooks/index.html",
     "user-guide/slack.html": "/master/configuration/sinks/slack.html",
     "user-guide/elasticsearch.html": "/master/playbook-reference/triggers/elasticsearch.html",
-    "catalog/actions/python-troubleshooting.html": "/master/playbook-reference/actions/python-troubleshooting.html"
+    "catalog/actions/python-troubleshooting.html": "/master/playbook-reference/actions/python-troubleshooting.html",
+    "configuration/notification-grouping.html": "/master/notification-routing/notification-grouping.html",
+    "tutorials/routing-by-namespace.html": "/master/notification-routing/routing-by-namespace.html",
+    "tutorials/routing-by-type.html": "/master/notification-routing/routing-by-type.html",
+    "tutorials/routing-exclusion.html": "/master/notification-routing/routing-exclusion.html",
+    "tutorials/routing-silencing.html": "/master/notification-routing/routing-silencing.html",
+    "configuration/configuring-sinks.html": "/master/notification-routing/configuring-sinks.html"
 }
+
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
 jinja_contexts = {}
