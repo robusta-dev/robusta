@@ -230,8 +230,19 @@ class JiraClient:
         url = self._get_full_jira_url(endpoint)
 
         payload = {
-            "fields": {"summary": summary, "description": description, "assignee": self.assignee, "parent": self.epic},
+            "fields": {
+                "summary": summary,
+                "description": description,
+            }
         }
+
+        # Only add assignee if defined
+        if hasattr(self, 'assignee') and self.assignee:
+            payload["fields"]["assignee"] = {"id": self.assignee}
+
+        # Only add parent if epic is defined
+        if hasattr(self, 'epic') and self.epic:
+            payload["fields"]["parent"] = {"key": self.epic}
 
         logging.debug(f"Update issue '{issue_id}' with payload: {payload}")
         response = self._call_jira_api(url, http_method=HttpMethod.PUT, json=payload) or {}
