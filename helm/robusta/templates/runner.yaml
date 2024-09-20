@@ -226,8 +226,8 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 5000
----
 {{ if and (.Values.enableServiceMonitors) (or (.Values.enablePrometheusStack) (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") ) }}
+---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -263,8 +263,8 @@ spec:
   targetLabels:
     - target
 {{ end }}
----
 {{ if .Values.runner.sentry_dsn }}
+---
 apiVersion: v1
 kind: Secret
 metadata:

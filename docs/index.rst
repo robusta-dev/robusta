@@ -35,11 +35,25 @@
    configuration/index
    🆕 Notification Grouping <configuration/notification-grouping>
    🆕 AI Analysis <configuration/ai-analysis>
+   🆕 Cost Savings (KRR) <configuration/resource-recommender>
+   🆕 Kubernetes Mis-configurations (Popeye) <configuration/cluster-misconfigurations>
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/alertmanager-integration/index
+   configuration/exporting/exporting-data
    configuration/additional-settings
 
+.. toctree::
+   :maxdepth: 4
+   :caption: 🔔 Notifications & Routing
+   :hidden:
+
+   notification-routing/configuring-sinks
+   🆕 Notification Grouping <notification-routing/notification-grouping>
+   notification-routing/routing-by-namespace
+   notification-routing/routing-by-type
+   notification-routing/routing-exclusion
+   notification-routing/routing-silencing
 
 .. toctree::
    :maxdepth: 4
@@ -70,9 +84,6 @@ Better Prometheus Alerts (and more) for Kubernetes
     :padding: 0
 
     .. grid-item::
-
-        What Does Robusta Add to Prometheus?
-        -------------------------------------
 
         Robusta extends Prometheus/VictoriaMetrics/Coralogix (and more) with features like:
 
