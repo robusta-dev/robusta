@@ -586,7 +586,7 @@ image:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: ~  # image can be used to override image.registry/imageName
+  image: ~ # image can be used to override image.registry/imageName
   imageName: kubewatch:v2.7.0
   imagePullPolicy: IfNotPresent
   pprof: True
@@ -634,6 +634,8 @@ kubewatch:
       runAsUser: 1000
     pod: {}
   customServiceAccount: "" # to override the kubewatch service account
+  serviceMonitor:
+    path: /metrics
   serviceAccount:
     # Additional annotations for the ServiceAccount.
     annotations: {}
