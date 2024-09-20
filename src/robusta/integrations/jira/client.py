@@ -34,6 +34,13 @@ class JiraClient:
         else:
             self.default_issue_type_id = self._get_default_issue_type()
 
+        if jira_params.epic:
+            self.epic = jira_params.epic
+        
+        if jira_params.assignee:
+            self.assignee = jira_params.assignee
+
+
         if jira_params.project_type_id_override:
             self.default_project_id = jira_params.project_type_id_override
         else:
@@ -223,7 +230,7 @@ class JiraClient:
         url = self._get_full_jira_url(endpoint)
 
         payload = {
-            "fields": {"summary": summary, "description": description},
+            "fields": {"summary": summary, "description": description, "assignee": self.assignee, "parent": self.epic},
         }
 
         logging.debug(f"Update issue '{issue_id}' with payload: {payload}")
