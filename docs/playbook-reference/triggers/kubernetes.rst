@@ -337,9 +337,8 @@ For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
-  :inline-ctx: { "resource_name" : "Secret", "related_actions" : [],
-  "custom_description":"Secret triggers fire when secret resource changes. *By default Robusta does not support tracking
-  secrets*, but you can enable it by [configuring kubewatch to monitor secrets.](https://docs.robusta.dev/master/tutorials/playbook-track-changes.html#track-kubernetes-changes)": }
+  :inline-ctx: { "resource_name" : "Secret", "related_actions" : []
+   }
   :header_update_levels:
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 

@@ -4,12 +4,12 @@
 ************************************
 
 {% if custom_description %}
-<p>{{ custom_description }}</p>
+{{ custom_description }}
 {% else %}
 {% if resource_name == "Ingress" %}
-<p>The following triggers are available for {{ resource_name }}es.</p>
+The following triggers are available for {{ resource_name }}es.
 {% else %}
-<p>The following triggers are available for {{ resource_name }}s.</p>
+The following triggers are available for {{ resource_name }}s.
 {% endif %}
 {% endif %}
 
