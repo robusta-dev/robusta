@@ -634,11 +634,8 @@ kubewatch:
       runAsUser: 1000
     pod: {}
   customServiceAccount: "" # to override the kubewatch service account
-  service:
-    port: 2112
   serviceMonitor:
     path: /metrics
-    interval: 15s
   serviceAccount:
     # Additional annotations for the ServiceAccount.
     annotations: {}
