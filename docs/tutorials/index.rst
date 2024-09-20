@@ -38,18 +38,6 @@ Define your own alerts. Customize the data shown in alert notifications.
 
 .. _tutorials-notification-routing:
 
-Notification Routing
-----------------------
-
-Send alerts to the right people.
-
-.. toctree::
-   :maxdepth: 1
-
-   routing-by-namespace
-   routing-by-type
-   routing-exclusion
-   routing-silencing
 
 Automatic Remediation
 ------------------------
