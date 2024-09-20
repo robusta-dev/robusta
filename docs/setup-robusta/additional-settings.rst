@@ -77,7 +77,8 @@ For example:
         target: "job"
 
 Mapping Custom Alert Severity
-----------------
+------------------------------------
+
 To correctly map your custom alert severity, you need to add ``custom_severity_map``. The values for each alert should be: high, medium, low, info, and debug.
 
 For example:

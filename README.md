@@ -1,8 +1,8 @@
 <div id="top"></div>
 
 <div align="center">
-  <h1 align="center">Robusta - Better Prometheus Alerts (and more) for Kubernetes</h1>
-  <h2 align="center">Enrich, Group, and Remediate your Alerts</h2>
+  <h1 align="center">Robusta - Better Prometheus Notifications for Kubernetes</h1>
+  <h2 align="center">Better grouping, enrichment, and remediation of your existing alerts</h2>
   <p align="center">
     <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
     <a href="#-installing-robusta"><strong>Installation</strong></a> | 
@@ -14,7 +14,9 @@
 
 ## What Can Robusta Do?
 
-Robusta integrates with Prometheus (e.g. `kube-prometheus-stack` or Coralogix) by webhook and adds features like: 
+Compatible with kube-prometheus-stack, Prometheus Operator, and more.
+
+Robusta integrates with Prometheus by webhook and adds features like: 
 
 * [**Smart Grouping**](https://docs.robusta.dev/master/configuration/notification-grouping.html) - reduce notification spam with Slack threads 🧵
 * [**AI Investigation**](https://docs.robusta.dev/master/configuration/ai-analysis.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
@@ -30,23 +32,13 @@ Don't have Prometheus? You can use Robusta without Prometheus, or install our al
 
 ## 🛠️ How it works
 
-Robusta is powered by a rule engine that takes incoming events (e.g. Prometheus alerts) and runs actions on them to gather more information or remediate problems. 
+Robusta uses rules and AI to take Prometheus alerts and add extra information to them, such as pod logs, relevant graphs, possible remediations, and more.
 
-Here is an example rule that adds Pod logs to the `KubePodCrashLooping` alert from Prometheus:
-
-```yaml
-triggers:
-  - on_prometheus_alert:
-      alert_name: KubePodCrashLooping
-actions:
-  - logs_enricher: {}
-```
-
-The resulting alert looks like this in Slack:
+Here is an example alert in Slack:
 
 ![](./docs/images/crash-report.png)
 
-When performing auto-remediation, you can configure 100% automation, or semi-automatic mode that requires user confirmation:
+Here is an example remediation action:
 
 ![](./docs/images/alert_on_hpa_reached_limit1.png)
 

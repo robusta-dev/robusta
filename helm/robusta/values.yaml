@@ -669,7 +669,7 @@ runner:
   imageName: robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
-  sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
+  sentry_dsn: https://4f1a66f025c60830fec303a094dcdf94@o1120648.ingest.sentry.io/6156573
   sendAdditionalTelemetry: false
   certificate: "" # base64 encoded
   customServiceAccount: "" # to override the runner service account
