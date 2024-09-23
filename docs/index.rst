@@ -34,9 +34,9 @@
 
    configuration/index
    🆕 Notification Grouping <configuration/notification-grouping>
-   🆕 AI Analysis <configuration/ai-analysis>
-   🆕 Cost Savings (KRR) <configuration/resource-recommender>
-   🆕 Kubernetes Mis-configurations (Popeye) <configuration/cluster-misconfigurations>
+   🪄 AI Analysis - HolmesGPT <configuration/ai-analysis>
+   Cost Savings - KRR <configuration/resource-recommender>
+   K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/alertmanager-integration/index
