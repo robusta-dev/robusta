@@ -2164,13 +2164,13 @@ twisted = ["twisted"]
 
 [[package]]
 name = "prometrix"
-version = "0.1.19a3"
+version = "0.2.0"
 description = "A Python Prometheus client for all Prometheus instances."
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "prometrix-0.1.19a3-py3-none-any.whl", hash = "sha256:cc4c8e7c70d65c4458e3d44bb0bd7d865d54c444132e284498eb0ea4c5afeb72"},
-    {file = "prometrix-0.1.19a3.tar.gz", hash = "sha256:029a0d8a60136dfce516ba31c874b318dfbc2cfdaab6e5cc8eba8d6bcce60a39"},
+    {file = "prometrix-0.2.0-py3-none-any.whl", hash = "sha256:583a38ed3ae9c81ded4b9d57afc908997d3802d33ad4ad2f63b9621ce7536053"},
+    {file = "prometrix-0.2.0.tar.gz", hash = "sha256:8d3bcf6291fe1aa0fb707b617a054f09f7606a519b422659c229a0ecf17bf430"},
 ]
 
 [package.dependencies]
@@ -3770,4 +3770,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "grafana-
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8, <3.12"
-content-hash = "0d1cbcbf06ec1e3211b15c6feb3d6e872c122d57a132350dc56b7c976ec8fc39"
+content-hash = "a7929096e4b9cadbdd926b8f0e4df585e17418d4211539c070bf4ca3984ce38c"
