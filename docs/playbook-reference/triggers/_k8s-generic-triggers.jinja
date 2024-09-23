@@ -4,7 +4,7 @@
 ************************************
 
 {% if custom_description %}
-{{ custom_description }}
+{{ custom_description | rst }}
 {% else %}
 {% if resource_name == "Ingress" %}
 The following triggers are available for {{ resource_name }}es.
