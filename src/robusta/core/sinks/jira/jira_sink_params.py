@@ -18,6 +18,9 @@ class JiraSinkParams(SinkBaseParams):
     doneStatusName: Optional[str] = "Done"
     reopenStatusName: Optional[str] = "To Do"
     noReopenResolution: Optional[str] = ""
+    epic: Optional[str] = ""
+    assignee: Optional[str] = ""
+
 
     @classmethod
     def _get_sink_type(cls):
