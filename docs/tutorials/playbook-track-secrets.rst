@@ -1,3 +1,4 @@
+.. _track-secrets-overview:
 Track Kubernetes Secret Changes
 ############################################
 
