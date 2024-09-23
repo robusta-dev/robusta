@@ -60,7 +60,7 @@ class PrometheusDiscoveryUtils:
             if query_result.result_type == "error" or not query_result.vector_result:
                 logging.error("PrometheusDiscoveryUtils failed to get prometheus results.")
                 return
-            value = query_result.vector_result[0].value.value
+            value = query_result.vector_result[0]["value"]["value"]
             return_value = float("%.2f" % float(value))
             return return_value if return_value >= 0 else None
         except:

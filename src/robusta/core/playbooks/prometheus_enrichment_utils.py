@@ -114,13 +114,13 @@ def get_resolution_from_duration(duration: timedelta) -> int:
 
 def get_target_name(series: PrometheusSeries) -> Optional[str]:
     for label in ["container", "pod", "node"]:
-        if label in series.metric:
-            return series.metric[label]
+        if label in series["metric"]:
+            return series["metric"][label]
     return None
 
 
 def get_series_job(series: PrometheusSeries) -> Optional[str]:
-    return series.metric.get("job")
+    return series["metric"]["job"] if "job" in series["metric"] else None
 
 
 def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeries]]) -> Optional[List[PrometheusSeries]]:
@@ -209,21 +209,21 @@ def create_chart_from_prometheus_query(
         label = get_target_name(series)
 
         if not label:
-            label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
+            label = "\n".join([v for (key, v) in series["metric"].items() if key != "job"])
 
         # If the label is empty, try to take it from the additional_label_factory
         if label == "" and chart_label_factory is not None:
             label = chart_label_factory(i)
 
         values = []
-        for index in range(len(series.values)):
-            timestamp = series.timestamps[index]
-            value = round(float(series.values[index]), FLOAT_PRECISION_LIMIT)
+        for index in range(len(series["values"])):
+            timestamp = series["timestamps"][index]
+            value = round(float(series["values"][index]), FLOAT_PRECISION_LIMIT)
             values.append((timestamp, value))
             if value > max_y_value:
                 max_y_value = value
-        min_time = min(min_time, min(series.timestamps))
-        max_time = max(max_time, max(series.timestamps))
+        min_time = min(min_time, min(series["timestamps"]))
+        max_time = max(max_time, max(series["timestamps"]))
 
         # Adjust min_time to ensure it is at least 1 hour before oom_kill_time, and adjust max_time to ensure it is at least 30 minutes after oom_kill_time, as required for the graph plot adjustments.
         if oom_kill_time:
