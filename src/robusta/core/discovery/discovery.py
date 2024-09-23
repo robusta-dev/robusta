@@ -53,6 +53,7 @@ from robusta.core.model.env_vars import (
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
+from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj, Rollout
 from robusta.patch.patch import create_monkey_patches
@@ -68,7 +69,7 @@ discovery_process_time = prometheus_client.Summary(
 
 class DiscoveryResults(BaseModel):
     services: List[ServiceInfo] = []
-    nodes: Optional[V1NodeList] = None
+    nodes: List[NodeInfo] = None
     node_requests: Dict = {}
     jobs: List[JobInfo] = []
     namespaces: List[NamespaceInfo] = []
@@ -428,6 +429,7 @@ class Discovery:
         # discover nodes - no need for batching. Number of nodes is not big enough
         try:
             current_nodes: V1NodeList = client.CoreV1Api().list_node()
+            nodes = [utils.from_api_server_node(node, node_requests.get(node.metadata.name, [])) for node in current_nodes.items]
         except Exception as e:
             logging.error(
                 "Failed to run periodic nodes discovery",
@@ -523,9 +525,10 @@ class Discovery:
             )
             raise e
         Discovery.stacktrace_thread_active = False
+
         return DiscoveryResults(
             services=active_services,
-            nodes=current_nodes,
+            nodes=nodes,
             node_requests=node_requests,
             jobs=active_jobs,
             namespaces=namespaces,

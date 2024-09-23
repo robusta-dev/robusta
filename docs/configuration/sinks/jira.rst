@@ -26,6 +26,8 @@ Optional Settings
 * ``dedups`` : [Optional - default: ``fingerprint``] Tickets deduplication parameter. By default, Only one issue per ``fingerprint`` will be created. There can be more than one value to use. Possible values are: fingerprint, cluster_name, title, node, type, source, namespace, creation_date etc
 * ``project_type_id_override`` : [Optional - default: None] If available, will override the ``project_name`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html>`__ to get your project id.
 * ``issue_type_id_override`` : [Optional - default: None] If available, will override the ``issue_type`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/finding-the-id-for-issue-types-646186508.html>`__ to get your issue id.
+* ``assignee`` : [Optional - default: None] Jira ID of the person that the issue is assigned to.
+* ``epic`` : [Optional - default: None] Jira ID of the epic that the issue is linked to.
 
 Following optional settings only work for Prometheus alerts:
 
@@ -54,6 +56,8 @@ Configuring the Jira sink
             api_key: api_key
             dedups: (OPTIONAL)
               - fingerprint
+            assignee: user_id of the assignee(OPTIONAL)
+            epic: epic_id(OPTIONAL)
             project_name: project_name
             scope:
               include:
