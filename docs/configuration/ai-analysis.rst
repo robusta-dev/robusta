@@ -28,7 +28,7 @@ Configuration
 
     .. tab-item:: OpenAI
         :name: open-ai
-        
+
         Create a secret with your OpenAI API key:
 
         .. code-block:: bash
@@ -62,7 +62,7 @@ Configuration
         * API_VERSION
         * DEPLOYMENT_NAME
         * ENDPOINT
-        * API_KEY 
+        * API_KEY
 
         .. details:: Step-By-Step Instruction for Azure Portal
 
@@ -184,7 +184,7 @@ Configuration
                   secretKeyRef:
                     name: holmes-secrets
                     key: awsSecretAccessKey
-          
+
         Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 
 
