@@ -35,6 +35,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
     3. :ref:`job_info_enricher<job_info_enricher>` fetches the Jobs status and information
     4. :ref:`job_events_enricher<job_events_enricher>` runs ``kubectl get events``, finds Events related to the Job, and attaches them
     5. :ref:`job_pod_enricher<job_pod_enricher>` finds Pods that were part of the Job. It attaches Pod-level information like Pod logs
+    
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 Testing Your Playbook

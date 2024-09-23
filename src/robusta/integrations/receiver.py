@@ -10,8 +10,10 @@ from typing import Dict, Optional, List, Union
 from uuid import UUID
 
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 
 import websocket
+import sentry_sdk
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
@@ -22,6 +24,7 @@ from robusta.core.model.env_vars import (
     RUNNER_VERSION,
     WEBSOCKET_PING_INTERVAL,
     WEBSOCKET_PING_TIMEOUT,
+    SENTRY_ENABLED,
 )
 from robusta.core.playbooks.playbook_utils import to_safe_str
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -158,7 +161,16 @@ class ActionRequestReceiver:
 
     def _process_action_sync(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
         try:
-            self.__exec_external_request(action, validate_timestamp)
+            if SENTRY_ENABLED:
+                ctx = sentry_sdk.start_transaction(op="manual_action", name=action.body.action_name)
+                ctx.set_tag("account_id", action.body.account_id)
+                ctx.set_tag("cluster_name", action.body.cluster_name)
+                ctx.set_tag("action_params", action.body.action_params)
+                ctx.set_tag("origin", action.body.origin)
+            else:
+                ctx = nullcontext()
+            with ctx:
+                self.__exec_external_request(action, validate_timestamp)
         except Exception:
             logging.error(
                 f"Failed to run incoming event {self._stringify_incoming_event(action.dict())}",
