@@ -343,7 +343,7 @@ Secret triggers fire when secret resource changes. *By default Robusta does not 
 
 .. jinja::
   :header_update_levels:
-  :file: playbook-reference/triggers/_k8s-secret-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-secrets-triggers.jinja
 
 
 Wildcard triggers
