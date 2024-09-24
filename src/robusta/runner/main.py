@@ -12,11 +12,7 @@ if add_custom_certificate(ADDITIONAL_CERTIFICATE):
 
 import signal
 
-from robusta.core.model.env_vars import (
-    ENABLE_TELEMETRY,
-    ROBUSTA_TELEMETRY_ENDPOINT,
-    TELEMETRY_PERIODIC_SEC,
-)
+from robusta.core.model.env_vars import ENABLE_TELEMETRY, ROBUSTA_TELEMETRY_ENDPOINT, TELEMETRY_PERIODIC_SEC
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
 from robusta.model.config import Registry
 from robusta.patch.patch import create_monkey_patches
@@ -47,6 +43,7 @@ def main():
     else:
         logging.info("Telemetry is disabled.")
 
+    logging.info("nothing")
     Web.init(event_handler, loader)
 
     signal.signal(signal.SIGINT, event_handler.handle_sigint)

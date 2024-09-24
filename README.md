@@ -5,7 +5,7 @@
   <h2 align="center">Better grouping, enrichment, and remediation of your existing alerts</h2>
   <p align="center">
     <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
-    <a href="#-installing-robusta"><strong>Installation</strong></a> | 
+    <a href="#-installing-robusta"><strong>Installation</strong></a> |
     <a href="https://docs.robusta.dev/master/configuration/index.html"><strong>Integrations ↗</strong></a> |
     <a href="https://docs.robusta.dev/master/index.html"><strong>Docs ↗</strong></a> |
     <a href="https://bit.ly/robusta-slack"><strong>Slack Community ↗</strong></a>
@@ -16,7 +16,7 @@
 
 Compatible with kube-prometheus-stack, Prometheus Operator, and more.
 
-Robusta integrates with Prometheus by webhook and adds features like: 
+Robusta integrates with Prometheus by webhook and adds features like:
 
 * [**Smart Grouping**](https://docs.robusta.dev/master/configuration/notification-grouping.html) - reduce notification spam with Slack threads 🧵
 * [**AI Investigation**](https://docs.robusta.dev/master/configuration/ai-analysis.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
