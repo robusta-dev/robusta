@@ -47,7 +47,7 @@ poetry-core = "1.1.0a7"
 docutils="0.19"
 sentry-sdk = {extras = ["flask"], version = "^2.13.0"}
 opsgenie-sdk = "^2.1.5"
-markdown2 = "^2.4.2"
+markdown2 = "2.4.13"
 toml = "^0.10.2"
 watchgod = "^0.7"
 webexteamssdk = "^1.6.1"

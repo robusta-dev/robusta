@@ -1570,19 +1570,18 @@ testing = ["coverage", "pyyaml"]
 
 [[package]]
 name = "markdown2"
-version = "2.5.0"
+version = "2.4.13"
 description = "A fast and complete Python implementation of Markdown"
 optional = false
-python-versions = "<4,>=3.8"
+python-versions = ">=3.5, <4"
 files = [
-    {file = "markdown2-2.5.0-py2.py3-none-any.whl", hash = "sha256:300d4429b620ebc974ef512339a9e08bc080473f95135a91f33906e24e8280c1"},
-    {file = "markdown2-2.5.0.tar.gz", hash = "sha256:9bff02911f8b617b61eb269c4c1a5f9b2087d7ff051604f66a61b63cab30adc2"},
+    {file = "markdown2-2.4.13-py2.py3-none-any.whl", hash = "sha256:855bde5cbcceb9beda7c80efdf7f406c23e6079172c497fcfce22fdce998e892"},
+    {file = "markdown2-2.4.13.tar.gz", hash = "sha256:18ceb56590da77f2c22382e55be48c15b3c8f0c71d6398def387275e6c347a9f"},
 ]
 
 [package.extras]
-all = ["latex2mathml", "pygments (>=2.7.3)", "wavedrom"]
+all = ["pygments (>=2.7.3)", "wavedrom"]
 code-syntax-highlighting = ["pygments (>=2.7.3)"]
-latex = ["latex2mathml"]
 wavedrom = ["wavedrom"]
 
 [[package]]
@@ -3770,4 +3769,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "grafana-
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8, <3.12"
-content-hash = "a7929096e4b9cadbdd926b8f0e4df585e17418d4211539c070bf4ca3984ce38c"
+content-hash = "5f8df527e7fe019fde56ebb5449d7ffbed91e8a34817c294e4b790cd70346959"
