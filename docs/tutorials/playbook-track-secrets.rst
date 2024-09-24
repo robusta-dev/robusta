@@ -115,11 +115,6 @@ Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, indicating that the Secret was created, modified, or deleted.
 
-**Sample Alert**:
-
-.. image::
-  :width: 600
-  :align: center
 
 Cleanup
 ------------------------------
