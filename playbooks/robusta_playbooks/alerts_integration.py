@@ -2,12 +2,13 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from string import Template
-from typing import Any, Dict, List, Optional, Iterable
+from typing import Any, Dict, Iterable, List, Optional
 
 import requests
 from hikaru.model.rel_1_26 import Node
 from kubernetes import client
-from kubernetes.client import V1Pod, V1PodList, V1PodStatus, exceptions
+from kubernetes.client import V1Pod, V1PodList, exceptions
+
 from robusta.api import (
     ActionException,
     ActionParams,
@@ -17,17 +18,19 @@ from robusta.api import (
     ChartValuesFormat,
     CustomGraphEnricherParams,
     Emojis,
+    EnrichmentType,
     ErrorCodes,
     ExecutionBaseEvent,
     Finding,
     FindingSource,
+    GraphBlock,
+    GraphEnricherParams,
     KubernetesResourceEvent,
     ListBlock,
     LogEnricherParams,
     MarkdownBlock,
     PodEvent,
     PrometheusKubernetesAlert,
-    PrometheusParams,
     ResourceChartItemType,
     ResourceChartResourceType,
     RobustaPod,
@@ -38,8 +41,6 @@ from robusta.api import (
     create_graph_enrichment,
     create_resource_enrichment,
     get_node_internal_ip,
-    GraphBlock,
-    EnrichmentType
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 from robusta.core.reporting import FindingSubject
@@ -223,7 +224,7 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
         enrichment_type=EnrichmentType.alert_labels,
-        title="Alert labels"
+        title="Alert labels",
     )
 
     if not params.alert_annotations_enrichment:
@@ -244,9 +245,8 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
         enrichment_type=EnrichmentType.alert_labels,
-        title="Alert annotations"
+        title="Alert annotations",
     )
-
 
 
 @action
@@ -263,7 +263,7 @@ def alert_definition_enricher(alert: PrometheusKubernetesAlert):
 
 
 @action
-def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
+def graph_enricher(alert: PrometheusKubernetesAlert, params: GraphEnricherParams):
     """
     Attach a graph of the Prometheus query that triggered the alert.
     """
@@ -273,10 +273,13 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
         promql_query,
         alert.alert.startsAt,
         include_x_axis=False,
-        graph_duration_minutes=60,
+        graph_duration_minutes=params.graph_duration_minutes,
     )
-    alert.add_enrichment([GraphBlock(f"{promql_query}.svg", chart.render(), graph_data=prom_block)],
-                         enrichment_type=EnrichmentType.graph, title="Alert Expression Graph")
+    alert.add_enrichment(
+        [GraphBlock(f"{promql_query}.svg", chart.render(), graph_data=prom_block)],
+        enrichment_type=EnrichmentType.graph,
+        title="Alert Expression Graph",
+    )
 
 
 @action
@@ -542,7 +545,7 @@ def mention_enricher(event: KubernetesResourceEvent, params: MentionParams):
 def mention_to_slack_format(mentions: Iterable[str]) -> List[str]:
     result = []
     for mentions_spec in mentions:
-        for mention in mentions_spec.split('.'):
+        for mention in mentions_spec.split("."):
             if mention.startswith("U"):
                 result.append(f"<@{mention}>")
             elif mention.startswith("S"):
