@@ -62,11 +62,14 @@ ENV PYTHONPATH=$PYTHONPATH:.:/app/src
 WORKDIR /app
 
 # Install necessary packages for the runtime environment
+# We're installing here libexpat1, to upgrade the package to include a fix to 3 high CVEs. CVE-2024-45491,CVE-2024-45490,CVE-2024-45492
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
     && apt-get install -y --no-install-recommends git ssh curl libcairo2 \
+    && apt-get install -y --no-install-recommends libexpat1 \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Patching CVE-2024-32002
 RUN git config --global core.symlinks false
