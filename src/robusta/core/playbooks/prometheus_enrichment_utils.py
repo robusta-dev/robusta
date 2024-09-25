@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import humanize
 import pygal
 from hikaru.model.rel_1_26 import Node
-from prometrix import PrometheusQueryResult, PrometheusSeries
+from prometrix import PrometheusQueryResult
 from pydantic import BaseModel
 
 from robusta.core.model.base_params import (
@@ -27,6 +27,8 @@ ChartLabelFactory = Callable[[int], str]
 ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
 BRACKETS_COMMA_PATTERN = r"\{\s*,"
 
+# for performance the series result is a dict of the format of the obj PrometheusSeries
+PrometheusSeriesDict = Dict[str, any]
 
 class XAxisLine(BaseModel):
     label: str
@@ -112,27 +114,27 @@ def get_resolution_from_duration(duration: timedelta) -> int:
     return _DEFAULT_RESOLUTION
 
 
-def get_target_name(series: PrometheusSeries) -> Optional[str]:
+def get_target_name(series: PrometheusSeriesDict) -> Optional[str]:
     for label in ["container", "pod", "node"]:
-        if label in series.metric:
-            return series.metric[label]
+        if label in series["metric"]:
+            return series["metric"][label]
     return None
 
 
-def get_series_job(series: PrometheusSeries) -> Optional[str]:
-    return series.metric.get("job")
+def get_series_job(series: PrometheusSeriesDict) -> Optional[str]:
+    return series["metric"]["job"] if "job" in series["metric"] else None
 
 
-def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeries]]) -> Optional[List[PrometheusSeries]]:
+def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeriesDict]]) -> Optional[List[PrometheusSeriesDict]]:
     if not series_list_result or len(series_list_result) == 1:
         return series_list_result
 
     target_names = {get_target_name(series) for series in series_list_result if get_target_name(series)}
-    return_list: List[PrometheusSeries] = []
+    return_list: List[PrometheusSeriesDict] = []
 
     # takes kubelet job if exists, return first job alphabetically if it doesn't
     for target_name in target_names:
-        relevant_series = [series for series in series_list_result if get_target_name(series) == target_name]
+        relevant_series: List[PrometheusSeriesDict] = [series for series in series_list_result if get_target_name(series) == target_name]
         relevant_kubelet_metric = [series for series in relevant_series if get_series_job(series) == "kubelet"]
         if len(relevant_kubelet_metric) == 1:
             return_list.append(relevant_kubelet_metric[0])
@@ -203,27 +205,27 @@ def create_chart_from_prometheus_query(
     max_y_value = 0
     series_list_result = prometheus_query_result.series_list_result
     if filter_prom_jobs:
-        series_list_result = filter_prom_jobs_results(series_list_result)
+        series_list_result: List[PrometheusSeriesDict] = filter_prom_jobs_results(series_list_result)
 
     for i, series in enumerate(series_list_result):
         label = get_target_name(series)
 
         if not label:
-            label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
+            label = "\n".join([v for (key, v) in series["metric"].items() if key != "job"])
 
         # If the label is empty, try to take it from the additional_label_factory
         if label == "" and chart_label_factory is not None:
             label = chart_label_factory(i)
 
         values = []
-        for index in range(len(series.values)):
-            timestamp = series.timestamps[index]
-            value = round(float(series.values[index]), FLOAT_PRECISION_LIMIT)
+        for index in range(len(series["values"])):
+            timestamp = series["timestamps"][index]
+            value = round(float(series["values"][index]), FLOAT_PRECISION_LIMIT)
             values.append((timestamp, value))
             if value > max_y_value:
                 max_y_value = value
-        min_time = min(min_time, min(series.timestamps))
-        max_time = max(max_time, max(series.timestamps))
+        min_time = min(min_time, min(series["timestamps"]))
+        max_time = max(max_time, max(series["timestamps"]))
 
         # Adjust min_time to ensure it is at least 1 hour before oom_kill_time, and adjust max_time to ensure it is at least 30 minutes after oom_kill_time, as required for the graph plot adjustments.
         if oom_kill_time:

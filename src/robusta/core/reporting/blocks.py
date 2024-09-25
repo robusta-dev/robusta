@@ -4,8 +4,8 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import gzip
-import json
 import itertools
+import json
 import logging
 import textwrap
 from copy import deepcopy
@@ -520,11 +520,14 @@ class PrometheusBlock(BaseBlock):
 
     data: PrometheusQueryResult
     metadata: Dict[str, str]
-
     vertical_lines: Optional[List[PrometheusBlockLineData]]
     horizontal_lines: Optional[List[PrometheusBlockLineData]]
     y_axis_type: Optional[ChartValuesFormat]
     graph_name: Optional[str]
+
+    class Config:
+        arbitrary_types_allowed = True
+
 
     def __init__(
         self,

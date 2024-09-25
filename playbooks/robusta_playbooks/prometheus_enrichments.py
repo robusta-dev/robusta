@@ -7,7 +7,6 @@ from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
 from prometheus_api_client import PrometheusApiClientException
 from prometrix import PrometheusQueryResult
-
 from robusta.api import (
     ExecutionBaseEvent,
     MarkdownBlock,
@@ -227,9 +226,9 @@ def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaPara
 
     query_result = 0
     if prometheus_result.result_type == "scalar":
-        query_result = prometheus_result.scalar_result.value
+        query_result = prometheus_result.scalar_result["value"]
     elif prometheus_result.result_type == "vector":
-        query_result = float(prometheus_result.vector_result[-1].value.value)
+        query_result = float(prometheus_result.vector_result[-1]["value"]["value"])
 
     rule_result: bool = False
     if params.operator == ">":
