@@ -336,6 +336,16 @@ For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
   :header_update_levels:
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
+
+Secret triggers
+*********************
+Secret triggers fire when secret resource changes. *By default Robusta does not support tracking secrets*, but you can enable it by :ref:`configuring kubewatch to monitor secrets<track-secrets-overview>`.
+
+.. jinja::
+  :header_update_levels:
+  :file: playbook-reference/triggers/_k8s-secrets-triggers.jinja
+
+
 Wildcard triggers
 *********************
 

@@ -22,6 +22,7 @@ from robusta.core.model.base_params import (
     FindingKeyParams,
     GrafanaAnnotationParams,
     GrafanaParams,
+    GraphEnricherParams,
     LogEnricherParams,
     NamedRegexPattern,
     NamespacedResourcesParams,

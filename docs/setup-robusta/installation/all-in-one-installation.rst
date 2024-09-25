@@ -15,8 +15,6 @@ Prerequisites
 * A :ref:`supported Kubernetes cluster <Supported Clusters>`
 * Helm
 
-.. include:: ../_questions.rst
-
 .. jinja::
    :inline-ctx: { "gen_config_flags": "--enable-prometheus-stack" }
    :header_update_levels:
