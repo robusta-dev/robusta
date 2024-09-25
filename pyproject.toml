@@ -57,7 +57,7 @@ humanize = "^3.13.1"
 # we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
-cryptography = "^42.0.5"
+cryptography = "^43.0.1"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
 prometrix = "0.1.16"
