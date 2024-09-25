@@ -26,6 +26,41 @@ Configuration
 
 .. tab-set::
 
+    .. tab-item:: Robusta
+        :name: robusta-ai
+
+        1. Go into the robusta platform. In settings > API keys, create an api key with Robusta AI write capabilities.
+
+        .. image:: /images/robusta_ai/robusta_ai_api_key.png
+            :width: 600px
+
+        2. Get your account id from your ``generated_values.yaml`` file
+
+
+        Create a secret in the following format using both your account id and robusta API key:
+
+        .. code-block:: bash
+
+          kubectl create secret generic holmes-secrets --from-literal=openAiKey='<account id> <robusta api key>'
+
+
+        Update your helm values (``generated_values.yaml`` file) with the following configuration:
+
+        .. code-block:: yaml
+
+            enableHolmesGPT: true
+            holmes:
+              additionalEnvVars:
+              - name: ROBUSTA_AI
+                value: "true"
+              - name: OPENAI_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: holmes-secrets
+                    key: openAiKey
+
+        Run Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
+
     .. tab-item:: OpenAI
         :name: open-ai
 
@@ -33,7 +68,7 @@ Configuration
 
         .. code-block:: bash
 
-          kubectl create secret generic holmes-secrets -n robusta --from-literal=openAiKey='<API_KEY_GOES_HERE>'
+          kubectl create secret generic holmes-secrets --from-literal=openAiKey='<API_KEY_GOES_HERE>'
 
         Then add the following to your helm values (``generated_values.yaml`` file):
 
@@ -123,7 +158,7 @@ Configuration
 
         .. code-block:: bash
 
-          kubectl create secret generic holmes-secrets -n robusta --from-literal=azureOpenAiKey='<AZURE_API_KEY_GOES_HERE>'
+          kubectl create secret generic holmes-secrets --from-literal=azureOpenAiKey='<AZURE_API_KEY_GOES_HERE>'
 
 
         Update your helm values (``generated_values.yaml`` file) with the following configuration:
@@ -160,7 +195,7 @@ Configuration
 
         .. code-block:: bash
 
-          kubectl create secret generic holmes-secrets -n robusta --from-literal=awsAccessKeyId='<YOUR_AWS_ACCESS_KEY_ID>' --from-literal=awsSecretAccessKey'<YOUR_AWS_SECRET_ACCESS_KEY>'
+          kubectl create secret generic holmes-secrets --from-literal=awsAccessKeyId='<YOUR_AWS_ACCESS_KEY_ID>' --from-literal=awsSecretAccessKey'<YOUR_AWS_SECRET_ACCESS_KEY>'
 
         Update your helm values (``generated_values.yaml`` file) with the following configuration:
 
@@ -187,41 +222,6 @@ Configuration
 
         Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 
-
-    .. tab-item:: Robusta
-        :name: robusta-ai
-
-        1. Go into the robusta platform. In settings > API keys, create an api key with Robusta AI write capabilities.
-
-        .. image:: /images/robusta_ai/robusta_ai_api_key.png
-            :width: 600px
-
-        2. Get your account id from your ``generated_values.yaml`` file
-
-
-        Create a secret in the following format using both your accountid and robusta API key:
-
-        .. code-block:: bash
-
-          kubectl create secret generic holmes-secrets -n robusta --from-literal=openAiKey='<account id> <robusta api key>'
-
-
-        Update your helm values (``generated_values.yaml`` file) with the following configuration:
-
-        .. code-block:: yaml
-
-            enableHolmesGPT: true
-            holmes:
-              additionalEnvVars:
-              - name: ROBUSTA_AI
-                value: true
-              - name: OPENAI_API_KEY
-                valueFrom:
-                  secretKeyRef:
-                    name: holmes-secrets
-                    key: openAiKey
-
-        Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 
 Test Holmes Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
