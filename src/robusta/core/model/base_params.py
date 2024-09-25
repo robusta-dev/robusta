@@ -325,6 +325,14 @@ class PrometheusDuration(BaseModel):
     duration_minutes: int
 
 
+class GraphEnricherParams(PrometheusParams):
+    """
+    :var graph_duration_minutes: the duration of the query in minutes
+    """
+
+    graph_duration_minutes: int = 60
+
+
 class PrometheusDateRange(BaseModel):
     """
     :var starts_at: the start date/time for the query
