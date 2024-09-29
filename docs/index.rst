@@ -1,4 +1,3 @@
-:hide-navigation:
 :hide-toc:
 
 .. toctree::

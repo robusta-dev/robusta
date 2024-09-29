@@ -206,7 +206,7 @@ html_theme_options = {
     "features": [
         "navigation.instant",
         "navigation.top",
-        "navigation.tabs",
+        #"navigation.tabs",
         "navigation.tabs.sticky",
         "search.share",
         "toc.follow",
