@@ -133,6 +133,36 @@ contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-
                               requests:
                                 storage: 10Gi
 
+.. details:: Error in Holmes: binascii.a2b_base64(s, strict_mode=validate)
+
+        If the Holmes pod fail to start, with this exception:
+
+        .. code-block::
+
+                2024-09-20 15:37:57.961 INFO     loading config /etc/robusta/config/active_playbooks.yaml
+                Traceback (most recent call last):
+                  File "/app/server.py", line 65, in <module>
+                    dal = SupabaseDal()
+                          ^^^^^^^^^^^^^
+                  File "/app/holmes/core/supabase_dal.py", line 38, in __init__
+                    self.enabled = self.__init_config()
+                                   ^^^^^^^^^^^^^^^^^^^^
+                  File "/app/holmes/core/supabase_dal.py", line 68, in __init_config
+                    robusta_token = self.__load_robusta_config()
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                  File "/app/holmes/core/supabase_dal.py", line 61, in __load_robusta_config
+                    return RobustaToken(**json.loads(base64.b64decode(token)))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^
+                  File "/usr/local/lib/python3.11/base64.py", line 88, in b64decode
+                    return binascii.a2b_base64(s, strict_mode=validate)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                binascii.Error: Invalid base64-encoded string: number of data characters (21) cannot be 1 more than a multiple of 4
+
+
+        It's often because the ``Robusta UI Token`` is pulled from a secret, and Holmes cannot read it.
+
+        See :ref:`Sinks Configuration Secrets` to configure Holmes to read the ``token``
+
 Contributing
 ^^^^^^^^^^^^^^^^^^^^^^
 

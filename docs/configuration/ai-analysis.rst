@@ -223,6 +223,41 @@ Configuration
         Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 
 
+Sinks Configuration Secrets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Holmes uses the ``token`` used for the ``Robusta UI sink``.
+If you're pulling this ``token`` from a secret:
+
+.. code-block:: yaml
+
+    runner:
+      additional_env_vars:
+      - name: UI_SINK_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: my-robusta-secrets
+            key: ui-token
+
+    sinksConfig:
+    - robusta_sink:
+        name: robusta_ui_sink
+        token: "{{ env.UI_SINK_TOKEN }}"
+
+You should direct Holmes to use the same secret, and pass it as an environment variable named ``ROBUSTA_UI_TOKEN``:
+
+.. code-block:: yaml
+
+    holmes:
+      additional_env_vars:
+      ....
+      - name: ROBUSTA_UI_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: my-robusta-secrets
+            key: ui-token
+
+
 Test Holmes Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
