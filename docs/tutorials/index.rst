@@ -78,3 +78,11 @@ Prometheus Graphs
    :maxdepth: 1
 
    robusta-runner-metrics
+
+HolmesGPT
+----------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   holmes-custom-toolsets
