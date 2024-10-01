@@ -26,20 +26,18 @@ To add a toolset in Holmes, update the ``generated_values.yaml`` with the follow
         # Name of the toolset (for example "mycompany/internal-tools")
         # Used for informational purposes only (e.g. to print the name of the toolset if it can't be loaded)
         - name: "switch_clusters"
-
           # List of tools the LLM can use - this is the important part
           tools:
             # Name is a unique identifier for the tool
             - name: "switch_cluster"
               # The LLM looks at this description when deciding what tools are relevant for each task
               description: "Used to switch between multiple kubernetes contexts(clusters)"
-
               # A templated bash command using Jinja2 templates
               # The LLM can only control parameters that you expose as template variables like {{ this_variable }}
               command: "kubectl config use-context {{ cluster_name }}"
 
 
-- **``toolsets``**: Defines a custom toolset, in this case, a ``switch_clusters`` toolset that allows Holmes to switch between Kubernetes clusters using ``kubectl``. The toolset includes a tool called ``switch_cluster``, which accepts the ``cluster_name`` as input and runs the corresponding ``kubectl`` command.
+**``toolsets``**: Defines a custom toolset, in this case, a ``switch_clusters`` toolset that allows Holmes to switch between Kubernetes clusters using ``kubectl``. The toolset includes a tool called ``switch_cluster``, which accepts the ``cluster_name`` as input and runs the corresponding ``kubectl`` command.
 
 Applying the Changes
 --------------------
@@ -91,11 +89,6 @@ To install a non-standard binary (such as ``jq`` for JSON processing) or any add
     RUN apt-get install -y jq
     ...
 
-This Dockerfile:
-- Inherits from the base Holmes image.
-- Installs the required binary (in this case, ``jq``).
-- Keeps the default entrypoint to ensure Holmes runs as expected.
-
 Step 2: Build and Push the Custom Docker Image
 ----------------------------------------------
 
@@ -124,9 +117,6 @@ Now, you will need to **build and push** the Docker image to your container regi
 
    This ensures that the image is available for your Kubernetes deployment.
 
-3. **Update your Holmes Deployment**
-   U
-Step 3: Update Helm to Use the Custom Docker Image
 --------------------------------------------------
 
 After pushing your custom Docker image, update your ``generated_values.yaml`` to use this custom image for Holmes.
@@ -135,9 +125,8 @@ After pushing your custom Docker image, update your ``generated_values.yaml`` to
 
     enableHolmesGPT: true
     holmes:
-      image:
-        repository: <your-registry>/<your-project>/holmes-custom  # Use your custom image
-        tag: <tag>  # Specify the tag you used when pushing the image
+      registry: <your-registry>/<your-project>  # Use your custom registry
+      image: <image>:<tag>  # Specify the image with the tag you used when pushing the image
       additionalEnvVars:
         - name: ROBUSTA_AI
           value: "true"
