@@ -1,4 +1,4 @@
-Adding Toolsets to Holmes
+Adding Custom Tools to Holmes
 #########################
 
 Holmes allows you to define custom toolsets that enhance its functionality by enabling additional tools to run Kubernetes commands or other tasks.
@@ -23,14 +23,21 @@ To add a toolset in Holmes, update the ``generated_values.yaml`` with the follow
               name: holmes-secrets
               key: openAiKey
       toolsets:
-        # Define the custom toolset (example: "switch_clusters")
+        # Name of the toolset (for example "mycompany/internal-tools")
+        # Used for informational purposes only (e.g. to print the name of the toolset if it can't be loaded)
         - name: "switch_clusters"
-          prerequisites:
-            - command: "kubectl version --client"
+
+          # List of tools the LLM can use - this is the important part
           tools:
+            # Name is a unique identifier for the tool
             - name: "switch_cluster"
-              description: "Used to switch between multiple Kubernetes contexts (clusters)"
+              # The LLM looks at this description when deciding what tools are relevant for each task
+              description: "Used to switch between multiple kubernetes contexts(clusters)"
+
+              # A templated bash command using Jinja2 templates
+              # The LLM can only control parameters that you expose as template variables like {{ this_variable }}
               command: "kubectl config use-context {{ cluster_name }}"
+
 
 - **``toolsets``**: Defines a custom toolset, in this case, a ``switch_clusters`` toolset that allows Holmes to switch between Kubernetes clusters using ``kubectl``. The toolset includes a tool called ``switch_cluster``, which accepts the ``cluster_name`` as input and runs the corresponding ``kubectl`` command.
 
