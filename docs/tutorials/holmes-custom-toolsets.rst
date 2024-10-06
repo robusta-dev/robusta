@@ -17,27 +17,22 @@ To add a toolset in Holmes, update the ``generated_values.yaml`` with the follow
       additionalEnvVars:
         - name: ROBUSTA_AI
           value: "true"
-        - name: OPENAI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: holmes-secrets
-              key: openAiKey
       toolsets:
         # Name of the toolset (for example "mycompany/internal-tools")
         # Used for informational purposes only (e.g. to print the name of the toolset if it can't be loaded)
-        - name: "switch_clusters"
+        - name: "resource_explanation"
           # List of tools the LLM can use - this is the important part
           tools:
-            # Name is a unique identifier for the tool
-            - name: "switch_cluster"
+          # Name is a unique identifier for the tool
+            - name: "explain_resource"
               # The LLM looks at this description when deciding what tools are relevant for each task
-              description: "Used to switch between multiple kubernetes contexts(clusters)"
+              description: "Provides detailed explanation of Kubernetes resources using kubectl explain"
               # A templated bash command using Jinja2 templates
-              # The LLM can only control parameters that you expose as template variables like {{ this_variable }}
-              command: "kubectl config use-context {{ cluster_name }}"
+              # The LLM can only control parameters that you expose as template variables like {{ resource_name }}
+              command: "kubectl explain {{ resource_name }}"
 
 
-**``toolsets``**: Defines a custom toolset, in this case, a ``switch_clusters`` toolset that allows Holmes to switch between Kubernetes clusters using ``kubectl``. The toolset includes a tool called ``switch_cluster``, which accepts the ``cluster_name`` as input and runs the corresponding ``kubectl`` command.
+**``toolsets``**: Defines a custom toolset, in this case, a ``resource_explanation``, which allows Holmes to use the ``kubectl explain`` command to provide details about various Kubernetes resources.
 
 Applying the Changes
 --------------------
@@ -130,11 +125,6 @@ After pushing your custom Docker image, update your ``generated_values.yaml`` to
       additionalEnvVars:
         - name: ROBUSTA_AI
           value: "true"
-        - name: OPENAI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: holmes-secrets
-              key: openAiKey
       toolsets:
         - name: "json_processor"
           prerequisites:
