@@ -22,16 +22,22 @@ Ask for help, or just say hi!
       :class-card: sd-bg-light sd-bg-text-light
       :link: https://github.com/robusta-dev/robusta/issues
 
+--------------------------------
 Commercial Support
-^^^^^^^^^^^^^^^^^^^
+--------------------------------
 Contact support@robusta.dev for details.
 
+--------------------------------
 Common Errors
-^^^^^^^^^^^^^
+--------------------------------
 
-This list contains some common errors we have encountered over time. If you can't find your answer here,
-contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-slack>`_.
+This list contains some common errors we have encountered over time.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Robusta CLI tool
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Errors installing the robusta cli config creation tool. Not relevant when installing via browser at platform.robusta.dev.
 
 .. details:: command not found: robusta (CLI not in path)
 
@@ -69,68 +75,95 @@ contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-
     For more info see:
     https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Helm installation fails
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Problems when running ``helm install`` command or installing via GitOps.
+
 .. details:: unknown field in com.coreos.monitoring.v1.Prometheus.spec, ValidationError(Prometheus.spec)
 
     This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
 
     Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
 
-.. details:: robusta-runner isn't working or has exceptions
+.. details:: at least one sinks must be defined
 
-    Check the pod's memory consumption. If necessary, increase the memory request in the Helm values:
+   Verify ``sinksConfig`` is defined in your Robusta values file, with at least one sink like Slack, Teams or Robusta UI ("robusta_sink"). If it's your first time installing, the fastest solution is to start configue creation from scratch.
+
+   .. code-block:: bash
+
+      Error: UPGRADE FAILED: execution error at (robusta/templates/playbooks-config.yaml:9:7): At least one sink must be defined!
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Robusta runner, Prometheus or Holmes failures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. details:: robusta-runner pod is in Pending state due to memory issues
+
+    If your cluster has 20 Nodes or less, set robusta-runner's memory request to 512MiB in Robusta's Helm values:
 
     .. code-block:: yaml
 
         runner:
           resources:
             requests:
-              memory: 2048Mi
+              memory: 512MiB
             limits:
-              memory: 2048Mi
+              memory: 512MiB
 
-    Here's a representative error caused by too little memory:
+.. details:: Prometheus' pods are in Pending state due to memory issues
 
-    .. details:: Discovery Error
+        If your cluster has 20 Nodes or less, set Prometheus memory request to TBD
 
-        .. code-block::
+        If using a test cluster like Kind/Colima, re-install Robusta with the ``isSmallCluster=true`` property:
 
-            2023-04-17 23:37:43.019 ERROR    Discovery process internal error
-            2023-04-17 23:37:43.022 INFO     Initialized new discovery pool
-            2023-04-17 23:37:43.022 ERROR    Failed to run publish discovery for robusta_ui_sink
-            Traceback (most recent call last):
-              File "/app/src/robusta/core/sinks/robusta/robusta_sink.py", line 175, in __discover_resources
-                results: DiscoveryResults = Discovery.discover_resources()
-              File "/app/src/robusta/core/discovery/discovery.py", line 288, in discover_resources
-                raise e
-              File "/app/src/robusta/core/discovery/discovery.py", line 280, in discover_resources
-                return future.result()
-              File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 446, in result
-                return self.__get_result()
-              File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
-                raise self._exception
-            concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+        .. code-block:: bash
 
-.. details:: AlertManager Silences are Disappearing
+                helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true
 
-        This happens when AlertManager does not have persistent storage enabled.
 
-        When using Robusta's embedded Prometheus Stack, persistent storage is enabled by default.
+.. details:: robusta-runner isn't working or has exceptions
 
-        For other Prometheus distributions set the following Helm value (or it's equivalent):
+        Start by checking the logs for errors:
 
-        .. code-block::
+        .. code-block:: bash
 
-                  # this is the setting in in kube-prometheus-stack
-                  # the exact setting will differ for other Prometheus distributions
-                  alertmanager:
-                    alertmanagerSpec:
-                      storage:
-                        volumeClaimTemplate:
-                          spec:
-                            accessModes: ["ReadWriteOnce"]
-                            resources:
-                              requests:
-                                storage: 10Gi
+                kubectl get pods -A | grep robusta-runner # get the name and the namespace of the robusta pod
+                kubectl logs -n <NAMESPACE> <ROBUSTA-RUNNER-POD-NAME> # get the logs
+
+        Check the pod's memory consumption. If necessary, increase the memory request in the Helm values:
+
+        .. code-block:: yaml
+
+                runner:
+                  resources:
+                    requests:
+                      memory: 2048Mi
+                    limits:
+                      memory: 2048Mi
+
+        Here's a representative error caused by too little memory:
+
+        .. details:: Discovery Error
+
+                .. code-block::
+
+                    2023-04-17 23:37:43.019 ERROR    Discovery process internal error
+                    2023-04-17 23:37:43.022 INFO     Initialized new discovery pool
+                    2023-04-17 23:37:43.022 ERROR    Failed to run publish discovery for robusta_ui_sink
+                    Traceback (most recent call last):
+                      File "/app/src/robusta/core/sinks/robusta/robusta_sink.py", line 175, in __discover_resources
+                        results: DiscoveryResults = Discovery.discover_resources()
+                      File "/app/src/robusta/core/discovery/discovery.py", line 288, in discover_resources
+                        raise e
+                      File "/app/src/robusta/core/discovery/discovery.py", line 280, in discover_resources
+                        return future.result()
+                      File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 446, in result
+                        return self.__get_result()
+                      File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+                        raise self._exception
+                    concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
 
 .. details:: Error in Holmes: binascii.a2b_base64(s, strict_mode=validate)
 
@@ -161,3 +194,39 @@ contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-
         It's often because the ``Robusta UI Token`` is pulled from a secret, and Holmes cannot read it.
 
         See :ref:`Sinks Configuration Secrets` to configure Holmes to read the ``token``
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Alert Manager is not working
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. details:: Not getting alert manager alerts
+
+        Receiver url has namespace TBD
+
+        .. tip::
+
+            If you're using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/robusta-demo/simulate-alert/>`_.
+
+
+
+.. details:: AlertManager Silences are Disappearing
+
+        This happens when AlertManager does not have persistent storage enabled.
+
+        When using Robusta's embedded Prometheus Stack, persistent storage is enabled by default.
+
+        For other Prometheus distributions set the following Helm value (or it's equivalent):
+
+        .. code-block::
+
+                  # this is the setting in in kube-prometheus-stack
+                  # the exact setting will differ for other Prometheus distributions
+                  alertmanager:
+                    alertmanagerSpec:
+                      storage:
+                        volumeClaimTemplate:
+                          spec:
+                            accessModes: ["ReadWriteOnce"]
+                            resources:
+                              requests:
+                                storage: 10Gi
