@@ -61,12 +61,12 @@ class RRM:
         if latest_revision is None:
             return
 
+        self.__latest_revision = latest_revision
         if len(errors):
             self.dal.set_account_resource_status(status_type=AccountResourceStatusType.error,
                                                  info=AccountResourceStatusInfo(error=", ".join(errors)),
                                                  latest_revision=self.__latest_revision)
         else:
-            self.__latest_revision = latest_revision
             self.dal.set_account_resource_status(status_type=AccountResourceStatusType.success, info=None,
                                                  latest_revision=self.__latest_revision)
 
