@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
-from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
@@ -28,8 +27,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
-from robusta.core.model.nodes import NodeInfo, NodeSystemInfo
-from robusta.core.model.pods import PodResources
+from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
 from robusta.core.pubsub.event_subscriber import EventHandler
 from robusta.core.reporting.base import Finding
@@ -81,9 +79,8 @@ class RobustaSink(SinkBase, EventHandler):
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
 
-        global_config = self.get_global_config()
         self.__prometheus_discovery_util = PrometheusDiscoveryUtils(
-            discovery_period_sec=self.__discovery_period_sec, global_config=global_config
+            discovery_period_sec=self.__discovery_period_sec, registry=registry
         )
         self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
         self.__pods_running_count: int = 0
