@@ -291,7 +291,7 @@ Holmes allows you to define custom toolsets that enhance its functionality by en
 
 In this guide, we will show how to add a custom toolset to Holmes in your ``generated_values.yaml`` file.
 
-Updating the Helm Values (``generated_values.yaml``)
+Updating the Helm Values
 ----------------------------------------------------
 
 To add a toolset in Holmes, update the ``generated_values.yaml`` with the following configuration:
@@ -337,14 +337,14 @@ Adding a Tool that requires to update Holmes image
 
 In some cases, adding a new tool to Holmes might require installing additional packages that are not included in the base Holmes Docker image. This guide explains how to create a custom Docker image that includes the new binaries and update your Helm deployment to use the custom image.
 
-Step 1: Creating a Custom Docker Image
+Creating a Custom Docker Image
 --------------------------------------
 
 To install a non-standard binary (such as ``jq`` for JSON processing) or any additional Linux tool, you can create a custom Docker image that inherits from the main Holmes image and installs the required binaries.
 
 **Example Dockerfile to add ``jq``:**
 
-.. code-block:: Dockerfile
+.. code-block::
     ...
     FROM python:3.11-slim
 
@@ -371,7 +371,7 @@ To install a non-standard binary (such as ``jq`` for JSON processing) or any add
     RUN apt-get install -y jq
     ...
 
-Step 2: Build and Push the Custom Docker Image
+Build and Push the Custom Docker Image
 ----------------------------------------------
 
 Now, you will need to **build and push** the Docker image to your container registry.
@@ -421,7 +421,7 @@ After pushing your custom Docker image, update your ``generated_values.yaml`` to
               description: "A tool that uses jq to process JSON input"
               command: "echo '{{ json_input }}' | jq '.'"  # Example jq command to format JSON
 
-Step 4: Update the Deployment with Helm
+Update the Deployment with Helm
 ---------------------------------------
 
 After updating your ``generated_values.yaml``, apply the changes to your Helm deployment:
