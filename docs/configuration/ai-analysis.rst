@@ -344,8 +344,8 @@ To install a non-standard binary (such as ``jq`` for JSON processing) or any add
 
 **Example Dockerfile to add ``jq``:**
 
-.. code-block::
-    ...
+.. code-block:: bash
+
     FROM python:3.11-slim
 
     ENV PYTHONUNBUFFERED=1
@@ -367,9 +367,9 @@ To install a non-standard binary (such as ``jq`` for JSON processing) or any add
         && apt-get install -y --no-install-recommends libexpat1 \
         && rm -rf /var/lib/apt/lists/*
 
-    # Just an example
+    # Example of installing jq
     RUN apt-get install -y jq
-    ...
+
 
 Build and Push the Custom Docker Image
 ----------------------------------------------
