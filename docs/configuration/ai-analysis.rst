@@ -342,7 +342,7 @@ Creating a Custom Docker Image
 
 To install a non-standard binary (such as ``jq`` for JSON processing) or any additional Linux tool, you can create a custom Docker image that inherits from the main Holmes image and installs the required binaries.
 
-**Example Dockerfile to add ``jq``:**
+**Example Dockerfile to add jq:**
 
 .. code-block:: bash
 
