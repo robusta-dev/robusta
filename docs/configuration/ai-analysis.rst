@@ -318,7 +318,7 @@ To add a toolset in Holmes, update the ``generated_values.yaml`` with the follow
               command: "kubectl explain {{ resource_name }}"
 
 
-**``toolsets``**: Defines a custom toolset, in this case, a ``resource_explanation``, which allows Holmes to use the ``kubectl explain`` command to provide details about various Kubernetes resources.
+``toolsets``: Defines a custom toolset, in this case, a ``resource_explanation``, which allows Holmes to use the ``kubectl explain`` command to provide details about various Kubernetes resources.
 
 Applying the Changes
 --------------------
@@ -329,10 +329,10 @@ Once you have updated the ``generated_values.yaml`` file, apply the changes by r
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
-After the deployment, the custom toolset is automatically available for Holmes to use. Holmes will now be able to run the ``switch_cluster`` tool whenever required, allowing it to switch between Kubernetes contexts based on the defined parameters.
+After the deployment, the custom toolset is automatically available for Holmes to use. Holmes will now be able to run the ``kubectl explain`` tool whenever required, allowing it to provide details about various Kubernetes resources.
 
 
-Adding a Tool that requires to update Holmes image
+Adding a tool that requires a new binary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some cases, adding a new tool to Holmes might require installing additional packages that are not included in the base Holmes Docker image. This guide explains how to create a custom Docker image that includes the new binaries and update your Helm deployment to use the custom image.
