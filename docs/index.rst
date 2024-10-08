@@ -2,14 +2,14 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Home
+   :caption: 🏠Home
    :hidden:
 
    self
 
 .. toctree::
    :maxdepth: 4
-   :caption: How it works
+   :caption: ⚙️How it works
    :hidden:
 
    how-it-works/index
@@ -70,7 +70,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Help
+   :caption: 🆘Help
    :hidden:
 
    help
