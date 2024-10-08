@@ -75,6 +75,8 @@
    :hidden:
 
    help
+   contributing
+   community-tutorials
 
 Better Prometheus Alerts (and more) for Kubernetes
 =====================================================
