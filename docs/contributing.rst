@@ -13,7 +13,7 @@ We love our community and appreciate any contribution to the Robusta project.
 
 To contribute to the docs, see :ref:`Improving These Docs`.
 
-For code contributions, a good place to start is developing a new sink of creating a new action.
+For code contributions, a good place to start is developing a new sink OR creating a new action.
 
 * :ref:`Developing a New Sink`
 * :ref:`Developing New Actions`

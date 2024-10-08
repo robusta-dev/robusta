@@ -37,7 +37,7 @@ This list contains some common errors we have encountered over time.
 Robusta CLI tool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Errors installing the robusta cli config creation tool. Not relevant when installing via browser at platform.robusta.dev.
+Errors installing the robusta cli config creation tool. Not relevant when using the Web Installation method.
 
 .. details:: command not found: robusta (CLI not in path)
 
@@ -87,7 +87,7 @@ Problems when running ``helm install`` command or installing via GitOps.
 
     Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
 
-.. details:: at least one sinks must be defined
+.. details:: at least one sink must be defined
 
    Verify ``sinksConfig`` is defined in your Robusta values file, with at least one sink like Slack, Teams or Robusta UI ("robusta_sink"). If it's your first time installing, the fastest solution is to start configue creation from scratch.
 
@@ -114,7 +114,18 @@ Robusta runner, Prometheus or Holmes failures
 
 .. details:: Prometheus' pods are in Pending state due to memory issues
 
-        If your cluster has 20 Nodes or less, set Prometheus memory request to TBD
+        If your cluster has 20 Nodes or less, set Prometheus memory request to 1Gi in Robusta's Helm values:
+
+        .. code-block:: yaml
+
+                kube-prometheus-stack:
+                  prometheus:
+                    prometheusSpec:
+                      resources:
+                        requests:
+                          memory: 1Gi
+                        limits:
+                          memory: 1Gi
 
         If using a test cluster like Kind/Colima, re-install Robusta with the ``isSmallCluster=true`` property:
 
@@ -131,19 +142,6 @@ Robusta runner, Prometheus or Holmes failures
 
                 kubectl get pods -A | grep robusta-runner # get the name and the namespace of the robusta pod
                 kubectl logs -n <NAMESPACE> <ROBUSTA-RUNNER-POD-NAME> # get the logs
-
-        Check the pod's memory consumption. If necessary, increase the memory request in the Helm values:
-
-        .. code-block:: yaml
-
-                runner:
-                  resources:
-                    requests:
-                      memory: 2048Mi
-                    limits:
-                      memory: 2048Mi
-
-        Here's a representative error caused by too little memory:
 
         .. details:: Discovery Error
 
@@ -164,6 +162,17 @@ Robusta runner, Prometheus or Holmes failures
                       File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
                         raise self._exception
                     concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
+                This error might be due to memory issues. Increase the memory request in Robusta's Helm values:
+
+                .. code-block:: yaml
+
+                        runner:
+                          resources:
+                            requests:
+                              memory: 2048Mi
+                            limits:
+                              memory: 2048Mi
 
 .. details:: Error in Holmes: binascii.a2b_base64(s, strict_mode=validate)
 
