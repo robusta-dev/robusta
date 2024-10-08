@@ -1,12 +1,41 @@
-.. _alert-history-export:
+Alert History Import and Export API
+===================================
 
-Exporting Alert History
-==========================
+GET https://api.robusta.dev/api/alerts
+--------------------------------------
 
-Robusta allows you to export alert history data using a simple API call. This feature helps in fetching historical alert details based on specific criteria such as ``alert_name``, ``account_id``, and time range.
+Use this endpoint to export alert history data. You can filter the results based on specific criteria using query parameters such as ``alert_name``, ``account_id``, and time range.
+
+Query Parameters
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :widths: 15 10 70 10
+   :header-rows: 1
+
+   * - Parameter
+     - Type
+     - Description
+     - Required
+   * - ``account_id``
+     - string
+     - The unique account identifier (found in your ``generated_values.yaml`` file).
+     - Yes
+   * - ``start_ts``
+     - string
+     - Start timestamp for the alert history query (in ISO 8601 format, e.g., ``2024-09-02T04:02:05.032Z``).
+     - Yes
+   * - ``end_ts``
+     - string
+     - End timestamp for the alert history query (in ISO 8601 format, e.g., ``2024-09-17T05:02:05.032Z``).
+     - Yes
+   * - ``alert_name``
+     - string
+     - The name of the alert to filter by (e.g., ``CrashLoopBackoff``).
+     - No
 
 Example Request
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 The following ``curl`` command demonstrates how to export alert history data for the ``CrashLoopBackoff`` alert:
 
@@ -20,10 +49,25 @@ In the command, make sure to replace the following placeholders:
 - ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
 - ``TOKEN_HERE``: Your API token for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
 
-Response Format
-^^^^^^^^^^^^^^^^
+Request Headers
+^^^^^^^^^^^^^^^
 
-The response will contain an array of alert objects with detailed information, as shown in the example below:
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - Header
+     - Description
+   * - ``Authorization``
+     - Bearer token for authentication (e.g., ``Bearer TOKEN_HERE``). The token must have "Read Alerts" permission.
+
+Response Format
+^^^^^^^^^^^^^^^
+
+The API will return a list of alerts in JSON format. Each alert object contains detailed information about the alert, including the name, priority, source, and related resource information.
+
+Example Response
+^^^^^^^^^^^^^^^^
 
 .. code-block:: json
 
@@ -60,19 +104,51 @@ The response will contain an array of alert objects with detailed information, a
         }
     ]
 
+Response Fields
+^^^^^^^^^^^^^^^
 
-Fields in the response include:
+.. list-table::
+   :widths: 20 10 70
+   :header-rows: 1
 
-- **alert_name**: The name of the alert (e.g., `CrashLoopBackoff`).
-- **title**: A short description of the alert event.
-- **source**: The source of the alert (e.g., `kubernetes_api_server`).
-- **priority**: The priority level of the alert (e.g., `HIGH`).
-- **started_at**: The timestamp when the alert was triggered.
-- **resolved_at**: The timestamp when the alert was resolved, or `null` if unresolved.
-- **cluster**: The cluster where the alert originated.
-- **namespace**: The namespace in which the alert occurred.
-- **app**: The application associated with the alert.
-- **resource_name**: The specific resource that triggered the alert.
-- **resource_node**: The node where the resource is located.
+   * - Field
+     - Type
+     - Description
+   * - ``alert_name``
+     - string
+     - Name of the alert (e.g., ``CrashLoopBackoff``).
+   * - ``title``
+     - string
+     - A brief description of the alert event.
+   * - ``source``
+     - string
+     - Source of the alert (e.g., ``kubernetes_api_server``).
+   * - ``priority``
+     - string
+     - Priority level of the alert (e.g., ``HIGH``).
+   * - ``started_at``
+     - string
+     - Timestamp when the alert was triggered, in ISO 8601 format.
+   * - ``resolved_at``
+     - string
+     - Timestamp when the alert was resolved, or ``null`` if still unresolved.
+   * - ``cluster``
+     - string
+     - The cluster where the alert originated.
+   * - ``namespace``
+     - string
+     - Namespace where the alert occurred.
+   * - ``app``
+     - string
+     - The application that triggered the alert.
+   * - ``resource_name``
+     - string
+     - Name of the resource that caused the alert.
+   * - ``resource_node``
+     - string
+     - The node where the resource is located.
 
-Use this API to fetch alert history and integrate it into your monitoring and reporting workflows.
+Usage
+^^^^^
+
+Use this API to fetch alert history based on specific criteria, such as alert name or time range, and integrate the data into your monitoring or reporting workflows.
