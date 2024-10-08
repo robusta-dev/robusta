@@ -340,9 +340,6 @@ If there is an error in processing the request, the API will return the followin
 - **Content-Type**: `application/json`
 
 
-Configuration Changes API
-==========================
-
 POST https://api.robusta.dev/api/config-changes
 -----------------------------------------------
 
