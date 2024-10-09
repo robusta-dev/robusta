@@ -276,15 +276,12 @@ Here is an example of a ``POST`` request to send a list of alerts:
                 "failure": true,
                 "starts_at": "2024-10-07T10:00:00Z",
                 "labels": {
-                    "severity": "high",
                     "environment": "production"
                 },
                 "annotations": {
-                    "runbook": "Check the API Gateway logs for errors."
+                    "env1": "true"
                 },
                 "cluster": "prod-cluster-1",
-                "subject_type": "service",
-                "subject_name": "api-gateway",
                 "subject_namespace": "prod",
                 "subject_node": "gke-prod-cluster-1-node-1"
             }
@@ -337,7 +334,6 @@ If there is an error in processing the request, the API will return the followin
     }
 
 - **Status Code**: Varies based on the error (e.g., `400 Bad Request`, `500 Internal Server Error`).
-- **Content-Type**: `application/json`
 
 
 POST https://api.robusta.dev/api/config-changes
@@ -460,13 +456,11 @@ Here is an example of a ``POST`` request to send a list of configuration changes
                 "source": "test-service",
                 "cluster": "prod-cluster-1",
                 "labels": {
-                    "severity": "medium",
                     "environment": "production"
                 },
                 "annotations": {
-                    "change_author": "John Doe"
+                    "env1": "true"
                 },
-                "subject_name": "api-gateway",
                 "subject_namespace": "prod",
                 "subject_node": "gke-prod-cluster-1-node-1"
             }
@@ -519,4 +513,3 @@ If there is an error in processing the request, the API will return the followin
     }
 
 - **Status Code**: Varies based on the error (e.g., `400 Bad Request`, `500 Internal Server Error`).
-- **Content-Type**: `application/json`
