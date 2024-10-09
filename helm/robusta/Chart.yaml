@@ -15,6 +15,6 @@ dependencies:
   condition: enablePrometheusStack
   repository: "https://prometheus-community.github.io/helm-charts"
 - name: holmes
-  version: 0.5.1
+  version: 0.5.2
   condition: enableHolmesGPT
   repository: "https://robusta-charts.storage.googleapis.com"
