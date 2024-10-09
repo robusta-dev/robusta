@@ -4,6 +4,6 @@ dependencies:
   version: 55.7.0
 - name: holmes
   repository: https://robusta-charts.storage.googleapis.com
-  version: 0.3.0
-digest: sha256:fa6632936bdf70488850570ac987f84b084bcd8dbc48c9f10a497af3377f624d
-generated: "2024-09-02T23:26:30.259204+03:00"
+  version: 0.5.2
+digest: sha256:a9a93e67c924281234b7e73bae9c54024efa44af3f76e27ba08f53ca12f3588e
+generated: "2024-10-09T19:32:24.192483+03:00"
