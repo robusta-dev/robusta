@@ -108,7 +108,7 @@ Response Fields
 ^^^^^^^^^^^^^^^
 
 .. list-table::
-   :widths: 20 10 70
+   :widths: 25 10 70
    :header-rows: 1
 
    * - Field
@@ -159,7 +159,7 @@ Request Body Schema
 The request body must include the following fields:
 
 .. list-table::
-   :widths: 20 10 70 10
+   :widths: 25 10 70 10
    :header-rows: 1
 
    * - Field
@@ -313,7 +313,7 @@ Request Headers
 Response Format
 ^^^^^^^^^^^^^^^
 
-### Success Response
+*Success Response*
 
 If the request is successful, the API will return the following response:
 
@@ -325,7 +325,7 @@ If the request is successful, the API will return the following response:
 
 - **Status Code**: `200 OK`
 
-### Error Response
+*Error Response*
 
 If there is an error in processing the request, the API will return the following format:
 
@@ -351,7 +351,7 @@ Request Body Schema
 The request body must include the following fields:
 
 .. list-table::
-   :widths: 20 10 70 10
+   :widths: 25 10 70 10
    :header-rows: 1
 
    * - Field
@@ -370,7 +370,7 @@ The request body must include the following fields:
 Each configuration change in the ``config_changes`` list must follow the specific schema, which includes the following fields:
 
 .. list-table::
-   :widths: 20 10 70 10
+   :widths: 25 10 70 10
    :header-rows: 1
 
    * - Field
@@ -495,7 +495,7 @@ Request Headers
 Response Format
 ^^^^^^^^^^^^^^^
 
-### Success Response
+*Success Response*
 
 If the request is successful, the API will return the following response:
 
@@ -507,7 +507,7 @@ If the request is successful, the API will return the following response:
 
 - **Status Code**: `200 OK`
 
-### Error Response
+*Error Response*
 
 If there is an error in processing the request, the API will return the following format:
 
