@@ -8,6 +8,7 @@ class OpenshiftGroup(BaseModel):
     name: str
     namespace: str = ""
     users: list[str] = []
+    namespaces: list[str] = []
     labels: Dict[str, str]
     annotations: Dict[str, str]
     deleted: bool = False

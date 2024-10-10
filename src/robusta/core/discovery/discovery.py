@@ -49,6 +49,7 @@ from robusta.core.model.env_vars import (
     DISCOVERY_POD_OWNED_PODS,
     DISCOVERY_PROCESS_TIMEOUT_SEC,
     IS_OPENSHIFT,
+    OPENSHIFT_GROUPS,
 )
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
@@ -235,6 +236,20 @@ class Discovery:
                     if not continue_ref:
                         break
 
+            if OPENSHIFT_GROUPS:
+                groupname_to_namespaces = defaultdict(list)
+                try:
+                    role_bindings = client.RbacAuthorizationV1Api().list_role_binding_for_all_namespaces()
+                    for role_binding in role_bindings.items:
+                        ns = role_binding.metadata.namespace
+
+                        for subject in role_binding.subjects:
+                            if subject.kind == "Group":
+                                groupname_to_namespaces[subject.name].append(ns)
+
+                except Exception:
+                    logging.exception(msg="Failed to build Openshift rolebinding to groups map.")
+
                 for _ in range(DISCOVERY_MAX_BATCHES):
                     try:
                         os_groups = client.CustomObjectsApi().list_cluster_custom_object(
@@ -251,11 +266,13 @@ class Discovery:
                     for os_group in os_groups.get("items", []):
                         try:
                             meta = os_group.get("metadata", {})
+                            name = meta.get("name")
                             openshift_groups.extend(
                                 [
                                     OpenshiftGroup(
-                                        name=meta.get("name"),
+                                        name=name,
                                         users=os_group.get("users", []) or [],
+                                        namespaces=groupname_to_namespaces.get(name, []),
                                         labels=meta.get("labels"),
                                         annotations=meta.get("annotations"),
                                         resource_version=meta.get("resourceVersion"),
@@ -269,7 +286,6 @@ class Discovery:
                     continue_ref = os_groups.get("metadata", {}).get("continue")
                     if not continue_ref:
                         break
-
             # rollouts.
             continue_ref = None
             if ARGO_ROLLOUTS:
