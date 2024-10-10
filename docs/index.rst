@@ -53,6 +53,7 @@
    notification-routing/routing-by-namespace
    notification-routing/routing-by-type
    notification-routing/routing-exclusion
+   notification-routing/routing-by-time
    notification-routing/routing-silencing
 
 .. toctree::
