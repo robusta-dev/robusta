@@ -3,6 +3,8 @@ from enum import Enum
 from typing import Dict, List, Optional, Union
 
 from hikaru.model.rel_1_26 import Container, ContainerState, ContainerStatus, Pod
+from kubernetes.client.models import V1Container, V1ContainerStatus, V1PodStatus, V1Pod, V1PodSpec, V1ResourceRequirements
+
 from pydantic import BaseModel
 
 from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
@@ -75,23 +77,31 @@ class PodContainer:
         return requests.cpu, limits.cpu
 
     @staticmethod
-    def get_requests(container: Container) -> ContainerResources:
+    def get_requests(container: Union[Container, V1Container]) -> ContainerResources:
         return PodContainer.get_resources(container, ResourceAttributes.requests)
 
     @staticmethod
-    def get_limits(container: Container) -> ContainerResources:
+    def get_limits(container: Union[Container, V1Container]) -> ContainerResources:
         return PodContainer.get_resources(container, ResourceAttributes.limits)
 
     @staticmethod
-    def get_resources(container: Container, resource_type: ResourceAttributes) -> ContainerResources:
-        try:
-            requests = container.object_at_path(["resources", resource_type.name])
-            mem = PodResources.parse_mem(requests.get("memory", "0Mi"))
-            cpu = PodResources.parse_cpu(requests.get("cpu", 0.0))
+    def get_resources(container: Union[Container, V1Container], resource_type: ResourceAttributes) -> ContainerResources:
+        if isinstance(container, V1Container):
+            resource_data = getattr(container.resources, resource_type.name)
+            if not resource_data:
+                return ContainerResources()
+            mem = PodResources.parse_mem(getattr(resource_data, "memory", "0Mi"))
+            cpu = PodResources.parse_cpu(getattr(resource_data, "cpu", "0m"))
             return ContainerResources(cpu=cpu, memory=mem)
-        except Exception:
-            # no resources on container, object_at_path throws error
-            return ContainerResources()
+        else: # hikaru
+            try:
+                requests = container.object_at_path(["resources", resource_type.name])
+                mem = PodResources.parse_mem(requests.get("memory", "0Mi"))
+                cpu = PodResources.parse_cpu(requests.get("cpu", 0.0))
+                return ContainerResources(cpu=cpu, memory=mem)
+            except Exception:
+                # no resources on container, object_at_path throws error
+                return ContainerResources()
 
     @staticmethod
     def get_pod_container_by_name(pod: Pod, container_name: str) -> Optional[Container]:
@@ -101,8 +111,10 @@ class PodContainer:
         return None
 
     @staticmethod
-    def get_status(pod: Pod, container_name: str) -> Optional[ContainerStatus]:
-        for status in pod.status.containerStatuses:
+    def get_status(pod: V1Pod, container_name: str) -> Optional[V1ContainerStatus]:
+        if not pod.status or not pod.status.container_statuses:
+            return None
+        for status in pod.status.container_statuses:
             if container_name == status.name:
                 return status
         return None
@@ -152,21 +164,24 @@ class PodResources(BaseModel):
         return 0
 
 
-def pod_restarts(pod: Pod) -> int:
-    return sum([status.restartCount for status in pod.status.containerStatuses])
+def pod_restarts(pod: Union[V1Pod, Pod]) -> int:
+    if isinstance(pod, Pod):
+        return sum([status.restartCount for status in pod.status.containerStatuses])
+    elif isinstance(pod, V1Pod):
+        status: V1PodStatus = pod.status
+        if not status.container_statuses:
+            return 0
+        return sum([status.restart_count for status in status.container_statuses])
+    else:
+        raise Exception(f"Unsupported pod type {type(pod)}")
+    
 
-
-def pod_requests(pod: Pod) -> PodResources:
+def pod_requests(pod: Union[V1Pod, Pod]) -> PodResources:
     return pod_resources(pod, ResourceAttributes.requests)
 
 
-def pod_limits(pod: Pod) -> PodResources:
+def pod_limits(pod: Union[Pod, V1Pod]) -> PodResources:
     return pod_resources(pod, ResourceAttributes.limits)
-
-
-def pod_other_limits(pod: Pod) -> Dict[str, float]:
-    # for additional defined resources like GPU
-    return pod_other_resources(pod, ResourceAttributes.limits)
 
 
 def pod_other_requests(pod: Pod) -> Dict[str, float]:
@@ -190,24 +205,6 @@ def pod_other_resources(pod: Pod, resource_attribute: ResourceAttributes) -> Dic
         except Exception:
             logging.error(f"failed to parse {resource_attribute.name} {container.resources}", exc_info=True)
     return total_resources
-
-
-def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResources:
-    pod_cpu_req: float = 0.0
-    pod_mem_req: int = 0
-    for container in pod.spec.containers:
-        try:
-            requests = container.object_at_path(["resources", resource_attribute.name])  # requests or limits
-            pod_cpu_req += PodResources.parse_cpu(requests.get("cpu", 0.0))
-            pod_mem_req += PodResources.parse_mem(requests.get("memory", "0Mi"))
-        except Exception:
-            pass  # no requests on container, object_at_path throws error
-
-    return PodResources(
-        pod_name=pod.metadata.name,
-        cpu=pod_cpu_req,
-        memory=pod_mem_req,
-    )
 
 
 def find_most_recent_oom_killed_container(
@@ -262,3 +259,27 @@ def is_state_in_oom_status(state: ContainerState):
     if not state.terminated:
         return False
     return state.terminated.reason == "OOMKilled"
+
+
+def pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodResources:
+    pod_cpu_req: float = 0.0
+    pod_mem_req: int = 0
+    for container in pod.spec.containers:
+        container: V1Container = container
+        resources: V1ResourceRequirements = container.resources
+        if resources is None:
+            continue
+        if resource_attribute == ResourceAttributes.requests:
+            requests = resources.requests
+            pod_cpu_req += PodResources.parse_cpu(getattr(requests, "cpu", "0m"))
+            pod_mem_req += PodResources.parse_mem(getattr(requests, "memory", "0Mi"))
+        elif resource_attribute == ResourceAttributes.limits:
+            limits = resources.limits
+            pod_cpu_req += PodResources.parse_cpu(getattr(limits, "cpu", "0m"))
+            pod_mem_req += PodResources.parse_mem(getattr(limits, "memory", "0Mi"))
+
+    return PodResources(
+        pod_name=pod.metadata.name,
+        cpu=pod_cpu_req,
+        memory=pod_mem_req,
+    )

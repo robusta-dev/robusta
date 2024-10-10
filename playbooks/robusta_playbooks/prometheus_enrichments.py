@@ -7,7 +7,6 @@ from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
 from prometheus_api_client import PrometheusApiClientException
 from prometrix import PrometheusQueryResult
-
 from robusta.api import (
     ExecutionBaseEvent,
     MarkdownBlock,
@@ -102,8 +101,8 @@ def get_prometheus_series(prometheus_params: PrometheusGetSeriesParams) -> dict:
 class PrometheusGetLabelNames(PrometheusParams):
     """
     :var match: List of Prometheus series selectors. If this parameter is None or an empty list, the labels won't be filtered by specific series selectors.
-    :var start_time: Optional start time for the query as datetime.If this parameter is None, Prometheus won't filter labels by start time.
-    :var end_time: Optional end time for the query as datetime. If this parameter is None, Prometheus won't filter labels by end time.
+    :var start: Optional start time for the query as datetime.If this parameter is None, Prometheus won't filter labels by start time.
+    :var end: Optional end time for the query as datetime. If this parameter is None, Prometheus won't filter labels by end time.
     :var limit: Optional maximum number of returned series. If this parameter is None, the returned list length won't be limited by number.
     """
 
@@ -227,9 +226,9 @@ def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaPara
 
     query_result = 0
     if prometheus_result.result_type == "scalar":
-        query_result = prometheus_result.scalar_result.value
+        query_result = prometheus_result.scalar_result["value"]
     elif prometheus_result.result_type == "vector":
-        query_result = float(prometheus_result.vector_result[-1].value.value)
+        query_result = float(prometheus_result.vector_result[-1]["value"]["value"])
 
     rule_result: bool = False
     if params.operator == ">":

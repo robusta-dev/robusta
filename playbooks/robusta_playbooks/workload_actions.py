@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import pytz
 
@@ -6,11 +7,30 @@ from robusta.api import (
     ActionException,
     Deployment,
     ErrorCodes,
+    ExecutionBaseEvent,
     KubernetesResourceEvent,
     MarkdownBlock,
+    NamespacedResourcesParams,
     action,
 )
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, Rollout
+
+
+@action
+def restart_named_rollout(event: ExecutionBaseEvent, params: NamespacedResourcesParams):
+    """
+    Performs rollout restart on a named argo rollout.
+    """
+    rollout = Rollout.readNamespaced(params.name, params.namespace).obj
+    if not rollout:
+        logging.info(f"Rollout {params.namespace}/{params.name} not found. Skipping restart_named_rollout")
+        return
+
+    now: str = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat()
+    rollout.spec.restartAt = now
+    rollout.update()
+
+    event.add_enrichment([MarkdownBlock(f"rollout/{params.namespace}/{params.name} restarted")])
 
 
 @action

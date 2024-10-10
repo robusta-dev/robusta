@@ -22,41 +22,48 @@ class PrometheusHealthStatus(BaseModel):
 
 
 class PrometheusDiscoveryUtils:
-    def __init__(self, discovery_period_sec: int, global_config: dict):
+    def __init__(self, discovery_period_sec: int, registry):
         self.status: PrometheusHealthStatus = PrometheusHealthStatus()
         self.__discovery_period_sec = discovery_period_sec
         self.__prometheus_error_log_period_sec = PROMETHEUS_ERROR_LOG_PERIOD_SEC
-        self.__global_config = global_config
+        self.registry = registry
 
         self.__last_alertmanager_error_log_time = 0
         self.__last_prometheus_error_log_time = 0
-        self.__check_prometheus_flags = global_config.get("check_prometheus_flags", True)
+        self.__check_prometheus_flags = registry.get_global_config().get("check_prometheus_flags", True)
 
         self.__thread = threading.Thread(target=self.__run_checks)
         self.__thread.start()
+
+    def get_global_config(self) -> dict:
+        return self.registry.get_global_config()
 
     def get_status(self) -> PrometheusHealthStatus:
         return self.status
 
     def get_cluster_avg_cpu(self) -> Optional[float]:
-        cpu_query = os.getenv("OVERRIDE_CLUSTER_CPU_AVG_QUERY",
-                              f'100 * (sum(rate(node_cpu_seconds_total{{mode!="idle"}}[1h])) / sum(machine_cpu_cores{{}}))')
+        cpu_query = os.getenv(
+            "OVERRIDE_CLUSTER_CPU_AVG_QUERY",
+            f'100 * (sum(rate(node_cpu_seconds_total{{mode!="idle"}}[1h])) / sum(machine_cpu_cores{{}}))',
+        )
         return self._get_query_prometheus_value(query=cpu_query)
 
     def get_cluster_avg_memory(self) -> Optional[float]:
-        memory_query = os.getenv("OVERRIDE_CLUSTER_MEM_AVG_QUERY",
-                                 f'100 * (1 - (sum(avg_over_time(node_memory_MemAvailable_bytes{{}}[1h])) / sum(machine_memory_bytes{{}})))')
+        memory_query = os.getenv(
+            "OVERRIDE_CLUSTER_MEM_AVG_QUERY",
+            f"100 * (1 - (sum(avg_over_time(node_memory_MemAvailable_bytes{{}}[1h])) / sum(machine_memory_bytes{{}})))",
+        )
         return self._get_query_prometheus_value(query=memory_query)
 
     def _get_query_prometheus_value(self, query: str) -> Optional[float]:
         try:
-            global_config = self.__global_config
+            global_config = self.get_global_config()
             prometheus_params = PrometheusParams(**global_config)
             query_result = run_prometheus_query(prometheus_params=prometheus_params, query=query)
             if query_result.result_type == "error" or not query_result.vector_result:
                 logging.error("PrometheusDiscoveryUtils failed to get prometheus results.")
                 return
-            value = query_result.vector_result[0].value.value
+            value = query_result.vector_result[0]["value"]["value"]
             return_value = float("%.2f" % float(value))
             return return_value if return_value >= 0 else None
         except:
@@ -66,8 +73,8 @@ class PrometheusDiscoveryUtils:
     def __run_checks(self):
         while True:
             try:
-                self.prometheus_connection_checks(self.__global_config)
-                self.alertmanager_connection_checks(self.__global_config)
+                self.prometheus_connection_checks(self.get_global_config())
+                self.alertmanager_connection_checks(self.get_global_config())
 
                 time.sleep(self.__discovery_period_sec)
             except Exception as e:

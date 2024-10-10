@@ -154,7 +154,7 @@ class ModelConversion:
                 structured_data.append({"type": "list", "data": block.items})
             elif isinstance(block, PrometheusBlock):
                 structured_data.append(
-                    {"type": "prometheus", "data": block.data.dict(), "metadata": block.metadata, "version": 1.0}
+                    {"type": "prometheus", "data": dict(block.data), "metadata": block.metadata, "version": 1.0}
                 )
             elif isinstance(block, TableBlock):
                 if block.table_name:
@@ -222,7 +222,7 @@ class ModelConversion:
         return {
             "issue_id": str(finding_id),
             "file_type": "structured_data",
-            "data": json.dumps(structured_data),
+            "data": json.dumps(structured_data, default=str),
             "account_id": account_id,
             "enrichment_type": enrichment.enrichment_type.name if enrichment.enrichment_type else None,
             "title": enrichment.title if enrichment else None,

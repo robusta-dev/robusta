@@ -89,4 +89,56 @@ spec:
       {{- if .Values.kubewatch.priorityClassName }}
       priorityClassName: {{ .Values.kubewatch.priorityClassName }}
       {{- end }}
-      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "robusta.fullname" . }}-forwarder
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "robusta.fullname" . }}-forwarder
+spec:
+  selector:
+    app: {{ include "robusta.fullname" . }}-forwarder
+  ports:
+    - name: forwarder-metrics
+      protocol: TCP
+      port: 80
+      targetPort: 2112
+---
+{{ if and (.Values.enableServiceMonitors) (or (.Values.enablePrometheusStack) (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "robusta.fullname" . }}-forwarder-service-monitor
+  labels:
+    release: {{ include "robusta.fullname" . }}
+    {{- with .Values.kubewatch.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+    - path: {{ .Values.kubewatch.serviceMonitor.path }}
+      port: forwarder-metrics
+      {{- if .Values.kubewatch.serviceMonitor.interval }}
+      interval: {{ .Values.kubewatch.serviceMonitor.interval }}
+      {{- end }}
+      {{- if .Values.kubewatch.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.kubewatch.serviceMonitor.scrapeTimeout }}
+      {{- end }}
+      {{- if .Values.kubewatch.serviceMonitor.relabelings }}
+      relabelings: {{- tpl (toYaml .Values.kubewatch.serviceMonitor.relabelings) . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubewatch.serviceMonitor.metricRelabelings }}
+      metricRelabelings: {{- tpl (toYaml .Values.kubewatch.serviceMonitor.metricRelabelings) . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubewatch.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.kubewatch.serviceMonitor.honorLabels }}
+      {{- end }}
+  selector:
+    matchLabels:
+      app: {{ include "robusta.fullname" . }}-forwarder
+  targetLabels:
+    - target
+{{ end }}
+---

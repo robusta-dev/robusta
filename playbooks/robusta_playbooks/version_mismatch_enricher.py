@@ -27,7 +27,7 @@ class BuildInfoResults:
     raw_metrics: List[Dict[str, str]]
 
     def __init__(self, query_result: PrometheusQueryResult):
-        self.raw_metrics = [result.metric for result in query_result.vector_result]
+        self.raw_metrics = [result["metric"] for result in query_result.vector_result]
         self.api_versions = list(
             set([metric.get("git_version") for metric in self.raw_metrics if metric.get("node") is None])
         )

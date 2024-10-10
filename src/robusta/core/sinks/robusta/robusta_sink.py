@@ -7,11 +7,13 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
+import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
-from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
+from robusta.core.discovery.utils import from_api_server_node
+from robusta.core.model.base_params import HolmesParams
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import (
     CLUSTER_STATUS_PERIOD_SEC,
@@ -25,9 +27,8 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
-from robusta.core.model.nodes import NodeInfo, NodeSystemInfo
+from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.openshift_group import OpenshiftGroup
-from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.pubsub.event_subscriber import EventHandler
 from robusta.core.reporting.base import Finding
@@ -37,6 +38,7 @@ from robusta.core.sinks.robusta.prometheus_discovery_utils import PrometheusDisc
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.robusta.rrm.rrm import RRM
 from robusta.core.sinks.sink_base import SinkBase
+from robusta.integrations.prometheus.utils import HolmesDiscovery
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
@@ -78,9 +80,8 @@ class RobustaSink(SinkBase, EventHandler):
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
 
-        global_config = self.get_global_config()
         self.__prometheus_discovery_util = PrometheusDiscoveryUtils(
-            discovery_period_sec=self.__discovery_period_sec, global_config=global_config
+            discovery_period_sec=self.__discovery_period_sec, registry=registry
         )
         self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
         self.__pods_running_count: int = 0
@@ -316,7 +317,7 @@ class RobustaSink(SinkBase, EventHandler):
             self.__publish_new_services(results.services)
             if results.nodes:
                 self.__assert_node_cache_initialized()
-                self.__publish_new_nodes(results.nodes, results.node_requests)
+                self.__publish_new_nodes(results.nodes)
 
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
@@ -348,76 +349,11 @@ class RobustaSink(SinkBase, EventHandler):
                 exc_info=True,
             )
 
-    @classmethod
-    def __to_taint_str(cls, taint: V1Taint) -> str:
-        return f"{taint.key}={taint.value}:{taint.effect}"
-
-    @classmethod
-    def __to_active_conditions_str(cls, conditions: List[V1NodeCondition]) -> str:
-        if not conditions:
-            return ""
-        return ",".join(
-            [
-                f"{condition.type}:{condition.status}"
-                for condition in conditions
-                if condition.status != "False" or condition.type == "Ready"
-            ]
-        )
-
-    @classmethod
-    def __to_node_info(cls, node: Union[V1Node, Node]) -> Dict:
-        info = getattr(node.status, "node_info", None) or getattr(node.status, "nodeInfo", None)
-        node_info = {}
-        node_info["system"] = NodeSystemInfo(**info.to_dict()).dict() if info else {}
-        node_info["labels"] = node.metadata.labels or {}
-        node_info["annotations"] = node.metadata.annotations or {}
-        node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
-        return node_info
-
-    @classmethod
-    def __from_api_server_node(
-        cls, api_server_node: Union[V1Node, Node], pod_requests_list: List[PodResources]
-    ) -> NodeInfo:
-        addresses = api_server_node.status.addresses or []
-        external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
-        external_ip = ",".join([addr.address for addr in external_addresses])
-        internal_addresses = [address for address in addresses if "internalip" in address.type.lower()]
-        internal_ip = ",".join([addr.address for addr in internal_addresses])
-        node_taints = api_server_node.spec.taints or []
-        taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
-        capacity = api_server_node.status.capacity or {}
-        allocatable = api_server_node.status.allocatable or {}
-        # V1Node and Node use snake case and camelCase respectively, handle this for more than 1 word attributes.
-        creation_ts = getattr(api_server_node.metadata, "creation_timestamp", None) or getattr(
-            api_server_node.metadata, "creationTimestamp", None
-        )
-        version = getattr(api_server_node.metadata, "resource_version", None) or getattr(
-            api_server_node.metadata, "resourceVersion", None
-        )
-        return NodeInfo(
-            name=api_server_node.metadata.name,
-            node_creation_time=str(creation_ts),
-            internal_ip=internal_ip,
-            external_ip=external_ip,
-            taints=taints,
-            conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
-            memory_capacity=PodResources.parse_mem(capacity.get("memory", "0Mi")),
-            memory_allocatable=PodResources.parse_mem(allocatable.get("memory", "0Mi")),
-            memory_allocated=sum([req.memory for req in pod_requests_list]),
-            cpu_capacity=PodResources.parse_cpu(capacity.get("cpu", "0")),
-            cpu_allocatable=PodResources.parse_cpu(allocatable.get("cpu", "0")),
-            cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
-            pods_count=len(pod_requests_list),
-            pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
-            node_info=cls.__to_node_info(api_server_node),
-            resource_version=int(version) if version else 0,
-        )
-
-    def __publish_new_nodes(self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]):
+    def __publish_new_nodes(self, current_nodes: List[NodeInfo]):
         # convert to map
         curr_nodes = {}
-        for node in current_nodes.items:
-            curr_nodes[node.metadata.name] = node
+        for node in current_nodes:
+            curr_nodes[node.name] = node
 
         # handle deleted nodes
         updated_nodes: List[NodeInfo] = []
@@ -428,8 +364,7 @@ class RobustaSink(SinkBase, EventHandler):
 
         # new or changed nodes
         for node_name in curr_nodes.keys():
-            pod_requests = node_requests.get(node_name, [])  # if all the pods on the node have no requests
-            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), pod_requests)
+            updated_node = curr_nodes.get(node_name)
             if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
                 updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node
@@ -512,9 +447,26 @@ class RobustaSink(SinkBase, EventHandler):
 
         self.dal.publish_helm_releases(helm_releases)
 
+    def get_holmes_model(self) -> Optional[str]:
+        global_config = self.get_global_config()
+        params: HolmesParams = HolmesParams(**global_config)
+        holmes_url = HolmesDiscovery().find_holmes_url(params.holmes_url)
+        if not holmes_url:
+            return None
+
+        try:
+            res = requests.get(f"{holmes_url}{HolmesDiscovery.MODEL_NAME_URL}")
+            res.raise_for_status()
+            model_name = res.json()["model_name"]
+            return model_name
+        except Exception:
+            return None
+
     def __update_cluster_status(self):
         self.last_send_time = time.time()
         prometheus_health_checker_status = self.__prometheus_discovery_util.get_status()
+        holmes_model = self.get_holmes_model()
+
         activity_stats = ActivityStats(
             relayConnection=False,
             alertManagerConnection=prometheus_health_checker_status.alertmanager,
@@ -522,6 +474,7 @@ class RobustaSink(SinkBase, EventHandler):
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
             managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED,
             holmesEnabled=HOLMES_ENABLED,
+            holmesModel=holmes_model,
             clusterTimeZone=str(datetime.now().astimezone().tzinfo),
         )
 
@@ -669,7 +622,7 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __update_node(self, new_node: Node, operation: K8sOperationType):
         with self.services_publish_lock:
-            new_info = self.__from_api_server_node(new_node, [])
+            new_info = from_api_server_node(new_node, [])
             if operation == K8sOperationType.CREATE:
                 name = new_node.metadata.name
                 self.__nodes_cache[name] = new_info
