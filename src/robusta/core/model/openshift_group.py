@@ -25,4 +25,5 @@ class OpenshiftGroup(BaseModel):
             and self.annotations == other.annotations
             and self.labels == other.labels
             and sorted(self.users) == sorted(other.users)
+            and sorted(self.namespaces) == sorted(other.namespaces)
         )
