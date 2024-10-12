@@ -101,7 +101,7 @@ When multiple attributes conditions are present, all must be satisfied.
 
 .. tip::
 
-    If you're using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/robusta-demo/simulate-alert/>`_.
+    If you're using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/simulate-alert/>`_.
 
 The following attributes can be included in an ``include``/``excluded`` block:
 
