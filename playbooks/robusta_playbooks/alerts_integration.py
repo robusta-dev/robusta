@@ -8,7 +8,6 @@ import requests
 from hikaru.model.rel_1_26 import Node
 from kubernetes import client
 from kubernetes.client import V1Pod, V1PodList, exceptions
-
 from robusta.api import (
     ActionException,
     ActionParams,
@@ -437,6 +436,7 @@ class ForeignLogParams(LogEnricherParams):
     """
 
     label_selectors: List[str]
+    title_override: Optional[str]
 
 
 @action
@@ -473,7 +473,7 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
     for matching_pod in matching_pods:
         pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
 
-        start_log_enrichment(event=event, params=params, pod=pod)
+        start_log_enrichment(event=event, params=params, pod=pod, title_override=params.title_override)
 
 
 logs_enricher = action(logs_enricher)
