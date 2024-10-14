@@ -22,8 +22,10 @@ from robusta.api import (
     ExecutionBaseEvent,
     Finding,
     FindingSource,
+    FindingSubjectType,
     GraphBlock,
     GraphEnricherParams,
+    KubeObjFindingSubject,
     KubernetesResourceEvent,
     ListBlock,
     LogEnricherParams,
@@ -44,6 +46,7 @@ from robusta.api import (
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 from robusta.core.reporting import FindingSubject
 from robusta.core.reporting.blocks import TableBlockFormat
+from robusta.utils.parsing import format_event_templated_string
 
 
 class SeverityParams(ActionParams):
@@ -430,6 +433,19 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
     )
 
 
+def format_pod_templated_string(pod: RobustaPod, template: Optional[str]) -> Optional[str]:
+    if not template:
+        return None
+    subject = FindingSubject(
+        name=pod.metadata.name,
+        subject_type=FindingSubjectType.from_kind("pod"),
+        namespace=pod.metadata.namespace,
+        labels=pod.metadata.labels,
+        annotations=pod.metadata.annotations
+    )
+    return format_event_templated_string(subject, template)
+
+
 class ForeignLogParams(LogEnricherParams):
     """
     :var label_selectors: List of specific label selectors to retrieve logs from
@@ -472,8 +488,8 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
         return
     for matching_pod in matching_pods:
         pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
-
-        start_log_enrichment(event=event, params=params, pod=pod, title_override=params.title_override)
+        title_override = format_pod_templated_string(pod, params.title_override)
+        start_log_enrichment(event=event, params=params, pod=pod, title_override=title_override)
 
 
 logs_enricher = action(logs_enricher)
