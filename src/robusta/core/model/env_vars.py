@@ -112,7 +112,7 @@ CLUSTER_DOMAIN = os.environ.get("CLUSTER_DOMAIN", "cluster.local")
 
 IS_OPENSHIFT = load_bool("IS_OPENSHIFT", False)
 
-ENABLE_GRAPH_BLOCK = load_bool("ENABLE_GRAPH_BLOCK", False)
+ENABLE_GRAPH_BLOCK = load_bool("ENABLE_GRAPH_BLOCK", True)
 
 RUN_AS_SUBPROCESS = load_bool("RUN_AS_SUBPROCESS", True)
 
