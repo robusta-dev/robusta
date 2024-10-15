@@ -91,12 +91,21 @@ class NotificationModeParams(BaseModel):
 class GroupingParams(BaseModel):
     group_by: GroupingAttributeSelectorListT = ["cluster"]
     interval: int = 15*60  # in seconds
+    aligned: bool = False
     notification_mode: Optional[NotificationModeParams]
 
     @root_validator
-    def validate_notification_mode(cls, values: Dict):
-        if values is None:
-            return {"summary": SummaryNotificationModeParams()}
+    def validate_interval_alignment(cls, values: Dict):
+        if values["aligned"]:
+            if values["interval"] < 24 * 3600:
+                if (24 * 3600) % values["interval"]:
+                    raise ValueError(f'Unable to properly align time interval of {values["interval"]} seconds')
+            else:
+                # TODO do we also want to support automatically aligning intervals longer than
+                # a day? Using month/year boundaries? This would require additionally handling
+                # leap years and daytime saving, just as we handle leap seconds in
+                # NotificationSummary.calculate_interval_boundaries
+                raise ValueError(f"Automatically aligning time intervals longer than 24 hours is not supported")
         return values
 
 
