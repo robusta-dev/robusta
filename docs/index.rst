@@ -89,7 +89,7 @@ Better Prometheus Alerts (and more) for Kubernetes
 
         Robusta extends Prometheus/VictoriaMetrics/Coralogix (and more) with features like:
 
-        * :doc:`Smart Grouping <configuration/notification-grouping>` - reduce notification spam with Slack threads 🧵
+        * :doc:`Smart Grouping <notification-routing/notification-grouping>` - reduce notification spam with Slack threads 🧵
         * :ref:`AI Investigation <AI Analysis>` - Kickstart your alert investigations with AI (optional)
         * :ref:`Alert Enrichment <Automatically Investigate a Prometheus Alert>` - see pods log and other data alongside your alerts
         * :ref:`Self-Healing <Remediate Prometheus Alerts>` - define auto-remediation rules for faster fixes
