@@ -27,7 +27,7 @@ class PrometheusDiscoveryUtils:
         self.__discovery_period_sec = discovery_period_sec
         self.__prometheus_error_log_period_sec = PROMETHEUS_ERROR_LOG_PERIOD_SEC
         self.registry = registry
-
+        self.first_checks_finished = False
         self.__last_alertmanager_error_log_time = 0
         self.__last_prometheus_error_log_time = 0
         self.__check_prometheus_flags = registry.get_global_config().get("check_prometheus_flags", True)
@@ -75,7 +75,7 @@ class PrometheusDiscoveryUtils:
             try:
                 self.prometheus_connection_checks(self.get_global_config())
                 self.alertmanager_connection_checks(self.get_global_config())
-
+                self.first_checks_finished = True
                 time.sleep(self.__discovery_period_sec)
             except Exception as e:
                 logging.error(e)
