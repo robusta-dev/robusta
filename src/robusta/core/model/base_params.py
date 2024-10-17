@@ -306,9 +306,7 @@ class PrometheusParams(ActionParams):
             logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
         return v
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("prometheus_auth", allow_reuse=True, always=True)
+    @field_validator("prometheus_auth", always=True)
     def auto_openshift_token(cls, v: Optional[SecretStr]):
         # If openshift is enabled, and the user didn't configure prometheus_auth, we will try to load the token from the service account
         if v is not None:

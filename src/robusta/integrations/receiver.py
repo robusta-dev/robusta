@@ -17,7 +17,7 @@ import sentry_sdk
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ValidationError, field_validator
 
 from robusta.core.model.env_vars import (
     INCOMING_REQUEST_TIME_WINDOW_SECONDS,
@@ -53,9 +53,7 @@ class ValidationResponse(BaseModel):
 class SlackActionRequest(BaseModel):
     value: ExternalActionRequest
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
-    @validator("value", pre=True, always=True)
+    @field_validator("value", pre=True, always=True)
     def validate_value(cls, v: str) -> dict:
         # Slack value is sent as a stringified json, so we need to parse it before validation
         return json.loads(v)
