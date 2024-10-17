@@ -84,7 +84,6 @@ class RunnerConfig(BaseModel):
 
     @root_validator()
     def ensure_unique_sink_name(cls, val: Dict) -> Dict:
-        print(f"validating {val}")
         if val.get('sinks_config'):
             value_set = set()
             sinksConfig = cast(List[SinkConfigBase], val.get('sinks_config'))
