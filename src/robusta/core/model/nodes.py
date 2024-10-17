@@ -1,6 +1,7 @@
 from typing import Dict
 
 from pydantic.main import BaseModel, Field
+from pydantic import ConfigDict
 
 
 class NodeInfo(BaseModel):
@@ -46,6 +47,4 @@ class NodeSystemInfo(BaseModel):
     operating_system: str = Field(alias="operatingSystem")
     os_image: str = Field(alias="osImage")
     system_uuid: str = Field(alias="systemUUID")
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)

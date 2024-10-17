@@ -1,7 +1,7 @@
 import base64
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, SecretStr, root_validator, validator
+from pydantic import field_validator, BaseModel, SecretStr, root_validator
 
 from robusta.core.playbooks.playbook_utils import get_env_replacement, replace_env_vars_values
 from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
@@ -75,13 +75,14 @@ class RunnerConfig(BaseModel):
                 ZulipSinkConfigWrapper
             ]
         ]
-    ]
-    light_actions: Optional[List[str]]
+    ] = None
+    light_actions: Optional[List[str]] = None
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
     alert_relabel: Optional[List[AlertRelabel]] = []
 
-    @validator("playbook_repos")
+    @field_validator("playbook_repos")
+    @classmethod
     def env_var_repo_keys(cls, playbook_repos: Dict[str, PlaybookRepo]):
         return {k: RunnerConfig._replace_env_var_in_playbook_repo(v) for k, v in playbook_repos.items()}
 
@@ -105,6 +106,7 @@ class RunnerConfig(BaseModel):
             playbook_repo.key = SecretStr(secret_value_replacement)
         return playbook_repo
 
-    @validator("global_config")
+    @field_validator("global_config")
+    @classmethod
     def env_var_params(cls, global_config: dict):
         return replace_env_vars_values(global_config)

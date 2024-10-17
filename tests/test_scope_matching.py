@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 import yaml
-from pydantic import BaseModel, Extra
+from pydantic import ConfigDict, BaseModel
 
 from robusta.core.reporting import Finding, FindingSeverity, FindingSource, FindingSubject
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
@@ -19,9 +19,7 @@ class CheckFindingSubject(BaseModel):
     namespace: Optional[str] = "default"
     kind: Optional[str] = "pod"
     node: Optional[str] = None
-
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class CheckFinding(BaseModel):
@@ -33,9 +31,7 @@ class CheckFinding(BaseModel):
     severity: str = "INFO"
     source: str = "NONE"
     finding_type: str = "ISSUE"
-
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     def create_finding(self) -> Finding:
         subject = FindingSubject(
@@ -61,17 +57,13 @@ class ScopeCheck(BaseModel):
     expected: bool
     message: str
     namespace_labels: Optional[Dict[str, str]] = {}
-
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class ScopeTest(BaseModel):
     scope: ScopeParams
     checks: List[ScopeCheck]
-
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class _TestConfig(BaseModel):

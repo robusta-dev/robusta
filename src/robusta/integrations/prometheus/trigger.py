@@ -126,7 +126,7 @@ class PrometheusAlertTrigger(BaseTrigger):
 
 
 class PrometheusAlertTriggers(BaseModel):
-    on_prometheus_alert: Optional[PrometheusAlertTrigger]
+    on_prometheus_alert: Optional[PrometheusAlertTrigger] = None
 
 
 class AlertEventBuilder:

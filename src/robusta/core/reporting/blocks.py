@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple
 import hikaru
 from hikaru import DiffDetail, DiffType
 from hikaru.model.rel_1_26 import HikaruDocumentBase
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 from robusta.core.model.base_params import ChartValuesFormat
 
@@ -474,11 +474,9 @@ class KubernetesFieldsBlock(TableBlock):
 
 class CallbackChoice(BaseModel):
     action: Callable
-    action_params: Optional[BaseModel]
-    kubernetes_object: Optional[Any]
-
-    class Config:
-        arbitrary_types_allowed = True
+    action_params: Optional[BaseModel] = None
+    kubernetes_object: Optional[Any] = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class CallbackBlock(BaseBlock):
@@ -524,9 +522,7 @@ class PrometheusBlock(BaseBlock):
     horizontal_lines: Optional[List[PrometheusBlockLineData]]
     y_axis_type: Optional[ChartValuesFormat]
     graph_name: Optional[str]
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
     def __init__(
@@ -566,10 +562,10 @@ class PrometheusBlock(BaseBlock):
 class ScanReportRow(BaseModel):
     scan_id: str  # UUID
     scan_type: ScanType
-    kind: Optional[str]
-    name: Optional[str]
-    namespace: Optional[str]
-    container: Optional[str]
+    kind: Optional[str] = None
+    name: Optional[str] = None
+    namespace: Optional[str] = None
+    container: Optional[str] = None
     content: List[Any]  # scan result data
     priority: float
 
@@ -758,13 +754,13 @@ class KRRScanReportBlock(ScanReportBlock):
 
 
 class EventRow(BaseModel):
-    type: Optional[str]
-    reason: Optional[str]
-    message: Optional[str]
+    type: Optional[str] = None
+    reason: Optional[str] = None
+    message: Optional[str] = None
     kind: str
     name: str
-    namespace: Optional[str]
-    time: Optional[str]
+    namespace: Optional[str] = None
+    time: Optional[str] = None
 
 
 class EventsBlock(TableBlock):

@@ -9,7 +9,7 @@ from robusta.utils.error_codes import ActionException, ErrorCodes
 
 class ResourceLister(BaseModel):
     list_all: Callable
-    list_namespaced: Optional[Callable]
+    list_namespaced: Optional[Callable] = None
 
 
 LISTERS = {  # TODO add ingress and cronjobs once upgrading the k8s client version (when updating hikaru)

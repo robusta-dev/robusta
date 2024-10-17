@@ -18,14 +18,14 @@ from robusta.core.triggers.pod_oom_killed_trigger import PodOOMKilledTrigger
 
 
 class CustomTriggers(BaseModel):
-    on_kubernetes_warning_event: Optional[WarningEventTrigger]
-    on_kubernetes_warning_event_create: Optional[WarningEventCreateTrigger]
-    on_kubernetes_warning_event_update: Optional[WarningEventUpdateTrigger]
-    on_kubernetes_warning_event_delete: Optional[WarningEventDeleteTrigger]
-    on_image_pull_backoff: Optional[PodImagePullBackoffTrigger]
-    on_pod_crash_loop: Optional[PodCrashLoopTrigger]
-    on_job_failure: Optional[JobFailedTrigger]
-    on_pod_oom_killed: Optional[PodOOMKilledTrigger]
-    on_pod_evicted: Optional[PodEvictedTrigger]
-    on_container_oom_killed: Optional[ContainerOOMKilledTrigger]
-    on_kubernetes_resource_operation: Optional[MultiResourceTrigger]
+    on_kubernetes_warning_event: Optional[WarningEventTrigger] = None
+    on_kubernetes_warning_event_create: Optional[WarningEventCreateTrigger] = None
+    on_kubernetes_warning_event_update: Optional[WarningEventUpdateTrigger] = None
+    on_kubernetes_warning_event_delete: Optional[WarningEventDeleteTrigger] = None
+    on_image_pull_backoff: Optional[PodImagePullBackoffTrigger] = None
+    on_pod_crash_loop: Optional[PodCrashLoopTrigger] = None
+    on_job_failure: Optional[JobFailedTrigger] = None
+    on_pod_oom_killed: Optional[PodOOMKilledTrigger] = None
+    on_pod_evicted: Optional[PodEvictedTrigger] = None
+    on_container_oom_killed: Optional[ContainerOOMKilledTrigger] = None
+    on_kubernetes_resource_operation: Optional[MultiResourceTrigger] = None

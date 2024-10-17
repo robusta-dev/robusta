@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import SecretStr, validator
+from pydantic import field_validator, SecretStr
 
 from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base_params import SinkBaseParams
@@ -20,7 +20,8 @@ class ZulipSinkParams(SinkBaseParams):
     def _get_sink_type(cls):
         return "zulip"
 
-    @validator("topic_override")
+    @field_validator("topic_override")
+    @classmethod
     def validate_topic_override(cls, v: str):
         return ChannelTransformer.validate_channel_override(v)
 

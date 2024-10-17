@@ -2050,87 +2050,87 @@ class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
 # K8s Trigger class
 class K8sTriggers(BaseModel):
 
-    on_clusterrole_all_changes: Optional[ClusterRoleAllChangesTrigger]
-    on_clusterrole_create: Optional[ClusterRoleCreateTrigger]
-    on_clusterrole_delete: Optional[ClusterRoleDeleteTrigger]
-    on_clusterrole_update: Optional[ClusterRoleUpdateTrigger]
-    on_clusterrolebinding_all_changes: Optional[ClusterRoleBindingAllChangesTrigger]
-    on_clusterrolebinding_create: Optional[ClusterRoleBindingCreateTrigger]
-    on_clusterrolebinding_delete: Optional[ClusterRoleBindingDeleteTrigger]
-    on_clusterrolebinding_update: Optional[ClusterRoleBindingUpdateTrigger]
-    on_configmap_all_changes: Optional[ConfigMapAllChangesTrigger]
-    on_configmap_create: Optional[ConfigMapCreateTrigger]
-    on_configmap_delete: Optional[ConfigMapDeleteTrigger]
-    on_configmap_update: Optional[ConfigMapUpdateTrigger]
-    on_daemonset_all_changes: Optional[DaemonSetAllChangesTrigger]
-    on_daemonset_create: Optional[DaemonSetCreateTrigger]
-    on_daemonset_delete: Optional[DaemonSetDeleteTrigger]
-    on_daemonset_update: Optional[DaemonSetUpdateTrigger]
-    on_deployment_all_changes: Optional[DeploymentAllChangesTrigger]
-    on_deployment_create: Optional[DeploymentCreateTrigger]
-    on_deployment_delete: Optional[DeploymentDeleteTrigger]
-    on_deployment_update: Optional[DeploymentUpdateTrigger]
-    on_event_all_changes: Optional[EventAllChangesTrigger]
-    on_event_create: Optional[EventCreateTrigger]
-    on_event_delete: Optional[EventDeleteTrigger]
-    on_event_update: Optional[EventUpdateTrigger]
-    on_horizontalpodautoscaler_all_changes: Optional[HorizontalPodAutoscalerAllChangesTrigger]
-    on_horizontalpodautoscaler_create: Optional[HorizontalPodAutoscalerCreateTrigger]
-    on_horizontalpodautoscaler_delete: Optional[HorizontalPodAutoscalerDeleteTrigger]
-    on_horizontalpodautoscaler_update: Optional[HorizontalPodAutoscalerUpdateTrigger]
-    on_ingress_all_changes: Optional[IngressAllChangesTrigger]
-    on_ingress_create: Optional[IngressCreateTrigger]
-    on_ingress_delete: Optional[IngressDeleteTrigger]
-    on_ingress_update: Optional[IngressUpdateTrigger]
-    on_job_all_changes: Optional[JobAllChangesTrigger]
-    on_job_create: Optional[JobCreateTrigger]
-    on_job_delete: Optional[JobDeleteTrigger]
-    on_job_update: Optional[JobUpdateTrigger]
-    on_kubernetes_any_resource_all_changes: Optional[KubernetesAnyAllChangesTrigger]
-    on_kubernetes_any_resource_create: Optional[KubernetesAnyCreateTrigger]
-    on_kubernetes_any_resource_delete: Optional[KubernetesAnyDeleteTrigger]
-    on_kubernetes_any_resource_update: Optional[KubernetesAnyUpdateTrigger]
-    on_namespace_all_changes: Optional[NamespaceAllChangesTrigger]
-    on_namespace_create: Optional[NamespaceCreateTrigger]
-    on_namespace_delete: Optional[NamespaceDeleteTrigger]
-    on_namespace_update: Optional[NamespaceUpdateTrigger]
-    on_networkpolicy_all_changes: Optional[NetworkPolicyAllChangesTrigger]
-    on_networkpolicy_create: Optional[NetworkPolicyCreateTrigger]
-    on_networkpolicy_delete: Optional[NetworkPolicyDeleteTrigger]
-    on_networkpolicy_update: Optional[NetworkPolicyUpdateTrigger]
-    on_node_all_changes: Optional[NodeAllChangesTrigger]
-    on_node_create: Optional[NodeCreateTrigger]
-    on_node_delete: Optional[NodeDeleteTrigger]
-    on_node_update: Optional[NodeUpdateTrigger]
-    on_persistentvolume_all_changes: Optional[PersistentVolumeAllChangesTrigger]
-    on_persistentvolume_create: Optional[PersistentVolumeCreateTrigger]
-    on_persistentvolume_delete: Optional[PersistentVolumeDeleteTrigger]
-    on_persistentvolume_update: Optional[PersistentVolumeUpdateTrigger]
-    on_persistentvolumeclaim_all_changes: Optional[PersistentVolumeClaimAllChangesTrigger]
-    on_persistentvolumeclaim_create: Optional[PersistentVolumeClaimCreateTrigger]
-    on_persistentvolumeclaim_delete: Optional[PersistentVolumeClaimDeleteTrigger]
-    on_persistentvolumeclaim_update: Optional[PersistentVolumeClaimUpdateTrigger]
-    on_pod_all_changes: Optional[PodAllChangesTrigger]
-    on_pod_create: Optional[PodCreateTrigger]
-    on_pod_delete: Optional[PodDeleteTrigger]
-    on_pod_update: Optional[PodUpdateTrigger]
-    on_replicaset_all_changes: Optional[ReplicaSetAllChangesTrigger]
-    on_replicaset_create: Optional[ReplicaSetCreateTrigger]
-    on_replicaset_delete: Optional[ReplicaSetDeleteTrigger]
-    on_replicaset_update: Optional[ReplicaSetUpdateTrigger]
-    on_secret_all_changes: Optional[SecretAllChangesTrigger]
-    on_secret_create: Optional[SecretCreateTrigger]
-    on_secret_delete: Optional[SecretDeleteTrigger]
-    on_secret_update: Optional[SecretUpdateTrigger]
-    on_service_all_changes: Optional[ServiceAllChangesTrigger]
-    on_service_create: Optional[ServiceCreateTrigger]
-    on_service_delete: Optional[ServiceDeleteTrigger]
-    on_service_update: Optional[ServiceUpdateTrigger]
-    on_serviceaccount_all_changes: Optional[ServiceAccountAllChangesTrigger]
-    on_serviceaccount_create: Optional[ServiceAccountCreateTrigger]
-    on_serviceaccount_delete: Optional[ServiceAccountDeleteTrigger]
-    on_serviceaccount_update: Optional[ServiceAccountUpdateTrigger]
-    on_statefulset_all_changes: Optional[StatefulSetAllChangesTrigger]
-    on_statefulset_create: Optional[StatefulSetCreateTrigger]
-    on_statefulset_delete: Optional[StatefulSetDeleteTrigger]
-    on_statefulset_update: Optional[StatefulSetUpdateTrigger]
+    on_clusterrole_all_changes: Optional[ClusterRoleAllChangesTrigger] = None
+    on_clusterrole_create: Optional[ClusterRoleCreateTrigger] = None
+    on_clusterrole_delete: Optional[ClusterRoleDeleteTrigger] = None
+    on_clusterrole_update: Optional[ClusterRoleUpdateTrigger] = None
+    on_clusterrolebinding_all_changes: Optional[ClusterRoleBindingAllChangesTrigger] = None
+    on_clusterrolebinding_create: Optional[ClusterRoleBindingCreateTrigger] = None
+    on_clusterrolebinding_delete: Optional[ClusterRoleBindingDeleteTrigger] = None
+    on_clusterrolebinding_update: Optional[ClusterRoleBindingUpdateTrigger] = None
+    on_configmap_all_changes: Optional[ConfigMapAllChangesTrigger] = None
+    on_configmap_create: Optional[ConfigMapCreateTrigger] = None
+    on_configmap_delete: Optional[ConfigMapDeleteTrigger] = None
+    on_configmap_update: Optional[ConfigMapUpdateTrigger] = None
+    on_daemonset_all_changes: Optional[DaemonSetAllChangesTrigger] = None
+    on_daemonset_create: Optional[DaemonSetCreateTrigger] = None
+    on_daemonset_delete: Optional[DaemonSetDeleteTrigger] = None
+    on_daemonset_update: Optional[DaemonSetUpdateTrigger] = None
+    on_deployment_all_changes: Optional[DeploymentAllChangesTrigger] = None
+    on_deployment_create: Optional[DeploymentCreateTrigger] = None
+    on_deployment_delete: Optional[DeploymentDeleteTrigger] = None
+    on_deployment_update: Optional[DeploymentUpdateTrigger] = None
+    on_event_all_changes: Optional[EventAllChangesTrigger] = None
+    on_event_create: Optional[EventCreateTrigger] = None
+    on_event_delete: Optional[EventDeleteTrigger] = None
+    on_event_update: Optional[EventUpdateTrigger] = None
+    on_horizontalpodautoscaler_all_changes: Optional[HorizontalPodAutoscalerAllChangesTrigger] = None
+    on_horizontalpodautoscaler_create: Optional[HorizontalPodAutoscalerCreateTrigger] = None
+    on_horizontalpodautoscaler_delete: Optional[HorizontalPodAutoscalerDeleteTrigger] = None
+    on_horizontalpodautoscaler_update: Optional[HorizontalPodAutoscalerUpdateTrigger] = None
+    on_ingress_all_changes: Optional[IngressAllChangesTrigger] = None
+    on_ingress_create: Optional[IngressCreateTrigger] = None
+    on_ingress_delete: Optional[IngressDeleteTrigger] = None
+    on_ingress_update: Optional[IngressUpdateTrigger] = None
+    on_job_all_changes: Optional[JobAllChangesTrigger] = None
+    on_job_create: Optional[JobCreateTrigger] = None
+    on_job_delete: Optional[JobDeleteTrigger] = None
+    on_job_update: Optional[JobUpdateTrigger] = None
+    on_kubernetes_any_resource_all_changes: Optional[KubernetesAnyAllChangesTrigger] = None
+    on_kubernetes_any_resource_create: Optional[KubernetesAnyCreateTrigger] = None
+    on_kubernetes_any_resource_delete: Optional[KubernetesAnyDeleteTrigger] = None
+    on_kubernetes_any_resource_update: Optional[KubernetesAnyUpdateTrigger] = None
+    on_namespace_all_changes: Optional[NamespaceAllChangesTrigger] = None
+    on_namespace_create: Optional[NamespaceCreateTrigger] = None
+    on_namespace_delete: Optional[NamespaceDeleteTrigger] = None
+    on_namespace_update: Optional[NamespaceUpdateTrigger] = None
+    on_networkpolicy_all_changes: Optional[NetworkPolicyAllChangesTrigger] = None
+    on_networkpolicy_create: Optional[NetworkPolicyCreateTrigger] = None
+    on_networkpolicy_delete: Optional[NetworkPolicyDeleteTrigger] = None
+    on_networkpolicy_update: Optional[NetworkPolicyUpdateTrigger] = None
+    on_node_all_changes: Optional[NodeAllChangesTrigger] = None
+    on_node_create: Optional[NodeCreateTrigger] = None
+    on_node_delete: Optional[NodeDeleteTrigger] = None
+    on_node_update: Optional[NodeUpdateTrigger] = None
+    on_persistentvolume_all_changes: Optional[PersistentVolumeAllChangesTrigger] = None
+    on_persistentvolume_create: Optional[PersistentVolumeCreateTrigger] = None
+    on_persistentvolume_delete: Optional[PersistentVolumeDeleteTrigger] = None
+    on_persistentvolume_update: Optional[PersistentVolumeUpdateTrigger] = None
+    on_persistentvolumeclaim_all_changes: Optional[PersistentVolumeClaimAllChangesTrigger] = None
+    on_persistentvolumeclaim_create: Optional[PersistentVolumeClaimCreateTrigger] = None
+    on_persistentvolumeclaim_delete: Optional[PersistentVolumeClaimDeleteTrigger] = None
+    on_persistentvolumeclaim_update: Optional[PersistentVolumeClaimUpdateTrigger] = None
+    on_pod_all_changes: Optional[PodAllChangesTrigger] = None
+    on_pod_create: Optional[PodCreateTrigger] = None
+    on_pod_delete: Optional[PodDeleteTrigger] = None
+    on_pod_update: Optional[PodUpdateTrigger] = None
+    on_replicaset_all_changes: Optional[ReplicaSetAllChangesTrigger] = None
+    on_replicaset_create: Optional[ReplicaSetCreateTrigger] = None
+    on_replicaset_delete: Optional[ReplicaSetDeleteTrigger] = None
+    on_replicaset_update: Optional[ReplicaSetUpdateTrigger] = None
+    on_secret_all_changes: Optional[SecretAllChangesTrigger] = None
+    on_secret_create: Optional[SecretCreateTrigger] = None
+    on_secret_delete: Optional[SecretDeleteTrigger] = None
+    on_secret_update: Optional[SecretUpdateTrigger] = None
+    on_service_all_changes: Optional[ServiceAllChangesTrigger] = None
+    on_service_create: Optional[ServiceCreateTrigger] = None
+    on_service_delete: Optional[ServiceDeleteTrigger] = None
+    on_service_update: Optional[ServiceUpdateTrigger] = None
+    on_serviceaccount_all_changes: Optional[ServiceAccountAllChangesTrigger] = None
+    on_serviceaccount_create: Optional[ServiceAccountCreateTrigger] = None
+    on_serviceaccount_delete: Optional[ServiceAccountDeleteTrigger] = None
+    on_serviceaccount_update: Optional[ServiceAccountUpdateTrigger] = None
+    on_statefulset_all_changes: Optional[StatefulSetAllChangesTrigger] = None
+    on_statefulset_create: Optional[StatefulSetCreateTrigger] = None
+    on_statefulset_delete: Optional[StatefulSetDeleteTrigger] = None
+    on_statefulset_update: Optional[StatefulSetUpdateTrigger] = None

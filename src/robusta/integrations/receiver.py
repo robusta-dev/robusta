@@ -53,6 +53,8 @@ class ValidationResponse(BaseModel):
 class SlackActionRequest(BaseModel):
     value: ExternalActionRequest
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("value", pre=True, always=True)
     def validate_value(cls, v: str) -> dict:
         # Slack value is sent as a stringified json, so we need to parse it before validation

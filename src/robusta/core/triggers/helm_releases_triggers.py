@@ -171,6 +171,6 @@ class HelmReleaseDeployTrigger(HelmReleaseBaseTrigger):
 
 
 class HelmReleaseTriggers(BaseModel):
-    on_helm_release_unhealthy: Optional[HelmReleaseUnhealthyTrigger]
-    on_helm_release_fail: Optional[HelmReleaseFailTrigger]
-    on_helm_release_deploy: Optional[HelmReleaseDeployTrigger]
+    on_helm_release_unhealthy: Optional[HelmReleaseUnhealthyTrigger] = None
+    on_helm_release_fail: Optional[HelmReleaseFailTrigger] = None
+    on_helm_release_deploy: Optional[HelmReleaseDeployTrigger] = None

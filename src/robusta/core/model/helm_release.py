@@ -9,9 +9,9 @@ import json
 class Metadata(BaseModel):
     name: str
     version: str
-    description: Optional[str]
-    apiVersion: Optional[str]
-    appVersion: Optional[str]
+    description: Optional[str] = None
+    apiVersion: Optional[str] = None
+    appVersion: Optional[str] = None
 
 
 class Chart(BaseModel):
@@ -22,15 +22,15 @@ class Info(BaseModel):
     first_deployed: datetime
     last_deployed: datetime
     deleted: str
-    description: Optional[str]
+    description: Optional[str] = None
     status: str
-    notes: Optional[str]
+    notes: Optional[str] = None
 
 
 class HelmRelease(BaseModel):
     name: str
     info: Info
-    chart: Optional[Chart]
+    chart: Optional[Chart] = None
     version: int
     namespace: str
     deleted: bool = False

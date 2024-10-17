@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class AccountResourceStatusInfo(BaseModel):
-    error: Optional[str]
+    error: Optional[str] = None
 
 
 class AccountResourceStatusType(str, Enum):
@@ -16,10 +16,10 @@ class AccountResourceStatusType(str, Enum):
 class AccountResourceStatus(BaseModel):
     account_id: str
     cluster_id: str
-    status: Optional[AccountResourceStatusType]
-    info: Optional[AccountResourceStatusInfo]
-    synced_revision: Optional[datetime]
-    latest_revision: Optional[datetime]
+    status: Optional[AccountResourceStatusType] = None
+    info: Optional[AccountResourceStatusInfo] = None
+    synced_revision: Optional[datetime] = None
+    latest_revision: Optional[datetime] = None
     updated_at: datetime
 
 
@@ -41,7 +41,7 @@ class PrometheusAlertRule(BaseModel):
     alert: str
     annotations: dict
     expr: str
-    duration: Optional[str]
+    duration: Optional[str] = None
     labels: dict
 
     @staticmethod

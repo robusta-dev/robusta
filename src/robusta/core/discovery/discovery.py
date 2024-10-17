@@ -37,7 +37,7 @@ from kubernetes.client import (
     V1StatefulSetList,
     V1Volume,
 )
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
@@ -75,9 +75,7 @@ class DiscoveryResults(BaseModel):
     namespaces: List[NamespaceInfo] = []
     helm_releases: List[HelmRelease] = []
     pods_running_count: int = 0
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 DISCOVERY_STACKTRACE_FILE = "/tmp/make_discovery_stacktrace"

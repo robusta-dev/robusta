@@ -52,4 +52,4 @@ class CronScheduleRepeatTrigger(ScheduledTrigger):
 
 
 class ScheduledTriggers(BaseModel):
-    on_schedule: Optional[Union[FixedDelayRepeatTrigger, DynamicDelayRepeatTrigger, CronScheduleRepeatTrigger]]
+    on_schedule: Optional[Union[FixedDelayRepeatTrigger, DynamicDelayRepeatTrigger, CronScheduleRepeatTrigger]] = None

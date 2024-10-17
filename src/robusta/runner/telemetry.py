@@ -13,7 +13,7 @@ class Telemetry(BaseModel):
     account_id: str = ""
     cluster_id: str = ""
     runner_version: str
-    last_alert_at: Optional[str]  # ts
+    last_alert_at: Optional[str] = None  # ts
 
     nodes_count: int = 0
     playbooks_count: int = 0

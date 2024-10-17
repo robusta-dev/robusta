@@ -67,7 +67,7 @@ class ContainerInfo(BaseModel):
 
 class VolumeInfo(BaseModel):
     name: str
-    persistent_volume_claim: Optional[Dict[str, str]]
+    persistent_volume_claim: Optional[Dict[str, str]] = None
 
     @staticmethod
     def get_volume_info(volume: Union[V1Volume, Volume]) -> "VolumeInfo":
@@ -102,10 +102,10 @@ class ServiceInfo(BaseModel):
     namespace: str
     classification: str = "None"
     deleted: bool = False
-    service_config: Optional[ServiceConfig]
+    service_config: Optional[ServiceConfig] = None
     ready_pods: int = 0
     total_pods: int = 0
-    is_helm_release: Optional[bool]
+    is_helm_release: Optional[bool] = None
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"

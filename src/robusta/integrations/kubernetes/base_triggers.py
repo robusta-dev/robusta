@@ -33,7 +33,7 @@ class IncomingK8sEventPayload(BaseModel):
     clusterUid: str
     description: str
     obj: Dict[Any, Any]
-    oldObj: Optional[Dict[Any, Any]]
+    oldObj: Optional[Dict[Any, Any]] = None
 
 
 class K8sTriggerEventScopeMatcher(BaseScopeMatcher):

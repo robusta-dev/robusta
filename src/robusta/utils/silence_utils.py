@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel, SecretStr, validator
+from pydantic import field_validator, BaseModel, SecretStr, validator
 
 from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound
 from robusta.core.model.base_params import ActionParams
@@ -63,7 +63,8 @@ class AlertManagerParams(ActionParams):
     alertmanager_auth: Optional[SecretStr] = None
     grafana_api_key: str = None  # type: ignore
 
-    @validator("alertmanager_url", allow_reuse=True)
+    @field_validator("alertmanager_url")
+    @classmethod
     def validate_alertmanager_url(cls, v):
 
         if v and not v.startswith("http"):  # if the user configured url without http(s)
@@ -74,6 +75,8 @@ class AlertManagerParams(ActionParams):
             return v[:-1]
         return v
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("alertmanager_auth", allow_reuse=True, always=True)
     def auto_openshift_token(cls, v: Optional[SecretStr]):
         # If openshift is enabled, and the user didn't configure alertmanager_auth, we will try to load the token from the service account

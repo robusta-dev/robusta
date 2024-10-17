@@ -2,7 +2,7 @@ import logging
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, SecretStr, validator
+from pydantic import field_validator, BaseModel, SecretStr, validator
 
 from robusta.integrations import openshift
 from robusta.utils.documented_pydantic import DocumentedModel
@@ -54,7 +54,7 @@ class OverrideGraph(BaseModel):
     resource_type: str
     item_type: str
     query: str
-    values_format: Optional[str]
+    values_format: Optional[str] = None
 
 
 class ActionParams(DocumentedModel):
@@ -73,18 +73,19 @@ class ActionParams(DocumentedModel):
 
 class ResourceInfo(BaseModel):
     name: Optional[str] = "unresolved"
-    namespace: Optional[str]
-    kind: Optional[str]
-    node: Optional[str]
-    container: Optional[str]
-    cluster: Optional[str]
+    namespace: Optional[str] = None
+    kind: Optional[str] = None
+    node: Optional[str] = None
+    container: Optional[str] = None
+    cluster: Optional[str] = None
 
 
 class HolmesParams(ActionParams):
 
     holmes_url: Optional[str]
 
-    @validator("holmes_url", allow_reuse=True)
+    @field_validator("holmes_url")
+    @classmethod
     def validate_protocol(cls, v):
         if v and not v.startswith("http"):  # if the user configured url without http(s)
             v = f"http://{v}"
@@ -289,20 +290,24 @@ class PrometheusParams(ActionParams):
     add_additional_labels: bool = True
     prometheus_graphs_overrides: Optional[List[OverrideGraph]] = None
 
-    @validator("prometheus_url", allow_reuse=True)
+    @field_validator("prometheus_url")
+    @classmethod
     def validate_protocol(cls, v):
         if v and not v.startswith("http"):  # if the user configured url without http(s)
             v = f"http://{v}"
             logging.info(f"Adding protocol to prometheus_url: {v}")
         return v
 
-    @validator("prometheus_url_query_string", allow_reuse=True)
+    @field_validator("prometheus_url_query_string")
+    @classmethod
     def validate_query_string(cls, v):
         if v and v.startswith("?"):  # if the user configured query string is using '?'
             v = v.lstrip("?")
             logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
         return v
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @validator("prometheus_auth", allow_reuse=True, always=True)
     def auto_openshift_token(cls, v: Optional[SecretStr]):
         # If openshift is enabled, and the user didn't configure prometheus_auth, we will try to load the token from the service account

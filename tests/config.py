@@ -1,6 +1,6 @@
 import os.path
 
-from pydantic import BaseSettings
+from pydantic_settings import SettingsConfigDict, BaseSettings
 
 
 # these settings are loaded from three sources:
@@ -17,9 +17,7 @@ class TestConfig(BaseSettings):
     # this is used by robusta-runner and should be a regular slack token with the same permissions as real
     # robusta slack tokens
     PYTEST_IN_CLUSTER_SLACK_TOKEN: str
-
-    class Config:
-        env_file = os.path.join(os.path.dirname(__file__), "config.env")
+    model_config = SettingsConfigDict(env_file=os.path.join(os.path.dirname(__file__), "config.env"))
 
 
 CONFIG = TestConfig()

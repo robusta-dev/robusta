@@ -3,7 +3,7 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.common import ChannelTransformer
 
 from typing import Optional
-from pydantic import validator
+from pydantic import field_validator
 
 
 class SlackSinkParams(SinkBaseParams):
@@ -21,7 +21,8 @@ class SlackSinkParams(SinkBaseParams):
     def _get_sink_type(cls):
         return "slack"
 
-    @validator("channel_override")
+    @field_validator("channel_override")
+    @classmethod
     def validate_channel_override(cls, v: str):
         return ChannelTransformer.validate_channel_override(v)
 

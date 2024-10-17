@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import root_validator
+from pydantic import model_validator
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
@@ -18,7 +18,8 @@ class YaMessengerSinkParams(SinkBaseParams):
     def _get_sink_type(cls):
         return "yamessenger"
 
-    @root_validator()
+    @model_validator()
+    @classmethod
     def validate_fields(cls, fields):
         assert fields["chat_id"] is not None or fields["user_name"] is not None, "chat_id or user_name must be defined for the Yandex Messenger sink"
         return fields

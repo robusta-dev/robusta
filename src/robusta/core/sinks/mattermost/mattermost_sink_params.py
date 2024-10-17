@@ -1,7 +1,7 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from pydantic import validator
+from pydantic import field_validator
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
@@ -19,7 +19,8 @@ class MattermostSinkParams(SinkBaseParams):
     def _get_sink_type(cls):
         return "mattermost"
 
-    @validator("url")
+    @field_validator("url")
+    @classmethod
     def set_http_schema(cls, url):
         parsed_url = urlparse(url)
         # if netloc is empty string, the url was provided without schema

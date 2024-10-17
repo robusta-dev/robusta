@@ -9,8 +9,8 @@ ScopeIncludeExcludeParamsT = Dict[str, Optional[Union[str, List[str]]]]
 
 
 class ScopeParams(BaseModel):
-    include: Optional[List[ScopeIncludeExcludeParamsT]]
-    exclude: Optional[List[ScopeIncludeExcludeParamsT]]
+    include: Optional[List[ScopeIncludeExcludeParamsT]] = None
+    exclude: Optional[List[ScopeIncludeExcludeParamsT]] = None
 
     @root_validator
     def check_non_empty(cls, data: Dict) -> Dict:

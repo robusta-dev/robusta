@@ -3,7 +3,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, root_validator, validator
+from pydantic import field_validator, BaseModel, root_validator, validator
 from pydantic.types import PositiveInt
 import pytz
 
@@ -32,7 +32,8 @@ class ActivityInterval(BaseModel):
     days: List[str]
     hours: List[ActivityHours] = []
 
-    @validator("days")
+    @field_validator("days")
+    @classmethod
     def check_days(cls, value: List[str]):
         for day in value:
             if day.upper() not in DAY_NAMES:
@@ -44,13 +45,15 @@ class ActivityParams(BaseModel):
     timezone: str = "UTC"
     intervals: List[ActivityInterval]
 
-    @validator("timezone")
+    @field_validator("timezone")
+    @classmethod
     def check_timezone(cls, timezone: str):
         if timezone not in pytz.all_timezones:
             raise ValueError(f"unknown timezone {timezone}")
         return timezone
 
-    @validator("intervals")
+    @field_validator("intervals")
+    @classmethod
     def check_intervals(cls, intervals: List[ActivityInterval]):
         if not intervals:
             raise ValueError("at least one interval has to be specified for the activity settings")
@@ -75,8 +78,8 @@ class SummaryNotificationModeParams(BaseModel):
 
 
 class NotificationModeParams(BaseModel):
-    regular: Optional[RegularNotificationModeParams]
-    summary: Optional[SummaryNotificationModeParams]
+    regular: Optional[RegularNotificationModeParams] = None
+    summary: Optional[SummaryNotificationModeParams] = None
     # TODO should we enforce that only one of these is set?
 
     @root_validator
@@ -91,7 +94,7 @@ class NotificationModeParams(BaseModel):
 class GroupingParams(BaseModel):
     group_by: GroupingAttributeSelectorListT = ["cluster"]
     interval: int = 15*60  # in seconds
-    notification_mode: Optional[NotificationModeParams]
+    notification_mode: Optional[NotificationModeParams] = None
 
     @root_validator
     def validate_notification_mode(cls, values: Dict):
@@ -105,9 +108,9 @@ class SinkBaseParams(ABC, BaseModel):
     send_svg: bool = False
     default: bool = True
     match: dict = {}
-    scope: Optional[ScopeParams]
-    activity: Optional[ActivityParams]
-    grouping: Optional[GroupingParams]
+    scope: Optional[ScopeParams] = None
+    activity: Optional[ActivityParams] = None
+    grouping: Optional[GroupingParams] = None
     stop: bool = False  # Stop processing if this sink has been matched
 
     @root_validator

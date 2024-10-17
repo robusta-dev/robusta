@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import validator
+from pydantic import field_validator
 
 from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
 from robusta.core.sinks.sink_base_params import SinkBaseParams
@@ -15,7 +15,8 @@ class MsTeamsSinkParams(SinkBaseParams):
     def _get_sink_type(cls):
         return "msteams"
 
-    @validator("webhook_override")
+    @field_validator("webhook_override")
+    @classmethod
     def validate_webhook_override(cls, v: str):
         return MsTeamsWebhookUrlTransformer.validate_webhook_override(v)
 

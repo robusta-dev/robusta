@@ -33,15 +33,15 @@ class JobContainer(BaseModel):
 
 class JobCondition(BaseModel):
     type: str
-    message: Optional[str]
+    message: Optional[str] = None
 
 
 class JobStatus(BaseModel):
     active: int = 0
     failed: int = 0
     succeeded: int = 0
-    completion_time: Optional[str]
-    failed_time: Optional[str]
+    completion_time: Optional[str] = None
+    failed_time: Optional[str] = None
     conditions: List[JobCondition]
 
     @staticmethod
@@ -79,12 +79,12 @@ class JobStatus(BaseModel):
 
 class JobData(BaseModel):
     backoff_limit: int
-    tolerations: Optional[List[Dict]]
-    node_selector: Optional[Dict]
-    labels: Optional[Dict[str, str]]
+    tolerations: Optional[List[Dict]] = None
+    node_selector: Optional[Dict] = None
+    labels: Optional[Dict[str, str]] = None
     containers: List[JobContainer]
-    pods: Optional[List[str]]
-    parents: Optional[List[str]]
+    pods: Optional[List[str]] = None
+    parents: Optional[List[str]] = None
 
     @staticmethod
     def _get_job_parents(job: Union[V1Job, Job]) -> List[str]:

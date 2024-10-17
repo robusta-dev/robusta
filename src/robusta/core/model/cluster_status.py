@@ -20,7 +20,7 @@ class ActivityStats(BaseModel):
     prometheusRetentionTime: str
     managedPrometheusAlerts: bool
     holmesEnabled: bool
-    holmesModel: Optional[str]
+    holmesModel: Optional[str] = None
     clusterTimeZone: str
 
 
@@ -28,7 +28,7 @@ class ClusterStatus(BaseModel):
     account_id: str
     cluster_id: str
     version: str
-    last_alert_at: Optional[str]  # ts
+    last_alert_at: Optional[str] = None  # ts
     light_actions: List[str]
     ttl_hours: int
     stats: ClusterStats
