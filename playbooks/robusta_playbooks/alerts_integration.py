@@ -8,6 +8,7 @@ import requests
 from hikaru.model.rel_1_26 import Node
 from kubernetes import client
 from kubernetes.client import V1Pod, V1PodList, exceptions
+from playbooks.robusta_playbooks.util import resolve_selectors
 from robusta.api import (
     ActionException,
     ActionParams,
@@ -454,6 +455,11 @@ class ForeignLogParams(LogEnricherParams):
     label_selectors: List[str]
     title_override: Optional[str]
 
+
+@action
+def alert_foreign_logs_enricher(event: PrometheusKubernetesAlert, params: ForeignLogParams):
+    params.label_selectors = resolve_selectors(event.labels, params.label_selectors)
+    return foreign_logs_enricher(event, params)
 
 @action
 def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
