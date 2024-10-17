@@ -1,5 +1,5 @@
 import base64
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, cast
 
 from pydantic import BaseModel, SecretStr, root_validator, validator
 
@@ -29,6 +29,7 @@ from robusta.core.sinks.zulip.zulip_sink_params import ZulipSinkConfigWrapper
 from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.base64_utils import is_base64_encoded
+from src.robusta.core.sinks.sink_config import SinkConfigBase
 
 
 class PlaybookRepo(BaseModel):
@@ -80,6 +81,20 @@ class RunnerConfig(BaseModel):
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
     alert_relabel: Optional[List[AlertRelabel]] = []
+
+    @root_validator()
+    def ensure_unique_sink_name(cls, val: Dict) -> Dict:
+        print(f"validating {val}")
+        if val.get('sinks_config'):
+            value_set = set()
+            sinksConfig = cast(List[SinkConfigBase], val.get('sinks_config'))
+            for sink_config in sinksConfig:
+                sink_name = sink_config.get_name()
+                if sink_name in value_set:
+                    raise ValueError(f"Sink name \"{sink_name}\" is already defined. Sink names must be unique.")
+                else:
+                    value_set.add(sink_name)
+        return val
 
     @validator("playbook_repos")
     def env_var_repo_keys(cls, playbook_repos: Dict[str, PlaybookRepo]):
