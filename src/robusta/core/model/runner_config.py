@@ -91,8 +91,8 @@ class RunnerConfig(BaseModel):
                 sink_name = sink_config.get_name()
                 if sink_name in value_set:
                     raise ValueError(f"Sink name \"{sink_name}\" is already defined. Sink names must be unique.")
-                else:
-                    value_set.add(sink_name)
+
+                value_set.add(sink_name)
         return val
 
     @validator("playbook_repos")
