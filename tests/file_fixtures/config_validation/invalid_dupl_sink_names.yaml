@@ -1,0 +1,22 @@
+playbook_repos:
+  chatgpt_robusta_actions:
+    url: "file:///path/to/kubernetes-chatgpt-bot"
+sinks_config:
+  - slack_sink:
+      name: my_sink1
+      slack_channel: my-alert-channel
+      api_key: "foobar"
+      scope:
+        include:
+          - labels:
+              - "severity=high"
+              - "severity=critical"
+
+  - slack_sink:
+      name: my_sink1
+      slack_channel: my-notification-channel
+      api_key: "foobar"
+      scope:
+        include:
+          - labels:
+              - "severity=warning"
