@@ -2,7 +2,7 @@
 import re
 from typing import Dict, List
 
-REGEXP_FIND_SELECTOR = r'\{\{\s*labels\.([^\s]+)\s*\}\}'
+REGEXP_FIND_SELECTOR = r'\{\{\s*labels\.([^\s\}]+)\s*\}\}'
 
 def resolve_selectors(labels:Dict, selectors:List[str]) -> List[str]:
     """
