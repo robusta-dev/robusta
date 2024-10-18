@@ -9,6 +9,7 @@ class OpsGenieSinkParams(SinkBaseParams):
     teams: List[str] = []
     tags: List[str] = []
     host: Optional[str] = None  # NOTE: If None, the default value will be used from opsgenie_sdk
+    extra_details_labels: Optional[bool] = None
 
     @classmethod
     def _get_sink_type(cls):

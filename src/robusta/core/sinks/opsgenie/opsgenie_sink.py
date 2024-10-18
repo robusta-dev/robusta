@@ -32,6 +32,9 @@ class OpsGenieSink(SinkBase):
         if sink_config.opsgenie_sink.host is not None:
             self.conf.host = sink_config.opsgenie_sink.host
 
+        if sink_config.opsgenie_sink.extra_details_labels is not None:
+            self.conf.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
+
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
 
@@ -52,6 +55,7 @@ class OpsGenieSink(SinkBase):
 
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
+        details = self.__to_details(finding)
         self.tags.insert(0, self.cluster_name)
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
@@ -59,13 +63,7 @@ class OpsGenieSink(SinkBase):
             description=description,
             alias=finding.fingerprint,
             responders=[{"name": team, "type": "team"} for team in self.teams],
-            details={
-                "Resource": finding.subject.name,
-                "Cluster": self.cluster_name,
-                "Namespace": finding.subject.namespace,
-                "Node": finding.subject.node,
-                "Source": str(finding.source.name),
-            },
+            details=details,
             tags=self.tags,
             entity=finding.service_key,
             priority=PRIORITY_MAP.get(finding.severity, "P3"),
@@ -95,6 +93,23 @@ class OpsGenieSink(SinkBase):
             description = f"{description}\n"
 
         return f"{description}{self.__enrichments_as_text(finding.enrichments)}"
+
+    def __to_details(self, finding: Finding) -> dict:
+        details = {
+            "Resource": finding.subject.name,
+            "Cluster": self.cluster_name,
+            "Namespace": finding.subject.namespace,
+            "Node": finding.subject.node,
+            "Source": str(finding.source.name),
+        }
+        lower_details_key = [k.lower() for k in details.keys()]
+        # If there are extra details labels in the config extra_details_labels,
+        # add them without altering the already existing details.
+        if self.conf.extra_details_labels:
+            for key, value in finding.subject.labels:
+                if key in self.conf.extra_details_labels and not key in lower_details_key:
+                    details[key] = value
+        return details
 
     @classmethod
     def __enrichments_as_text(cls, enrichments: List[Enrichment]) -> str:
