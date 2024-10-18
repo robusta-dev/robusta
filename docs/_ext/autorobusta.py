@@ -214,6 +214,7 @@ class RobustaActionDirective(SphinxDirective):
         "reference-label": str,
         "manual-trigger-only": directives.flag,
         "trigger-params": str,
+        "recommended-trigger": str
     }
     has_content = True
     required_arguments = 1
@@ -223,22 +224,28 @@ class RobustaActionDirective(SphinxDirective):
     def run(self) -> List[Node]:
         objpath = self.arguments[0]
         if len(self.arguments) < 2:
-            recommended_trigger = None
+            example_yaml = None
         else:
-            recommended_trigger = self.arguments[1]
+            example_yaml = self.arguments[1]
         obj = pydoc.locate(objpath)
         if obj is None:
             raise Exception(f"Cannot document None: {objpath}")
         action_definition = Action(obj)
-        return self.__generate_rst(action_definition, recommended_trigger)
 
-    def __generate_rst(self, action_definition: Action, recommended_trigger: Optional[str]):
+        recommended_trigger = self.options.get("recommended-trigger", None)
+
+        return self.__generate_rst(action_definition, recommended_trigger, example_yaml)
+
+    def __generate_rst(self, action_definition: Action, recommended_trigger: Optional[str], example_yaml: Optional[str]):
         node = nodes.section()
         node.document = self.state.document
 
         trigger_params = json.loads(self.options.get("trigger-params", "{}"))
+        if not example_yaml:
+            example_yaml = generator.generate_example_config(action_definition.func, recommended_trigger, trigger_params)
 
-        example_yaml = generator.generate_example_config(action_definition.func, recommended_trigger, trigger_params)
+        self.state.nested_parse(self.content, self.content_offset, node)
+
         params_cls = action_definition.params_type
         params_cls_path = ""
         if params_cls is not None:
@@ -256,7 +263,6 @@ class RobustaActionDirective(SphinxDirective):
 
         reference_label = self.options.get("reference-label", action_definition.action_name)
         manual_trigger_only = "manual-trigger-only" in self.options
-
         indented_cli_trigger_example = ""
         if cli_trigger:
             indented_cli_trigger_example = f"""\

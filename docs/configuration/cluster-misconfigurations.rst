@@ -117,8 +117,8 @@ This error suggests you are running the Popeye image on a different os/arch node
 
 Reference
 ======================================
-.. robusta-action:: playbooks.robusta_playbooks.popeye.popeye_scan on_schedule
-
+.. robusta-action:: playbooks.robusta_playbooks.popeye.popeye_scan
+    :recommended-trigger: on_schedule
     You can trigger a Popeye scan at any time, by running the following command:
 
     .. code-block:: bash
