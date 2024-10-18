@@ -14,9 +14,11 @@ You will need a Grafana API key with write permissions.
 Builtin actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_deployment_lines_to_grafana on_deployment_update
+.. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_deployment_lines_to_grafana
+    :recommended-trigger: on_deployment_update
 
 .. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_alert_lines_to_grafana
 
-.. robusta-action:: playbooks.robusta_playbooks.deployment_status_report.deployment_status_report on_deployment_update
+.. robusta-action:: playbooks.robusta_playbooks.deployment_status_report.deployment_status_report
+    :recommended-trigger: on_deployment_update
     :reference-label: change_tracking__deployment_status_report

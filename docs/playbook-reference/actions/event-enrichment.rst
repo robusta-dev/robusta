@@ -29,7 +29,8 @@ Pod Enrichers (General)
 
 These actions can add context to any pod-related event, be it from ``on_prometheus_alert`` or ``on_pod_update``.
 
-.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.logs_enricher on_pod_crash_loop
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.logs_enricher
+    :recommended-trigger: on_pod_crash_loop
 
 .. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
 
@@ -58,7 +59,8 @@ They're less general than the above actions, and usually designed for a specific
 .. deprecated
 .. .. robusta-action:: playbooks.robusta_playbooks.restart_loop_reporter.restart_loop_reporter
 
-.. robusta-action:: playbooks.robusta_playbooks.oom_killer.pod_oom_killer_enricher on_pod_oom_killed
+.. robusta-action:: playbooks.robusta_playbooks.oom_killer.pod_oom_killer_enricher
+    :recommended-trigger: on_pod_oom_killed
 
 .. .. robusta-action:: playbooks.robusta_playbooks.image_pull_backoff_enricher.image_pull_backoff_reporter
 
@@ -127,6 +129,17 @@ These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.default_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.foreign_logs_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_foreign_logs_enricher
+    .. code-block:: yaml
+        customPlaybooks:
+        - actions:
+        - alert_foreign_logs_enricher:
+            label_selectors:
+            - "app={{labels.service}}"
+            - "env=production"
+        triggers:
+          - on_prometheus_alert: {}
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_definition_enricher
 

@@ -458,6 +458,14 @@ class ForeignLogParams(LogEnricherParams):
 
 @action
 def alert_foreign_logs_enricher(event: PrometheusKubernetesAlert, params: ForeignLogParams):
+    """
+    Prometheus alert enricher to fetch and attach pod logs.
+
+    This action behaves the same as the foreign_logs_enricher.
+    The logs are fetched for the pod determined by the label selector field in the parameters.
+    The label selector field can use the format {{labels.XYZ}} to reference any XYZ label present in the Prometheus alert.
+
+    """
     params.label_selectors = resolve_selectors(event.labels, params.label_selectors)
     return foreign_logs_enricher(event, params)
 

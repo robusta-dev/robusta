@@ -14,7 +14,7 @@ def resolve_selectors(labels:Dict, selectors:List[str]) -> List[str]:
     """
     def replace_label(match):
         key = match.group(1).strip()
-        return labels.get(key, '')
+        return labels.get(key, match.string)
 
     resolved_selectors = [re.sub(REGEXP_FIND_SELECTOR, replace_label, selector) for selector in selectors]
     return resolved_selectors

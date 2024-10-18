@@ -7,7 +7,7 @@ from playbooks.robusta_playbooks.util import resolve_selectors
     [
         ({}, ["my_selector"], ["my_selector"]),
         ({"field1": "value1"}, ["{{ labels.field1 }}"], ["value1"]),
-        ({}, ["{{ labels.field1 }}"], [""]),
+        ({}, ["{{ labels.field1 }}"], ["{{ labels.field1 }}"]),
         ({"field_1": "value1"}, ["{{ labels.field_1 }}"], ["value1"]),
         ({"field-1": "value1"}, ["{{ labels.field-1 }}"], ["value1"]),
         (
