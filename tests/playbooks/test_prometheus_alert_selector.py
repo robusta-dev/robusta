@@ -7,9 +7,9 @@ from playbooks.robusta_playbooks.util import resolve_selectors
     [
         ({}, ["my_selector"], ["my_selector"]),
         ({"field1": "value1"}, ["{{ labels.field1 }}"], ["value1"]),
-        ({}, ["{{ labels.field1 }}"], ["{{ labels.field1 }}"]),
-        ({"field_1": "value1"}, ["{{ labels.field_1 }}"], ["value1"]),
-        ({"field-1": "value1"}, ["{{ labels.field-1 }}"], ["value1"]),
+        ({}, ["{{ labels.field_not_found }}"], ["{{ labels.field_not_found }}"]),
+        ({"field_1": "field_with_underscore"}, ["{{ labels.field_1 }}"], ["field_with_underscore"]),
+        ({"field-1": "field_with_dash"}, ["{{ labels.field-1 }}"], ["field_with_dash"]),
         (
             {"domain": "localhost", "port": "3000", "apiUrl": "/my_api"},
             ["http://{{ labels.domain}}:{{ labels.port }}{{labels.apiUrl}}"],
@@ -17,7 +17,7 @@ from playbooks.robusta_playbooks.util import resolve_selectors
         (
             {"domain": "localhost", "port": "3000", "apiUrl": "/my_api"},
             [
-                "http://{{ labels.domain}}:{{ labels.port }}{{labels.apiUrl}}",
+                "http://{{ labels.domain}}:{{ labels.port}}{{labels.apiUrl}}",
                 "{{ labels.domain}}",
                 "{labels.domain}",
                 "{apiUrl"
