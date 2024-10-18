@@ -22,15 +22,15 @@ from playbooks.robusta_playbooks.util import resolve_selectors
             {"domain": "localhost", "port": "3000", "apiUrl": "/my_api"},
             [
                 "http://{{ labels.domain}}:{{ labels.port}}{{labels.apiUrl}}",
-        #         "{{ labels.domain}}",
-        #         "{labels.domain}",
-        #         "{{apiUrl}}"
+                "{{ labels.domain}}",
+                "{labels.domain}",
+                "{{apiUrl}}"
             ],
             [
                 "http://localhost:3000/my_api",
-        #         "localhost",
-        #         "{labels.domain}",
-        #         "{{apiUrl}}"
+                "localhost",
+                "{labels.domain}",
+                "{{apiUrl}}"
             ]
         )
     ],
