@@ -29,7 +29,7 @@ from robusta.core.sinks.zulip.zulip_sink_params import ZulipSinkConfigWrapper
 from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.base64_utils import is_base64_encoded
-from src.robusta.core.sinks.sink_config import SinkConfigBase
+from robusta.core.sinks.sink_config import SinkConfigBase
 
 
 class PlaybookRepo(BaseModel):

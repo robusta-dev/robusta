@@ -20,5 +20,4 @@ class TestSinkValidation:
             yaml_content = yaml.safe_load(file)
             with pytest.raises(ValidationError) as validation_error:
                 config = RunnerConfig(**yaml_content)
-            assert "sink name".casefold() in str(validation_error).casefold()
-            assert "unique".casefold() in str(validation_error).casefold()
+            assert f'Sink name "my_sink1" is already defined. Sink names must be unique.' in str(validation_error)
