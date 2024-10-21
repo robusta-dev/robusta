@@ -14,6 +14,7 @@ These actions can be triggered automatically on Prometheus alerts, or :ref:`manu
     This action has been deprecated. To enable it add the following to your generated_values.yaml
 
     .. code-block:: bash
+
         runner:
           additional_env_vars:
           - name: PYTHON_DEBUGGER_IMAGE
@@ -24,6 +25,7 @@ These actions can be triggered automatically on Prometheus alerts, or :ref:`manu
     This action has been deprecated. To enable it add the following to your generated_values.yaml
 
     .. code-block:: bash
+
         runner:
           additional_env_vars:
           - name: PYTHON_DEBUGGER_IMAGE
@@ -40,6 +42,7 @@ These actions can be triggered automatically on Prometheus alerts, or :ref:`manu
     This action has been deprecated. To enable it add the following to your generated_values.yaml
 
     .. code-block:: bash
+
         runner:
           additional_env_vars:
           - name: PYTHON_DEBUGGER_IMAGE

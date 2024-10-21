@@ -156,8 +156,7 @@ By default, the memory request and limit are set to ``2Gi``. Modify these values
 
 Reference
 ======================================
-.. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan
-    :recommended-trigger: on_schedule
+.. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
 
     You can trigger a KRR scan at any time, by running the following command:
 
