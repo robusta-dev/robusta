@@ -466,7 +466,8 @@ def alert_foreign_logs_enricher(event: PrometheusKubernetesAlert, params: Foreig
     The label selector field can use the format {{labels.XYZ}} to reference any XYZ label present in the Prometheus alert.
 
     """
-    params.label_selectors = resolve_selectors(event.labels, params.label_selectors)
+    subject = event.get_subject()
+    params.label_selectors = [format_event_templated_string(subject, selector) for selector in params.label_selectors]
     return foreign_logs_enricher(event, params)
 
 @action

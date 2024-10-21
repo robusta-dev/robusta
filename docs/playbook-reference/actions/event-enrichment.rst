@@ -136,7 +136,7 @@ These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_
         - actions:
         - alert_foreign_logs_enricher:
             label_selectors:
-            - "app={{labels.service}}"
+            - "app={labels.service}"
             - "env=production"
         triggers:
           - on_prometheus_alert: {}
