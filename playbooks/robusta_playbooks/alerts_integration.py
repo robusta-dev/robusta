@@ -8,7 +8,6 @@ import requests
 from hikaru.model.rel_1_26 import Node
 from kubernetes import client
 from kubernetes.client import V1Pod, V1PodList, exceptions
-from playbooks.robusta_playbooks.util import resolve_selectors
 from robusta.api import (
     ActionException,
     ActionParams,
@@ -463,7 +462,7 @@ def alert_foreign_logs_enricher(event: PrometheusKubernetesAlert, params: Foreig
 
     This action behaves the same as the foreign_logs_enricher.
     The logs are fetched for the pod determined by the label selector field in the parameters.
-    The label selector field can use the format {{labels.XYZ}} to reference any XYZ label present in the Prometheus alert.
+    The label selector field can use the format ${labels.XYZ} to reference any XYZ label present in the Prometheus alert.
 
     """
     subject = event.get_subject()
