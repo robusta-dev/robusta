@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import time
 from dataclasses import dataclass, field
@@ -39,9 +40,9 @@ if TYPE_CHECKING:
 S = TypeVar("S")
 T = TypeVar("T")
 
-
+PYTHON_DEBUGGER_IMAGE_OVERRIDE = os.getenv("PYTHON_DEBUGGER_IMAGE", "debug-toolkit:v8.0")
 # TODO: import these from the python-tools project
-PYTHON_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/debug-toolkit:v6.0"
+PYTHON_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/{PYTHON_DEBUGGER_IMAGE_OVERRIDE}"
 JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit:v1.0.2"
 
 
