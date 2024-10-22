@@ -171,7 +171,7 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
     try:
         holmes_req = HolmesConversationRequest(
             user_prompt=params.ask,
-            source=params.context.source if params.context else "unknown source",
+            source=getattr(params.context, "source", "unknown source") if params.context else "unknown source",
             resource=params.resource,
             conversation_type=params.conversation_type,
             context=params.context,
