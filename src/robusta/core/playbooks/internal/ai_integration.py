@@ -181,7 +181,7 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
         result = requests.post(f"{holmes_url}/api/conversation", data=holmes_req.json())
         result.raise_for_status()
         holmes_result = HolmesConversationResult(**json.loads(result.text))
-
+        print(holmes_result)
         params_resource_kind = params.resource.kind or ""
         finding = Finding(
             title=f"AI Analysis of {conversation_title}",
