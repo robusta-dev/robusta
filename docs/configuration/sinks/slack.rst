@@ -3,6 +3,10 @@ Slack
 
 Robusta can report issues and events in your Kubernetes cluster to Slack.
 
+.. warning::
+
+   If you are using the Slack sink and a Robusta version prior to 0.10.29, we **highly recommend updating**, as Slack is deprecating their older APIs.
+
 Connecting Slack
 ------------------------------------------------
 
