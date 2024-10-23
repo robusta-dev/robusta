@@ -214,7 +214,7 @@ Alert Manager is not working
 
         .. tip::
 
-            If you're using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/robusta-demo/simulate-alert/>`_.
+            If you're using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/simulate-alert/>`_.
 
 
 
