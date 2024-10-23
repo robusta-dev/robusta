@@ -546,7 +546,7 @@ class Discovery:
         try:
             future = Discovery.executor.submit(Discovery.discovery_process)
             return future.result(timeout=DISCOVERY_PROCESS_TIMEOUT_SEC)
-        except Exception as e
+        except Exception as e:
             # We've seen this and believe the process is killed due to oom kill
             # The process pool becomes not usable, so re-creating it
             logging.error("Discovery process internal error")
