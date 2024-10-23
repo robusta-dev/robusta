@@ -546,18 +546,14 @@ class Discovery:
         try:
             future = Discovery.executor.submit(Discovery.discovery_process)
             return future.result(timeout=DISCOVERY_PROCESS_TIMEOUT_SEC)
-        except BrokenProcessPool as bpp:
+        except Exception as e
             # We've seen this and believe the process is killed due to oom kill
             # The process pool becomes not usable, so re-creating it
-
-            logging.error("Discovery process was killed. The robusta-runner pod may be running out of memory. Refer to the following documentation to increase the runner's memory: https://docs.robusta.dev/master/help.html")
-            Discovery.out_of_memory_detected = True
-            Discovery.executor.shutdown()
-            Discovery.executor = ProcessPoolExecutor(max_workers=1)
-            logging.info("Initialized new discovery pool")
-            raise bpp
-        except Exception as e:
             logging.error("Discovery process internal error")
+            if isinstance(e, BrokenProcessPool):
+                Discovery.out_of_memory_detected = True
+                logging.error("The discovery process was killed, likely due to an Out of Memory error. Refer to the following documentation to increase the available memory for the pod robusta-runner: https://docs.robusta.dev/master/help.html")
+
             Discovery.executor.shutdown()
             Discovery.executor = ProcessPoolExecutor(max_workers=1)
             logging.info("Initialized new discovery pool")
