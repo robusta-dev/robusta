@@ -22,6 +22,7 @@ class ActivityStats(BaseModel):
     holmesEnabled: bool
     holmesModel: Optional[str]
     clusterTimeZone: str
+    errors: List[str]
 
 
 class ClusterStatus(BaseModel):
