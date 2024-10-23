@@ -331,13 +331,15 @@ class RobustaSink(SinkBase, EventHandler):
 
         except Exception:
             # we had an error during discovery. Reset caches to align the data with the storage
-            if Discovery.out_of_memory_detected and "ERROR_DISCOVERY_OOM" not in self.__errors:
-               self.__errors.append("ERROR_DISCOVERY_OOM")
             self.__reset_caches()
             logging.error(
                 f"Failed to run publish discovery for {self.sink_name}",
                 exc_info=True,
             )
+        finally:
+            if Discovery.out_of_memory_detected and "ERROR_DISCOVERY_OOM" not in self.__errors:
+                self.__errors.append("ERROR_DISCOVERY_OOM")
+
 
     def __publish_new_nodes(self, current_nodes: List[NodeInfo]):
         # convert to map
