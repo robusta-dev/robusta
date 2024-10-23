@@ -1,0 +1,68 @@
+Examples
+===================================
+
+ 
+You can combine multiple routing methods to create an alerting system that gives your teams only alerts relevant to them.
+
+Use Case 1: Route Specific Alerts to Seperate Teams and Slack Channels
+**********************************************************************************
+In this example we are going to consider two teams, with #frontend and #backend channels. The Frontend team should only receive alerts that are from the Frontend namespace and if have "frontend" in the name. All the alerts from backend namespace should go to the #backend channel
+
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: frontend_sink
+        slack_channel: frontend-notifications
+        api_key: secret-key
+        scope:
+            include:
+            - namespace: [frontend]
+            - identifier: "frontend-*"
+
+    - slack_sink:
+        name: backend_sink
+        slack_channel: backend-notifications
+        api_key: secret-key
+        scope:
+            include:
+            - namespace: [backend]
+
+Use Case 2: Route Alerts To Different Suport Teams Based On Time Of The Day
+**********************************************************************************
+
+Let's see how we can route alerts between payment supports teams 1 and two. Between 12AM to 12 PM #payments-support-1 should receive alerts. The rest of the time #payment-support-2 should recieve notifications.
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: payments_support_1_sink
+        slack_channel: payments-support-1
+        api_key: secret-key
+        activity:
+            timezone: UTC
+            intervals:
+            - days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+            hours:
+            - start: 00:00  # 12 AM
+                end: 12:00  # 12 PM
+        scope:
+            include:
+            - namespace: [payment, renewal]
+
+    - slack_sink:
+        name: payments_support_2_sink
+        slack_channel: payments-support-2
+        api_key: secret-key
+        activity:
+            timezone: UTC
+            intervals:
+            - days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+            hours:
+            - start: 12:00  # 12 PM
+                end: 23:59  # 11:59 PM
+        scope:
+            include:
+            - namespace: [payment, renewal]

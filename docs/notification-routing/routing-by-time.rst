@@ -1,5 +1,5 @@
-Time-limiting sink activity
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Time-limiting Sink Activity
+=============================================
 
 It is possible, for any sink, to set the schedule of its activation by specifying the ``activity`` field in its
 configuration. You can specify multiple time spans, with specific days of the week and hours in these days that

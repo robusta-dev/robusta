@@ -55,6 +55,7 @@
    notification-routing/routing-exclusion
    notification-routing/routing-by-time
    notification-routing/routing-silencing
+   notification-routing/notification-routing-examples
 
 .. toctree::
    :maxdepth: 4
