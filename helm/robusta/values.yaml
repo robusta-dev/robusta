@@ -197,6 +197,7 @@ builtinPlaybooks:
       attach_logs: true
       container_memory_graph: true
       node_memory_graph: true
+      dmesg_log: true
   - pod_dmesg_enricher: {}
   stop: true
 
