@@ -1,8 +1,13 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
-from robusta.core.model.base_params import ConversationType, HolmesConversationIssueContext, ResourceInfo
+from robusta.core.model.base_params import (
+    ConversationType,
+    HolmesConversationChatContext,
+    HolmesConversationIssueContext,
+    ResourceInfo,
+)
 from robusta.core.reporting import BaseBlock
 
 
@@ -21,7 +26,7 @@ class HolmesConversationRequest(BaseModel):
     source: Optional[str] = None  # "prometheus" etc
     conversation_type: ConversationType
     resource: Optional[ResourceInfo] = ResourceInfo()
-    context: HolmesConversationIssueContext
+    context: Union[HolmesConversationIssueContext, HolmesConversationChatContext]
     include_tool_calls: bool = False
     include_tool_call_results: bool = False
 
