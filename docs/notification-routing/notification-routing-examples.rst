@@ -6,7 +6,7 @@ You can combine multiple routing methods to create an alerting system that gives
 
 Use Case 1: Route Specific Alerts to Seperate Teams and Slack Channels
 **********************************************************************************
-In this example we are going to consider two teams, with #frontend and #backend channels. The Frontend team should only receive alerts that are from the Frontend namespace and if have "frontend" in the name. All the alerts from backend namespace should go to the #backend channel
+In this example we are going to consider two teams, with #frontend and #backend channels. The Frontend team should only receive alerts that are from the Frontend namespace. All the alerts from backend namespace should go to the #backend channel
 
 
 .. code-block:: yaml
@@ -19,7 +19,6 @@ In this example we are going to consider two teams, with #frontend and #backend 
         scope:
             include:
             - namespace: [frontend]
-            - identifier: "frontend-*"
 
     - slack_sink:
         name: backend_sink
