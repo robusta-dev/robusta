@@ -1,10 +1,9 @@
-Time-limiting Sink Activity
+Route Alerts by Time
 =============================================
 
 It is possible, for any sink, to set the schedule of its activation by specifying the ``activity`` field in its
 configuration. You can specify multiple time spans, with specific days of the week and hours in these days that
-the sink will be active. Outside of these specified time spans, the sink will not run - so for example Slack
-messages will not be delivered.
+the sink will be active. Outside of these specified time spans, the sink will not run - for example, if you use Slack for notifications and the Slack sink has an activity block specified than you can avoid sending slack messages at certain hours.
 
 An example of such a configuration is presented below:
 
