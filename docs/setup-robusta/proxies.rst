@@ -1,21 +1,21 @@
 Deploying Behind Proxies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta needs access to the internet if:
+Robusta requires internet access in the following cases:
 
-* The Robusta SaaS is enabled
-* OR Robusta is configured to send notifications to external :ref:`sinks <Sinks Reference>` like Slack
+* Robusta SaaS is enabled
+* Robusta is configured to send notifications to services such as Slack (via :ref:`sinks <Sinks Reference>`)
 
-In these cases - if your Kubernetes cluster is behind an HTTP proxy or firewall - see below for instructions to allow Robusta thwe access it needs.
+If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions below to ensure Robusta has the necessary access.
 
 Configuring Proxy Settings for Robusta
 ----------------------------------------
 
-All traffic from Robusta to the external world happens via the robusta-runner deployment. 
+All outbound traffic from Robusta is handled by the `robusta-runner` deployment. 
 
-To configure proxy settings for robusta-runner, define `HTTP_PROXY` and `HTTPS_PROXY` environment variables with one of the following Helm values:
+To configure proxy settings for `robusta-runner`, set the `HTTP_PROXY` and `HTTPS_PROXY` environment variables. You can do so with one of the follopwing Helm values:
 
-* ``runner.additional_env_vars`` - to set one variable at a time
+* ``runner.additional_env_vars`` - to set one environment variable at a time
 * ``runner.additional_env_froms`` - to set many environment variables at once
 
 Either Helm value can be used, depending on your preference. See `this GitHub issue for details and an example configuration <https://github.com/robusta-dev/robusta/pull/450>`_.
@@ -23,16 +23,16 @@ Either Helm value can be used, depending on your preference. See `this GitHub is
 Domains Used by Robusta Saas UI
 ---------------------------------
 
-When using the Robusta SaaS, make sure that access is allowed to the following domains:
+If you are using Robusta SaaS, ensure that your network allows access to the following domains:
 
 .. code:: bash
 
     api.robusta.dev,robusta-charts.storage.googleapis.com,us-central1-docker.pkg.dev,platform.robusta.dev,xvyhpoxfmtpuqqeyqkso.supabase.co,relay.robusta.dev
 
-Using Robusta in Airgapped Environments or with No External Access
+Running Robusta in Air-Gapped or Offline Environments
 ------------------------------------------------------------------------------
 
-You can use Robusta entirely offline if
+You can run Robusta entirely offline if the following conditions are met:
 
-* No sinks are configured which live on the public internet
-* AND the Robusta UI is disabled or running on-premise
+* No external sinks are configured (e.g., services on the public internet).
+* The Robusta UI is either disabled or running on-premise.
