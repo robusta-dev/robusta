@@ -1,10 +1,12 @@
 Deploying Behind Proxies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta can run in airgapped environments with no internet access. However, to send notifications to external
-:ref:`sinks <Sinks Reference>` like Slack, Robusta needs to communicate with services outside your cluster.
+Robusta needs access to the internet if:
 
-If your Kubernetes cluster is behind an HTTP proxy or firewall, you will need to configure traffic from Robusta to outside the cluster.
+* The Robusta UI is enabled (and the SaaS version of the UI is used, not the on-premise version)
+* OR Robusta is configured to send notifications to external :ref:`sinks <Sinks Reference>` like Slack
+
+In these cases, you may need to configure your environment to allow traffic from Robusta to outside the cluster. This is usually necessary if your Kubernetes cluster is behind an HTTP proxy or firewall.
 
 Configuring Proxy Settings for Robusta
 ----------------------------------------
@@ -26,3 +28,11 @@ When using the Robusta SaaS, make sure that access is allowed to the following d
 .. code:: bash
 
     api.robusta.dev,robusta-charts.storage.googleapis.com,us-central1-docker.pkg.dev,platform.robusta.dev,xvyhpoxfmtpuqqeyqkso.supabase.co,relay.robusta.dev
+
+Using Robusta in Airgapped Environments or with No External Access
+------------------------------------------------------------------------------
+
+You can use Robusta entirely offline if
+
+* No sinks are configured which live on the public internet
+* AND the Robusta UI is disabled or running on-premise
