@@ -6,7 +6,7 @@ Robusta needs access to the internet if:
 * The Robusta SaaS is enabled
 * OR Robusta is configured to send notifications to external :ref:`sinks <Sinks Reference>` like Slack
 
-In these cases, you may need to configure your environment to allow traffic from Robusta to outside the cluster. This is usually necessary if your Kubernetes cluster is behind an HTTP proxy or firewall.
+In these cases - if your Kubernetes cluster is behind an HTTP proxy or firewall - see below for instructions to allow Robusta thwe access it needs.
 
 Configuring Proxy Settings for Robusta
 ----------------------------------------
