@@ -3,7 +3,7 @@ Deploying Behind Proxies
 
 Robusta needs access to the internet if:
 
-* The Robusta UI is enabled (and the SaaS version of the UI is used, not the on-premise version)
+* The Robusta SaaS is enabled
 * OR Robusta is configured to send notifications to external :ref:`sinks <Sinks Reference>` like Slack
 
 In these cases, you may need to configure your environment to allow traffic from Robusta to outside the cluster. This is usually necessary if your Kubernetes cluster is behind an HTTP proxy or firewall.
