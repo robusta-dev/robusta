@@ -174,6 +174,10 @@ Robusta runner, Prometheus or Holmes failures
                             limits:
                               memory: 2048Mi
 
+        .. details:: Blocked by firewall / HTTP proxy
+
+                If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions in :ref:`Deploying Behind Proxies` to ensure Robusta has the necessary access.
+
 .. details:: Error in Holmes: binascii.a2b_base64(s, strict_mode=validate)
 
         If the Holmes pod fail to start, with this exception:
