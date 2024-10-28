@@ -495,10 +495,11 @@ class OOMGraphEnricherParams(ResourceGraphEnricherParams):
     delay_graph_s: int = 0
 
 
-class OomKillParams(OOMGraphEnricherParams):
+class OomKillParams(OOMGraphEnricherParams, PodRunningParams):
     attach_logs: Optional[bool] = False
     container_memory_graph: Optional[bool] = False
     node_memory_graph: Optional[bool] = False
+    dmesg_log: Optional[bool] = False
 
     def __init__(
         self,
