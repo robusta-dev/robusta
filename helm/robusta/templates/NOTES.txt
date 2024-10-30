@@ -8,6 +8,7 @@ You can set sendAdditionalTelemetry: true as a Helm value to send exception repo
 This is disabled by default.
 
 To opt-out of telemetry entirely, set a ENABLE_TELEMETRY=false environment variable on the robusta-runner deployment.
+Note that if the Robusta UI is enabled, telemetry cannot be disabled even if ENABLE_TELEMETRY=false is set.
 
 {{- range .Values.sinksConfig }}
 {{if .robusta_sink}}
