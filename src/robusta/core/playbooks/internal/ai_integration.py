@@ -5,7 +5,9 @@ import requests
 
 from robusta.core.model.base_params import (
     AIInvestigateParams,
+    HolmesChatParams,
     HolmesConversationParams,
+    HolmesIssueChatParams,
     HolmesWorkloadHealthParams,
     ResourceInfo,
 )
@@ -15,8 +17,12 @@ from robusta.core.reporting import Finding, FindingSubject
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
 from robusta.core.reporting.holmes import (
+    HolmesChatRequest,
+    HolmesChatResult,
+    HolmesChatResultsBlock,
     HolmesConversationRequest,
     HolmesConversationResult,
+    HolmesIssueChatRequest,
     HolmesRequest,
     HolmesResult,
     HolmesResultsBlock,
@@ -154,10 +160,7 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
 
 
 def build_conversation_title(params: HolmesConversationParams):
-    if params.conversation_type == "issue":
-        return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id}"
-
-    return ""
+    return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id}"
 
 
 @action
@@ -243,3 +246,99 @@ def delayed_health_check(event: KubernetesAnyChangeEvent, action_params: Delayed
         replace_existing=True,
         standalone_task=True,
     )
+
+
+@action
+def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+    conversation_title = build_conversation_title(params)
+    params_resource_kind = params.resource.kind or ""
+    try:
+        holmes_req = HolmesIssueChatRequest(
+            ask=params.ask,
+            conversation_history=params.conversation_history,
+            investigation_result=params.context.investigation_result,
+            issue_type=params.context.issue_type,
+        )
+        result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
+        result.raise_for_status()
+
+        holmes_result = HolmesChatResult(**json.loads(result.text))
+
+        finding = Finding(
+            title=f"AI Analysis of {conversation_title}",
+            aggregation_key="HolmesConversationResult",
+            subject=FindingSubject(
+                name=params.resource.name if params.resource else "",
+                namespace=params.resource.namespace if params.resource else "",
+                subject_type=FindingSubjectType.from_kind(params_resource_kind)
+                if params.resource
+                else FindingSubjectType.TYPE_NONE,
+                node=params.resource.node if params.resource else "",
+                container=params.resource.container if params.resource else "",
+            ),
+            finding_type=FindingType.AI_ANALYSIS,
+            failure=False,
+        )
+        finding.add_enrichment(
+            [HolmesChatResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
+        )
+
+        event.add_finding(finding)
+
+    except Exception as e:
+        logging.exception(f"Failed to get holmes chat for {conversation_title}")
+        if isinstance(e, requests.ConnectionError):
+            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
+        elif isinstance(e, requests.HTTPError):
+            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
+                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
+
+            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
+        else:
+            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+
+
+@action
+def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+
+    cluster_name = event.get_context().cluster_name
+    account_id = event.get_context().account_id
+
+    try:
+        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history)
+        result = requests.post(f"{holmes_url}/api/chat", data=holmes_req.json())
+        result.raise_for_status()
+        holmes_result = HolmesChatResult(**json.loads(result.text))
+
+        finding = Finding(
+            title=f"AI Ask Chat for {cluster_name} cluster {account_id} account_id",
+            aggregation_key="HolmesChatResult",
+            subject=FindingSubject(
+                subject_type=FindingSubjectType.TYPE_NONE,
+            ),
+            finding_type=FindingType.AI_ANALYSIS,
+            failure=False,
+        )
+        finding.add_enrichment(
+            [HolmesChatResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
+        )
+
+        event.add_finding(finding)
+
+    except Exception as e:
+        logging.exception(f"Failed to get holmes chat for {cluster_name} cluster {account_id} account_id")
+        if isinstance(e, requests.ConnectionError):
+            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
+        elif isinstance(e, requests.HTTPError):
+            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
+                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
+
+            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
+        else:
+            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")

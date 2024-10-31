@@ -2,7 +2,7 @@ import logging
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, SecretStr, ValidationError, root_validator, validator
+from pydantic import BaseModel, SecretStr, validator
 
 from robusta.integrations import openshift
 from robusta.utils.documented_pydantic import DocumentedModel
@@ -163,21 +163,34 @@ class HolmesConversationIssueContext(BaseModel):
     source: Optional[str] = None
 
 
-class HolmesConversationChatContext(BaseModel):
-    """
-    :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
-    """
-
-    conversation_history: Optional[list[HolmesConversationHistory]] = []
-
-
 class ConversationType(str, Enum):
     """
     Conversation types for holmes_conversation action
     """
 
     ISSUE = "issue"
-    CHAT = "chat"
+
+
+class HolmesIssueChatParamsContext(BaseModel):
+    """
+    :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
+    :var issue_type: aggregation key of the issue
+    :var robusta_issue_id: id of the issue
+    """
+
+    investigation_result: HolmesInvestigationResult
+    issue_type: str
+    robusta_issue_id: Optional[str] = None
+
+
+class HolmesChatParams(HolmesParams):
+    ask: str
+    conversation_history: Optional[list[dict]] = None
+
+
+class HolmesIssueChatParams(HolmesChatParams):
+    resource: Optional[ResourceInfo] = ResourceInfo()
+    context: HolmesIssueChatParamsContext
 
 
 class HolmesConversationParams(HolmesParams):
@@ -190,36 +203,10 @@ class HolmesConversationParams(HolmesParams):
 
     ask: str
     resource: Optional[ResourceInfo] = ResourceInfo()
-    context: Union[
-        HolmesConversationIssueContext,
-        HolmesConversationChatContext,
-    ]
+    context: HolmesConversationIssueContext
     conversation_type: ConversationType
     include_tool_calls: bool = True
     include_tool_call_results: bool = True
-
-    @root_validator(pre=True)
-    def validate_and_parse_context(cls, values):
-        conversation_type = values.get("conversation_type")
-        context_data = values.get("context")
-
-        if context_data is None:
-            raise ValueError("The 'context' field is required.")
-
-        if conversation_type == ConversationType.ISSUE:
-            try:
-                context = HolmesConversationIssueContext(**context_data)
-                values["context"] = context
-            except ValidationError as e:
-                raise ValueError(f"Invalid context for conversation_type 'issue': {e}")
-        elif conversation_type == ConversationType.CHAT:
-            try:
-                context = HolmesConversationChatContext(**context_data)
-                values["context"] = context
-            except ValidationError as e:
-                raise ValueError(f"Invalid context for conversation_type 'chat': {e}")
-
-        return values
 
 
 class HolmesWorkloadHealthParams(HolmesParams):

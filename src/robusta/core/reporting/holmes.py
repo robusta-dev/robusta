@@ -1,11 +1,11 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
 from robusta.core.model.base_params import (
     ConversationType,
-    HolmesConversationChatContext,
     HolmesConversationIssueContext,
+    HolmesInvestigationResult,
     ResourceInfo,
 )
 from robusta.core.reporting import BaseBlock
@@ -26,9 +26,19 @@ class HolmesConversationRequest(BaseModel):
     source: Optional[str] = None  # "prometheus" etc
     conversation_type: ConversationType
     resource: Optional[ResourceInfo] = ResourceInfo()
-    context: Union[HolmesConversationIssueContext, HolmesConversationChatContext]
+    context: HolmesConversationIssueContext
     include_tool_calls: bool = False
     include_tool_call_results: bool = False
+
+
+class HolmesChatRequest(BaseModel):
+    ask: str
+    convesation_history: Optional[List[dict]] = None
+
+
+class HolmesIssueChatRequest(HolmesChatRequest):
+    investigation_result: HolmesInvestigationResult
+    issue_type: str
 
 
 class ToolCallResult(BaseModel):
@@ -54,6 +64,26 @@ class HolmesResultsBlock(BaseBlock):
     def __init__(
         self,
         holmes_result: Optional[HolmesResult] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            holmes_result=holmes_result,
+            **kwargs,
+        )
+
+
+class HolmesChatResult(BaseModel):
+    analysis: Optional[str] = None
+    tool_calls: Optional[List[ToolCallResult]] = None
+    conversation_history: List[dict]
+
+
+class HolmesChatResultsBlock(BaseBlock):
+    holmes_result: Optional[HolmesChatResult]
+
+    def __init__(
+        self,
+        holmes_result: Optional[HolmesChatResult] = None,
         **kwargs,
     ):
         super().__init__(
