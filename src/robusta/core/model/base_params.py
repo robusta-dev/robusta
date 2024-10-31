@@ -184,6 +184,11 @@ class HolmesIssueChatParamsContext(BaseModel):
 
 
 class HolmesChatParams(HolmesParams):
+    """
+    :var ask: User's prompt for holmes
+    :var conversation_type: Type of a conversation issue/service/generic_ask (ConversationType)
+    """
+
     ask: str
     conversation_history: Optional[list[dict]] = None
 

@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Optional
 
 import requests
 
@@ -40,11 +41,15 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
     return params.context.get("issue_type", "unknown health issue")
 
 
-@action
-def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
-    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+def find_holmes_url_or_raise_exception(holmes_url: Optional[str] = None) -> str:
+    holmes_url = HolmesDiscovery.find_holmes_url(holmes_url)
     if not holmes_url:
         raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+
+
+@action
+def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
+    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
 
     investigation__title = build_investigation_title(params)
     subject = params.resource.dict() if params.resource else {}
@@ -89,7 +94,9 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         event.add_finding(finding)
 
     except Exception as e:
-        logging.exception(f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}")
+        logging.exception(
+            f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}", exc_info=True
+        )
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):
@@ -103,9 +110,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
 @action
 def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHealthParams):
-    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
-    if not holmes_url:
-        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
 
     params.resource.cluster = event.get_context().cluster_name
 
@@ -147,7 +152,7 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
 
         event.add_finding(finding)
     except Exception as e:
-        logging.exception(f"Failed to get holmes analysis for {params.resource}, {params.ask}")
+        logging.exception(f"Failed to get holmes analysis for {params.resource}, {params.ask}", exc_info=True)
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):
@@ -163,11 +168,10 @@ def build_conversation_title(params: HolmesConversationParams):
     return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id}"
 
 
+# old version of holmes conversation API
 @action
 def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationParams):
-    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
-    if not holmes_url:
-        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
 
     conversation_title = build_conversation_title(params)
 
@@ -208,7 +212,7 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
         event.add_finding(finding)
 
     except Exception as e:
-        logging.exception(f"Failed to get holmes chat for {conversation_title}")
+        logging.exception(f"Failed to get holmes chat for {conversation_title}", exc_info=True)
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):
@@ -250,9 +254,8 @@ def delayed_health_check(event: KubernetesAnyChangeEvent, action_params: Delayed
 
 @action
 def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
-    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
-    if not holmes_url:
-        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
+
     conversation_title = build_conversation_title(params)
     params_resource_kind = params.resource.kind or ""
     try:
@@ -289,7 +292,7 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
         event.add_finding(finding)
 
     except Exception as e:
-        logging.exception(f"Failed to get holmes chat for {conversation_title}")
+        logging.exception(f"Failed to get holmes chat for {conversation_title}", exc_info=True)
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):
@@ -303,9 +306,7 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
 
 @action
 def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
-    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
-    if not holmes_url:
-        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
+    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
 
     cluster_name = event.get_context().cluster_name
     account_id = event.get_context().account_id
