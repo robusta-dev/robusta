@@ -170,8 +170,8 @@ class ModelConversion:
                 structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, HolmesResultsBlock):
                 ModelConversion.add_ai_analysis_data(structured_data, block)
-            #            elif isinstance(block, HolmesChatResultsBlock):
-            #                ModelConversion.add_ai_analysis_data(structured_data, block)
+            elif isinstance(block, HolmesChatResultsBlock):
+                ModelConversion.add_ai_chat_data(structured_data, block)
             elif isinstance(block, HeaderBlock):
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):
