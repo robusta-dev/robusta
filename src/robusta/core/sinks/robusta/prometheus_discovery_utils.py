@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound, NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
-from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
+from robusta.core.model.env_vars import PROMETHEUS_ENABLED, PROMETHEUS_ERROR_LOG_PERIOD_SEC
 from robusta.core.playbooks.prometheus_enrichment_utils import run_prometheus_query
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags
 from robusta.utils.silence_utils import AlertManagerParams, get_alertmanager_silences_connection
@@ -24,6 +24,8 @@ class PrometheusHealthStatus(BaseModel):
 class PrometheusDiscoveryUtils:
     def __init__(self, discovery_period_sec: int, registry):
         self.status: PrometheusHealthStatus = PrometheusHealthStatus()
+        # if robusta kps it will take a while to connect at the start
+        self.status.prometheus = PROMETHEUS_ENABLED
         self.__discovery_period_sec = discovery_period_sec
         self.__prometheus_error_log_period_sec = PROMETHEUS_ERROR_LOG_PERIOD_SEC
         self.registry = registry
