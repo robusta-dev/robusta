@@ -100,7 +100,7 @@ class ModelConversion:
         structured_data.append(
             {
                 "type": "markdown",
-                "metadata": {"type": "ai_investigation_result"},
+                "metadata": {"type": "ai_investigation_result", "createdAt": datetime_to_db_str(datetime.now())},
                 "data": Transformer.to_github_markdown(block.holmes_result.analysis),
             }
         )

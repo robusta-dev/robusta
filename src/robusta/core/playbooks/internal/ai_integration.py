@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Optional
 
 import requests
 
@@ -41,15 +40,11 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
     return params.context.get("issue_type", "unknown health issue")
 
 
-def find_holmes_url_or_raise_exception(holmes_url: Optional[str] = None) -> str:
-    holmes_url = HolmesDiscovery.find_holmes_url(holmes_url)
-    if not holmes_url:
-        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
-
-
 @action
 def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
-    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     investigation__title = build_investigation_title(params)
     subject = params.resource.dict() if params.resource else {}
@@ -110,7 +105,9 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
 @action
 def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHealthParams):
-    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     params.resource.cluster = event.get_context().cluster_name
 
@@ -171,7 +168,9 @@ def build_conversation_title(params: HolmesConversationParams):
 # old version of holmes conversation API
 @action
 def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationParams):
-    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     conversation_title = build_conversation_title(params)
 
@@ -254,7 +253,9 @@ def delayed_health_check(event: KubernetesAnyChangeEvent, action_params: Delayed
 
 @action
 def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
-    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     conversation_title = build_conversation_title(params)
     params_resource_kind = params.resource.kind or ""
@@ -306,7 +307,9 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
 
 @action
 def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
-    holmes_url = find_holmes_url_or_raise_exception(params.holmes_url)
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     cluster_name = event.get_context().cluster_name
     account_id = event.get_context().account_id
