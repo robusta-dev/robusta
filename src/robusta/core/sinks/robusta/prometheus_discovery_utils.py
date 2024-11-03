@@ -24,7 +24,9 @@ class PrometheusHealthStatus(BaseModel):
 class PrometheusDiscoveryUtils:
     def __init__(self, discovery_period_sec: int, registry):
         self.status: PrometheusHealthStatus = PrometheusHealthStatus()
-        # if robusta kps it will take a while to connect at the start
+        # if we use the bundled prometheus, we use "connected" as the default status, because, on the first install,
+        # Prometheus might take a little longer to start
+        # otherwise, we use false
         self.status.prometheus = PROMETHEUS_ENABLED
         self.__discovery_period_sec = discovery_period_sec
         self.__prometheus_error_log_period_sec = PROMETHEUS_ERROR_LOG_PERIOD_SEC
