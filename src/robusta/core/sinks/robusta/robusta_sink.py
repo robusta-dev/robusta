@@ -79,8 +79,8 @@ class RobustaSink(SinkBase, EventHandler):
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
+        self.prometheus_real_status_reported = False
         self.__errors = []
-
         self.__prometheus_discovery_util = PrometheusDiscoveryUtils(
             discovery_period_sec=self.__discovery_period_sec, registry=registry
         )
@@ -566,12 +566,20 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __periodic_cluster_status(self):
         first_alert = False
+
+        # Check if it's the first time an alert occurred
         if self.registry.get_telemetry().last_alert_at and self.first_prometheus_alert_time == 0:
             first_alert = True
             self.first_prometheus_alert_time = time.time()
-
-        if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
+        finished_first_prometheus_discovery = self.__prometheus_discovery_util.first_checks_finished \
+                                              and not self.prometheus_real_status_reported
+        # Regular update logic: only when CLUSTER_STATUS_PERIOD_SEC has passed or on first alert
+        if (time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC) \
+                or first_alert \
+                or finished_first_prometheus_discovery:
+            self.prometheus_real_status_reported = self.__prometheus_discovery_util.first_checks_finished
             self.__update_cluster_status()
+            self.last_send_time = time.time()
 
     def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
         # convert to map
