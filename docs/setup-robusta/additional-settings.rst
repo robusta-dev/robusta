@@ -168,3 +168,20 @@ It is best to define this in a :ref:`Global Config`, so it will be applied every
           regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
 Place these values inside Robusta's Helm values and perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+
+Memory allocation on big clusters
+------------------------------------
+
+On bigger clusters, increase Robusta's memory ``requests`` and ``limits``
+
+Add this to Robusta's Helm values:
+
+.. code-block:: yaml
+
+        runner:
+          resources:
+            requests:
+              memory: 2048Mi
+            limits:
+              memory: 2048Mi

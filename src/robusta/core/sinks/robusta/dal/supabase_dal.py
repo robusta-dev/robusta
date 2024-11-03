@@ -19,6 +19,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
+from robusta.core.model.openshift_group import OpenshiftGroup
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
@@ -47,6 +48,7 @@ SCANS_META_TABLE = "ScansMeta"
 RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
 ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
+OPENSHIFT_GROUPS_TABLE = "OpenshiftGroups"
 
 
 class SupabaseDal(AccountResourceFetcher):
@@ -215,6 +217,16 @@ class SupabaseDal(AccountResourceFetcher):
             "update_time": "now()",
         }
 
+    def to_db_openshift_group(self, os_group: OpenshiftGroup) -> Dict[Any, Any]:
+        as_dict = os_group.dict()
+        as_dict["cluster"] = self.cluster
+        as_dict["namespace"] = ""
+        as_dict["account_id"] = self.account_id
+        as_dict["update_time"] = "now()"
+        as_dict["service_key"] = os_group.get_service_key()
+        del as_dict["resource_version"]
+        return as_dict
+
     def persist_services(self, services: List[ServiceInfo]):
         if not services:
             return
@@ -224,6 +236,17 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(SERVICES_TABLE).upsert(db_services, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.exception(f"Failed to persist services {services} error: {e}")
+            raise
+
+    def persist_openshift_groups(self, os_groups: List[OpenshiftGroup]):
+        if not os_groups:
+            return
+
+        db_os_groups = [self.to_db_openshift_group(os_group) for os_group in os_groups]
+        try:
+            self.client.table(OPENSHIFT_GROUPS_TABLE).upsert(db_os_groups, returning=ReturnMethod.minimal).execute()
+        except Exception as e:
+            logging.exception(f"Failed to persist services {os_groups} error: {e}")
             raise
 
     def get_active_services(self) -> List[ServiceInfo]:
@@ -262,6 +285,22 @@ class SupabaseDal(AccountResourceFetcher):
             )
             for service in res.data
         ]
+
+    def get_active_openshift_groups(self) -> List[OpenshiftGroup]:
+        try:
+            res = (
+                self.client.table(OPENSHIFT_GROUPS_TABLE)
+                .select("name", "labels", "annotations", "users")
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster", "eq", self.cluster)
+                .filter("deleted", "eq", False)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to get existing openshift groups (supabase) error: {e}")
+            raise
+
+        return [OpenshiftGroup(**os_group) for os_group in res.data]
 
     def has_cluster_findings(self) -> bool:
         try:
@@ -556,14 +595,16 @@ class SupabaseDal(AccountResourceFetcher):
             logging.error(f"Failed to persist namespaces {namespaces} error: {e}")
             raise
 
-    def publish_cluster_nodes(self, node_count: int, pod_count: int, avg_cpu: Optional[float] = None, avg_mem: Optional[float] = None):
+    def publish_cluster_nodes(
+        self, node_count: int, pod_count: int, avg_cpu: Optional[float] = None, avg_mem: Optional[float] = None
+    ):
         data = {
             "_account_id": self.account_id,
             "_cluster_id": self.cluster,
             "_node_count": node_count,
             "_cpu_utilization": avg_cpu,
             "_memory_utilization": avg_mem,
-            "_pod_count": pod_count
+            "_pod_count": pod_count,
         }
         try:
             self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()

@@ -197,7 +197,7 @@ builtinPlaybooks:
       attach_logs: true
       container_memory_graph: true
       node_memory_graph: true
-  - pod_dmesg_enricher: {}
+      dmesg_log: true
   stop: true
 
 # playbooks for prometheus alerts enrichment

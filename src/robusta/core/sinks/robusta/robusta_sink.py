@@ -28,6 +28,7 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
+from robusta.core.model.openshift_group import OpenshiftGroup
 from robusta.core.model.services import ServiceInfo
 from robusta.core.pubsub.event_subscriber import EventHandler
 from robusta.core.reporting.base import Finding
@@ -78,7 +79,8 @@ class RobustaSink(SinkBase, EventHandler):
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
-
+        self.prometheus_real_status_reported = False
+        self.__errors = []
         self.__prometheus_discovery_util = PrometheusDiscoveryUtils(
             discovery_period_sec=self.__discovery_period_sec, registry=registry
         )
@@ -91,6 +93,7 @@ class RobustaSink(SinkBase, EventHandler):
         # start cluster discovery
         self.__active = True
         self.__services_cache: Dict[str, ServiceInfo] = {}
+        self.__openshift_groups_cache: Dict[str, OpenshiftGroup] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = {}
@@ -151,6 +154,12 @@ class RobustaSink(SinkBase, EventHandler):
             logging.info("Initializing services cache")
             for service in self.dal.get_active_services():
                 self.__services_cache[service.get_service_key()] = service
+
+    def __assert_openshift_groups_cache_initialized(self):
+        if not self.__openshift_groups_cache:
+            logging.info("Initializing openshift groups cache")
+            for os_group in self.dal.get_active_openshift_groups():
+                self.__openshift_groups_cache[os_group.get_service_key()] = os_group
 
     def __assert_node_cache_initialized(self):
         if not self.__nodes_cache:
@@ -321,6 +330,11 @@ class RobustaSink(SinkBase, EventHandler):
             self.__publish_new_namespaces(results.namespaces)
 
             self.__pods_running_count = results.pods_running_count
+
+            self.__assert_openshift_groups_cache_initialized()
+            if results.openshift_groups:
+                self.__publish_new_openshift_groups(results.openshift_groups)
+
             # save the cached services for the resolver.
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
@@ -335,6 +349,10 @@ class RobustaSink(SinkBase, EventHandler):
                 f"Failed to run publish discovery for {self.sink_name}",
                 exc_info=True,
             )
+        finally:
+            if Discovery.out_of_memory_detected and "ERROR_DISCOVERY_OOM" not in self.__errors:
+                self.__errors.append("ERROR_DISCOVERY_OOM")
+
 
     def __publish_new_nodes(self, current_nodes: List[NodeInfo]):
         # convert to map
@@ -368,6 +386,13 @@ class RobustaSink(SinkBase, EventHandler):
             self.dal.remove_deleted_node(node_name)
 
     def __safe_delete_service(self, service_key):
+        self.__services_cache.pop(service_key, None)
+
+        # could be case where it is not in cache but is in db, i.e. after cache reset
+        if service_key:
+            self.dal.remove_deleted_service(service_key)
+
+    def __safe_delete_openshift_group(self, service_key):
         self.__services_cache.pop(service_key, None)
 
         # could be case where it is not in cache but is in db, i.e. after cache reset
@@ -456,6 +481,7 @@ class RobustaSink(SinkBase, EventHandler):
             holmesEnabled=HOLMES_ENABLED,
             holmesModel=holmes_model,
             clusterTimeZone=str(datetime.now().astimezone().tzinfo),
+            errors=self.__errors
         )
 
         # checking the status of relay connection
@@ -540,12 +566,20 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __periodic_cluster_status(self):
         first_alert = False
+
+        # Check if it's the first time an alert occurred
         if self.registry.get_telemetry().last_alert_at and self.first_prometheus_alert_time == 0:
             first_alert = True
             self.first_prometheus_alert_time = time.time()
-
-        if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
+        finished_first_prometheus_discovery = self.__prometheus_discovery_util.first_checks_finished \
+                                              and not self.prometheus_real_status_reported
+        # Regular update logic: only when CLUSTER_STATUS_PERIOD_SEC has passed or on first alert
+        if (time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC) \
+                or first_alert \
+                or finished_first_prometheus_discovery:
+            self.prometheus_real_status_reported = self.__prometheus_discovery_util.first_checks_finished
             self.__update_cluster_status()
+            self.last_send_time = time.time()
 
     def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
         # convert to map
@@ -567,6 +601,35 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__namespaces_cache[namespace_name] = updated_namespace
 
         self.dal.publish_namespaces(updated_namespaces)
+
+    def __publish_new_openshift_groups(self, os_groups: List[OpenshiftGroup]):
+        # convert to map
+        curr_os_groups = {}
+        for os_group in os_groups:
+            curr_os_groups[os_group.get_service_key()] = os_group
+
+        # handle deleted openshift groups.
+        cache_keys = list(self.__openshift_groups_cache.keys())
+        updated_os_groups: List[OpenshiftGroup] = []
+        for os_group_key in cache_keys:
+            if not curr_os_groups.get(os_group_key):  # service doesn't exist any more, delete it
+                self.__safe_delete_openshift_group(os_group_key)
+
+        # new or changed services
+        for key in curr_os_groups.keys():
+            current_os_group = curr_os_groups[key]
+            cached_os_group = self.__openshift_groups_cache.get(key)
+
+            # prevent service updates if the resource version in the cache is lower than the new service
+            if cached_os_group and cached_os_group.resource_version > current_os_group.resource_version:
+                continue
+
+            # service not in the cache, or changed
+            if self.__openshift_groups_cache.get(key) != current_os_group:
+                updated_os_groups.append(current_os_group)
+                self.__services_cache[key] = current_os_group
+
+        self.dal.persist_openshift_groups(updated_os_groups)
 
     def get_global_config(self) -> dict:
         return self.registry.get_global_config()

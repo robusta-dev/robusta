@@ -24,6 +24,7 @@ from robusta.api import (
     action,
     create_container_graph,
     create_node_graph_enrichment,
+    dmesg_enricher,
     get_oom_killed_container,
     parse_kubernetes_datetime_to_ms,
     pod_most_recent_oom_killed_container,
@@ -174,6 +175,9 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
     event.add_finding(finding)
     if params.attach_logs and container_name is not None:
         logs_enricher(event, LogEnricherParams(container_name=container_name))
+
+    if params.dmesg_log and node:
+        dmesg_enricher(event, node, params.custom_annotations)
 
 
 @action
