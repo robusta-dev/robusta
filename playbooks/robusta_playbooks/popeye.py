@@ -6,10 +6,20 @@ import uuid
 from collections import defaultdict
 from datetime import datetime
 from json import JSONDecodeError
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
-from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
+from hikaru.model.rel_1_26 import (
+    Affinity,
+    Container,
+    NodeAffinity,
+    NodeSelector,
+    NodeSelectorRequirement,
+    NodeSelectorTerm,
+    PodSpec,
+    ResourceRequirements,
+)
 from pydantic import BaseModel, ValidationError
+
 from robusta.api import (
     RUNNER_SERVICE_ACCOUNT,
     EnrichmentAnnotation,
@@ -18,8 +28,8 @@ from robusta.api import (
     FindingSource,
     FindingType,
     PodRunningParams,
-    RobustaJob,
     PopeyeScanReportBlock,
+    RobustaJob,
     ScanReportRow,
     ScanType,
     action,
@@ -128,6 +138,23 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     resources = ResourceRequirements(
         limits={"memory": (str(POPEYE_MEMORY_LIMIT))},
     )
+    affinity = Affinity(
+        nodeAffinity=NodeAffinity(
+            requiredDuringSchedulingIgnoredDuringExecution=NodeSelector(
+                nodeSelectorTerms=[
+                    NodeSelectorTerm(
+                        matchExpressions=[
+                            NodeSelectorRequirement(
+                                key="kubernetes.io/arch",
+                                operator="NotIn",
+                                values=["arm64"],
+                            )
+                        ]
+                    )
+                ]
+            )
+        )
+    )
     spec = PodSpec(
         serviceAccountName=params.service_account_name,
         containers=[
@@ -142,6 +169,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                 resources=resources,
             )
         ],
+        affinity=affinity,
         restartPolicy="Never",
         **params.popeye_job_spec,
     )
@@ -257,5 +285,5 @@ def clean_up_k8s_logs_from_job_output(logs: str) -> str:
         if endline_pos == -1:
             logs = ""
         else:
-            logs = logs[endline_pos + 1:]
+            logs = logs[endline_pos + 1 :]
     return logs

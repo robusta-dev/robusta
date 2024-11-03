@@ -52,8 +52,10 @@
    🆕 Notification Grouping <notification-routing/notification-grouping>
    notification-routing/routing-by-namespace
    notification-routing/routing-by-type
+   notification-routing/routing-by-time
    notification-routing/routing-exclusion
    notification-routing/routing-silencing
+   notification-routing/notification-routing-examples
 
 .. toctree::
    :maxdepth: 4
@@ -89,7 +91,7 @@ Better Prometheus Alerts (and more) for Kubernetes
 
         Robusta extends Prometheus/VictoriaMetrics/Coralogix (and more) with features like:
 
-        * :doc:`Smart Grouping <configuration/notification-grouping>` - reduce notification spam with Slack threads 🧵
+        * :doc:`Smart Grouping <notification-routing/notification-grouping>` - reduce notification spam with Slack threads 🧵
         * :ref:`AI Investigation <AI Analysis>` - Kickstart your alert investigations with AI (optional)
         * :ref:`Alert Enrichment <Automatically Investigate a Prometheus Alert>` - see pods log and other data alongside your alerts
         * :ref:`Self-Healing <Remediate Prometheus Alerts>` - define auto-remediation rules for faster fixes

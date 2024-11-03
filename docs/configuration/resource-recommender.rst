@@ -88,7 +88,7 @@ To enable Horizontal Pod Autoscaler (HPA) recommendations in the Robusta UI, add
 .. code-block:: yaml
 
     globalConfig:
-      krr_args: "--enable-hpa"
+      krr_args: "--allow-hpa"
 
 Common KRR Settings
 ---------------------

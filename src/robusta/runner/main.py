@@ -12,11 +12,7 @@ if add_custom_certificate(ADDITIONAL_CERTIFICATE):
 
 import signal
 
-from robusta.core.model.env_vars import (
-    ENABLE_TELEMETRY,
-    ROBUSTA_TELEMETRY_ENDPOINT,
-    TELEMETRY_PERIODIC_SEC,
-)
+from robusta.core.model.env_vars import ENABLE_TELEMETRY, ROBUSTA_TELEMETRY_ENDPOINT, TELEMETRY_PERIODIC_SEC
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
 from robusta.model.config import Registry
 from robusta.patch.patch import create_monkey_patches
@@ -37,8 +33,11 @@ def main():
     registry = Registry()
     event_handler = PlaybooksEventHandlerImpl(registry)
     loader = ConfigLoader(registry, event_handler)
-
-    if ENABLE_TELEMETRY:
+    sink_registry = registry.get_sinks()
+    ui_sink_enabled = "robusta_ui_sink" in sink_registry.get_all()
+    if ui_sink_enabled or ENABLE_TELEMETRY:
+        if not ENABLE_TELEMETRY:
+            logging.warning("Telemetry could not be disabled when Robusta UI is used.")
         TelemetryService(
             endpoint=ROBUSTA_TELEMETRY_ENDPOINT,
             periodic_time_sec=TELEMETRY_PERIODIC_SEC,

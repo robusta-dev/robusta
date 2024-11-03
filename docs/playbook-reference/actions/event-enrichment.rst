@@ -128,6 +128,21 @@ These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.foreign_logs_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_foreign_logs_enricher
+
+    Here is an example using a dynamic selector that depends on the alert's labels
+
+    .. code-block:: yaml
+
+        customPlaybooks:
+        - actions:
+            - alert_foreign_logs_enricher:
+                label_selectors:
+                - "app=${labels.service}"
+                - "env=production"
+        triggers:
+          - on_prometheus_alert: {}
+
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_definition_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.mention_enricher

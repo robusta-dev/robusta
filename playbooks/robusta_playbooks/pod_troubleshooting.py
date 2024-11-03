@@ -27,6 +27,7 @@ from robusta.api import (
     TableBlock,
     action,
 )
+from robusta.integrations.kubernetes.custom_models import PYTHON_DEBUGGER_IMAGE
 from robusta.utils.parsing import load_json
 
 
@@ -68,6 +69,10 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
     # This should use ephemeral containers, but they aren't in GA yet. To enable them on GCP for example,
     # you need to create a brand new cluster. Therefore we're sticking with regular containers for now
     pod = event.get_pod()
+    if "debug-toolkit:v6.0" not in PYTHON_DEBUGGER_IMAGE:
+        logging.error(f"The python_profiler action is deprecated "
+                      f"to run set the PYTHON_DEBUGGER_IMAGE environment variable to debug-toolkit:v6.0.")
+        return
     logging.warning(f"The python_profiler action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_profiler - pod not found for event: {event}")
@@ -179,8 +184,11 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
 
     Use this to track memory leaks in your Python application on Kubernetes.
     """
+    if "debug-toolkit:v6.0" not in PYTHON_DEBUGGER_IMAGE:
+        logging.error(f"The python_memory action is deprecated and might not work on all platforms. "
+                      f"to enable it set the PYTHON_DEBUGGER_IMAGE environment variable to debug-toolkit:v6.0.")
+        return
     pod = event.get_pod()
-    logging.warning(f"The python_memory action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_memory - pod not found for event: {event}")
         return
@@ -296,7 +304,10 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     Create a finding with the stack trace results.
     """
     pod = event.get_pod()
-    logging.warning(f"The debugger_stack_trace action is deprecated and might not work on all platforms.")
+    if "debug-toolkit:v6.0" not in PYTHON_DEBUGGER_IMAGE:
+        logging.error(f"The debugger_stack_trace action is deprecated and might not work on all platforms. "
+                      f"to enable it set the PYTHON_DEBUGGER_IMAGE environment variable to debug-toolkit:v6.0.")
+        return
     if not pod:
         logging.info(f"debugger_stack_trace - pod not found for event: {event}")
         return
@@ -381,6 +392,10 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     Create a finding with alternative debugging options for received processes ; i.e. Stack-trace or Memory-trace.
 
     """
+    if "debug-toolkit:v6.0" not in PYTHON_DEBUGGER_IMAGE:
+        logging.error(f"The python_process_inspector action is deprecated and might not work on all platforms. "
+                      f"to enable it set the PYTHON_DEBUGGER_IMAGE environment variable to debug-toolkit:v6.0.")
+        return
     pod = event.get_pod()
     logging.warning(f"The python_process_inspector action is deprecated and might not work on all platforms.")
     if not pod:
@@ -440,6 +455,10 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
 
     Now you can use break points and log points in VSCode.
     """
+    if "debug-toolkit:v6.0" not in PYTHON_DEBUGGER_IMAGE:
+        logging.error(f"The python_debugger action is deprecated and might not work on all platforms. "
+                      f"to enable it set the PYTHON_DEBUGGER_IMAGE environment variable to debug-toolkit:v6.0.")
+        return
     pod = event.get_pod()
     logging.warning(f"The python_debugger action is deprecated and might not work on all platforms.")
     if not pod:

@@ -1,9 +1,10 @@
 import logging
 import time
+from typing import Optional
 
 from robusta.api import (
-    ExecutionBaseEvent,
     EmptyFileBlock,
+    ExecutionBaseEvent,
     FileBlock,
     LogEnricherParams,
     MarkdownBlock,
@@ -19,6 +20,7 @@ def start_log_enrichment(
     event: ExecutionBaseEvent,
     params: LogEnricherParams,
     pod: RobustaPod,
+    title_override: Optional[str] = None
 ):
     if pod is None:
         if params.warn_on_missing_label:
@@ -77,9 +79,9 @@ def start_log_enrichment(
         )
     else:
         log_block = FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())
-
+    title = "Logs" if not title_override else title_override
     event.add_enrichment([log_block],
-                         enrichment_type=EnrichmentType.text_file, title="Logs")
+                         enrichment_type=EnrichmentType.text_file, title=title)
 
 
 def logs_enricher(event: PodEvent, params: LogEnricherParams):

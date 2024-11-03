@@ -3,7 +3,7 @@ import os
 import threading
 import time
 from collections import defaultdict
-from concurrent.futures.process import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool, ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
 
 import prometheus_client
@@ -90,6 +90,7 @@ DISCOVERY_STACKTRACE_TIMEOUT_S = int(os.environ.get("DISCOVERY_STACKTRACE_TIMEOU
 class Discovery:
     executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process
     stacktrace_thread_active = False
+    out_of_memory_detected = False
 
     @staticmethod
     def create_stacktrace():
@@ -168,6 +169,7 @@ class Discovery:
         )
 
     @staticmethod
+
     def create_service_info_from_hikaru(obj: Union[Deployment, DaemonSet, StatefulSet, Pod, ReplicaSet]) -> ServiceInfo:
         return Discovery.__create_service_info_from_hikaru(
             obj.metadata,
@@ -193,6 +195,7 @@ class Discovery:
 
         # discover micro services
         try:
+
             continue_ref: Optional[str] = None
             if IS_OPENSHIFT:
                 for _ in range(DISCOVERY_MAX_BATCHES):
@@ -602,6 +605,10 @@ class Discovery:
             # We've seen this and believe the process is killed due to oom kill
             # The process pool becomes not usable, so re-creating it
             logging.error("Discovery process internal error")
+            if isinstance(e, BrokenProcessPool):
+                Discovery.out_of_memory_detected = True
+                logging.error("The discovery process was killed, likely due to an Out of Memory error. Refer to the following documentation to increase the available memory for the pod robusta-runner: https://docs.robusta.dev/master/help.html")
+
             Discovery.executor.shutdown()
             Discovery.executor = ProcessPoolExecutor(max_workers=1)
             logging.info("Initialized new discovery pool")

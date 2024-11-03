@@ -79,6 +79,7 @@ class RobustaSink(SinkBase, EventHandler):
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
+        self.__errors = []
 
         self.__prometheus_discovery_util = PrometheusDiscoveryUtils(
             discovery_period_sec=self.__discovery_period_sec, registry=registry
@@ -348,6 +349,10 @@ class RobustaSink(SinkBase, EventHandler):
                 f"Failed to run publish discovery for {self.sink_name}",
                 exc_info=True,
             )
+        finally:
+            if Discovery.out_of_memory_detected and "ERROR_DISCOVERY_OOM" not in self.__errors:
+                self.__errors.append("ERROR_DISCOVERY_OOM")
+
 
     def __publish_new_nodes(self, current_nodes: List[NodeInfo]):
         # convert to map
@@ -476,6 +481,7 @@ class RobustaSink(SinkBase, EventHandler):
             holmesEnabled=HOLMES_ENABLED,
             holmesModel=holmes_model,
             clusterTimeZone=str(datetime.now().astimezone().tzinfo),
+            errors=self.__errors
         )
 
         # checking the status of relay connection
