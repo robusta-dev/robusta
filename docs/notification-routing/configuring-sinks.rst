@@ -3,13 +3,13 @@
 Notification 101
 ==========================
 
-Robusta can send notifications to various destinations, called sinks. These notifications are enriched with issue logs, graphs, :ref:`AI Analysis` and more.
-
-The following guide is explains general settings for all sinks, please take a look at the specific sink guide for detailed instructions. For a list of all sinks, refer to :ref:`Sinks Reference`.
+Robusta can send notifications to various destinations, called sinks. For a list of all sinks, refer to :ref:`Sinks Reference`.
 
 Defining Sinks
 ^^^^^^^^^^^^^^^^^^
-Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
+Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value.
+
+For example, lets add a :ref:`Microsoft Teams <MS Teams sink>`:
 
 .. code-block:: yaml
 
@@ -21,41 +21,37 @@ Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
         scope: {}                     # optional routing rules
         default: true                 # optional (see below)
 
-To add a sink, update ``sinksConfig`` according to the instructions in :ref:`Sinks Reference`. Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+Many sinks have unique parameters which can be found under :ref:`Sinks Reference`.
 
-Integrate as many sinks as you like.
+Defining Multiple Sinks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can define multiple sinks and by default, notifications will be sent to all of them.
 
-.. _sink-matchers:
+If you'd like to selectively send notifications to different sinks, you can define :ref:`routing rules <sink-scope-matching>`.
 
-Routing Alerts to Only One Sink
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, alerts are sent to all sinks that matches the alerts.
-
-To prevent sending alerts to more sinks after the current one, you can specify ``stop: true``
-
-The sinks evaluation order, is the order defined in ``generated_values.yaml``.
+In the following example, we define a :ref:`Slack sink <Slack>` and a :ref:`MS Teams sink <MS Teams>` without any routing rules, so both sinks receive all notifications:
 
 .. code-block:: yaml
 
     sinksConfig:
     - slack_sink:
-        name: production_sink
-        slack_channel: production-notifications
+        name: my_slack_sink
+        slack_channel: my-channel
         api_key: secret-key
-        scope:
-          include:
-            - namespace: production
-        stop: true
+    - ms_teams_sink:
+        name: my_teams_sink
+        webhook_url: <placeholder>
+
+.. _sink-matchers:
 
 .. _sink-scope-matching:
 
 Routing Alerts To Specific Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Define which messages a sink accepts using ``scope``.
+You can define routing-rules using a ``scope`` block.
 
-For example, **Slack**  can be integrated to receive high-severity messages in a specific namespace. Other messages will not be sent to this **Slack** sink.
+For example, to send only high-severity alerts to Slack:
 
 .. code-block:: yaml
 
@@ -65,13 +61,27 @@ For example, **Slack**  can be integrated to receive high-severity messages in a
         slack_channel: test-notifications
         api_key: secret-key
         scope:
-          include: # more options available - see below
+          include:
+            - severity: HIGH
+
+More complex routing rules are possible. For example, we match only high-severity alert from the ``prod`` namespace:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        scope:
+          include:
+            # AND between both conditions
             - namespace: [prod]
               severity: HIGH
 
-Each attribute expression used in the ``scope`` specification can be 1 item, or a list, where each is either a `regex <https://docs.python.org/3/library/re.html#re.match>`_ or an exact match.
+Each attribute used in ``scope.include`` can be a single item, or a list. Both exact matches and `regexes <https://docs.python.org/3/library/re.html#re.match>`_ are supported.
 
-``Scope`` allows specifying a set of ``include`` and ``exclude`` sections:
+Here is a more complex example showing multiple ``include`` and ``exclude`` sections:
 
 .. code-block:: yaml
 
@@ -81,29 +91,39 @@ Each attribute expression used in the ``scope`` specification can be 1 item, or 
         slack_channel: prod-notifications
         api_key: secret-key
         scope:
-        # AND between namespace and labels, but OR within each selector
+          # define 3 include sections, with an OR between them
           include:
+            # this is a single include section. for an include section to match, the alert must match EVERYTHING in it (both namespace and name)
             - namespace: default
-              labels: "instance=1,foo!=x.*"
+              name: ["foo"]
+
+            # this is another include section - the alert will match if it matches this include section or the one above (but within each section, all conditions must be satisfied)
             - namespace: bla
-              name:
-              - foo
-              - qux
+              # when multiple values are provided for a given attribute, they are ORed together
+              name: ["bar", "baz"]
+
+            # this is yet a third include section (ORed with the previous two)
+            # label selectors are interpreted as in Kubernetes - meaning selectors separated by comma are ANDED together
+            - labels: "instance=1,foo!=x.*"
+
+          # define 2 exclude sections, with an AND between them - all exclude sections must not match
           exclude:
+            # again, within a single include/exclude section, all conditions must be satisfied for the section to match
             - type: ISSUE
               title: .*crash.*
             - name: bar[a-z]*
 
 
-In order for a message to be sent to a ``Sink``, it must match **one of** the ``include`` sections, and **must not** match **all** the ``exclude`` sections.
-
-When multiple attributes conditions are present, all must be satisfied.
+In the above example, an alert must match **one of** the ``include`` sections, and **must not match all** the ``exclude`` sections.
 
 .. tip::
 
-    If you're using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/simulate-alert/>`_.
+    Using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/simulate-alert/>`_.
 
-The following attributes can be included in an ``include``/``excluded`` block:
+Reference for all Scope Options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here is the complete list of attributes that can be used in ``include`` / ``exclude`` sections:
 
 - ``title``: e.g. ``Crashing pod foo in namespace default``
 - ``name`` : the Kubernetes object name
@@ -142,13 +162,11 @@ The following attributes can be included in an ``include``/``excluded`` block:
 
     Ask us in Slack if you need help.
 
-By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
-
-The top-level mechanism works as follows:
+When processing the ``scope`` block, the following rules apply:
 
 #. If the notification is **excluded** by any of the sink ``scope`` excludes - drop it
 #. If the notification is **included** by any of the sink ``scope`` includes - accept it
-#. If the notification is **included** by any of the sink ``matchers`` - accept it (Deprecated)
+#. If the notification is **included** by any of the sink ``matchers`` (deprecated) - accept it
 
 Any of (but not both) of the ``include`` and ``exclude`` may be left undefined or empty.
 An undefined/empty ``include`` section will effectively allow all alerts, and an
@@ -171,9 +189,33 @@ Within a specific ``labels`` or ``annotations`` expression, the logic is ``AND``
 
 The above requires that the ``instance`` will have a value of ``1`` **AND** the ``foo`` label values starts with ``x``
 
+Fall-through routing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sinks are matched in the order they are defined in ``generated_values.yaml``.
+
+To prevent sending alerts to more sinks after the current one matches, you can specify ``stop: true`` in the sink.
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: production_sink
+        slack_channel: production-notifications
+        api_key: secret-key
+        scope:
+          include:
+            - namespace: production
+        stop: true
+
+    # because the previous sink sets stop: true, this sink will only receive alerts not matched by the previous sink
+    - slack_sink:
+        name: non_production_sink
+        slack_channel: non-production-notifications
+        api_key: secret-key
 
 Alternative Routing Methods
-************************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For :ref:`customPlaybooks <defining-playbooks>`, there is another option for routing notifications.
 
@@ -197,16 +239,9 @@ Instead of using sink matchers, you can set the *sinks* attribute per playbook:
 
 Notifications generated this way are sent exclusively to the specified sinks. They will still be filtered by matchers.
 
-Non-Default Sinks
-*********************************
+If you use this method, you can set ``default: false`` in the sink definition and it will be ignored for all notifications except those from custom playbooks that explicitly name this sink.
 
-To prevent a sink from receiving most notifications, you can set ``default: false``. In this case, notifications will be
-routed to the sink only from :ref:`customPlaybooks that explicitly name this sink <Alternative Routing Methods>`.
-
-Here too, matchers apply as usual and perform further filtering.
-
-
-Examples
+More Examples
 ^^^^^^^^^^^
 
 🎓 :ref:`Route Alerts By Namespace`
