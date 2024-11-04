@@ -49,11 +49,13 @@ from robusta.core.model.env_vars import (
     DISCOVERY_POD_OWNED_PODS,
     DISCOVERY_PROCESS_TIMEOUT_SEC,
     IS_OPENSHIFT,
+    OPENSHIFT_GROUPS,
 )
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
+from robusta.core.model.openshift_group import OpenshiftGroup
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj, Rollout
 from robusta.patch.patch import create_monkey_patches
@@ -75,6 +77,7 @@ class DiscoveryResults(BaseModel):
     namespaces: List[NamespaceInfo] = []
     helm_releases: List[HelmRelease] = []
     pods_running_count: int = 0
+    openshift_groups: List[OpenshiftGroup] = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -188,6 +191,7 @@ class Discovery:
         pods_metadata: List[V1ObjectMeta] = []
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
+        openshift_groups: List[OpenshiftGroup] = []
 
         # discover micro services
         try:
@@ -236,6 +240,56 @@ class Discovery:
                     if not continue_ref:
                         break
 
+            if OPENSHIFT_GROUPS:
+                groupname_to_namespaces = defaultdict(list)
+                try:
+                    role_bindings = client.RbacAuthorizationV1Api().list_role_binding_for_all_namespaces()
+                    for role_binding in role_bindings.items:
+                        ns = role_binding.metadata.namespace
+
+                        for subject in role_binding.subjects:
+                            if subject.kind == "Group":
+                                groupname_to_namespaces[subject.name].append(ns)
+
+                except Exception:
+                    logging.exception(msg="Failed to build Openshift rolebinding to groups map.")
+
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    try:
+                        os_groups = client.CustomObjectsApi().list_cluster_custom_object(
+                            group="user.openshift.io",
+                            version="v1",
+                            plural="groups",
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                    except Exception:
+                        logging.exception(msg="Failed to list Openshift groups from api.")
+                        break
+
+                    for os_group in os_groups.get("items", []):
+                        try:
+                            meta = os_group.get("metadata", {})
+                            name = meta.get("name")
+                            openshift_groups.extend(
+                                [
+                                    OpenshiftGroup(
+                                        name=name,
+                                        users=os_group.get("users", []) or [],
+                                        namespaces=groupname_to_namespaces.get(name, []),
+                                        labels=meta.get("labels"),
+                                        annotations=meta.get("annotations"),
+                                        resource_version=meta.get("resourceVersion"),
+                                    )
+                                ]
+                            )
+                        except Exception:
+                            logging.exception(msg=f"Failed to parse Openshift Group/n {os_group}")
+                            continue
+
+                    continue_ref = os_groups.get("metadata", {}).get("continue")
+                    if not continue_ref:
+                        break
             # rollouts.
             continue_ref = None
             if ARGO_ROLLOUTS:
@@ -537,6 +591,7 @@ class Discovery:
             namespaces=namespaces,
             helm_releases=list(helm_releases_map.values()),
             pods_running_count=pods_running_count,
+            openshift_groups=openshift_groups,
         )
 
     @staticmethod

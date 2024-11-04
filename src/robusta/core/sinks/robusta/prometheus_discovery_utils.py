@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound, NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
-from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
+from robusta.core.model.env_vars import PROMETHEUS_ENABLED, PROMETHEUS_ERROR_LOG_PERIOD_SEC
 from robusta.core.playbooks.prometheus_enrichment_utils import run_prometheus_query
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags
 from robusta.utils.silence_utils import AlertManagerParams, get_alertmanager_silences_connection
@@ -24,10 +24,14 @@ class PrometheusHealthStatus(BaseModel):
 class PrometheusDiscoveryUtils:
     def __init__(self, discovery_period_sec: int, registry):
         self.status: PrometheusHealthStatus = PrometheusHealthStatus()
+        # if we use the bundled prometheus, we use "connected" as the default status, because, on the first install,
+        # Prometheus might take a little longer to start
+        # otherwise, we use false
+        self.status.prometheus = PROMETHEUS_ENABLED
         self.__discovery_period_sec = discovery_period_sec
         self.__prometheus_error_log_period_sec = PROMETHEUS_ERROR_LOG_PERIOD_SEC
         self.registry = registry
-
+        self.first_checks_finished = False
         self.__last_alertmanager_error_log_time = 0
         self.__last_prometheus_error_log_time = 0
         self.__check_prometheus_flags = registry.get_global_config().get("check_prometheus_flags", True)
@@ -75,7 +79,7 @@ class PrometheusDiscoveryUtils:
             try:
                 self.prometheus_connection_checks(self.get_global_config())
                 self.alertmanager_connection_checks(self.get_global_config())
-
+                self.first_checks_finished = True
                 time.sleep(self.__discovery_period_sec)
             except Exception as e:
                 logging.error(e)
