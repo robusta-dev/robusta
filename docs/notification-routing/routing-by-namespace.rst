@@ -1,4 +1,4 @@
-Route Alerts By Namespace
+Route By Namespace
 =============================
 
 Route alerts based on Kubernetes namespace. Ideal for teams that "own" specific namespaces.
@@ -37,7 +37,7 @@ By default, the sink will receive notifications for all namespaces. Let's duplic
         slack_channel: system-notifications
         api_key: secret-key
 
-We now have two sinks, both receiving all notifications. Restrict the notifications for each sink by adding :ref:`matchers <sink-matchers>`:
+We now have two sinks, both receiving all notifications. Restrict the notifications for each sink by adding :ref:`scopes <sink-matchers>`:
 
 .. code-block:: yaml
 
@@ -58,9 +58,9 @@ We now have two sinks, both receiving all notifications. Restrict the notificati
           include:
             - namespace: [kube-system]
 
-Apply this final configuration using a :ref:`Helm Upgrade <Simple Upgrade>`.
+Alerts will be now routed according to Kubernetes namespace.
 
-Alerts will be now routed according to Kubernetes namespace. You can apply this method to as many sinks as you like.
+You can apply this method with as many sinks as you like. If the number of sinks is large, consider setting the channel dynamically. (See instructions for :ref:`Slack <Dynamic Alert Routing>` or :ref:`MS Teams <Dynamically Route MS Teams Alerts>`.)
 
 Troubleshooting Issues
 ------------------------
@@ -70,5 +70,3 @@ sent to default sinks (without namespace matchers) if they exist.
 
 If you forward custom Prometheus alerts to Robusta (and don't use Robusta's builtin Prometheus alerts), make sure they
 have a ``namespace`` label. Otherwise this method will not work.
-
-.. include:: _routing-further-reading.rst

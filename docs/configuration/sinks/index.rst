@@ -41,7 +41,7 @@ By default, Robusta sends all notifications to all sinks.
 **Related Topics:**
 
 * :ref:`sinks-overview`
-* :ref:`Routing Alerts to Specific Sinks`
+* :ref:`sink-scope-matching`
 
 Available sinks
 ^^^^^^^^^^^^^^^^^^^^^

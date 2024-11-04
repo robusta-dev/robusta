@@ -45,7 +45,7 @@ Then do a :ref:`Helm Upgrade <Simple Upgrade>` to apply the new configuration.
 
 Notification Grouping
 -----------------------------
-Slack allows grouping multiple notifications into summary messages and Slack threads. Refer to :ref:`Notification Grouping <notification-grouping>` for details.
+Slack allows grouping multiple notifications into summary messages and Slack threads. Refer to :ref:`Grouping <notification-grouping>` for details.
 
 .. image:: /images/notification-grouping.png
    :width: 600px
@@ -54,7 +54,7 @@ Slack allows grouping multiple notifications into summary messages and Slack thr
 Dynamic Alert Routing
 -------------------------------------------------------------------
 
-You can route alerts to different Slack channels by defining several Slack sinks. See :ref:`Route Alerts By Namespace` for an example.
+You can route alerts to different Slack channels by defining several Slack sinks. See :ref:`Route By Namespace` for an example.
 
 Alternatively, if the number of channels is large, you can define a single Slack sink and use the ``channel_override`` parameter to read read the destination channel from alert metadata.
 
