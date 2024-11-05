@@ -160,6 +160,8 @@ Choose an AI provider below and follow the instructions:
               additionalEnvVars:
               - name: MODEL
                 value: azure/<DEPLOYMENT_NAME>  # replace with deployment name from the portal (e.g. avi-deployment), leave "azure/" prefix
+              - name: MODEL_TYPE
+                value: gpt-4o                   # your azure deployment model type
               - name: AZURE_API_VERSION
                 value: <API_VERSION>            # replace with API version you found in the Azure portal
               - name: AZURE_API_BASE
@@ -297,7 +299,7 @@ Additionally your alerts on Slack will have an "Ask Holmes" button that sends an
   Due to technical limitations with Slack, alerts analyzed from Slack will be sent to the AI without alert-labels.
 
   This means sometimes the AI won't know the namespace, pod name, or other metadata and the results may be less accurate.
-  
+
   For the most accurate results, it is best to use the Robusta UI.
 
 
