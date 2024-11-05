@@ -14,12 +14,14 @@
    :hidden:
 
    multi-cluster
-   alertsui
    upgrade
    configuration-secrets
    supported-clusters
    openshift
    node-selector
    proxies
+   privacy-and-security
+   alertsui
    additional-settings
    installation-faq
+   

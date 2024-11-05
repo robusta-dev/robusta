@@ -5,8 +5,10 @@
 Overview
 ================================
 
-This section is optimized for learning by example. If you prefer reference guides, refer to
-:ref:`Integrations Overview` and :ref:`How it works`.
+.. admonition:: **Under Construction**
+
+    We're working on adding more tutorials. Refer to other areas of the docs for now!
+
 
 Discover Builtin Features
 ---------------------------
@@ -17,48 +19,18 @@ No customization needed. Here's a teaser of what Robusta does out of the box:
    :maxdepth: 1
 
    alert-builtin-enrichment
-   chatgpt
+
+* :ref:`Alert Investigation with AI <AI Analysis>`
 
 .. _playbook-tutorials:
 
-Custom Alerts and Playbooks
-------------------------------------
-
-Define your own alerts. Customize the data shown in alert notifications.
+Customizing the Built-in Prometheus Stack
+--------------------------------------------
 
 .. toctree::
    :maxdepth: 1
 
-   playbook-track-changes
-   playbook-job-failure
-   playbook-failed-liveness
    alert-custom-prometheus
-   alert-custom-enrichment
-   playbook-track-secrets.rst
-
-.. _tutorials-notification-routing:
-
-
-Automatic Remediation
-------------------------
-
-Fix problems automatically.
-
-.. toctree::
-   :maxdepth: 1
-
-   alert-remediation
-
-Application Troubleshooting
-----------------------------
-
-Troubleshoot, debug, and profile Kubernetes applications faster.
-
-.. toctree::
-   :maxdepth: 1
-
-   application-troubleshooting-java
-   application-troubleshooting-python
 
 .. More tutorial ideas:
 .. Remediate Alerts
