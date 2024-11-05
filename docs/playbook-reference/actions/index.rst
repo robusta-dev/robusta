@@ -13,8 +13,6 @@ Actions Reference
    change-tracking
    networking
    grafana
-   python-troubleshooting
-   java-troubleshooting
    scans
    miscellaneous
    develop-actions/index
