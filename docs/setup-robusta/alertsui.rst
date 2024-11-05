@@ -1,7 +1,9 @@
-Alerts UI
-######################
+Managed Prometheus Alerts
+##########################
 
-With the Robusta Alerts UI, you can create and customize Prometheus Rules using templates, without needing to know PromQL.
+Optionally, you can manage your Prometheus alerts with the Robusta Alerts UI, instead of managing them as PrometheusRule YAMLs in-cluster.
+
+This lets your team create and customize Prometheus alerts with templates, without needing to know PromQL.
 
 .. image:: /images/robusta-ui-alerts-ui.gif
 
@@ -13,9 +15,11 @@ This guide covers how it works, and also the steps involved to use this feature:
 How it works
 --------------------
 
-Robusta will generate a predefined set of alerts and sync them to your clusters using PrometheusRule files (CRDs).
-Alerts are currently based on the Kube Prometheus Stack alerts.
-You can disable/enable alerts and change thresholds via the UI.
+When this feature is enabled, Robusta manages the list of alerts in the Robusta UI and syncs them to your clusters as managed PrometheusRule files (CRDs).
+
+The base set of alerts are based on the Kube Prometheus Stack alerts.
+
+You can disable/enable individual alerts and change thresholds via the UI.
 
 Activate Alerts Interface
 --------------------------
