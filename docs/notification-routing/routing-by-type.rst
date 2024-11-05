@@ -1,4 +1,4 @@
-Route Alerts By Type
+Route By Type
 =============================
 
 By default, all Robusta notifications are sent to all :ref:`sinks <Sinks Reference>`.
@@ -72,5 +72,3 @@ Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a sub
 
 Now the ``crash-notifications`` channel will receive crashpod notifications and all other notifications will go to the
 ``main-notifications`` channel.
-
-.. include:: _routing-further-reading.rst

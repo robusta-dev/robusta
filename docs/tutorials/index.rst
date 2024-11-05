@@ -49,17 +49,6 @@ Fix problems automatically.
 
    alert-remediation
 
-Application Troubleshooting
-----------------------------
-
-Troubleshoot, debug, and profile Kubernetes applications faster.
-
-.. toctree::
-   :maxdepth: 1
-
-   application-troubleshooting-java
-   application-troubleshooting-python
-
 .. More tutorial ideas:
 .. Remediate Alerts
 .. Create tickets in Jira for Kubernetes issues
