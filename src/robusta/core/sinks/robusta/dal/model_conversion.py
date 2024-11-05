@@ -107,7 +107,8 @@ class ModelConversion:
         ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls, structured_data)
 
         conversation_history_block = FileBlock(
-            "conversation_history.txt", json.dumps(block.holmes_result.conversation_history, indent=2).encode()
+            f"conversation_history-{datetime.now()}.txt",
+            json.dumps(block.holmes_result.conversation_history, indent=2).encode(),
         )
         conversation_history_block.zip()
         conversation_history_obj = ModelConversion.get_file_object(conversation_history_block)

@@ -33,7 +33,7 @@ class HolmesConversationRequest(BaseModel):
 
 class HolmesChatRequest(BaseModel):
     ask: str
-    convesation_history: Optional[List[dict]] = None
+    conversation_history: Optional[List[dict]] = None
 
 
 class HolmesIssueChatRequest(HolmesChatRequest):
