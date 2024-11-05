@@ -3,33 +3,45 @@
 AI Analysis
 ==========================
 
+Why use HolmesGPT?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Robusta can integrate with `Holmes GPT <https://github.com/robusta-dev/holmesgpt>`_ to analyze health issues on your cluster, and to run AI based root cause analysis for alerts.
 
-Holmes can be installed with Robusta by adding ``enableHolmesGPT: true`` to the Robusta ``generated_values.yaml`` file.
+When available, AI based investigations can be launched in one of two ways:
 
-When available, AI based investigations can be launched using the ``Ask Holmes`` button in Slack. The results will be sent back as a new message.
+1. Click the ``Ask Holmes`` button in Slack. The AI investigation will be sent back as a new message.
 
 .. image:: /images/robusta-holmes-investigation.png
     :width: 600px
 
-On the Robusta UI, clicking the ``Find Root Cause`` button will start an investigation and display its results.
+2. In the Robusta UI, click the ``Root Cause`` tab on an alert.
 
 .. image:: /images/ai-root-causeanalysis.png
     :width: 600px
 
-Configuration
-^^^^^^^^^^^^^^^^^^
+Configuring HolmesGPT
+^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning::
+Add ``enableHolmesGPT: true`` to the Robusta Helm values, and then follow these steps:
 
-  Only GPT-4o is officially supported. We highly recommend using GPT-4o to get the most accurate results!
+1. Choose an AI model - we highly recommend using GPT-4o to get the most accurate results! Other models may work, but are not officially supported.
+2. :ref:`Configure your AI provider with the chosen model <Choosing and configuring an AI provider>`.
+3. :ref:`Optional: Configure HolmesGPT Access to SaaS Data <Configuring HolmesGPT Access to SaaS Data>`.
+
+Choosing and configuring an AI provider
+----------------------------------------
+
+Choose an AI provider below and follow the instructions:
 
 .. tab-set::
 
-    .. tab-item:: Robusta
+    .. tab-item:: Robusta AI
         :name: robusta-ai
 
-        Update your helm values (``generated_values.yaml`` file) with the following configuration:
+        Robusta AI is the premium AI service provided by Robusta. It is currently free to use while in beta. To use Robusta AI, you must have a Robusta account and be using the Robusta UI.
+
+        To use Robusta AI, update your helm values (``generated_values.yaml`` file) with the following configuration:
 
         .. code-block:: yaml
 
@@ -39,11 +51,7 @@ Configuration
               - name: ROBUSTA_AI
                 value: "true"
 
-        Run Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
-
-        .. note::
-
-            The Robusta mode is available only when using the Robusta UI
+        Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
 
     .. tab-item:: OpenAI
         :name: open-ai
@@ -69,9 +77,7 @@ Configuration
                     name: holmes-secrets
                     key: openAiKey
 
-
-        Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
-
+        Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
 
     .. tab-item:: Azure AI
         :name: azure-ai
@@ -164,7 +170,7 @@ Configuration
                     name: holmes-secrets
                     key: azureOpenAiKey
 
-        Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
+        Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
 
     .. tab-item:: AWS Bedrock
         :name: aws-bedrock
@@ -204,42 +210,59 @@ Configuration
                     name: holmes-secrets
                     key: awsSecretAccessKey
 
-        Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
+        Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
 
+Configuring HolmesGPT Access to SaaS Data
+----------------------------------------------------
 
-Sinks Configuration Secrets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To use HolmesGPT with the Robusta UI, one further step is necessary: HolmesGPT needs a token to authenticate with the Robusta SaaS so it can read alerts and historical data.
 
-Holmes uses the ``token`` used for the ``Robusta UI sink``.
-If you're pulling this ``token`` from a secret:
+This is the same token used by the Robusta UI sink.
 
-.. code-block:: yaml
+.. tab-set::
 
-    runner:
-      additional_env_vars:
-      - name: UI_SINK_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: my-robusta-secrets
-            key: ui-token
+    .. tab-item:: Using Helm Values
 
-    sinksConfig:
-    - robusta_sink:
-        name: robusta_ui_sink
-        token: "{{ env.UI_SINK_TOKEN }}"
+        Update your helm values (``generated_values.yaml`` file) with the following configuration:
 
-You should direct Holmes to use the same secret, and pass it as an environment variable named ``ROBUSTA_UI_TOKEN``:
+        .. code-block:: yaml
 
-.. code-block:: yaml
+            holmes:
+              TODO
 
-    holmes:
-      additional_env_vars:
-      ....
-      - name: ROBUSTA_UI_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: my-robusta-secrets
-            key: ui-token
+    .. tab-item:: Using a Secret
+
+        If you define the Robusta UI token using a secret, you can reuse the same secret for HolmesGPT.
+
+        Your Helm values should look something like this:
+
+        .. code-block:: yaml
+
+            runner:
+              additional_env_vars:
+              - name: UI_SINK_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: my-robusta-secrets
+                    key: ui-token
+
+            sinksConfig:
+            - robusta_sink:
+                name: robusta_ui_sink
+                token: "{{ env.UI_SINK_TOKEN }}"
+
+        Now direct Holmes to use the same secret, and pass it as an environment variable named ``ROBUSTA_UI_TOKEN``:
+
+        .. code-block:: yaml
+
+            holmes:
+              additional_env_vars:
+              ....
+              - name: ROBUSTA_UI_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: my-robusta-secrets
+                    key: ui-token
 
 
 Test Holmes Integration
@@ -249,7 +272,9 @@ In this section we will see Holmes in action by deploying a crashing pod and ana
 
 Before we proceed, you must follow the instructions above and configure Holmes.
 
-1. Let's deploy a crashing pod to simulate an issue.
+Once everything is setup:
+
+1. Ddeploy a crashing pod to simulate an issue.
 
 .. code-block:: yaml
 
@@ -265,20 +290,27 @@ Before we proceed, you must follow the instructions above and configure Holmes.
 .. image:: /images/AI_Analysis_demo2.png
     :width: 1000px
 
-Additionally your alerts on Slack will have an "Ask Holmes" button. Clicking it will give you results in the Slack channel itself. Note that due to technical limitations with Slack-buttons, alerts analyzed from Slack will be sent to the AI without alert-labels. For the most accurate results, it is best to use the UI.
+Additionally your alerts on Slack will have an "Ask Holmes" button that sends an analysis back to Slack.
+
+.. warning::
+
+  Due to technical limitations with Slack, alerts analyzed from Slack will be sent to the AI without alert-labels.
+
+  This means sometimes the AI won't know the namespace, pod name, or other metadata and the results may be less accurate.
+  
+  For the most accurate results, it is best to use the Robusta UI.
+
+
+Advanced - Customizing HolmesGPT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Adding Custom Tools to Holmes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------
 
 Holmes allows you to define custom toolsets that enhance its functionality by enabling additional tools to run Kubernetes commands or other tasks.
 
 In this guide, we will show how to add a custom toolset to Holmes in your ``generated_values.yaml`` file.
-
-Updating the Helm Values
-----------------------------------------------------
-
-To add a toolset in Holmes, update the ``generated_values.yaml`` with the following configuration:
 
 .. code-block:: yaml
 
@@ -304,9 +336,6 @@ To add a toolset in Holmes, update the ``generated_values.yaml`` with the follow
 
 ``toolsets``: Defines a custom toolset, in this case, a ``resource_explanation``, which allows Holmes to use the ``kubectl explain`` command to provide details about various Kubernetes resources.
 
-Applying the Changes
---------------------
-
 Once you have updated the ``generated_values.yaml`` file, apply the changes by running the Helm upgrade command:
 
 .. code-block:: bash
@@ -317,14 +346,11 @@ After the deployment, the custom toolset is automatically available for Holmes t
 
 
 Adding a tool that requires a new binary
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------
 
 In some cases, adding a new tool to Holmes might require installing additional packages that are not included in the base Holmes Docker image. This guide explains how to create a custom Docker image that includes the new binaries and update your Helm deployment to use the custom image.
 
-Creating a Custom Docker Image
---------------------------------------
-
-To install a non-standard binary (such as ``jq`` for JSON processing) or any additional Linux tool, you can create a custom Docker image that inherits from the main Holmes image and installs the required binaries.
+As an example, we'll add a new HolmesGPT tool that uses the ``jq`` binary, which isn't present in the original image:
 
 **Example Dockerfile to add jq:**
 
@@ -354,10 +380,6 @@ To install a non-standard binary (such as ``jq`` for JSON processing) or any add
     # Example of installing jq
     RUN apt-get install -y jq
 
-
-Build and Push the Custom Docker Image
-----------------------------------------------
-
 Now, you will need to **build and push** the Docker image to your container registry.
 
 **Abstracted Instructions for Building and Pushing the Docker Image**:
@@ -383,7 +405,6 @@ Now, you will need to **build and push** the Docker image to your container regi
 
    This ensures that the image is available for your Kubernetes deployment.
 
---------------------------------------------------
 
 After pushing your custom Docker image, update your ``generated_values.yaml`` to use this custom image for Holmes.
 
@@ -405,10 +426,8 @@ After pushing your custom Docker image, update your ``generated_values.yaml`` to
               description: "A tool that uses jq to process JSON input"
               command: "echo '{{ json_input }}' | jq '.'"  # Example jq command to format JSON
 
-Update the Deployment with Helm
----------------------------------------
 
-After updating your ``generated_values.yaml``, apply the changes to your Helm deployment:
+Finally, after updating your ``generated_values.yaml``, apply the changes to your Helm deployment:
 
 .. code-block:: bash
 
