@@ -215,55 +215,47 @@ Choose an AI provider below and follow the instructions:
 Configuring HolmesGPT Access to SaaS Data
 ----------------------------------------------------
 
-To use HolmesGPT with the Robusta UI, one further step is necessary: HolmesGPT needs a token to authenticate with the Robusta SaaS so it can read alerts and historical data.
+To use HolmesGPT with the Robusta UI, one further step may be necessary, depending on how Robusta is configured.
 
-This is the same token used by the Robusta UI sink.
+* If you define the Robusta UI token directly in your Helm values, HolmesGPT can read the token automatically and no further setup is necessary.
+* If you store the Robusta UI token in a Kubernetes secret, follow the instructions below.
 
-.. tab-set::
+Note: the same Robusta UI token is used for the Robusta UI sink and for HolmesGPT.
+ 
+Reading the Robusta UI Token from a secret in HolmesGPT
+************************************************************
 
-    .. tab-item:: Using Helm Values
+1. Review your existing Robusta Helm values - you should have an existing section similar to this, which reads the Robusta UI token from a secret:
 
-        Update your helm values (``generated_values.yaml`` file) with the following configuration:
+.. code-block:: yaml
 
-        .. code-block:: yaml
+    runner:
+      additional_env_vars:
+      - name: UI_SINK_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: my-robusta-secrets
+            key: ui-token
 
-            holmes:
-              TODO
+    sinksConfig:
+    - robusta_sink:
+        name: robusta_ui_sink
+        token: "{{ env.UI_SINK_TOKEN }}"
 
-    .. tab-item:: Using a Secret
+2. Add the following to your Helm values, directing HolmesGPT to use the same secret, passed as an environment variable named ``ROBUSTA_UI_TOKEN``:
 
-        If you define the Robusta UI token using a secret, you can reuse the same secret for HolmesGPT.
+.. code-block:: yaml
 
-        Your Helm values should look something like this:
+    holmes:
+      additional_env_vars:
+      ....
+      - name: ROBUSTA_UI_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: my-robusta-secrets
+            key: ui-token
 
-        .. code-block:: yaml
-
-            runner:
-              additional_env_vars:
-              - name: UI_SINK_TOKEN
-                valueFrom:
-                  secretKeyRef:
-                    name: my-robusta-secrets
-                    key: ui-token
-
-            sinksConfig:
-            - robusta_sink:
-                name: robusta_ui_sink
-                token: "{{ env.UI_SINK_TOKEN }}"
-
-        Now direct Holmes to use the same secret, and pass it as an environment variable named ``ROBUSTA_UI_TOKEN``:
-
-        .. code-block:: yaml
-
-            holmes:
-              additional_env_vars:
-              ....
-              - name: ROBUSTA_UI_TOKEN
-                valueFrom:
-                  secretKeyRef:
-                    name: my-robusta-secrets
-                    key: ui-token
-
+Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
 
 Test Holmes Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
