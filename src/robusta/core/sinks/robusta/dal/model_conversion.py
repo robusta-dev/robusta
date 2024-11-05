@@ -111,6 +111,7 @@ class ModelConversion:
         )
         conversation_history_block.zip()
         conversation_history_obj = ModelConversion.get_file_object(conversation_history_block)
+        conversation_history_obj["metadata"] = {"type": "conversation_history"}
         structured_data.append(conversation_history_obj)
 
     @staticmethod
