@@ -1,8 +1,7 @@
-Examples
+Common Examples
 ===================================
 
- 
-You can combine multiple routing methods to create an alerting system that gives your teams only alerts relevant to them.
+Here are examples of common routing patterns that teams use with Robusta. The goal is to send each team only the most relevant alerts.
 
 Use Case 1: Route Specific Alerts to Seperate Teams and Slack Channels
 **********************************************************************************
@@ -28,7 +27,7 @@ In this example we are going to consider two teams, with #frontend and #backend 
             include:
             - namespace: [backend]
 
-For a complete list of filters, view the :ref:`Scopes documentation <Routing Alerts To Specific Sinks>`.
+For a complete list of filters, view the :ref:`Scopes documentation <sink-scope-matching>`.
 
 Use Case 2: Route Alerts To Different Support Teams Based On Time Of The Day
 **********************************************************************************
@@ -63,9 +62,9 @@ Let's see how we can route alerts between two teams with different Slack channel
                 end: 23:59  # 11:59 PM
 
 
-For more information on time-based routing, :ref:`view <Route Alerts by Time>`
+For more information on time-based routing, :ref:`view <Route by Time>`
 
-If you want to selectively apply time-based-routing to certain alerts only, then this method can be combined with :ref:`Scopes <Routing Alerts To Specific Sinks>`. For example:
+If you want to selectively apply time-based-routing to certain alerts only, then this method can be combined with :ref:`Scopes <sink-scope-matching>`. For example:
 
 .. code-block:: yaml
 

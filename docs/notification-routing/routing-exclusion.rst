@@ -1,16 +1,32 @@
-Routing with Exclusion Rules
+Dropping Specific Alerts
 =============================
 
-This guide defines a sink that receives all notifications *except* for something specific.
+This guide defines a sink that receives all notifications *except* for a specific alert.
 
-To drop a specific notification altogether, see :ref:`Silencing Alerts`.
+To drop a specific notification globally from *all sinks*, see :ref:`Silencing Alerts`.
 
-Using Matchers to Exclude Alerts
+Exclude Alerts by Alert Name
 ------------------------------------------------
 
-To excluding notifications from a sink, define a matcher with a "negative lookahead regex":
+Using :ref:`sink scopes <sink-scope-matching>`, you can drop all alerts with a specific name:
 
-For example, we can exclude notifications related to pods and deployments:
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: main_sink
+        slack_channel: main-notifications
+        api_key: secret-key
+        - scope:
+            exclude:
+            # don't send notifications where the alert name is ANY of the following
+            - identifier: [ImagePullBackoff, CrashLoopBackoff, CPUThrottlingHigh]
+
+
+Exclude Alert by Namespace
+------------------------------------------------
+
+Using :ref:`sink scopes <sink-scope-matching>`, you can drop all alerts from a specific namespace:
 
 .. code-block:: yaml
 
@@ -20,8 +36,5 @@ For example, we can exclude notifications related to pods and deployments:
         slack_channel: no-pods-or-deployments
         api_key: secret-key
         scope:
-        # don't send notifications related to pods and deployments
           exclude:
-            - kind: [pod, deployment]
-
-.. include:: _routing-further-reading.rst
+            - namespace: ["kube-system"]

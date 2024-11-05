@@ -1,4 +1,4 @@
-Route Alerts by Time
+Route by Time
 =============================================
 
 It is possible, for any sink, to set the schedule of its activation by specifying the ``activity`` field in its
