@@ -162,10 +162,7 @@ class HolmesIssueChatParamsContext(BaseModel):
 # will be deprecated later alongside with holmes_conversation action
 class HolmesOldConversationIssueContext(HolmesIssueChatParamsContext):
     """
-    :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
     :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
-    :var issue_type: aggregation key of the issue
-    :var robusta_issue_id: id of the issue
     :var source: source of the issue
     """
 
