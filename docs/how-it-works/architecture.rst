@@ -1,7 +1,7 @@
 Architecture
 ==================
 
-Robusta runs in-cluster as two Kubernetes deployments
+The base installation for Robusta runs in-cluster as two Kubernetes deployments
 
 * robusta-forwarder - Connects to the APIServer and monitors Kubernetes changes. Forwards them to robusta-runner.
 * robusta-runner - Receives all events, evaluates playbooks, sends notifications
@@ -10,7 +10,11 @@ Robusta runs in-cluster as two Kubernetes deployments
    :width: 600
    :align: center
 
-Robusta has some optional components, described below.
+Optionally, Robusta has some additional components, described below.
+
+HolmesGPT (Optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Robusta's next generation AI-engine that investigates alerts automatically. See :ref:`AI Analysis <AI Analysis>`.
 
 Bundled Prometheus (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -23,6 +27,8 @@ Web UI (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The Robusta `SaaS platform <http://home.robusta.dev/ui?from=docs>`_ provides a single pane of glass for all your alerts and clusters.
+
+On commercial plans, the UI is available for self-hosting in your own environment.
 
 CLI (Optional)
 ^^^^^^^^^^^^^^^^
