@@ -147,30 +147,6 @@ class HolmesConversationHistory(BaseModel):
     answer: HolmesInvestigationResult
 
 
-class HolmesConversationIssueContext(BaseModel):
-    """
-    :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
-    :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
-    :var issue_type: aggregation key of the issue
-    :var robusta_issue_id: id of the issue
-    :var source: source of the issue
-    """
-
-    investigation_result: HolmesInvestigationResult
-    conversation_history: Optional[list[HolmesConversationHistory]] = []
-    issue_type: str
-    robusta_issue_id: Optional[str] = None
-    source: Optional[str] = None
-
-
-class ConversationType(str, Enum):
-    """
-    Conversation types for holmes_conversation action
-    """
-
-    ISSUE = "issue"
-
-
 class HolmesIssueChatParamsContext(BaseModel):
     """
     :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
@@ -181,6 +157,28 @@ class HolmesIssueChatParamsContext(BaseModel):
     investigation_result: HolmesInvestigationResult
     issue_type: str
     robusta_issue_id: Optional[str] = None
+
+
+# will be deprecated later alongside with holmes_conversation action
+class HolmesOldConversationIssueContext(HolmesIssueChatParamsContext):
+    """
+    :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
+    :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
+    :var issue_type: aggregation key of the issue
+    :var robusta_issue_id: id of the issue
+    :var source: source of the issue
+    """
+
+    conversation_history: Optional[list[HolmesConversationHistory]] = []
+    source: Optional[str] = None
+
+
+class ConversationType(str, Enum):
+    """
+    Conversation types for holmes_conversation action
+    """
+
+    ISSUE = "issue"
 
 
 class HolmesChatParams(HolmesParams):
@@ -208,7 +206,7 @@ class HolmesConversationParams(HolmesParams):
 
     ask: str
     resource: Optional[ResourceInfo] = ResourceInfo()
-    context: HolmesConversationIssueContext
+    context: HolmesOldConversationIssueContext
     conversation_type: ConversationType
     include_tool_calls: bool = True
     include_tool_call_results: bool = True

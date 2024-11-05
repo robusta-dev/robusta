@@ -161,7 +161,7 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
 
 
-def build_conversation_title(params: HolmesConversationParams):
+def build_conversation_title(params: HolmesConversationParams) -> str:
     return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id}"
 
 
@@ -312,7 +312,6 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
 
     cluster_name = event.get_context().cluster_name
-    account_id = event.get_context().account_id
 
     try:
         holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history)
@@ -321,7 +320,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         holmes_result = HolmesChatResult(**json.loads(result.text))
 
         finding = Finding(
-            title=f"AI Ask Chat for {cluster_name} cluster {account_id} account_id",
+            title="AI Ask Chat",
             aggregation_key="HolmesChatResult",
             subject=FindingSubject(
                 subject_type=FindingSubjectType.TYPE_NONE,
@@ -336,7 +335,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         event.add_finding(finding)
 
     except Exception as e:
-        logging.exception(f"Failed to get holmes chat for {cluster_name} cluster {account_id} account_id")
+        logging.exception(f"Failed to get holmes chat for {cluster_name} cluster", exc_info=True)
         if isinstance(e, requests.ConnectionError):
             raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
         elif isinstance(e, requests.HTTPError):

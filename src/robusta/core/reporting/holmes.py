@@ -4,8 +4,8 @@ from pydantic import BaseModel
 
 from robusta.core.model.base_params import (
     ConversationType,
-    HolmesConversationIssueContext,
     HolmesInvestigationResult,
+    HolmesOldConversationIssueContext,
     ResourceInfo,
 )
 from robusta.core.reporting import BaseBlock
@@ -26,7 +26,7 @@ class HolmesConversationRequest(BaseModel):
     source: Optional[str] = None  # "prometheus" etc
     conversation_type: ConversationType
     resource: Optional[ResourceInfo] = ResourceInfo()
-    context: HolmesConversationIssueContext
+    context: HolmesOldConversationIssueContext
     include_tool_calls: bool = False
     include_tool_call_results: bool = False
 
@@ -61,16 +61,6 @@ class HolmesConversationResult(BaseModel):
 class HolmesResultsBlock(BaseBlock):
     holmes_result: Optional[HolmesResult]
 
-    def __init__(
-        self,
-        holmes_result: Optional[HolmesResult] = None,
-        **kwargs,
-    ):
-        super().__init__(
-            holmes_result=holmes_result,
-            **kwargs,
-        )
-
 
 class HolmesChatResult(BaseModel):
     analysis: Optional[str] = None
@@ -80,13 +70,3 @@ class HolmesChatResult(BaseModel):
 
 class HolmesChatResultsBlock(BaseBlock):
     holmes_result: Optional[HolmesChatResult]
-
-    def __init__(
-        self,
-        holmes_result: Optional[HolmesChatResult] = None,
-        **kwargs,
-    ):
-        super().__init__(
-            holmes_result=holmes_result,
-            **kwargs,
-        )
