@@ -3,7 +3,7 @@ Configure Metric Querying
 
 Metrics querying lets Robusta pull metrics and create silences.
 
-To configure it, add the ``prometheus_url`` and ``alertmanager_url`` to your Helm values and :ref:`update Robusta <Simple Upgrade>`.
+If Robusta fails to auto-detect the Prometheus and Alertmanager urls - and you see related connection errors in the logs - configure the ``prometheus_url`` and ``alertmanager_url`` in your Helm values and :ref:`update Robusta <Simple Upgrade>`
 
 .. code-block:: yaml
 
