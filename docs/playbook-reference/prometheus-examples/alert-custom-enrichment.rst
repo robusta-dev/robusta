@@ -1,4 +1,4 @@
-Enrich Custom Prometheus Alerts
+Enrich Prometheus Alerts
 #################################
 
 Robusta can add extra context to your Prometheus alerts, so you can respond to alerts faster and without digging elsewhere for information.
