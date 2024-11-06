@@ -353,7 +353,6 @@ class RobustaSink(SinkBase, EventHandler):
             if Discovery.out_of_memory_detected and "ERROR_DISCOVERY_OOM" not in self.__errors:
                 self.__errors.append("ERROR_DISCOVERY_OOM")
 
-
     def __publish_new_nodes(self, current_nodes: List[NodeInfo]):
         # convert to map
         curr_nodes = {}
@@ -481,7 +480,7 @@ class RobustaSink(SinkBase, EventHandler):
             holmesEnabled=HOLMES_ENABLED,
             holmesModel=holmes_model,
             clusterTimeZone=str(datetime.now().astimezone().tzinfo),
-            errors=self.__errors
+            errors=self.__errors,
         )
 
         # checking the status of relay connection
@@ -571,12 +570,15 @@ class RobustaSink(SinkBase, EventHandler):
         if self.registry.get_telemetry().last_alert_at and self.first_prometheus_alert_time == 0:
             first_alert = True
             self.first_prometheus_alert_time = time.time()
-        finished_first_prometheus_discovery = self.__prometheus_discovery_util.first_checks_finished \
-                                              and not self.prometheus_real_status_reported
+        finished_first_prometheus_discovery = (
+            self.__prometheus_discovery_util.first_checks_finished and not self.prometheus_real_status_reported
+        )
         # Regular update logic: only when CLUSTER_STATUS_PERIOD_SEC has passed or on first alert
-        if (time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC) \
-                or first_alert \
-                or finished_first_prometheus_discovery:
+        if (
+            (time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC)
+            or first_alert
+            or finished_first_prometheus_discovery
+        ):
             self.prometheus_real_status_reported = self.__prometheus_discovery_util.first_checks_finished
             self.__update_cluster_status()
             self.last_send_time = time.time()
@@ -624,10 +626,10 @@ class RobustaSink(SinkBase, EventHandler):
             if cached_os_group and cached_os_group.resource_version > current_os_group.resource_version:
                 continue
 
-            # service not in the cache, or changed
+            # group not in the cache, or changed
             if self.__openshift_groups_cache.get(key) != current_os_group:
                 updated_os_groups.append(current_os_group)
-                self.__services_cache[key] = current_os_group
+                self.__openshift_groups_cache[key] = current_os_group
 
         self.dal.persist_openshift_groups(updated_os_groups)
 

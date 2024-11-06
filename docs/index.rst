@@ -13,10 +13,8 @@
    :caption: How it works
    :hidden:
 
-   how-it-works/index
    how-it-works/architecture
    how-it-works/oss-vs-saas
-   how-it-works/privacy-and-security
    how-it-works/coverage
    how-it-works/usage-faq
 
@@ -57,7 +55,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: 🎨 Playbooks
+   :caption: ⚙️ Automation
    :hidden:
 
    playbook-reference/index
