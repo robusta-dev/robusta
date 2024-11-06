@@ -1,3 +1,4 @@
+import copy
 import logging
 import ssl
 import tempfile
@@ -308,6 +309,28 @@ class SlackSender:
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
+
+    def __limit_labels_size(self, labels: dict, max_size: int = 1000) -> dict:
+        # slack can only send 2k tokens in a callback so the labels are limited in size
+
+        low_priority_labels = ["job", "prometheus", "severity", "service"]
+        limited_labels = copy.deepcopy(labels)
+        current_length = len(str(limited_labels))
+
+        # first remove the low priority labels if needed
+        for key in low_priority_labels:
+            if current_length <= max_size:
+                break
+            if key in limited_labels:
+                del limited_labels[key]
+                current_length = len(str(limited_labels))
+
+        while current_length > max_size and limited_labels:
+            limited_labels.pop(next(iter(limited_labels)))
+            current_length = len(str(limited_labels))
+
+        return limited_labels
+
     def __create_holmes_callback(self, finding: Finding) -> CallbackBlock:
         resource = ResourceInfo(
             name=finding.subject.name if finding.subject.name else "",
@@ -321,6 +344,7 @@ class SlackSender:
             "robusta_issue_id": str(finding.id),
             "issue_type": finding.aggregation_key,
             "source": finding.source.name,
+            "labels": self.__limit_labels_size(labels=finding.subject.labels)
         }
 
         return CallbackBlock(

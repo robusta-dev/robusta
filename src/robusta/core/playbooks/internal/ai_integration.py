@@ -161,8 +161,9 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
 
 
-def build_conversation_title(params: HolmesConversationParams) -> str:
-    return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id}"
+def build_conversation_title(params: HolmesConversationParams):
+        label_string = f"with alert labels {params.labels}" if params.labels else ""
+        return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id} {label_string}"
 
 
 # old version of holmes conversation API

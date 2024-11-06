@@ -152,6 +152,7 @@ class HolmesIssueChatParamsContext(BaseModel):
     :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
     :var issue_type: aggregation key of the issue
     :var robusta_issue_id: id of the issue
+    :var labels: labels from the issue
     """
 
     investigation_result: HolmesInvestigationResult
@@ -168,6 +169,7 @@ class HolmesOldConversationIssueContext(HolmesIssueChatParamsContext):
 
     conversation_history: Optional[list[HolmesConversationHistory]] = []
     source: Optional[str] = None
+    labels: Optional[Dict[str, str]] = None
 
 
 class ConversationType(str, Enum):
