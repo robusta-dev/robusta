@@ -1,9 +1,13 @@
 In-cluster Prometheus
 ****************************************
 
-Are you already running Prometheus in the same cluster as Robusta? Follow this guide to connect your Prometheus to Robusta. If your Prometheus is in a different cluster refer to the :ref:`Centralized Prometheus` documentation to integrate it with Robusta.
+Here's how to integrate an existing Prometheus with Robusta in the same cluster:
 
-You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
+* Send alerts to Robusta by adding a receiver to AlertManager
+* Point Robusta at Prometheus so it can query metrics and silence alerts
+    * Robusta will attempt auto-detection, so this is not always necessary!
+
+If your Prometheus is in a different cluster, refer to :ref:`Centralized Prometheus`.
 
 Send Alerts to Robusta
 ============================

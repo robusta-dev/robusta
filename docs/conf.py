@@ -104,7 +104,18 @@ redirects = {
     "tutorials/routing-by-type.html": "/master/notification-routing/routing-by-type.html",
     "tutorials/routing-exclusion.html": "/master/notification-routing/routing-exclusion.html",
     "tutorials/routing-silencing.html": "/master/notification-routing/routing-silencing.html",
-    "configuration/configuring-sinks.html": "/master/notification-routing/configuring-sinks.html"
+    "configuration/configuring-sinks.html": "/master/notification-routing/configuring-sinks.html",
+    "how-it-works/privacy-and-security.html": "/master/setup-robusta/privacy-and-security.html",
+    "how-it-works/index.html": "/master/playbook-reference/what-are-playbooks.html",
+    "playbook-reference/examples.html": "/master/playbook-reference/prometheus-examples/index.html",
+    "tutorials/playbook-track-changes.html": "/master/playbook-reference/kubernetes-examples/playbook-failed-liveness.html",
+    "tutorials/playbook-job-failure.html": "/master/playbook-reference/kubernetes-examples/playbook-job-failure.html",
+    "tutorials/playbook-failed-liveness.html": "/master/playbook-reference/kubernetes-examples/playbook-failed-liveness.html",
+    "tutorials/playbook-track-secrets.html": "/master/playbook-reference/kubernetes-examples//playbook-track-secrets.html",
+    "tutorials/alert-remediation.html": "/master/playbook-reference/prometheus-examples/alert-remediation.html",
+    "tutorials/alert-custom-enrichment.html": "/master/playbook-reference/prometheus-examples/alert-custom-enrichment.html"
+
+
 }
 
 
