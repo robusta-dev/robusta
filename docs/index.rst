@@ -31,15 +31,12 @@
    :hidden:
 
    configuration/index
-   🆕 Notification Grouping <configuration/notification-grouping>
    🪄 AI Analysis - HolmesGPT <configuration/ai-analysis>
+   🔔 Sinks <configuration/sinks/index>
+   🔥 Prometheus/AlertManager <configuration/alertmanager-integration/index>
    Cost Savings - KRR <configuration/resource-recommender>
    K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
-   configuration/configuring-sinks
-   🔔 Sinks Reference <configuration/sinks/index>
-   configuration/alertmanager-integration/index
    configuration/exporting/exporting-data
-   configuration/additional-settings
 
 .. toctree::
    :maxdepth: 4
@@ -47,7 +44,8 @@
    :hidden:
 
    notification-routing/configuring-sinks
-   🆕 Notification Grouping <notification-routing/notification-grouping>
+   Routing (Scopes) <notification-routing/routing-with-scopes>
+   Grouping (Slack Threads) <notification-routing/notification-grouping>
    notification-routing/routing-by-namespace
    notification-routing/routing-by-type
    notification-routing/routing-by-time

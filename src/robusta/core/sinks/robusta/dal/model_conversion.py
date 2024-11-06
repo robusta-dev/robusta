@@ -23,7 +23,7 @@ from robusta.core.reporting import (
 )
 from robusta.core.reporting.blocks import EmptyFileBlock, GraphBlock
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.holmes import HolmesResultsBlock
+from robusta.core.reporting.holmes import HolmesChatResultsBlock, HolmesResultsBlock, ToolCallResult
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
 
@@ -87,6 +87,35 @@ class ModelConversion:
         }
 
     @staticmethod
+    def append_to_structured_data_tool_calls(tool_calls: List[ToolCallResult], structured_data) -> None:
+        for tool_call in tool_calls:
+            file_block = FileBlock(f"{tool_call.description}.txt", tool_call.result.encode())
+            file_block.zip()
+            data_obj = ModelConversion.get_file_object(file_block)
+            data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
+            structured_data.append(data_obj)
+
+    @staticmethod
+    def add_ai_chat_data(structured_data: List[Dict], block: HolmesChatResultsBlock):
+        structured_data.append(
+            {
+                "type": "markdown",
+                "metadata": {"type": "ai_investigation_result", "createdAt": datetime_to_db_str(datetime.now())},
+                "data": Transformer.to_github_markdown(block.holmes_result.analysis),
+            }
+        )
+        ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls, structured_data)
+
+        conversation_history_block = FileBlock(
+            f"conversation_history-{datetime.now()}.txt",
+            json.dumps(block.holmes_result.conversation_history, indent=2).encode(),
+        )
+        conversation_history_block.zip()
+        conversation_history_obj = ModelConversion.get_file_object(conversation_history_block)
+        conversation_history_obj["metadata"] = {"type": "conversation_history"}
+        structured_data.append(conversation_history_obj)
+
+    @staticmethod
     def add_ai_analysis_data(structured_data: List[Dict], block: HolmesResultsBlock):
         structured_data.append(
             {
@@ -95,12 +124,7 @@ class ModelConversion:
                 "data": Transformer.to_github_markdown(block.holmes_result.analysis),
             }
         )
-        for tool_call in block.holmes_result.tool_calls:
-            file_block = FileBlock(f"{tool_call.description}.txt", tool_call.result.encode())
-            file_block.zip()
-            data_obj = ModelConversion.get_file_object(file_block)
-            data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
-            structured_data.append(data_obj)
+        ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls, structured_data)
 
         structured_data.append({"type": "list", "data": block.holmes_result.instructions})
 
@@ -148,6 +172,8 @@ class ModelConversion:
                 structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, HolmesResultsBlock):
                 ModelConversion.add_ai_analysis_data(structured_data, block)
+            elif isinstance(block, HolmesChatResultsBlock):
+                ModelConversion.add_ai_chat_data(structured_data, block)
             elif isinstance(block, HeaderBlock):
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):

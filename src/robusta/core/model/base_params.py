@@ -147,19 +147,26 @@ class HolmesConversationHistory(BaseModel):
     answer: HolmesInvestigationResult
 
 
-class HolmesConversationIssueContext(BaseModel):
+class HolmesIssueChatParamsContext(BaseModel):
     """
     :var investigation_result: HolmesInvestigationResult object that contains investigation saved to Evidence table by frontend for the issue.
-    :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
     :var issue_type: aggregation key of the issue
     :var robusta_issue_id: id of the issue
-    :var source: source of the issue
     """
 
     investigation_result: HolmesInvestigationResult
-    conversation_history: Optional[list[HolmesConversationHistory]] = []
     issue_type: str
     robusta_issue_id: Optional[str] = None
+
+
+# will be deprecated later alongside with holmes_conversation action
+class HolmesOldConversationIssueContext(HolmesIssueChatParamsContext):
+    """
+    :var conversation_history: List of HolmesConversationHistory objects that contain previous user prompts and responses.
+    :var source: source of the issue
+    """
+
+    conversation_history: Optional[list[HolmesConversationHistory]] = []
     source: Optional[str] = None
 
 
@@ -169,6 +176,21 @@ class ConversationType(str, Enum):
     """
 
     ISSUE = "issue"
+
+
+class HolmesChatParams(HolmesParams):
+    """
+    :var ask: User's prompt for holmes
+    :var conversation_type: Type of a conversation issue/service/generic_ask (ConversationType)
+    """
+
+    ask: str
+    conversation_history: Optional[list[dict]] = None
+
+
+class HolmesIssueChatParams(HolmesChatParams):
+    resource: Optional[ResourceInfo] = ResourceInfo()
+    context: HolmesIssueChatParamsContext
 
 
 class HolmesConversationParams(HolmesParams):
@@ -181,8 +203,7 @@ class HolmesConversationParams(HolmesParams):
 
     ask: str
     resource: Optional[ResourceInfo] = ResourceInfo()
-    # for now context supports only params for issue
-    context: HolmesConversationIssueContext
+    context: HolmesOldConversationIssueContext
     conversation_type: ConversationType
     include_tool_calls: bool = True
     include_tool_call_results: bool = True
