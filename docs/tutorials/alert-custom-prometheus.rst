@@ -111,4 +111,4 @@ Next Steps
 
 In the next tutorial, discover how to further enhance this Prometheus alert with Robusta. Keep reading to learn more:
 
-* :ref:`Enrich Custom Prometheus Alerts`
+* :ref:`Enrich Prometheus Alerts`
