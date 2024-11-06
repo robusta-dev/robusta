@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
     IMAGE_REGISTRY,
     RUNNER_SERVICE_ACCOUNT,
@@ -32,7 +33,7 @@ from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.16.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.17.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 
@@ -52,9 +53,9 @@ class KRRObject(BaseModel):
     current_pod_count: Optional[int]
 
     def __init__(self, **data):
-        pods = data.pop('pods', [])
+        pods = data.pop("pods", [])
         super().__init__(**data)
-        self.current_pod_count = len([pod for pod in pods if not pod.get('deleted', False)])
+        self.current_pod_count = len([pod for pod in pods if not pod.get("deleted", False)])
 
 
 class KRRRecommendedInfo(BaseModel):
@@ -363,7 +364,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             delete_job_post_execution=False,
             process_name=False,
             finalizers=["robusta.dev/krr-job-output"],
-            custom_pod_labels=krr_pod_labels
+            custom_pod_labels=krr_pod_labels,
         )
 
         # NOTE: We need to remove the logs before the json result
@@ -437,7 +438,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                         "description": krr_scan.description,
                         "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
                         "warnings": scan.object.warnings,
-                        "current_pod_count": scan.object.current_pod_count
+                        "current_pod_count": scan.object.current_pod_count,
                     }
                     for resource in krr_scan.resources
                 ],
