@@ -3,24 +3,26 @@ Configure Metric Querying
 
 Metrics querying lets Robusta pull metrics and create silences.
 
-To configure it, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+If Robusta fails to auto-detect the Prometheus and Alertmanager urls - and you see related connection errors in the logs - configure the ``prometheus_url`` and ``alertmanager_url`` in your Helm values and :ref:`update Robusta <Simple Upgrade>`
 
 .. code-block:: yaml
 
-    globalConfig: # this line should already exist
-        # add the lines below
+    globalConfig: # This line should already exist
+        # Add the lines below
         alertmanager_url: "http://ALERT_MANAGER_SERVICE_NAME.NAMESPACE.svc.cluster.local:9093" # (1)
-        grafana_url: ""
-
         prometheus_url: "http://PROMETHEUS_SERVICE_NAME.NAMESPACE.svc.cluster.local:9090" # (2)
 
-        # Add any labels that are relevant to the specific cluster (optional)
+        # If Prometheus has data for multiple clusters, tell Robusta how to query data for this cluster only
         # prometheus_additional_labels:
         #   cluster: 'CLUSTER_NAME_HERE'
 
-        # Create alert silencing when using Grafana alerts (optional)
+        # If using Grafana alerts, add this too
         # grafana_api_key: <YOUR GRAFANA EDITOR API KEY> # (3)
         # alertmanager_flavor: grafana
+
+        # If necessary, see docs below
+        # prometheus_auth: ...
+        # alertmanager_auth: ...
 
 .. code-annotations::
     1. Example: http://alertmanager-Helm_release_name-kube-prometheus-alertmanager.default.svc.cluster.local:9093.
