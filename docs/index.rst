@@ -91,7 +91,7 @@ Better Prometheus Alerts (and more) for Kubernetes
         * :ref:`AI Investigation <AI Analysis>` - Kickstart your alert investigations with AI (optional)
         * :ref:`Alert Enrichment <Automatically Investigate a Prometheus Alert>` - see pods log and other data alongside your alerts
         * :ref:`Self-Healing <Remediate Prometheus Alerts>` - define auto-remediation rules for faster fixes
-        * :ref:`Advanced Routing <Notification 101>` by team, namespace, k8s metadata and more
+        * :ref:`Advanced Routing <Notification Basics>` by team, namespace, k8s metadata and more
         * :ref:`K8s Problem-Detection <Triggers Reference>` - alert on OOMKills or failing Jobs without PromQL
         * :ref:`Change Tracking <Track Kubernetes Changes>` - correlate alerts and Kubernetes rollouts
         * :ref:`Auto-Resolve <Jira>` - send alerts, resolve them when updated (e.g. in Jira)
