@@ -268,7 +268,7 @@ Before we proceed, you must follow the instructions above and configure Holmes.
 
 Once everything is setup:
 
-1. Ddeploy a crashing pod to simulate an issue.
+1. Deploy a crashing pod to simulate an issue.
 
 .. code-block:: yaml
 
