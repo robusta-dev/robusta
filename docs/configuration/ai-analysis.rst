@@ -223,7 +223,7 @@ To use HolmesGPT with the Robusta UI, one further step may be necessary, dependi
 * If you store the Robusta UI token in a Kubernetes secret, follow the instructions below.
 
 Note: the same Robusta UI token is used for the Robusta UI sink and for HolmesGPT.
- 
+
 Reading the Robusta UI Token from a secret in HolmesGPT
 ************************************************************
 
@@ -249,7 +249,7 @@ Reading the Robusta UI Token from a secret in HolmesGPT
 .. code-block:: yaml
 
     holmes:
-      additional_env_vars:
+      additionalEnvVars:
       ....
       - name: ROBUSTA_UI_TOKEN
         valueFrom:
