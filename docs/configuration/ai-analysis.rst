@@ -445,25 +445,25 @@ Common Scenarios for Adding Permissions:
 
 As an example, let's imagine a scenario where holmes wants to analyze the state of Argo CD applications and projects
 
-Steps to Add Permissions for Argo CD:
+**Steps to Add Permissions for Argo CD:**
 
-    Determine Required Permissions:
-        API Group: argoproj.io
-        Resources: applications, appprojects
-        Verbs: get, list, watch
+    1. **Update generated_values.yaml with Required Permissions:**
 
-    Update generated_values.yaml:
-
-    Add the following configuration under the customClusterRoleRules section:
+    Add the following configuration under the ``customClusterRoleRules`` section:
 
     .. code-block:: yaml
 
-    enableHolmesGPT: true holmes: customClusterRoleRules: - apiGroups: ["argoproj.io"] resources: ["applications", "appprojects"] verbs: ["get", "list", "watch"]
+      enableHolmesGPT: true
+      holmes:
+        customClusterRoleRules:
+          - apiGroups: ["argoproj.io"]
+            resources: ["applications", "appprojects"]
+            verbs: ["get", "list", "watch"]
 
-    Apply the Configuration:
+    2. **Apply the Configuration:**
 
     Deploy the updated configuration using Helm:
 
     .. code-block:: bash
 
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+      helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
