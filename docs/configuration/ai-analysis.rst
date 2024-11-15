@@ -439,33 +439,33 @@ You will need to extend its ClusterRole rules whenever HolmesGPT needs to access
 
 Common Scenarios for Adding Permissions:
 
-  * External Integrations: When HolmesGPT needs to access custom resources managed by tools like Argo CD or any other third-party integration deployed in your cluster.
-  * Custom Resource Definitions (CRDs): If HolmesGPT needs to interact with CRDs specific to your organization's infrastructure.
-  * Enhanced Monitoring: To enable HolmesGPT to analyze additional resources, such as Secrets, or other sensitive data critical to troubleshooting and insights.
+* External Integrations: When HolmesGPT needs to access custom resources managed by tools like Argo CD or any other third-party integration deployed in your cluster.
+* Custom Resource Definitions (CRDs): If HolmesGPT needs to interact with CRDs specific to your organization's infrastructure.
+* Enhanced Monitoring: To enable HolmesGPT to analyze additional resources, such as Secrets, or other sensitive data critical to troubleshooting and insights.
 
 As an example, let's imagine a scenario where HolmesGPT needs to analyze the state of Argo CD applications and projects to troubleshoot issues related to application deployments managed by Argo CD.
 
 **Steps to Add Permissions for Argo CD:**
 
-  1. **Update generated_values.yaml with Required Permissions:**
+1. **Update generated_values.yaml with Required Permissions:**
 
-  Add the following configuration under the ``customClusterRoleRules`` section:
+Add the following configuration under the ``customClusterRoleRules`` section:
 
-  .. code-block:: yaml
+.. code-block:: yaml
 
-      enableHolmesGPT: true
-      holmes:
-        customClusterRoleRules:
-          - apiGroups: ["argoproj.io"]
-            resources: ["applications", "appprojects"]
-            verbs: ["get", "list", "watch"]
+    enableHolmesGPT: true
+    holmes:
+      customClusterRoleRules:
+        - apiGroups: ["argoproj.io"]
+          resources: ["applications", "appprojects"]
+          verbs: ["get", "list", "watch"]
 
-  2. **Apply the Configuration:**
+2. **Apply the Configuration:**
 
-  Deploy the updated configuration using Helm:
+Deploy the updated configuration using Helm:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+  helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
 This will grant HolmesGPT the necessary permissions to analyze Argo CD applications and projects.
