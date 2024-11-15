@@ -30,6 +30,7 @@ BRACKETS_COMMA_PATTERN = r"\{\s*,"
 # for performance the series result is a dict of the format of the obj PrometheusSeries
 PrometheusSeriesDict = Dict[str, any]
 
+
 class XAxisLine(BaseModel):
     label: str
     value: float
@@ -125,7 +126,9 @@ def get_series_job(series: PrometheusSeriesDict) -> Optional[str]:
     return series["metric"]["job"] if "job" in series["metric"] else None
 
 
-def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeriesDict]]) -> Optional[List[PrometheusSeriesDict]]:
+def filter_prom_jobs_results(
+    series_list_result: Optional[List[PrometheusSeriesDict]],
+) -> Optional[List[PrometheusSeriesDict]]:
     if not series_list_result or len(series_list_result) == 1:
         return series_list_result
 
@@ -134,7 +137,9 @@ def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeriesD
 
     # takes kubelet job if exists, return first job alphabetically if it doesn't
     for target_name in target_names:
-        relevant_series: List[PrometheusSeriesDict] = [series for series in series_list_result if get_target_name(series) == target_name]
+        relevant_series: List[PrometheusSeriesDict] = [
+            series for series in series_list_result if get_target_name(series) == target_name
+        ]
         relevant_kubelet_metric = [series for series in relevant_series if get_series_job(series) == "kubelet"]
         if len(relevant_kubelet_metric) == 1:
             return_list.append(relevant_kubelet_metric[0])
@@ -487,7 +492,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container!="", image!=""}) by (pod, job)',
+            query='sum(max(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container!="", image!=""}) by (container, pod, job)) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
@@ -495,7 +500,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
-            query='sum(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)',
+            query='sum(max(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
