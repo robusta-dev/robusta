@@ -223,7 +223,7 @@ To use HolmesGPT with the Robusta UI, one further step may be necessary, dependi
 * If you store the Robusta UI token in a Kubernetes secret, follow the instructions below.
 
 Note: the same Robusta UI token is used for the Robusta UI sink and for HolmesGPT.
- 
+
 Reading the Robusta UI Token from a secret in HolmesGPT
 ************************************************************
 
@@ -428,3 +428,42 @@ Finally, after updating your ``generated_values.yaml``, apply the changes to you
     helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
 This will update the deployment to use the custom Docker image, which includes the new binaries. The ``toolsets`` defined in the configuration will now be available for Holmes to use, including any new binaries like ``jq``.
+
+
+Adding Permissions for Additional Resources
+----------------------------------------------
+
+There are scenarios where HolmesGPT may require access to additional Kubernetes resources to perform specific analyses or interact with external tools.
+
+You will need to extend its ClusterRole rules whenever HolmesGPT needs to access resources that are not included in its default configuration.
+
+Common Scenarios for Adding Permissions:
+
+    * External Integrations: When Holmes needs to access custom resources managed by tools like Argo CD or any other third-party integration deployed in your cluster.
+    * Custom Resource Definitions (CRDs): If Holmes needs to interact with CRDs specific to your organization's infrastructure.
+    * Enhanced Monitoring: To enable Holmes to analyze additional resources, such as Secrets, or other sensitive data critical to troubleshooting and insights.
+
+As an example, let's imagine a scenario where holmes wants to analyze the state of Argo CD applications and projects
+
+Steps to Add Permissions for Argo CD:
+
+    Determine Required Permissions:
+        API Group: argoproj.io
+        Resources: applications, appprojects
+        Verbs: get, list, watch
+
+    Update generated_values.yaml:
+
+    Add the following configuration under the customClusterRoleRules section:
+
+    .. code-block:: yaml
+
+    enableHolmesGPT: true holmes: customClusterRoleRules: - apiGroups: ["argoproj.io"] resources: ["applications", "appprojects"] verbs: ["get", "list", "watch"]
+
+    Apply the Configuration:
+
+    Deploy the updated configuration using Helm:
+
+    .. code-block:: bash
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
