@@ -443,7 +443,7 @@ Common Scenarios for Adding Permissions:
 * Custom Resource Definitions (CRDs): If HolmesGPT needs to interact with CRDs specific to your organization's infrastructure.
 * Enhanced Monitoring: To enable HolmesGPT to analyze additional resources, such as Secrets, or other sensitive data critical to troubleshooting and insights.
 
-As an example, let's imagine a scenario where HolmesGPT needs to analyze the state of Argo CD applications and projects to troubleshoot issues related to application deployments managed by Argo CD.
+As an example, let's consider a case where HolmesGPT needs to analyze the state of Argo CD applications and projects to troubleshoot issues related to application deployments managed by Argo CD.
 
 **Steps to Add Permissions for Argo CD:**
 
