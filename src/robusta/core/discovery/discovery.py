@@ -247,6 +247,10 @@ class Discovery:
                     for role_binding in role_bindings.items:
                         ns = role_binding.metadata.namespace
 
+                        if not role_binding.subjects:
+                            logging.info(f"Skipping role binding: {role_binding.metadata.name} in ns: {role_binding.metadata.namespace}")
+                            continue
+
                         for subject in role_binding.subjects:
                             if subject.kind == "Group":
                                 groupname_to_namespaces[subject.name].append(ns)
