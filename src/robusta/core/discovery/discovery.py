@@ -169,7 +169,6 @@ class Discovery:
         )
 
     @staticmethod
-
     def create_service_info_from_hikaru(obj: Union[Deployment, DaemonSet, StatefulSet, Pod, ReplicaSet]) -> ServiceInfo:
         return Discovery.__create_service_info_from_hikaru(
             obj.metadata,
@@ -187,7 +186,7 @@ class Discovery:
     def discovery_process() -> DiscoveryResults:
         create_monkey_patches()
         Discovery.stacktrace_thread_active = True
-        threading.Thread(target=Discovery.stack_dump_on_signal).start()
+        threading.Thread(target=Discovery.stack_dump_on_signal, daemon=True).start()
         pods_metadata: List[V1ObjectMeta] = []
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
