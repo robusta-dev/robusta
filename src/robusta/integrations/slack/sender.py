@@ -12,7 +12,12 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
-from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, SLACK_REQUEST_TIMEOUT, HOLMES_ENABLED, SLACK_TABLE_COLUMNS_LIMIT
+from robusta.core.model.env_vars import (
+    ADDITIONAL_CERTIFICATE,
+    SLACK_REQUEST_TIMEOUT,
+    HOLMES_ENABLED,
+    SLACK_TABLE_COLUMNS_LIMIT,
+)
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
@@ -489,8 +494,12 @@ class SlackSender:
         if finding.title:
             blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
 
+        links_block: LinksBlock
         if platform_enabled:
-            blocks.append(self.__create_links(finding, sink_params.investigate_link))
+            links_block = self.__create_links(finding, sink_params.investigate_link)
+        else:
+            links_block = LinksBlock()
+        blocks.append(links_block)
 
         if HOLMES_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
@@ -516,7 +525,11 @@ class SlackSender:
             if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
                 attachment_blocks.extend(enrichment.blocks)
             else:
-                blocks.extend(enrichment.blocks)
+                for block in enrichment.blocks:
+                    if isinstance(block, LinksBlock):
+                        links_block.links.extend(block.links)
+                    else:
+                        blocks.append(block)
 
         blocks.append(DividerBlock())
 

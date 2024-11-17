@@ -495,9 +495,14 @@ class CallbackBlock(BaseBlock):
         super().__init__(choices=choices)
 
 
+class LinkType(str, Enum):
+    PROMETHEUS_GENERATOR_URL = "prometheus_generator_url"
+
+
 class LinkProp(BaseModel):
     text: str
     url: str
+    type: Optional[LinkType] = None
 
 
 class LinksBlock(BaseBlock):
@@ -527,7 +532,6 @@ class PrometheusBlock(BaseBlock):
 
     class Config:
         arbitrary_types_allowed = True
-
 
     def __init__(
         self,

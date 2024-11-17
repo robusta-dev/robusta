@@ -9,6 +9,7 @@ from robusta.core.reporting.blocks import (
     HeaderBlock,
     JsonBlock,
     KubernetesDiffBlock,
+    LinksBlock,
     ListBlock,
     MarkdownBlock,
     TableBlock,
@@ -130,7 +131,7 @@ class PagerdutySink(SinkBase):
     def __send_events_to_pagerduty(self, finding: Finding, platform_enabled: bool):
         custom_details: dict = {}
 
-        links = []
+        links: list[dict[str, str]] = []
         if platform_enabled:
             links.append({
                 "text": "🔎 Investigate in Robusta",
@@ -173,6 +174,16 @@ class PagerdutySink(SinkBase):
 
         for enrichment in finding.enrichments:
             for block in enrichment.blocks:
+                if isinstance(block, LinksBlock):
+                    for link in block.links:
+                        links.append(
+                            {
+                                "text": link.text,
+                                "href": link.url,
+                            }
+                        )
+                    continue
+                
                 text = self.__to_unformatted_text_for_alerts(block)
                 if not text:
                     continue
