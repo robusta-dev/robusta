@@ -312,7 +312,9 @@ def create_chart_from_prometheus_query(
         show_legend=hide_legends is not True,
     )
 
+    # delta and limit line adjustment for case when there is no data
     limit_line_adjusted = False
+    delta = 0
 
     if len(plot_data_list):
         y_axis_division = 5
@@ -344,8 +346,6 @@ def create_chart_from_prometheus_query(
     else:
         chart.y_labels = []
         chart.show_minor_y_labels = False
-
-        delta = 0  # No need to adjust if there's no data
 
     chart.show_x_guides = True
     chart.show_y_guides = True
