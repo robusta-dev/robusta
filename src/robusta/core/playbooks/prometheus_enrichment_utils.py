@@ -249,6 +249,15 @@ def create_chart_from_prometheus_query(
         min_time = starts_at.timestamp()
         max_time = ends_at.timestamp()
 
+    limit_line = None
+    request_line = None
+
+    for line in lines:
+        if "Limit" in line.label:
+            limit_line = line
+        elif "Request" in line.label:
+            request_line = line
+
     vertical_lines = []
     horizontal_lines = []
     for line in lines:
@@ -303,6 +312,8 @@ def create_chart_from_prometheus_query(
         show_legend=hide_legends is not True,
     )
 
+    limit_line_adjusted = False
+
     if len(plot_data_list):
         y_axis_division = 5
         # Calculate the maximum Y value with an added 20% padding
@@ -312,6 +323,14 @@ def create_chart_from_prometheus_query(
         interval = max_y_value_with_padding / (y_axis_division - 1)
 
         chart.range = (0, max_y_value_with_padding)
+
+        # Calculate delta corresponding to 6 pixels
+        delta = (chart.range[1] - chart.range[0]) * 6 / chart.config.height
+        # Limit delta to a maximum of 3% of the Y-axis range (to prefent significant deviation)
+        delta = min(delta, (chart.range[1] - chart.range[0]) * 0.03)
+
+        if limit_line and request_line and limit_line.value == request_line.value:
+            limit_line_adjusted = True
 
         if values_format == ChartValuesFormat.Percentage:
             # Calculate the Y-axis labels, shift to percentage, and round to the nearest whole number percentage
@@ -325,6 +344,8 @@ def create_chart_from_prometheus_query(
     else:
         chart.y_labels = []
         chart.show_minor_y_labels = False
+
+        delta = 0  # No need to adjust if there's no data
 
     chart.show_x_guides = True
     chart.show_y_guides = True
@@ -350,6 +371,14 @@ def create_chart_from_prometheus_query(
         chart.title = chart_title
     else:
         chart.title = promql_query
+
+    # Adjust the "Limit" line's plotting data if limit and request lines are equal
+    if limit_line_adjusted:
+        for plot_data in plot_data_list:
+            if plot_data.plot[0] == limit_line.label:
+                adjusted_values = [(x, y + delta) for x, y in plot_data.plot[1]]
+                plot_data.plot = (plot_data.plot[0], adjusted_values)
+                break
 
     for p in plot_data_list:
         chart.add(
