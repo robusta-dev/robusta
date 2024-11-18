@@ -326,8 +326,8 @@ def create_chart_from_prometheus_query(
 
         # Calculate delta corresponding to 6 pixels
         delta = (chart.range[1] - chart.range[0]) * 6 / chart.config.height
-        # Limit delta to a maximum of 3% of the Y-axis range (to prefent significant deviation)
-        delta = min(delta, (chart.range[1] - chart.range[0]) * 0.03)
+        # Limit delta to a maximum of 2% of the Y-axis range (to prefent significant deviation)
+        delta = min(delta, (chart.range[1] - chart.range[0]) * 0.02)
 
         if limit_line and request_line and limit_line.value == request_line.value:
             limit_line_adjusted = True
