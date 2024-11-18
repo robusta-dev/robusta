@@ -331,8 +331,8 @@ class RobustaSink(SinkBase, EventHandler):
 
             self.__pods_running_count = results.pods_running_count
 
-            self.__assert_openshift_groups_cache_initialized()
             if results.openshift_groups:
+                self.__assert_openshift_groups_cache_initialized()
                 self.__publish_new_openshift_groups(results.openshift_groups)
 
             # save the cached services for the resolver.

@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
@@ -9,8 +9,8 @@ class OpenshiftGroup(BaseModel):
     namespace: str = ""
     users: list[str] = []
     namespaces: list[str] = []
-    labels: Dict[str, str]
-    annotations: Dict[str, str]
+    labels: Optional[Dict[str, str]] = None
+    annotations: Optional[Dict[str, str]] = None
     deleted: bool = False
 
     def get_service_key(self) -> str:

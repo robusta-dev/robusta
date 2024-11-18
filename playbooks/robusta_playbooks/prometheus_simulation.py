@@ -219,10 +219,10 @@ def alertmanager_alert(event: ExecutionBaseEvent, action_params: AlertmanagerAle
 
     try:
         requests.post(
-            f"{alertmanager_url}/api/v1/alerts",
+            f"{alertmanager_url}/api/v2/alerts",
             data=json.dumps(alerts),
             headers=headers,
-        )
+        ).raise_for_status()
     except Exception:
         logging.exception(f"Failed to create alertmanager alerts {alerts}")
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED)
