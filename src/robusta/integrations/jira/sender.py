@@ -38,6 +38,13 @@ SEVERITY_JIRA_ID = {
     FindingSeverity.INFO: "Minor",
 }
 
+SEVERITY_JIRA_FALLBACK_ID = {
+    FindingSeverity.HIGH: "1",
+    FindingSeverity.MEDIUM: "2",
+    FindingSeverity.LOW: "3",
+    FindingSeverity.INFO: "4",
+}
+
 STRONG_MARK_REGEX = r"\*{1}[\w|\s\d%!><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+\*{1}"
 ITALIAN_MARK_REGEX = r"(^|\s+)_{1}[\w|\s\d%!*><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+_{1}(\s+|$)"
 CODE_REGEX = r"`{1,3}[\w|\s\d%!*><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+`{1,3}"
@@ -98,7 +105,6 @@ class JiraSender:
         logging.info(self.params.dedups)
         self.client = JiraClient(self.params)
         self.sendResolved = self.params.sendResolved
-        self.priority_mapping = params.priority_mapping or SEVERITY_JIRA_ID
 
     def _markdown_to_jira(self, text):
         # Using priority queue to determine which markdown to eject first. Bigger text -
@@ -249,13 +255,16 @@ class JiraSender:
         # Default priority is "Major" if not a standard severity is given
         severity = (priority_mapping or SEVERITY_JIRA_ID).get(finding.severity, "Major")
 
+        issue_data = {
+            "description": {"type": "doc", "version": 1, "content": actions + output_blocks},
+            "summary": finding.title,
+            "labels": labels,
+            "priority": {"name": severity},  # First try with name
+        }
+
+        # Let client.manage_issue handle the fallback to ID if name fails
         self.client.manage_issue(
-            {
-                "description": {"type": "doc", "version": 1, "content": actions + output_blocks},
-                "summary": finding.title,
-                "labels": labels,
-                "priority": {"name": severity},
-            },
+            issue_data,
             {"status": status, "source": finding.source},
             file_blocks,
         )

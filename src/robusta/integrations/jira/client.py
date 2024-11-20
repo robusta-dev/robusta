@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Dict
 
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
@@ -61,7 +61,7 @@ class JiraClient:
         if jira_params.priority_mapping:
             self._validate_priorities(jira_params.priority_mapping)
 
-    def _validate_priorities(self, priority_mapping: dict):
+    def _validate_priorities(self, priority_mapping: Dict[str, str]) -> None:
         """Validate that configured priorities exist in Jira"""
         endpoint = "priority"
         url = self._get_full_jira_url(endpoint)
@@ -272,10 +272,27 @@ class JiraClient:
         alert_resolved = status == FindingStatus.RESOLVED
         is_prometheus_alert = source == FindingSource.PROMETHEUS
 
+        def create_with_fallback(data, attachments):
+            try:
+                self.create_issue(data, attachments)
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 400 and "priority" in e.response.text:
+                    # If priority name failed, try with ID
+                    priority_name = data["fields"]["priority"]["name"]
+                    # Find the severity by name in SEVERITY_JIRA_ID (reverse lookup)
+                    for severity, name in SEVERITY_JIRA_ID.items():
+                        if name == priority_name:
+                            # Use the fallback ID for this severity
+                            data["fields"]["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+                            self.create_issue(data, attachments)
+                            break
+                else:
+                    raise  # Re-raise if it's not a priority-related error
+
         if not is_prometheus_alert:
             # It's not an alert fired from Prometheus, we simply create
             # a Jira issue without other logic involved
-            self.create_issue(issue_data, issue_attachments)
+            create_with_fallback(issue_data, issue_attachments)
         elif existing_issue:
             issue_done = self._check_issue_done(existing_issue)
             issue_id = self._get_nested_property(existing_issue, "id", -1)
@@ -292,7 +309,7 @@ class JiraClient:
                     self.transition_issue(issue_id, self.reopenStatusName)
                     self.update_issue(issue_id, issue_data)
                 else:
-                    self.create_issue(issue_data, issue_attachments)
+                    create_with_fallback(issue_data, issue_attachments)
             else:
                 if alert_resolved:
                     if self.sendResolved:
@@ -304,7 +321,7 @@ class JiraClient:
                     self.update_issue(issue_id, issue_data)
         else:
             if not alert_resolved:
-                self.create_issue(issue_data, issue_attachments)
+                create_with_fallback(issue_data, issue_attachments)
 
     def add_attachment(self, issue_id, issue_attachments):
         endpoint = f"issue/{issue_id}/attachments"
