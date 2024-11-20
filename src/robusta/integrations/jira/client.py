@@ -255,7 +255,7 @@ class JiraClient:
             response = self._call_jira_api(url, HttpMethod.POST, json=payload)
             if response:
                 return self._handle_attachment_and_return(response, issue_attachments)
-        except HTTPError as e:
+        except Exception as e:
             logging.info(f"Priority creation failed with error: {e.response.text}")
             priority_name = issue_data.get("priority", {}).get("name")
             for severity, name in SEVERITY_JIRA_ID.items():
