@@ -230,49 +230,43 @@ class JiraClient:
         2. Default Robusta priority names (SEVERITY_JIRA_ID)
         3. Fallback to standard Jira IDs (1-4)
         """
-
         endpoint = "issue"
         url = self._get_full_jira_url(endpoint)
-        payload = {
-            "update": {},
-            "fields": {
-                **issue_data,
-                "issuetype": {"id": str(self.default_issue_type_id)},
-                "project": {"id": str(self.default_project_id)},
-            },
-        }
-        
-        try:
-            response = self._call_jira_api(
-                url,
-                HttpMethod.POST,
-                json=payload
-            )
-            if not response:
-                logging.error("Received empty response from Jira API")
-                return None
 
+        # 1. First try user configured priority mapping if it exists
+        if hasattr(self, 'params') and self.params.priority_mapping:
+            # Extract severity from the priority name in issue_data
+            priority_name = issue_data.get("priority", {}).get("name")
+            for severity, mapped_name in self.params.priority_mapping.items():
+                if mapped_name == priority_name:
+                    try:
+                        payload = self._create_issue_payload(issue_data)
+                        response = self._call_jira_api(url, HttpMethod.POST, json=payload)
+                        if response:
+                            return self._handle_attachment_and_return(response, issue_attachments)
+                    except:
+                        # If user mapping fails, continue to next strategy
+                        logging.info(f"User configured priority mapping failed for '{priority_name}'")
+                        break
+
+        # 2. Try default Robusta priority names (SEVERITY_JIRA_ID)
+        try:
+            payload = self._create_issue_payload(issue_data)
+            response = self._call_jira_api(url, HttpMethod.POST, json=payload)
+            if response:
+                return self._handle_attachment_and_return(response, issue_attachments)
         except HTTPError as e:
             if e.response.status_code == 400 and "priority" in e.response.text:
-                priority_name = issue_data["priority"]["name"]
-                
+                # 3. Fallback to standard Jira Priority IDs
+                priority_name = issue_data.get("priority", {}).get("name")
                 for severity, name in SEVERITY_JIRA_ID.items():
                     if name == priority_name:
                         logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
                         issue_data["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
-                        payload["fields"] = {
-                            **issue_data,
-                            "issuetype": {"id": str(self.default_issue_type_id)},
-                            "project": {"id": str(self.default_project_id)},
-                        }
-                        response = self._call_jira_api(
-                            url,
-                            HttpMethod.POST,
-                            json=payload
-                        )
-                        if not response:
-                            logging.error("Received empty response from Jira API during fallback")
-                            return None
+                        payload = self._create_issue_payload(issue_data)
+                        response = self._call_jira_api(url, HttpMethod.POST, json=payload)
+                        if response:
+                            return self._handle_attachment_and_return(response, issue_attachments)
                         break
                 else:
                     logging.error(f"Could not find fallback ID for priority '{priority_name}'")
@@ -280,6 +274,20 @@ class JiraClient:
             else:
                 raise
 
+        logging.error("All priority mapping attempts failed")
+        return None
+
+    def _create_issue_payload(self, issue_data):
+        return {
+            "update": {},
+            "fields": {
+                **issue_data,
+                "issuetype": {"id": str(self.default_issue_type_id)},
+                "project": {"id": str(self.default_project_id)},
+            },
+        }
+
+    def _handle_attachment_and_return(self, response, issue_attachments):
         issue_id = response.get("id")
         if issue_id and issue_attachments:
             self.add_attachment(issue_id, issue_attachments)
