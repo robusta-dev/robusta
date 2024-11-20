@@ -245,7 +245,7 @@ class JiraClient:
                         if response:
                             return self._handle_attachment_and_return(response, issue_attachments)
                     except:
-                        # If user mapping fails, continue to next strategy
+                        # If user priority mapping fails, continue to next strategy
                         logging.info(f"User configured priority mapping failed for '{priority_name}'")
                         break
 
@@ -256,22 +256,19 @@ class JiraClient:
             if response:
                 return self._handle_attachment_and_return(response, issue_attachments)
         except HTTPError as e:
-            if e.response.status_code == 400 and "priority" in e.response.text:
-                # 3. Fallback to standard Jira Priority IDs
-                priority_name = issue_data.get("priority", {}).get("name")
-                for severity, name in SEVERITY_JIRA_ID.items():
-                    if name == priority_name:
-                        logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
-                        issue_data["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
-                        payload = self._create_issue_payload(issue_data)
-                        response = self._call_jira_api(url, HttpMethod.POST, json=payload)
-                        if response:
-                            return self._handle_attachment_and_return(response, issue_attachments)
-                        break
-                else:
-                    logging.error(f"Could not find fallback ID for priority '{priority_name}'")
-                    raise
+            logging.info(f"Priority creation failed with error: {e.response.text}")
+            priority_name = issue_data.get("priority", {}).get("name")
+            for severity, name in SEVERITY_JIRA_ID.items():
+                if name == priority_name:
+                    logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
+                    issue_data["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+                    payload = self._create_issue_payload(issue_data)
+                    response = self._call_jira_api(url, HttpMethod.POST, json=payload)
+                    if response:
+                        return self._handle_attachment_and_return(response, issue_attachments)
+                    break
             else:
+                logging.error(f"Could not find fallback ID for priority '{priority_name}'")
                 raise
 
         logging.error("All priority mapping attempts failed")
