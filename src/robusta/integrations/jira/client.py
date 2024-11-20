@@ -234,7 +234,7 @@ class JiraClient:
             # Case 1 & 2: Try with configured priority name or default name mapping
             response = self._call_jira_api(
                 self._get_full_jira_url("issue"), 
-                "POST",  # Pass method here
+                HttpMethod.POST,  # Use enum instead of string
                 data=issue_data
             )
         except HTTPError as e:
@@ -250,7 +250,7 @@ class JiraClient:
                         issue_data["fields"]["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
                         response = self._call_jira_api(
                             self._get_full_jira_url("issue"),
-                            "POST",  # Pass method here
+                            HttpMethod.POST,  # Use enum here too
                             data=issue_data
                         )
                         break
