@@ -181,7 +181,6 @@ class ConversationType(str, Enum):
 class HolmesChatParams(HolmesParams):
     """
     :var ask: User's prompt for holmes
-    :var conversation_type: Type of a conversation issue/service/generic_ask (ConversationType)
     """
 
     ask: str
