@@ -234,8 +234,8 @@ class JiraClient:
             # Case 1 & 2: Try with configured priority name or default name mapping
             response = self._call_jira_api(
                 self._get_full_jira_url("issue"), 
-                HttpMethod.POST,  # Use enum instead of string
-                data=issue_data
+                HttpMethod.POST,
+                json=issue_data
             )
         except HTTPError as e:
             if e.response.status_code == 400 and "priority" in e.response.text:
@@ -250,8 +250,8 @@ class JiraClient:
                         issue_data["fields"]["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
                         response = self._call_jira_api(
                             self._get_full_jira_url("issue"),
-                            HttpMethod.POST,  # Use enum here too
-                            data=issue_data
+                            HttpMethod.POST,
+                            json=issue_data
                         )
                         break
                 else:
@@ -260,8 +260,9 @@ class JiraClient:
             else:
                 raise
 
-        if issue_attachments:
-            self._upload_attachments(response["id"], issue_attachments)
+        issue_id = response.get("id")
+        if issue_id and issue_attachments:
+            self.add_attachment(issue_id, issue_attachments)
         return response
 
     def update_issue(self, issue_id, issue_data):
