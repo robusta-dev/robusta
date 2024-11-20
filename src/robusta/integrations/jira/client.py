@@ -230,35 +230,43 @@ class JiraClient:
         2. Default Robusta priority names (SEVERITY_JIRA_ID)
         3. Fallback to standard Jira IDs (1-4)
         """
+        payload = {
+            "update": {},
+            "fields": {
+                **issue_data,
+                "issuetype": {"id": str(self.default_issue_type_id)},
+                "project": {"id": str(self.default_project_id)},
+            },
+        }
+        
         try:
-            # Case 1 & 2: Try with configured priority name or default name mapping
             response = self._call_jira_api(
                 self._get_full_jira_url("issue"), 
                 HttpMethod.POST,
-                json=issue_data
+                json=payload
             )
         except HTTPError as e:
             if e.response.status_code == 400 and "priority" in e.response.text:
-                # Case 3: If name-based priority failed, try with standard Jira IDs
-                priority_name = issue_data["fields"]["priority"]["name"]
+                priority_name = issue_data["priority"]["name"]
                 
-                # Find which severity this name came from
                 for severity, name in SEVERITY_JIRA_ID.items():
                     if name == priority_name:
-                        # Use the fallback ID mapping
                         logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
-                        issue_data["fields"]["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+                        issue_data["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+                        payload["fields"] = {
+                            **issue_data,
+                            "issuetype": {"id": str(self.default_issue_type_id)},
+                            "project": {"id": str(self.default_project_id)},
+                        }
                         response = self._call_jira_api(
                             self._get_full_jira_url("issue"),
                             HttpMethod.POST,
-                            json=issue_data
+                            json=payload
                         )
                         break
                 else:
                     logging.error(f"Could not find fallback ID for priority '{priority_name}'")
                     raise
-            else:
-                raise
 
         issue_id = response.get("id")
         if issue_id and issue_attachments:
