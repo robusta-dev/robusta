@@ -3,6 +3,7 @@ from typing import Optional, Dict
 
 from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
+from requests.exceptions import HTTPError
 
 from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.consts import FindingSource
@@ -13,6 +14,7 @@ from robusta.integrations.common.requests import (
     check_response_succeed,
     process_request,
 )
+from robusta.integrations.jira.sender import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
 
 _API_PREFIX = "rest/api/3"
 
@@ -222,23 +224,41 @@ class JiraClient:
         response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
         logging.debug(response)
 
-    def create_issue(self, issue_data, issue_attachments=None):
-        endpoint = "issue"
-        url = self._get_full_jira_url(endpoint)
-        payload = {
-            "update": {},
-            "fields": {
-                **issue_data,
-                "issuetype": {"id": str(self.default_issue_type_id)},
-                "project": {"id": str(self.default_project_id)},
-            },
-        }
-        logging.debug(f"Create issue with payload: {payload}")
-        response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
-        logging.debug(response)
-        issue_id = response.get("id")
-        if issue_id and issue_attachments:
-            self.add_attachment(issue_id, issue_attachments)
+    def create_issue(self, issue_data: dict, issue_attachments=None):
+        """Create a Jira issue with priority handling in this order:
+        1. User configured priority mapping (by name)
+        2. Default Robusta priority names (SEVERITY_JIRA_ID)
+        3. Fallback to standard Jira IDs (1-4)
+        """
+        try:
+            # Case 1 & 2: Try with configured priority name or default name mapping
+            response = self._call_jira_api(
+                self._get_full_jira_url("issue"), method="POST", data=issue_data
+            )
+        except HTTPError as e:
+            if e.response.status_code == 400 and "priority" in e.response.text:
+                # Case 3: If name-based priority failed, try with standard Jira IDs
+                priority_name = issue_data["fields"]["priority"]["name"]
+                
+                # Find which severity this name came from
+                for severity, name in SEVERITY_JIRA_ID.items():
+                    if name == priority_name:
+                        # Use the fallback ID mapping
+                        logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
+                        issue_data["fields"]["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+                        response = self._call_jira_api(
+                            self._get_full_jira_url("issue"), method="POST", data=issue_data
+                        )
+                        break
+                else:
+                    logging.error(f"Could not find fallback ID for priority '{priority_name}'")
+                    raise
+            else:
+                raise
+
+        if issue_attachments:
+            self._upload_attachments(response["id"], issue_attachments)
+        return response
 
     def update_issue(self, issue_id, issue_data):
         summary = self._get_nested_property(issue_data, "summary", "")
@@ -272,27 +292,10 @@ class JiraClient:
         alert_resolved = status == FindingStatus.RESOLVED
         is_prometheus_alert = source == FindingSource.PROMETHEUS
 
-        def create_with_fallback(data, attachments):
-            try:
-                self.create_issue(data, attachments)
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 400 and "priority" in e.response.text:
-                    # If priority name failed, try with ID
-                    priority_name = data["fields"]["priority"]["name"]
-                    # Find the severity by name in SEVERITY_JIRA_ID (reverse lookup)
-                    for severity, name in SEVERITY_JIRA_ID.items():
-                        if name == priority_name:
-                            # Use the fallback ID for this severity
-                            data["fields"]["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
-                            self.create_issue(data, attachments)
-                            break
-                else:
-                    raise  # Re-raise if it's not a priority-related error
-
         if not is_prometheus_alert:
             # It's not an alert fired from Prometheus, we simply create
             # a Jira issue without other logic involved
-            create_with_fallback(issue_data, issue_attachments)
+            self.create_issue(issue_data, issue_attachments)
         elif existing_issue:
             issue_done = self._check_issue_done(existing_issue)
             issue_id = self._get_nested_property(existing_issue, "id", -1)
@@ -308,8 +311,6 @@ class JiraClient:
                 elif self.reopenIssues:
                     self.transition_issue(issue_id, self.reopenStatusName)
                     self.update_issue(issue_id, issue_data)
-                else:
-                    create_with_fallback(issue_data, issue_attachments)
             else:
                 if alert_resolved:
                     if self.sendResolved:
@@ -321,7 +322,7 @@ class JiraClient:
                     self.update_issue(issue_id, issue_data)
         else:
             if not alert_resolved:
-                create_with_fallback(issue_data, issue_attachments)
+                self.create_issue(issue_data, issue_attachments)
 
     def add_attachment(self, issue_id, issue_attachments):
         endpoint = f"issue/{issue_id}/attachments"
