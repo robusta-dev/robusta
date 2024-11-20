@@ -1,0 +1,83 @@
+name: Build & Deploy Robusta Docs
+
+on:
+  create: {}
+  release:
+    types: [published]
+  push:
+    paths:
+      - 'docs/**'
+      - .github/workflows/deploy-docs.yaml
+
+jobs:
+  has-secrets:
+    name: Check Secrets
+    runs-on: ubuntu-latest
+    steps:
+    - id: docs
+      env:
+        HAS_SECRET_ACCESS: ${{ secrets.HAS_SECRET_ACCESS }}
+      if: ${{ env.HAS_SECRET_ACCESS != '' }}
+      run: echo '::set-output name=docs::true'
+    outputs:
+      docs: ${{ steps.docs.outputs.docs }}
+
+  setup-build-publish-deploy:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+    needs: [has-secrets]
+    env:
+      PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - uses: google-github-actions/setup-gcloud@v0.2.0
+      if: needs.has-secrets.outputs.docs
+      with:
+        service_account_key: ${{ secrets.GKE_PROD_SA_KEY }}
+        project_id: ${{ secrets.GKE_PROD_PROJECT }}
+        export_default_credentials: true
+
+    # Configure Docker to use the gcloud command-line tool as a credential helper for authentication
+    - name: Configure Docker
+      if: needs.has-secrets.outputs.docs
+      run: |-
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install graphviz pandoc
+        curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
+        poetry config virtualenvs.create false
+        poetry install --extras=all
+
+    # see https://stackoverflow.com/a/58034787/495995 for an explanation on ${GITHUB_REF##*/}
+    - name: Update docs version
+      run: |
+        echo "Setting DOCS_VERSION_PLACEHOLDER to ${GITHUB_REF##*/}"
+        sed -i "s/DOCS_VERSION_PLACEHOLDER/${GITHUB_REF##*/}/g" docs/conf.py
+        sed -i "s/DOCS_RELEASE_PLACEHOLDER/${GITHUB_REF##*/}/g" docs/conf.py
+
+    - name: Build the docs
+      env:
+        ROBUSTA_GOOGLE_FONTS_API_KEY: ${{ secrets.ROBUSTA_GOOGLE_FONTS_API_KEY }}
+      run: |
+        cd docs
+        poetry run make html
+
+    - name: Upload docs to public gcp bucket
+      if: needs.has-secrets.outputs.docs
+      run: gsutil rsync -R ./docs/_build/html "gs://robusta-docs/${GITHUB_REF##*/}/"
+
+    - name: Upload docs artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs
+        path: docs/_build/html
