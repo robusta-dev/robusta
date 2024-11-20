@@ -105,7 +105,7 @@ class EnrichmentType(Enum):
     crash_info = "crash_info"
     image_pull_backoff_info = "image_pull_backoff_info"
     pending_pod_info = "pending_pod_info"
-
+    prometheus_generator_url = "prometheus_generator_url"
 
 class Enrichment:
     # This is the actual enrichment data

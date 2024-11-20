@@ -45,7 +45,7 @@ from robusta.api import (
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 from robusta.core.reporting import FindingSubject
-from robusta.core.reporting.blocks import LinkProp, LinkType, LinksBlock, TableBlockFormat
+from robusta.core.reporting.blocks import LinkProp, LinksBlock, TableBlockFormat
 from robusta.utils.parsing import format_event_templated_string
 
 
@@ -218,13 +218,12 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
     if params.show_prometheus_link:
         # prom_link_block: MarkdownBlock = MarkdownBlock(f"*Prometheus Link:* <{alert.alert.generatorURL}|Click Here>")
         prom_link_block: LinksBlock = LinksBlock(
-            links=[
-                LinkProp(
-                    text="📈 Prometheus Generator", url=alert.alert.generatorURL, type=LinkType.PROMETHEUS_GENERATOR_URL
-                )
-            ]
+            links=[LinkProp(text="📈 Prometheus Generator", url=alert.alert.generatorURL)]
         )
-        alert.add_enrichment([prom_link_block])
+        alert.add_enrichment(
+            [prom_link_block],
+            enrichment_type=EnrichmentType.prometheus_generator_url,
+        )
 
     labels = alert.alert.labels
     alert.add_enrichment(
@@ -453,7 +452,7 @@ def format_pod_templated_string(pod: RobustaPod, template: Optional[str]) -> Opt
         subject_type=FindingSubjectType.from_kind("pod"),
         namespace=pod.metadata.namespace,
         labels=pod.metadata.labels,
-        annotations=pod.metadata.annotations
+        annotations=pod.metadata.annotations,
     )
     return format_event_templated_string(subject, template)
 
@@ -480,6 +479,7 @@ def alert_foreign_logs_enricher(event: PrometheusKubernetesAlert, params: Foreig
     subject = event.get_subject()
     params.label_selectors = [format_event_templated_string(subject, selector) for selector in params.label_selectors]
     return foreign_logs_enricher(event, params)
+
 
 @action
 def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
