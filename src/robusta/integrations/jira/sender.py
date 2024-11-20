@@ -98,6 +98,7 @@ class JiraSender:
         logging.info(self.params.dedups)
         self.client = JiraClient(self.params)
         self.sendResolved = self.params.sendResolved
+        self.priority_mapping = params.priority_mapping or SEVERITY_JIRA_ID
 
     def _markdown_to_jira(self, text):
         # Using priority queue to determine which markdown to eject first. Bigger text -
@@ -237,8 +238,15 @@ class JiraSender:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
 
-        # Default priority is "Major" if not a standard severity is given
-        severity = SEVERITY_JIRA_ID.get(finding.severity, "Major")
+        # Convert string-based priority_mapping to enum-based if it exists
+        priority_mapping = {}
+        if self.params.priority_mapping:
+            priority_mapping = {
+                getattr(FindingSeverity, k): v 
+                for k, v in self.params.priority_mapping.items()
+            }
+        
+        severity = (priority_mapping or SEVERITY_JIRA_ID).get(finding.severity, "Major")
 
         self.client.manage_issue(
             {
