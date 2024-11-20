@@ -233,7 +233,9 @@ class JiraClient:
         try:
             # Case 1 & 2: Try with configured priority name or default name mapping
             response = self._call_jira_api(
-                self._get_full_jira_url("issue"), method="POST", data=issue_data
+                self._get_full_jira_url("issue"), 
+                "POST",  # Pass method here
+                data=issue_data
             )
         except HTTPError as e:
             if e.response.status_code == 400 and "priority" in e.response.text:
@@ -247,7 +249,9 @@ class JiraClient:
                         logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
                         issue_data["fields"]["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
                         response = self._call_jira_api(
-                            self._get_full_jira_url("issue"), method="POST", data=issue_data
+                            self._get_full_jira_url("issue"),
+                            "POST",  # Pass method here
+                            data=issue_data
                         )
                         break
                 else:
