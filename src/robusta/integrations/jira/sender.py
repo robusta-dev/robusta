@@ -242,10 +242,11 @@ class JiraSender:
         priority_mapping = {}
         if self.params.priority_mapping:
             priority_mapping = {
-                getattr(FindingSeverity, k): v 
+                getattr(FindingSeverity, k): v
                 for k, v in self.params.priority_mapping.items()
             }
-        
+
+        # Default priority is "Major" if not a standard severity is given
         severity = (priority_mapping or SEVERITY_JIRA_ID).get(finding.severity, "Major")
 
         self.client.manage_issue(

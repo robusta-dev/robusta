@@ -36,9 +36,10 @@ class JiraClient:
 
         if jira_params.epic:
             self.epic = jira_params.epic
-
+        
         if jira_params.assignee:
             self.assignee = jira_params.assignee
+
 
         if jira_params.project_type_id_override:
             self.default_project_id = jira_params.project_type_id_override
@@ -175,12 +176,6 @@ class JiraClient:
         if default_issue:
             return default_issue["id"]
         return None
-
-    def get_available_priorities(self):
-        """Get available priorities from Jira"""
-        endpoint = "priority"
-        url = self._get_full_jira_url(endpoint)
-        return self._call_jira_api(url) or []
 
     def list_issues(self, search_params: Optional[str] = None):
         endpoint = "search"

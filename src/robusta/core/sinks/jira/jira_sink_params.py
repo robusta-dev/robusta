@@ -22,6 +22,7 @@ class JiraSinkParams(SinkBaseParams):
     assignee: Optional[str] = ""
     priority_mapping: Optional[Dict[str, str]] = None
 
+
     @classmethod
     def _get_sink_type(cls):
         return "jira"
