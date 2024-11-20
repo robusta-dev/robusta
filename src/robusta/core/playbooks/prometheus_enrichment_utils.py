@@ -326,7 +326,8 @@ def create_chart_from_prometheus_query(
 
         chart.range = (0, max_y_value_with_padding)
 
-        # Calculate delta corresponding to 6 pixels
+        # Fix for the case when the request and limit has the same value.
+        # 6 pixels where chosen as minimum distance based on current width and height of the slack graph
         delta = (chart.range[1] - chart.range[0]) * 6 / chart.config.height
         # Limit delta to a maximum of 2% of the Y-axis range (to prefent significant deviation)
         delta = min(delta, (chart.range[1] - chart.range[0]) * 0.02)
