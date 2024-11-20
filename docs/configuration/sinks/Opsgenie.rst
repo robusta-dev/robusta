@@ -5,6 +5,12 @@ Robusta can report issues and events in your Kubernetes cluster to the OpsGenie 
 
 To configure OpsGenie, We need an OpsGenie API key. It can be configured using the OpsGenie team integration.
 
+Customizing Opsgenie Extra Details
+------------------------------------------------
+
+We can add Prometheus alert labels into Opsgenie alert extra details by setting `extra_details_labels` to `true` in the `sinksConfig` section.
+
+
 Configuring the OpsGenie sink
 ------------------------------------------------
 
@@ -21,6 +27,7 @@ Configuring the OpsGenie sink
             - "sre"
             tags:
             - "prod a"
+            extra_details_labels: false # optional, default is false
 
 Save the file and run
 
