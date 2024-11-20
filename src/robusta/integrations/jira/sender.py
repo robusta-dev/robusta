@@ -246,7 +246,7 @@ class JiraSender:
             "description": {"type": "doc", "version": 1, "content": actions + output_blocks},
             "summary": finding.title,
             "labels": labels,
-            "priority": {"name": severity},  # First try with name
+            "priority": {"name": severity},
         }
 
         # Let client.manage_issue handle the fallback to ID if name fails

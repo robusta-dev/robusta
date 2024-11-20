@@ -230,6 +230,9 @@ class JiraClient:
         2. Default Robusta priority names (SEVERITY_JIRA_ID)
         3. Fallback to standard Jira IDs (1-4)
         """
+
+        endpoint = "issue"
+        url = self._get_full_jira_url(endpoint)
         payload = {
             "update": {},
             "fields": {
@@ -241,10 +244,14 @@ class JiraClient:
         
         try:
             response = self._call_jira_api(
-                self._get_full_jira_url("issue"), 
+                url,
                 HttpMethod.POST,
                 json=payload
             )
+            if not response:
+                logging.error("Received empty response from Jira API")
+                return None
+
         except HTTPError as e:
             if e.response.status_code == 400 and "priority" in e.response.text:
                 priority_name = issue_data["priority"]["name"]
@@ -259,14 +266,19 @@ class JiraClient:
                             "project": {"id": str(self.default_project_id)},
                         }
                         response = self._call_jira_api(
-                            self._get_full_jira_url("issue"),
+                            url,
                             HttpMethod.POST,
                             json=payload
                         )
+                        if not response:
+                            logging.error("Received empty response from Jira API during fallback")
+                            return None
                         break
                 else:
                     logging.error(f"Could not find fallback ID for priority '{priority_name}'")
                     raise
+            else:
+                raise
 
         issue_id = response.get("id")
         if issue_id and issue_attachments:
