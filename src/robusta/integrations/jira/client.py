@@ -14,7 +14,7 @@ from robusta.integrations.common.requests import (
     check_response_succeed,
     process_request,
 )
-from robusta.integrations.jira.sender import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
+from robusta.integrations.jira.constants import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
 
 _API_PREFIX = "rest/api/3"
 

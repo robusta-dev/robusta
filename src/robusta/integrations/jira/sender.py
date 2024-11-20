@@ -17,6 +17,7 @@ from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.jira.jira_sink_params import JiraSinkParams
 from robusta.integrations.jira.client import JiraClient
+from robusta.integrations.jira.constants import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
@@ -29,20 +30,6 @@ SEVERITY_COLOR_MAP = {
     FindingSeverity.MEDIUM: "#e48301",
     FindingSeverity.LOW: "#ffdc06",
     FindingSeverity.INFO: "#05aa01",
-}
-# Jira priorities, see: https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-priorities/#api-group-issue-priorities
-SEVERITY_JIRA_ID = {
-    FindingSeverity.HIGH: "Critical",
-    FindingSeverity.MEDIUM: "Major",
-    FindingSeverity.LOW: "Minor",
-    FindingSeverity.INFO: "Minor",
-}
-
-SEVERITY_JIRA_FALLBACK_ID = {
-    FindingSeverity.HIGH: "1",
-    FindingSeverity.MEDIUM: "2",
-    FindingSeverity.LOW: "3",
-    FindingSeverity.INFO: "4",
 }
 
 STRONG_MARK_REGEX = r"\*{1}[\w|\s\d%!><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+\*{1}"
