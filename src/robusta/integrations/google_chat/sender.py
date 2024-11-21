@@ -28,8 +28,9 @@ class GoogleChatSender:
         )
         blocks.append(self.__create_finding_header(finding, status))
 
-        if platform_enabled:
-            blocks.append(self.__create_links(finding))
+        links_block = self.__create_links(finding, platform_enabled) 
+        if links_block:
+            blocks.append(links_block)
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n"))
         if finding.description:
@@ -120,22 +121,23 @@ class GoogleChatSender:
             f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>\n\n"
         )
 
-    def __create_links(self, finding: Finding):
+    def __create_links(self, finding: Finding, platform_enabled: bool):
         links: List[LinkProp] = []
-        links.append(
-            LinkProp(
-                text="Investigate 🔎",
-                url=finding.get_investigate_uri(self.account_id, self.cluster_name),
-            )
-        )
-
-        if finding.add_silence_url:
+        if platform_enabled:
             links.append(
                 LinkProp(
-                    text="Configure Silences 🔕",
-                    url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    text="Investigate 🔎",
+                    url=finding.get_investigate_uri(self.account_id, self.cluster_name),
                 )
             )
+
+            if finding.add_silence_url:
+                links.append(
+                    LinkProp(
+                        text="Configure Silences 🔕",
+                        url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    )
+                )
 
         for link in finding.links:
             links.append(LinkProp(text=f"{link.link_text}", url=link.url))

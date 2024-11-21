@@ -80,19 +80,25 @@ class OpsGenieSink(SinkBase):
             self.__open_alert(finding, platform_enabled)
 
     def __to_description(self, finding: Finding, platform_enabled: bool) -> str:
-        description = ""
+        actions_block: list[str] = []
         if platform_enabled:
-            description = (
+            actions_block.append(
                 f'<a href="{finding.get_investigate_uri(self.account_id, self.cluster_name)}">🔎 Investigate</a>'
             )
             if finding.add_silence_url:
-                description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}">🔕 Silence</a>'
+                actions_block.append(
+                    f'<a href="{finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}">🔕 Silence</a>'
+                )
 
-            for link in finding.links:
-                description = f'{description}  <a href="{link.url}">{link.link_text}</a>'
-            description = f"{description}\n"
+        for link in finding.links:
+            actions_block.append(f'<a href="{link.url}">{link.link_text}</a>')
 
-        return f"{description}{self.__enrichments_as_text(finding.enrichments)}"
+        if actions_block:
+            actions = f"{' '.join(actions_block)}\n"
+        else:
+            actions = ""
+
+        return f"{actions}{self.__enrichments_as_text(finding.enrichments)}"
 
     def __to_details(self, finding: Finding) -> dict:
         details = {

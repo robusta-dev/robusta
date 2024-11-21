@@ -204,10 +204,10 @@ class JiraSender:
                     )
                 )
 
-            for link in finding.links:
-                actions.append(
-                    to_paragraph(f"{link.link_text}", [{"type": "link", "attrs": {"href": link.url}}])
-                )
+        for link in finding.links:
+            actions.append(
+                to_paragraph(f"{link.link_text}", [{"type": "link", "attrs": {"href": link.url}}])
+            )
 
         # Add runbook_url to issue markdown if present
         if finding.subject.annotations.get("runbook_url", None):

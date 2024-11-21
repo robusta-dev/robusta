@@ -63,9 +63,9 @@ class YaMessengerSink(SinkBase):
             if finding.add_silence_url:
                 message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
 
-            for link in finding.links:
-                message_content = f"[{link.link_text}]({link.url})"
-            message_content += "\n\n"
+        for link in finding.links:
+            message_content += f"[{link.link_text}]({link.url})"
+        message_content += "\n\n"
 
         blocks = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]
 

@@ -3,7 +3,7 @@ Some base code for handling HTML-outputting sinks. Currently used
 by the mail and servicenow sinks.
 """
 
-from typing import List
+from typing import List, Optional
 
 from robusta.core.reporting.base import BaseBlock, Emojis, Finding, LinkType
 from robusta.core.reporting.blocks import LinksBlock, LinkProp
@@ -89,23 +89,28 @@ ul.header_links li a {
 }
 """
 
-    def create_links(self, finding: Finding, html_class: str):
-        links: List[LinkProp] = [
-            LinkProp(
-                text="Investigate 🔎",
-                url=finding.get_investigate_uri(self.account_id, self.cluster_name),
-            )
-        ]
-
-        if finding.add_silence_url:
+    def create_links(self, finding: Finding, html_class: str, platform_enabled: bool) -> Optional[LinksBlock]:
+        links: List[LinkProp] = []
+        if platform_enabled:
             links.append(
                 LinkProp(
-                    text="Configure Silences 🔕",
-                    url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    text="Investigate 🔎",
+                    url=finding.get_investigate_uri(self.account_id, self.cluster_name),
                 )
             )
+
+            if finding.add_silence_url:
+                links.append(
+                    LinkProp(
+                        text="Configure Silences 🔕",
+                        url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    )
+                )
 
         for link in finding.links:
             links.append(LinkProp(text=link.link_text, url=link.url))
 
-        return with_attr(LinksBlock(links=links), "html_class", html_class)
+        if links:
+            return with_attr(LinksBlock(links=links), "html_class", html_class)
+        
+        return None

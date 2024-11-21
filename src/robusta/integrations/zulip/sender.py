@@ -138,8 +138,9 @@ class ZulipSender:
             if finding.add_silence_url:
                 silence_url = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
                 message_lines.append(self.__to_zulip_link("🔕 Silence", silence_url))
-            for link in finding.links:
-                message_lines.append(f"🎬 {self.__to_zulip_link(link.name, link.url)}")
+                
+        for link in finding.links:
+            message_lines.append(f"🎬 {self.__to_zulip_link(link.name, link.url)}")
 
         message_lines.append(f"{self.__to_zulip_bold('Source:')} `{self.cluster_name}`")
         message_lines.append(finding.description)

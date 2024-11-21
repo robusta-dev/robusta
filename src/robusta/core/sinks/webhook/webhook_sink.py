@@ -44,8 +44,8 @@ class WebhookSink(SinkBase):
                     f"Silence: {finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}"
                 )
 
-            for link in finding.links:
-                message_lines.append(f"{link.name}: {link.url}")
+        for link in finding.links:
+            message_lines.append(f"{link.name}: {link.url}")
 
         message_lines.append(f"Source: {self.cluster_name}")
         message_lines.append(finding.description)

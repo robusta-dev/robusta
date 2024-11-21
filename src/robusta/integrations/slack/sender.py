@@ -537,8 +537,7 @@ class SlackSender:
             if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
                 attachment_blocks.extend(enrichment.blocks)
             else:
-                for block in enrichment.blocks:
-                    blocks.append(block)
+                blocks.extend(enrichment.blocks)
 
         blocks.append(DividerBlock())
 
