@@ -24,6 +24,7 @@ class OpsGenieSink(SinkBase):
         self.api_key = sink_config.opsgenie_sink.api_key
         self.teams = sink_config.opsgenie_sink.teams
         self.tags = sink_config.opsgenie_sink.tags
+        self.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
 
         opsgenie_sdk.configuration.Configuration.set_default(None)
         self.conf = opsgenie_sdk.configuration.Configuration()
@@ -31,9 +32,6 @@ class OpsGenieSink(SinkBase):
 
         if sink_config.opsgenie_sink.host is not None:
             self.conf.host = sink_config.opsgenie_sink.host
-
-        if sink_config.opsgenie_sink.extra_details_labels is not None:
-            self.conf.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
 
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
@@ -111,9 +109,9 @@ class OpsGenieSink(SinkBase):
         lower_details_key = [k.lower() for k in details.keys()]
         # If there are extra details labels in the config extra_details_labels,
         # add them without altering the already existing details.
-        if self.conf.extra_details_labels:
+        if self.extra_details_labels:
             for key, value in finding.subject.labels:
-                if key in self.conf.extra_details_labels and not key in lower_details_key:
+                if not key in lower_details_key:
                     details[key] = value
         return details
 
