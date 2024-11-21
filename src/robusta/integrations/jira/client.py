@@ -194,7 +194,7 @@ class JiraClient:
                 if mapped_name == priority_name:
                     return {"name": mapped_name}
 
-        # 2. Try default Robusta priority names
+        # 2. Try default Jira Robusta priority names
         try:
             # Make a test call to validate the priority name
             endpoint = "issue"
