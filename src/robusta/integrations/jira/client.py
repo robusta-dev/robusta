@@ -332,6 +332,8 @@ class JiraClient:
                 elif self.reopenIssues:
                     self.transition_issue(issue_id, self.reopenStatusName)
                     self.update_issue(issue_id, issue_data)
+                else:
+                    self.create_issue(issue_data, issue_attachments)
             else:
                 if alert_resolved:
                     if self.sendResolved:
