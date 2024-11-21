@@ -2,9 +2,10 @@
 Some base code for handling HTML-outputting sinks. Currently used
 by the mail and servicenow sinks.
 """
+
 from typing import List
 
-from robusta.core.reporting.base import BaseBlock, Finding
+from robusta.core.reporting.base import BaseBlock, Emojis, Finding, LinkType
 from robusta.core.reporting.blocks import LinksBlock, LinkProp
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.sinks.transformer import Transformer
@@ -89,10 +90,12 @@ ul.header_links li a {
 """
 
     def create_links(self, finding: Finding, html_class: str):
-        links: List[LinkProp] = [LinkProp(
-            text="Investigate 🔎",
-            url=finding.get_investigate_uri(self.account_id, self.cluster_name),
-        )]
+        links: List[LinkProp] = [
+            LinkProp(
+                text="Investigate 🔎",
+                url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+            )
+        ]
 
         if finding.add_silence_url:
             links.append(
@@ -102,7 +105,7 @@ ul.header_links li a {
                 )
             )
 
-        for video_link in finding.video_links:
-            links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
+        for link in finding.links:
+            links.append(LinkProp(text=link.link_text, url=link.url))
 
         return with_attr(LinksBlock(links=links), "html_class", html_class)

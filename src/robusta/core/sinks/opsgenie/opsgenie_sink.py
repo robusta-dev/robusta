@@ -88,8 +88,8 @@ class OpsGenieSink(SinkBase):
             if finding.add_silence_url:
                 description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}">🔕 Silence</a>'
 
-            for video_link in finding.video_links:
-                description = f'{description}  <a href="{video_link.url}">🎬 {video_link.name}</a>'
+            for link in finding.links:
+                description = f'{description}  <a href="{link.url}">{link.link_text}</a>'
             description = f"{description}\n"
 
         return f"{description}{self.__enrichments_as_text(finding.enrichments)}"

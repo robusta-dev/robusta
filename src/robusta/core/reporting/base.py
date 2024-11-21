@@ -5,7 +5,7 @@ import urllib.parse
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
@@ -28,6 +28,8 @@ class Emojis(Enum):
     Recommend = "🛠"
     Alert = "🚨"
     K8Notification = "👀"
+    Video = "🎬"
+    Graph = "📈"
 
 
 class FindingSeverity(Enum):
@@ -88,9 +90,26 @@ class FindingStatus(Enum):
         return "🔥"
 
 
-class VideoLink(BaseModel):
+class LinkType(StrEnum):
+    VIDEO = "video"
+    PROMETHEUS_GENERATOR_URL = "prometheus_generator_url"
+
+
+class Link(BaseModel):
     url: str
     name: str = "See more"
+    type: Optional[LinkType] = None
+
+    @property
+    def link_text(self):
+        if self.type == LinkType.PROMETHEUS_GENERATOR_URL:
+            return f"{Emojis.Graph} {self.name}"
+        
+        if self.type == LinkType.VIDEO:
+            return f"{Emojis.Video} {self.name}"
+        
+        return self.name
+
 
 
 class EnrichmentType(Enum):
@@ -105,7 +124,7 @@ class EnrichmentType(Enum):
     crash_info = "crash_info"
     image_pull_backoff_info = "image_pull_backoff_info"
     pending_pod_info = "pending_pod_info"
-    prometheus_generator_url = "prometheus_generator_url"
+
 
 class Enrichment:
     # This is the actual enrichment data
@@ -260,7 +279,7 @@ class Finding(Filterable):
         self.category = None  # TODO fill real category
         self.subject = subject
         self.enrichments: List[Enrichment] = []
-        self.video_links: List[VideoLink] = []
+        self.links: List[Link] = []
         self.service = TopServiceResolver.guess_cached_resource(name=subject.name, namespace=subject.namespace)
         self.service_key = self.service.get_resource_key() if self.service else ""
         uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
@@ -341,11 +360,15 @@ class Finding(Filterable):
             Enrichment(blocks=enrichment_blocks, annotations=annotations, enrichment_type=enrichment_type, title=title)
         )
 
-    def add_video_link(self, video_link: VideoLink, suppress_warning: bool = False):
+    def add_link(self, link: Link, suppress_warning: bool = False) -> None:
         if self.dirty and not suppress_warning:
             logging.warning("Updating a finding after it was added to the event is not allowed!")
+        self.links.append(link)
 
-        self.video_links.append(video_link)
+    def add_video_link(self, video_link: Link, suppress_warning: bool = False) -> None:
+        # For backward compatability
+        video_link.type = LinkType.VIDEO
+        self.add_link(video_link, suppress_warning)
 
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"

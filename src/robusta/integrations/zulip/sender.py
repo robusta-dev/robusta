@@ -12,7 +12,7 @@ from robusta.core.reporting import (
     MarkdownBlock,
     TableBlock,
 )
-from robusta.core.reporting.base import BaseBlock, Finding, FindingStatus
+from robusta.core.reporting.base import BaseBlock, Finding, FindingStatus, LinkType
 from robusta.core.reporting.blocks import FileBlock, LinksBlock
 from robusta.core.reporting.consts import FindingSource
 from robusta.core.reporting.utils import convert_svg_to_png
@@ -138,8 +138,8 @@ class ZulipSender:
             if finding.add_silence_url:
                 silence_url = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
                 message_lines.append(self.__to_zulip_link("🔕 Silence", silence_url))
-            for video_link in finding.video_links:
-                message_lines.append(f"🎬 {self.__to_zulip_link(video_link.name, video_link.url)}")
+            for link in finding.links:
+                message_lines.append(f"🎬 {self.__to_zulip_link(link.name, link.url)}")
 
         message_lines.append(f"{self.__to_zulip_bold('Source:')} `{self.cluster_name}`")
         message_lines.append(finding.description)

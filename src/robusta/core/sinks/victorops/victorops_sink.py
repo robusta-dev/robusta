@@ -29,8 +29,8 @@ class VictoropsSink(SinkBase):
                     self.account_id, self.cluster_name
                 )
 
-            for video_link in finding.video_links:
-                json_dict[f"vo_annotate.u.🎬 {video_link.name}"] = video_link.url
+            for link in finding.links:
+                json_dict[f"vo_annotate.u.🎬 {link.name}"] = link.url
 
         # custom fields
         json_dict["Resource"] = finding.subject.name

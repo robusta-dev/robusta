@@ -58,11 +58,12 @@ class MsTeamsSender:
         cluster_name: str,
         account_id: str,
         webhook_override: str,
+        prefer_redirect_to_platform: bool,
     ):
         webhook_url = MsTeamsWebhookUrlTransformer.template(
             webhook_override=webhook_override, default_webhook_url=webhook_url, annotations=finding.subject.annotations
         )
-        msg = MsTeamsMsg(webhook_url)
+        msg = MsTeamsMsg(webhook_url, prefer_redirect_to_platform)
         msg.write_title_and_desc(platform_enabled, finding, cluster_name, account_id)
 
         for enrichment in finding.enrichments:

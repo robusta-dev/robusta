@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 import requests
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
-from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, Enrichment
+from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, Enrichment, Link, LinkType
 from robusta.core.reporting.blocks import (
     HeaderBlock,
     JsonBlock,
@@ -15,7 +15,8 @@ from robusta.core.reporting.blocks import (
     TableBlock,
 )
 from robusta.core.reporting.consts import FindingAggregationKey
-from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
+from robusta.core.reporting.url_helpers import convert_prom_graph_url_to_robusta_metrics_explorer
+from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper, PagerdutySinkParams
 from robusta.core.sinks.sink_base import SinkBase
 
 
@@ -25,6 +26,7 @@ class PagerdutySink(SinkBase):
         self.events_url = "https://events.pagerduty.com/v2/enqueue/"
         self.change_url = "https://events.pagerduty.com/v2/change/enqueue"
         self.api_key = sink_config.pagerduty_sink.api_key
+        self.sink_config: PagerdutySinkParams = sink_config.pagerduty_sink
 
     @staticmethod
     def __to_pagerduty_severity_type(severity: FindingSeverity):
@@ -58,15 +60,16 @@ class PagerdutySink(SinkBase):
         custom_details: dict = {}
         links = []
         if platform_enabled:
-            links.append({
-                "text": "🔂 See change history in Robusta",
-                "href": finding.get_investigate_uri(self.account_id, self.cluster_name)
-            })
+            links.append(
+                {
+                    "text": "🔂 See change history in Robusta",
+                    "href": finding.get_investigate_uri(self.account_id, self.cluster_name),
+                }
+            )
         else:
-            links.append({
-                "text": "🔂 Enable Robusta UI to see change history",
-                "href": "https://bit.ly/robusta-ui-pager-duty"
-            })
+            links.append(
+                {"text": "🔂 Enable Robusta UI to see change history", "href": "https://bit.ly/robusta-ui-pager-duty"}
+            )
 
         source = self.cluster_name
 
@@ -115,9 +118,9 @@ class PagerdutySink(SinkBase):
                         "summary": summary,
                         "timestamp": timestamp,
                         "source": source,
-                        "custom_details": custom_details
+                        "custom_details": custom_details,
                     },
-                    "links": links
+                    "links": links,
                 }
 
                 headers = {"Content-Type": "application/json"}
@@ -127,33 +130,52 @@ class PagerdutySink(SinkBase):
                         f"Error sending message to PagerDuty: {response.status_code}, {response.reason}, {response.text}"
                     )
 
-    @staticmethod
     def __send_events_to_pagerduty(self, finding: Finding, platform_enabled: bool):
         custom_details: dict = {}
 
         links: list[dict[str, str]] = []
+
         if platform_enabled:
-            links.append({
-                "text": "🔎 Investigate in Robusta",
-                "href": finding.get_investigate_uri(self.account_id, self.cluster_name)
-            })
+            links.append(
+                {
+                    "text": "🔎 Investigate in Robusta",
+                    "href": finding.get_investigate_uri(self.account_id, self.cluster_name),
+                }
+            )
 
             if finding.add_silence_url:
-                links.append({
-                    "text": "🔕 Create Prometheus Silence",
-                    "href": finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
-                })
+                links.append(
+                    {
+                        "text": "🔕 Create Prometheus Silence",
+                        "href": finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    }
+                )
         else:
-            links.append({
-                "text": "🔎 Enable Robusta UI to investigate",
-                "href": "https://bit.ly/robusta-ui-pager-duty"
-            })
+            links.append(
+                {"text": "🔎 Enable Robusta UI to investigate", "href": "https://bit.ly/robusta-ui-pager-duty"}
+            )
 
             if finding.add_silence_url:
-                links.append({
-                    "text": "🔕 Enable Robusta UI to silence alerts",
-                    "href": "https://bit.ly/robusta-ui-pager-duty"
-                })
+                links.append(
+                    {"text": "🔕 Enable Robusta UI to silence alerts", "href": "https://bit.ly/robusta-ui-pager-duty"}
+                )
+
+        prom_generator_link: Optional[Link] = next(
+            filter(lambda link: link.type == LinkType.PROMETHEUS_GENERATOR_URL, finding.links), None
+        )
+        if prom_generator_link:
+            link_url: str = prom_generator_link.url
+            if platform_enabled and self.sink_config.prefer_redirect_to_platform:
+                link_url = convert_prom_graph_url_to_robusta_metrics_explorer(
+                    prom_generator_link.url, self.cluster_name, self.account_id
+                )
+
+            links.append(
+                {
+                    "text": prom_generator_link.link_text,
+                    "href": link_url,
+                }
+            )
 
         # custom fields that don't have an inherent meaning in PagerDuty itself:
         custom_details["Resource"] = finding.subject.name
@@ -164,9 +186,9 @@ class PagerdutySink(SinkBase):
         custom_details["Severity"] = PagerdutySink.__to_pagerduty_severity_type(finding.severity).upper()
         custom_details["Fingerprint ID"] = finding.fingerprint
         custom_details["Description"] = finding.description
-        custom_details[
-            "Caption"
-        ] = f"{finding.severity.to_emoji()} {PagerdutySink.__to_pagerduty_severity_type(finding.severity)} - {finding.title}"
+        custom_details["Caption"] = (
+            f"{finding.severity.to_emoji()} {PagerdutySink.__to_pagerduty_severity_type(finding.severity)} - {finding.title}"
+        )
 
         message_lines = ""
         if finding.description:
@@ -183,7 +205,7 @@ class PagerdutySink(SinkBase):
                             }
                         )
                     continue
-                
+
                 text = self.__to_unformatted_text_for_alerts(block)
                 if not text:
                     continue
@@ -219,7 +241,7 @@ class PagerdutySink(SinkBase):
         if finding.aggregation_key == FindingAggregationKey.CONFIGURATION_CHANGE_KUBERNETES_RESOURCE_CHANGE.value:
             return PagerdutySink.__send_changes_to_pagerduty(self, finding=finding, platform_enabled=platform_enabled)
 
-        return PagerdutySink.__send_events_to_pagerduty(self, finding=finding, platform_enabled=platform_enabled)
+        return self.__send_events_to_pagerduty(finding=finding, platform_enabled=platform_enabled)
 
     @staticmethod
     def __to_unformatted_text_for_alerts(block: BaseBlock) -> str:
@@ -245,10 +267,12 @@ class PagerdutySink(SinkBase):
 
     @staticmethod
     def __to_unformatted_text_for_changes(block: KubernetesDiffBlock) -> Optional[List[str]]:
-        return list(map(
-            lambda diff: diff.formatted_path,
-            block.diffs,
-        ))
+        return list(
+            map(
+                lambda diff: diff.formatted_path,
+                block.diffs,
+            )
+        )
 
     # fetch the changed values from the block
     @staticmethod

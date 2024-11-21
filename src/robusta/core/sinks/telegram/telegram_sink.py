@@ -59,8 +59,8 @@ class TelegramSink(SinkBase):
             if finding.add_silence_url:
                 message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
 
-            for video_link in finding.video_links:
-                message_content = f"[{VIDEO_ICON} {video_link.name}]({video_link.url})"
+            for link in finding.links:
+                message_content = f"[{link.link_text}]({link.url})"
             message_content += "\n\n"
 
         blocks = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]

@@ -137,7 +137,7 @@ class GoogleChatSender:
                 )
             )
 
-        for video_link in finding.video_links:
-            links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
+        for link in finding.links:
+            links.append(LinkProp(text=f"{link.link_text}", url=link.url))
 
         return LinksBlock(links=links)

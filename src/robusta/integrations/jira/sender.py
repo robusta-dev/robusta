@@ -204,9 +204,9 @@ class JiraSender:
                     )
                 )
 
-            for video_link in finding.video_links:
+            for link in finding.links:
                 actions.append(
-                    to_paragraph(f"🎬 {video_link.name}", [{"type": "link", "attrs": {"href": video_link.url}}])
+                    to_paragraph(f"{link.link_text}", [{"type": "link", "attrs": {"href": link.url}}])
                 )
 
         # Add runbook_url to issue markdown if present

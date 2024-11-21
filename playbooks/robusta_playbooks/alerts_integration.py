@@ -45,7 +45,8 @@ from robusta.api import (
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 from robusta.core.reporting import FindingSubject
-from robusta.core.reporting.blocks import LinkProp, LinksBlock, TableBlockFormat
+from robusta.core.reporting.base import Link, LinkType
+from robusta.core.reporting.blocks import TableBlockFormat
 from robusta.utils.parsing import format_event_templated_string
 
 
@@ -65,7 +66,6 @@ class DefaultEnricherParams(ActionParams):
     """
 
     alert_annotations_enrichment: bool = False
-    show_prometheus_link: bool = False
 
 
 @action
@@ -215,15 +215,7 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
 
     By default, this enricher is last in the processing order, so it will be added to all alerts, that aren't silenced.
     """
-    if params.show_prometheus_link:
-        # prom_link_block: MarkdownBlock = MarkdownBlock(f"*Prometheus Link:* <{alert.alert.generatorURL}|Click Here>")
-        prom_link_block: LinksBlock = LinksBlock(
-            links=[LinkProp(text="📈 Prometheus Generator", url=alert.alert.generatorURL)]
-        )
-        alert.add_enrichment(
-            [prom_link_block],
-            enrichment_type=EnrichmentType.prometheus_generator_url,
-        )
+    alert.add_link(Link(url=alert.alert.generatorURL, name="View Graph", type=LinkType.PROMETHEUS_GENERATOR_URL))
 
     labels = alert.alert.labels
     alert.add_enrichment(
