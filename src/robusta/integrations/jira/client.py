@@ -2,8 +2,8 @@ import logging
 from typing import Optional, Dict
 
 from requests.auth import HTTPBasicAuth
-from requests_toolbelt import MultipartEncoder
 from requests.exceptions import HTTPError
+from requests_toolbelt import MultipartEncoder
 
 from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.consts import FindingSource
@@ -38,9 +38,10 @@ class JiraClient:
 
         if jira_params.epic:
             self.epic = jira_params.epic
-
+        
         if jira_params.assignee:
             self.assignee = jira_params.assignee
+
 
         if jira_params.project_type_id_override:
             self.default_project_id = jira_params.project_type_id_override
@@ -300,11 +301,11 @@ class JiraClient:
         }
 
         # Only add assignee if defined
-        if hasattr(self, "assignee") and self.assignee:
+        if hasattr(self, 'assignee') and self.assignee:
             payload["fields"]["assignee"] = {"id": self.assignee}
 
         # Only add parent if epic is defined
-        if hasattr(self, "epic") and self.epic:
+        if hasattr(self, 'epic') and self.epic:
             payload["fields"]["parent"] = {"key": self.epic}
 
         logging.debug(f"Update issue '{issue_id}' with payload: {payload}")
