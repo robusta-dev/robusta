@@ -38,10 +38,9 @@ class JiraClient:
 
         if jira_params.epic:
             self.epic = jira_params.epic
-        
+
         if jira_params.assignee:
             self.assignee = jira_params.assignee
-
 
         if jira_params.project_type_id_override:
             self.default_project_id = jira_params.project_type_id_override
@@ -105,7 +104,7 @@ class JiraClient:
                 f"request: url: {response.request.url} "
                 f"headers: {response.request.headers} body: {response.request.body}"
             )
-            return None
+            raise HTTPError(f"Jira API error: {response.status_code} - {response.text}", response=response)
 
     def _get_transition_id(self, issue_id, status_name):
         transitions = self._get_transitions_for_issue(issue_id)
@@ -234,7 +233,7 @@ class JiraClient:
         url = self._get_full_jira_url(endpoint)
 
         # 1. First try user configured priority mapping if it exists
-        if hasattr(self, 'params') and self.params.priority_mapping:
+        if hasattr(self, "params") and self.params.priority_mapping:
             # Extract severity from the priority name in issue_data
             priority_name = issue_data.get("priority", {}).get("name")
             for severity, mapped_name in self.params.priority_mapping.items():
@@ -242,34 +241,31 @@ class JiraClient:
                     try:
                         payload = self._create_issue_payload(issue_data)
                         response = self._call_jira_api(url, HttpMethod.POST, json=payload)
-                        if response:
-                            return self._handle_attachment_and_return(response, issue_attachments)
-                    except:
-                        # If user priority mapping fails, continue to next strategy
-                        logging.info(f"User configured priority mapping failed for '{priority_name}'")
+                        return self._handle_attachment_and_return(response, issue_attachments)
+                    except HTTPError as e:
+                        logging.info(f"User configured priority mapping failed for '{priority_name}': {str(e)}")
                         break
 
         # 2. Try default Robusta priority names (SEVERITY_JIRA_ID)
         try:
             payload = self._create_issue_payload(issue_data)
             response = self._call_jira_api(url, HttpMethod.POST, json=payload)
-            if response:
-                return self._handle_attachment_and_return(response, issue_attachments)
-        except Exception as e:
-            logging.info(f"Priority creation failed with error: {e.response.text}")
+            return self._handle_attachment_and_return(response, issue_attachments)
+        except HTTPError as e:
             priority_name = issue_data.get("priority", {}).get("name")
-            for severity, name in SEVERITY_JIRA_ID.items():
-                if name == priority_name:
-                    logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
-                    issue_data["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+            severity = next((sev for sev, name in SEVERITY_JIRA_ID.items() if name == priority_name), None)
+
+            if severity:
+                logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
+                issue_data["priority"] = {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+                try:
                     payload = self._create_issue_payload(issue_data)
                     response = self._call_jira_api(url, HttpMethod.POST, json=payload)
-                    if response:
-                        return self._handle_attachment_and_return(response, issue_attachments)
-                    break
+                    return self._handle_attachment_and_return(response, issue_attachments)
+                except HTTPError as e:
+                    logging.error(f"Fallback priority creation failed: {str(e)}")
             else:
                 logging.error(f"Could not find fallback ID for priority '{priority_name}'")
-                raise
 
         logging.error("All priority mapping attempts failed")
         return None
@@ -304,11 +300,11 @@ class JiraClient:
         }
 
         # Only add assignee if defined
-        if hasattr(self, 'assignee') and self.assignee:
+        if hasattr(self, "assignee") and self.assignee:
             payload["fields"]["assignee"] = {"id": self.assignee}
 
         # Only add parent if epic is defined
-        if hasattr(self, 'epic') and self.epic:
+        if hasattr(self, "epic") and self.epic:
             payload["fields"]["parent"] = {"key": self.epic}
 
         logging.debug(f"Update issue '{issue_id}' with payload: {payload}")
