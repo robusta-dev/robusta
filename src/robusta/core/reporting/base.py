@@ -23,7 +23,7 @@ class BaseBlock(BaseModel):
     html_class: str = None
 
 
-class Emojis(Enum):
+class Emojis(StrEnum):
     Explain = "📘"
     Recommend = "🛠"
     Alert = "🚨"
