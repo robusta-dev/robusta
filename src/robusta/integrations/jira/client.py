@@ -196,11 +196,17 @@ class JiraClient:
 
         # 2. Try default Robusta priority names
         try:
+            # Make a test call to validate the priority name
+            endpoint = "issue"
+            url = self._get_full_jira_url(endpoint)
+            test_payload = self._create_issue_payload({"priority": {"name": priority_name}})
+            self._call_jira_api(url, HttpMethod.POST, json=test_payload)
             return {"name": priority_name}
         except HTTPError:
             # 3. Try fallback IDs
             severity = next((sev for sev, name in SEVERITY_JIRA_ID.items() if name == priority_name), None)
             if severity:
+                logging.info(f"Priority name '{priority_name}' failed, falling back to ID-based priority")
                 return {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
             logging.error(f"Could not find fallback ID for priority '{priority_name}'")
             raise
