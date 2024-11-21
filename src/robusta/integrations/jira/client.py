@@ -225,10 +225,11 @@ class JiraClient:
         logging.debug(response)
 
     def create_issue(self, issue_data: dict, issue_attachments=None):
-        """Create a Jira issue with priority handling in this order:
-        1. User configured priority mapping (by name)
-        2. Default Robusta priority names (SEVERITY_JIRA_ID)
-        3. Fallback to standard Jira IDs (1-4)
+        """
+        Create a Jira issue with priority handling in this order:
+          1. User configured priority mapping (by name)
+          2. Default Robusta priority names (SEVERITY_JIRA_ID)
+          3. Fallback to standard Jira IDs (1-4)
         """
         endpoint = "issue"
         url = self._get_full_jira_url(endpoint)
