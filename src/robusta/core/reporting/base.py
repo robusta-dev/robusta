@@ -5,7 +5,8 @@ import urllib.parse
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
-from enum import Enum, StrEnum
+from enum import Enum
+from strenum import StrEnum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
@@ -104,12 +105,11 @@ class Link(BaseModel):
     def link_text(self):
         if self.type == LinkType.PROMETHEUS_GENERATOR_URL:
             return f"{Emojis.Graph} {self.name}"
-        
+
         if self.type == LinkType.VIDEO:
             return f"{Emojis.Video} {self.name}"
-        
-        return self.name
 
+        return self.name
 
 
 class EnrichmentType(Enum):
