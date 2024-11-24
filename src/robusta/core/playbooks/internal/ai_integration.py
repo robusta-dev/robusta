@@ -162,8 +162,8 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
 
 
 def build_conversation_title(params: HolmesConversationParams):
-        label_string = f"with alert labels {params.labels}" if params.labels else ""
-        return f"{params.resource}, {params.ask} for issue '{params.context.robusta_issue_id}' with labels {label_string}"
+    label_string = f"with alert labels {params.labels}" if params.labels else ""
+    return f"{params.resource}, {params.ask} for issue '{params.context.robusta_issue_id}' with labels {label_string}"
 
 
 # old version of holmes conversation API
