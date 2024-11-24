@@ -27,10 +27,14 @@ Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 Obtaining a webhook URL
 -----------------------------------
 
-- Choose a channel and click "Manage Channel".
-- Click "Connectors->Edit", and configure an "Incoming Webhook"
-- Fill out the name ``robusta``.
-- Optional: upload the :download:`robusta logo </images/msteams_sink/msteams_robusta_logo.png>` for the connector’s image.
+- Click '...' on the channel you want to add the webhook to.
+- Click 'Workflows'.
+- In the search box type 'webhook'.
+- Select the webhook template.
+- Name the webhook as 'Robusta Webhook'.
+- Click 'Next'.
+- Make sure the right Team & Channel is selected
+- Click 'Add workflow'.
 - Copy the ``webhook_url``.
 
 .. image:: /images/msteams_sink/msteam_get_webhook_url.gif
