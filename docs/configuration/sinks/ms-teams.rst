@@ -30,7 +30,7 @@ Obtaining a webhook URL
 - Click '...' on the channel you want to add the webhook to.
 - Click 'Workflows'.
 - In the search box type 'webhook'.
-- Select the webhook template.
+- Select ``webhook template``.
 - Name the webhook as 'Robusta Webhook'.
 - Click 'Next'.
 - Make sure the right Team & Channel is selected
