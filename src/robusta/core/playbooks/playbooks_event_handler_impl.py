@@ -249,7 +249,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
                 )
                 logging.error(msg)
-                execution_event.response = self.__error_resp(e.type, e.code, log=False)
+                execution_event.response = self.__error_resp(msg, e.code, log=False)
                 playbooks_errors_count.labels(source).inc()
             except PrometheusNotFound as e:
                 logging.error(str(e))
