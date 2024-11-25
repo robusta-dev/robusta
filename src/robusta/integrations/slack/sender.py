@@ -12,9 +12,14 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
-from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, SLACK_REQUEST_TIMEOUT, HOLMES_ENABLED, SLACK_TABLE_COLUMNS_LIMIT
+from robusta.core.model.env_vars import (
+    ADDITIONAL_CERTIFICATE,
+    SLACK_REQUEST_TIMEOUT,
+    HOLMES_ENABLED,
+    SLACK_TABLE_COLUMNS_LIMIT,
+)
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
-from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus
+from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
 from robusta.core.reporting.blocks import (
     BaseBlock,
     CallbackBlock,
@@ -33,6 +38,7 @@ from robusta.core.reporting.blocks import (
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations
 from robusta.core.reporting.holmes import HolmesResultsBlock, ToolCallResult
+from robusta.core.reporting.url_helpers import convert_prom_graph_url_to_robusta_metrics_explorer
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base import KeyT
@@ -350,26 +356,39 @@ class SlackSender:
 {title}"""
         )
 
-    def __create_links(self, finding: Finding, include_investigate_link: bool):
+    def __create_links(
+        self,
+        finding: Finding,
+        platform_enabled: bool,
+        include_investigate_link: bool,
+        prefer_redirect_to_platform: bool,
+    ):
         links: List[LinkProp] = []
-        if include_investigate_link:
-            links.append(
-                LinkProp(
-                    text="Investigate 🔎",
-                    url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+        if platform_enabled:
+            if include_investigate_link:
+                links.append(
+                    LinkProp(
+                        text="Investigate 🔎",
+                        url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+                    )
                 )
-            )
 
-        if finding.add_silence_url:
-            links.append(
-                LinkProp(
-                    text="Configure Silences 🔕",
-                    url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+            if finding.add_silence_url:
+                links.append(
+                    LinkProp(
+                        text="Configure Silences 🔕",
+                        url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    )
                 )
-            )
 
-        for video_link in finding.video_links:
-            links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
+        for link in finding.links:
+            link_url = link.url
+            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and prefer_redirect_to_platform:
+                link_url = convert_prom_graph_url_to_robusta_metrics_explorer(
+                    link.url, self.cluster_name, self.account_id
+                )
+
+            links.append(LinkProp(text=link.link_text, url=link_url))
 
         return LinksBlock(links=links)
 
@@ -489,8 +508,10 @@ class SlackSender:
         if finding.title:
             blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
 
-        if platform_enabled:
-            blocks.append(self.__create_links(finding, sink_params.investigate_link))
+        links_block: LinksBlock = self.__create_links(
+            finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
+        )
+        blocks.append(links_block)
 
         if HOLMES_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))

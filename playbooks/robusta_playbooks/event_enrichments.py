@@ -31,7 +31,7 @@ from robusta.api import (
     SlackAnnotations,
     StatefulSet,
     VideoEnricherParams,
-    VideoLink,
+    Link,
     action,
     get_event_timestamp,
     get_job_all_pods,
@@ -367,7 +367,7 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
     """
     Attaches a video links to the finding
     """
-    event.add_video_link(VideoLink(url=params.url, name=params.name))
+    event.add_video_link(Link(url=params.url, name=params.name))
 
 
 @action
