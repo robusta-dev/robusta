@@ -30,6 +30,7 @@ BRACKETS_COMMA_PATTERN = r"\{\s*,"
 # for performance the series result is a dict of the format of the obj PrometheusSeries
 PrometheusSeriesDict = Dict[str, any]
 
+
 class XAxisLine(BaseModel):
     label: str
     value: float
@@ -125,7 +126,9 @@ def get_series_job(series: PrometheusSeriesDict) -> Optional[str]:
     return series["metric"]["job"] if "job" in series["metric"] else None
 
 
-def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeriesDict]]) -> Optional[List[PrometheusSeriesDict]]:
+def filter_prom_jobs_results(
+    series_list_result: Optional[List[PrometheusSeriesDict]],
+) -> Optional[List[PrometheusSeriesDict]]:
     if not series_list_result or len(series_list_result) == 1:
         return series_list_result
 
@@ -134,7 +137,9 @@ def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeriesD
 
     # takes kubelet job if exists, return first job alphabetically if it doesn't
     for target_name in target_names:
-        relevant_series: List[PrometheusSeriesDict] = [series for series in series_list_result if get_target_name(series) == target_name]
+        relevant_series: List[PrometheusSeriesDict] = [
+            series for series in series_list_result if get_target_name(series) == target_name
+        ]
         relevant_kubelet_metric = [series for series in relevant_series if get_series_job(series) == "kubelet"]
         if len(relevant_kubelet_metric) == 1:
             return_list.append(relevant_kubelet_metric[0])
@@ -244,6 +249,15 @@ def create_chart_from_prometheus_query(
         min_time = starts_at.timestamp()
         max_time = ends_at.timestamp()
 
+    limit_line = None
+    request_line = None
+
+    for line in lines:
+        if "Limit" in line.label:
+            limit_line = line
+        elif "Request" in line.label:
+            request_line = line
+
     vertical_lines = []
     horizontal_lines = []
     for line in lines:
@@ -298,6 +312,10 @@ def create_chart_from_prometheus_query(
         show_legend=hide_legends is not True,
     )
 
+    # delta and limit line adjustment for case when there is no data
+    limit_line_adjusted = False
+    delta = 0
+
     if len(plot_data_list):
         y_axis_division = 5
         # Calculate the maximum Y value with an added 20% padding
@@ -307,6 +325,15 @@ def create_chart_from_prometheus_query(
         interval = max_y_value_with_padding / (y_axis_division - 1)
 
         chart.range = (0, max_y_value_with_padding)
+
+        # Fix for the case when the request and limit has the same value.
+        # 6 pixels where chosen as minimum distance based on current width and height of the slack graph
+        delta = (chart.range[1] - chart.range[0]) * 6 / chart.config.height
+        # Limit delta to a maximum of 2% of the Y-axis range (to prefent significant deviation)
+        delta = min(delta, (chart.range[1] - chart.range[0]) * 0.02)
+
+        if limit_line and request_line and limit_line.value == request_line.value:
+            limit_line_adjusted = True
 
         if values_format == ChartValuesFormat.Percentage:
             # Calculate the Y-axis labels, shift to percentage, and round to the nearest whole number percentage
@@ -345,6 +372,14 @@ def create_chart_from_prometheus_query(
         chart.title = chart_title
     else:
         chart.title = promql_query
+
+    # Adjust the "Limit" line's plotting data if limit and request lines are equal
+    if limit_line_adjusted:
+        for plot_data in plot_data_list:
+            if plot_data.plot[0] == limit_line.label:
+                adjusted_values = [(x, y + delta) for x, y in plot_data.plot[1]]
+                plot_data.plot = (plot_data.plot[0], adjusted_values)
+                break
 
     for p in plot_data_list:
         chart.add(
@@ -487,7 +522,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container!="", image!=""}) by (pod, job)',
+            query='sum(max(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container!="", image!=""}) by (container, pod, job)) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
@@ -495,7 +530,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
-            query='sum(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)',
+            query='sum(max(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,

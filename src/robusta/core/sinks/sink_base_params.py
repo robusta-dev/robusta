@@ -103,6 +103,7 @@ class GroupingParams(BaseModel):
 class SinkBaseParams(ABC, BaseModel):
     name: str
     send_svg: bool = False
+    prefer_redirect_to_platform = True
     default: bool = True
     match: dict = {}
     scope: Optional[ScopeParams]

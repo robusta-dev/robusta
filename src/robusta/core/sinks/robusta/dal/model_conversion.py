@@ -21,7 +21,7 @@ from robusta.core.reporting import (
     PrometheusBlock,
     TableBlock,
 )
-from robusta.core.reporting.blocks import EmptyFileBlock, GraphBlock
+from robusta.core.reporting.blocks import EmptyFileBlock, GraphBlock, LinksBlock
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.holmes import HolmesChatResultsBlock, HolmesResultsBlock, ToolCallResult
 from robusta.core.sinks.transformer import Transformer
@@ -50,7 +50,7 @@ class ModelConversion:
             "service_key": finding.service_key,
             "cluster": cluster_id,
             "account_id": account_id,
-            "video_links": [link.dict() for link in finding.video_links],
+            "video_links": [link.dict() for link in finding.links],  # TD: Migrate column in table.
             "starts_at": datetime_to_db_str(finding.starts_at),
             "updated_at": datetime_to_db_str(datetime.now()),
         }
@@ -137,7 +137,7 @@ class ModelConversion:
         finding_id: uuid.UUID,
         enrichment: Enrichment,
     ) -> Dict[Any, Any]:
-        structured_data = []
+        structured_data: list[Any] = []
         for block in enrichment.blocks:
             if isinstance(block, MarkdownBlock):
                 if not block.text:
@@ -238,6 +238,9 @@ class ModelConversion:
                 structured_data.append({"type": "json", "data": block.json_str})
             elif isinstance(block, EventsRef):
                 structured_data.append({"type": "events_ref", "data": block.dict()})
+            elif isinstance(block, LinksBlock):
+                links = [link.dict() for link in block.links]
+                structured_data.append({"type": "list", "data": links})
             else:
                 logging.warning(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
                 continue  # no reason to crash the entire report
