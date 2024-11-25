@@ -28,3 +28,4 @@ def convert_prom_graph_url_to_robusta_metrics_explorer(prom_url: str, cluster_na
         return robusta_metrics_url
     except Exception:
         logging.warning('Failed to convert prom url: %s to robusta url', prom_url, exc_info=True)
+        return prom_url
