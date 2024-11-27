@@ -149,7 +149,7 @@ Response Fields
      - The node where the resource is located.
 
 
-GET `https://stg.api.robusta.dev/api/query/report`
+GET `https://api.robusta.dev/api/query/report`
 --------------------------------------
 
 Use this endpoint to retrieve aggregated alert data, including the count of each type of alert during a specified time range. Filters can be applied using query parameters such as `account_id` and the time range.
@@ -187,7 +187,7 @@ The following `curl` command demonstrates how to query aggregated alert data for
 
 .. code-block:: bash
 
-    curl --location 'https://stg.api.robusta.dev/api/query/report?account_id=16ecba1a-7993-4dd1-a98c-d201462ccba7&start_ts=2024-10-27T04:02:05.032Z&end_ts=2024-11-27T05:02:05.032Z' \
+    curl --location 'https://api.robusta.dev/api/query/report?account_id=XXXXXX-XXXX_XXXX_XXXXX7&start_ts=2024-10-27T04:02:05.032Z&end_ts=2024-11-27T05:02:05.032Z' \
     --header 'Authorization: Bearer TOKEN_HERE'
 
 
