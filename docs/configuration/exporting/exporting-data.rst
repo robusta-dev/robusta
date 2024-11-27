@@ -185,10 +185,11 @@ Example Request
 
 The following `curl` command demonstrates how to query aggregated alert data for a specified time range:
 
-```bash
-curl --location 'https://stg.api.robusta.dev/api/query/report?account_id=16ecba1a-7993-4dd1-a98c-d201462ccba7&start_ts=2024-10-27T04:02:05.032Z&end_ts=2024-11-27T05:02:05.032Z' \
---header 'Authorization: Bearer TOKEN_HERE'
-```
+.. code-block:: bash
+
+    curl --location 'https://stg.api.robusta.dev/api/query/report?account_id=16ecba1a-7993-4dd1-a98c-d201462ccba7&start_ts=2024-10-27T04:02:05.032Z&end_ts=2024-11-27T05:02:05.032Z' \
+    --header 'Authorization: Bearer TOKEN_HERE'
+
 
 In the command, make sure to replace the following placeholders:
 
