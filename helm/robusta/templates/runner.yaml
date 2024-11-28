@@ -218,6 +218,10 @@ metadata:
   labels:
     app: {{ include "robusta.fullname" . }}-runner
     target: {{ include "robusta.fullname" . }}-runner
+{{- if .Values.service.annotations }}
+  annotations:
+{{ toYaml .Values.service.annotations | indent 4 }}
+{{- end }}
 spec:
   selector:
     app: {{ include "robusta.fullname" . }}-runner

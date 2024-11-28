@@ -35,6 +35,11 @@ globalConfig:
   custom_annotations: []
   custom_severity_map: {}
 
+# k8s service config
+service:
+  # service annotations
+  annotations: {}
+
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []
 
