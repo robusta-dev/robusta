@@ -314,8 +314,11 @@ class SlackSender:
         # slack can only send 2k tokens in a callback so the labels are limited in size
 
         low_priority_labels = ["job", "prometheus", "severity", "service"]
+        current_length = len(str(labels))
+        if current_length <= max_size:
+            return labels
+        
         limited_labels = copy.deepcopy(labels)
-        current_length = len(str(limited_labels))
 
         # first remove the low priority labels if needed
         for key in low_priority_labels:
