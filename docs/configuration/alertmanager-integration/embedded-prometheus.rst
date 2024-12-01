@@ -50,3 +50,9 @@ To allow the Grafana dashboard to persist after the Grafana instance restarts, y
         enabled: true
 
 Apply the change by performing a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+Troubleshooting
+---------------------
+
+Encountering issues with your Prometheus? Follow this guide to resolve some `common errors <https://docs.robusta.dev/master/help.html#common-errors>`_.
+
