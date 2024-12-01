@@ -169,7 +169,7 @@ def build_conversation_title(params: HolmesConversationParams) -> str:
 def add_labels_to_ask(params: HolmesConversationParams) -> str:
     label_string = f"the alert has the following labels: {params.context.get('labels')}" if params.context.get("labels") else ""
     ask = f"{params.ask}, {label_string}" if label_string else params.ask
-    logging.warning(f"holmes ask query: {ask}")
+    logging.debug(f"holmes ask query: {ask}")
     return ask
 
 
