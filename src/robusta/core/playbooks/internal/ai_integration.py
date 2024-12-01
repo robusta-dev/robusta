@@ -50,6 +50,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
     subject = params.resource.dict() if params.resource else {}
 
     try:
+        params.ask = add_labels_to_ask(params)
         holmes_req = HolmesRequest(
             source=params.context.get("source", "unknown source") if params.context else "unknown source",
             title=investigation__title,
@@ -161,9 +162,15 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
 
 
-def build_conversation_title(params: HolmesConversationParams):
-    label_string = f"with alert labels {params.labels}" if params.labels else ""
-    return f"{params.resource}, {params.ask} for issue '{params.context.robusta_issue_id}' with labels {label_string}"
+def build_conversation_title(params: HolmesConversationParams) -> str:
+    return f"{params.resource}, {params.ask} for issue '{params.context.robusta_issue_id}'"
+
+
+def add_labels_to_ask(params: HolmesConversationParams) -> str:
+    label_string = f"the alert has the following labels: {params.context.get('labels')}" if params.context.get("labels") else ""
+    ask = f"{params.ask}, {label_string}" if label_string else params.ask
+    logging.warning(f"holmes ask query: {ask}")
+    return ask
 
 
 # old version of holmes conversation API

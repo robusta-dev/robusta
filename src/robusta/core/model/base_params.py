@@ -158,6 +158,7 @@ class HolmesIssueChatParamsContext(BaseModel):
     investigation_result: HolmesInvestigationResult
     issue_type: str
     robusta_issue_id: Optional[str] = None
+    labels: Optional[Dict[str, str]] = None
 
 
 # will be deprecated later alongside with holmes_conversation action
@@ -169,7 +170,6 @@ class HolmesOldConversationIssueContext(HolmesIssueChatParamsContext):
 
     conversation_history: Optional[list[HolmesConversationHistory]] = []
     source: Optional[str] = None
-    labels: Optional[Dict[str, str]] = None
 
 
 class ConversationType(str, Enum):
