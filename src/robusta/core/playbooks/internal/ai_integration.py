@@ -50,6 +50,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
     subject = params.resource.dict() if params.resource else {}
 
     try:
+        params.ask = add_labels_to_ask(params)
         holmes_req = HolmesRequest(
             source=params.context.get("source", "unknown source") if params.context else "unknown source",
             title=investigation__title,
@@ -162,7 +163,14 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
 
 
 def build_conversation_title(params: HolmesConversationParams) -> str:
-    return f"{params.resource}, {params.ask} for issue {params.context.robusta_issue_id}"
+    return f"{params.resource}, {params.ask} for issue '{params.context.robusta_issue_id}'"
+
+
+def add_labels_to_ask(params: HolmesConversationParams) -> str:
+    label_string = f"the alert has the following labels: {params.context.get('labels')}" if params.context.get("labels") else ""
+    ask = f"{params.ask}, {label_string}" if label_string else params.ask
+    logging.debug(f"holmes ask query: {ask}")
+    return ask
 
 
 # old version of holmes conversation API

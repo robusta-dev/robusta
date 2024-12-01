@@ -43,7 +43,9 @@ from robusta.api import (
     pod_requests,
     pod_restarts,
 )
+from robusta.core.discovery import utils
 from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
+from robusta.core.model.pods import ResourceAttributes
 
 
 class RelatedPodParams(ActionParams):
@@ -195,13 +197,19 @@ def to_pod_obj(pod: V1Pod, cluster: str, include_raw_data: bool = False) -> Rela
     )
 
 
+def get_attr_str(obj, attr) -> Optional[str]:
+    ret_attr = getattr(obj, attr, None)
+    # str(None) = "None"
+    return str(ret_attr) if ret_attr else None
+
+
 def get_pod_containers(pod: V1Pod) -> List[RelatedContainer]:
     containers: List[RelatedContainer] = []
     spec: V1PodSpec = pod.spec
     for container in spec.containers:
         container: V1Container = container
-        requests = PodContainer.get_requests(container)
-        limits = PodContainer.get_limits(container)
+        requests = utils.container_resources(container, ResourceAttributes.requests)
+        limits = utils.container_resources(container, ResourceAttributes.limits)
         containerStatus: Optional[V1ContainerStatus] = PodContainer.get_status(pod, container.name)
         currentState: Optional[V1ContainerState] = getattr(containerStatus, "state", None)
         lastState: Optional[V1ContainerStateTerminated] = getattr(containerStatus, "last_state", None)
@@ -222,16 +230,16 @@ def get_pod_containers(pod: V1Pod) -> List[RelatedContainer]:
                 cpuRequest=requests.cpu,
                 memoryLimit=limits.memory,
                 memoryRequest=requests.memory,
-                restarts=getattr(containerStatus, "restartCount", 0),
+                restarts=getattr(containerStatus, "restart_count", 0),
                 status=stateStr,
                 statusMessage=getattr(state, "message", None) if state else None,
                 statusReason=getattr(state, "reason", None) if state else None,
-                created=getattr(state, "startedAt", None),
+                created=get_attr_str(state, "started_at"),
                 ports=[port.to_dict() for port in container.ports] if container.ports else [],
                 terminatedReason=getattr(terminated_state, "reason", None),
-                terminatedExitCode=getattr(terminated_state, "exitCode", None),
-                terminatedStarted=getattr(terminated_state, "startedAt", None),
-                terminatedFinished=getattr(terminated_state, "finishedAt", None),
+                terminatedExitCode=getattr(terminated_state, "exit_code", None),
+                terminatedStarted=get_attr_str(terminated_state, "started_at"),
+                terminatedFinished=get_attr_str(terminated_state, "finished_at"),
             )
         )
 
