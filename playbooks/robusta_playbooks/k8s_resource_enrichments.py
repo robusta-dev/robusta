@@ -43,7 +43,9 @@ from robusta.api import (
     pod_requests,
     pod_restarts,
 )
+from robusta.core.discovery import utils
 from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
+from robusta.core.model.pods import ResourceAttributes
 
 
 class RelatedPodParams(ActionParams):
@@ -200,8 +202,8 @@ def get_pod_containers(pod: V1Pod) -> List[RelatedContainer]:
     spec: V1PodSpec = pod.spec
     for container in spec.containers:
         container: V1Container = container
-        requests = PodContainer.get_requests(container)
-        limits = PodContainer.get_limits(container)
+        requests = utils.container_resources(container, ResourceAttributes.requests)
+        limits = utils.container_resources(container, ResourceAttributes.limits)
         containerStatus: Optional[V1ContainerStatus] = PodContainer.get_status(pod, container.name)
         currentState: Optional[V1ContainerState] = getattr(containerStatus, "state", None)
         lastState: Optional[V1ContainerStateTerminated] = getattr(containerStatus, "last_state", None)
