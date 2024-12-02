@@ -50,13 +50,6 @@ class IncidentioSink(SinkBase):
                     "href": finding.get_investigate_uri(self.account_id, self.cluster_name),
                 }
             )
-        else:
-            links.append(
-                {
-                    "text": "🔎 Enable Robusta UI to investigate",
-                    "href": "https://bit.ly/robusta-ui-incidentio",
-                }
-            )
 
         # Collect metadata
         metadata["resource"] = finding.subject.name
