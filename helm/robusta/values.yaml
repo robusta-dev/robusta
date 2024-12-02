@@ -680,6 +680,10 @@ runner:
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
+  # k8s service config
+  service:
+    # custom service annotations
+    annotations: {}
   serviceMonitor:
     path: /metrics
   securityContext:
