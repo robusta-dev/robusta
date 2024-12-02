@@ -61,7 +61,8 @@ class JiraClient:
             )
 
         if jira_params.priority_mapping:
-            self._validate_priorities(jira_params.priority_mapping)
+            if logging.getLogger().getEffectiveLevel() <= logging.DEBUG:
+                self._validate_priorities(jira_params.priority_mapping)
 
     def _validate_priorities(self, priority_mapping: Dict[str, str]) -> None:
         """Validate that configured priorities exist in Jira"""
