@@ -1,10 +1,9 @@
 import logging
 from typing import Optional, Dict, List, Any
-from urllib.parse import urljoin
 from robusta.core.sinks.incidentio.incidentio_client import IncidentIoClient
+from robusta.core.sinks.incidentio.incidentio_sink_params import IncidentioSinkParams, IncidentioSinkConfigWrapper
 from robusta.core.sinks.incidentio.incidentio_api import AlertEventsApi
-
-import requests
+from robusta.core.sinks.sink_base import SinkBase
 
 from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, Enrichment, Link, LinkType
 from robusta.core.reporting.blocks import (
@@ -16,13 +15,12 @@ from robusta.core.reporting.blocks import (
     TableBlock,
     KubernetesDiffBlock,
 )
-from robusta.core.sinks.sink_base import SinkBase
-from robusta.core.sinks.sink_config import SinkConfigBase
-from robusta.core.sinks.incidentio.incidentio_sink_params import IncidentioSinkParams
 
 
 class IncidentioSink(SinkBase):
-    def __init__(self, sink_config: SinkConfigBase, registry):
+    params: IncidentioSinkParams
+
+    def __init__(self, sink_config: IncidentioSinkConfigWrapper, registry):
         super().__init__(sink_config.incidentio_sink, registry)
         self.source_config_id = sink_config.incidentio_sink.source_config_id
         self.client = IncidentIoClient(
