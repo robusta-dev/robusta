@@ -10,7 +10,6 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 
 class IncidentioSinkParams(SinkBaseParams):
     base_url: Optional[str] = "https://api.incident.io/v2/"
-    alert_events_api: Optional[str] = "alert_events/http"
     token: str
     source_config_id: str
 
