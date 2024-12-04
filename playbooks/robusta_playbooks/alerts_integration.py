@@ -215,7 +215,8 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
 
     By default, this enricher is last in the processing order, so it will be added to all alerts, that aren't silenced.
     """
-    alert.add_link(Link(url=alert.alert.generatorURL, name="View Graph", type=LinkType.PROMETHEUS_GENERATOR_URL))
+    if alert.alert.generatorURL:
+        alert.add_link(Link(url=alert.alert.generatorURL, name="View Graph", type=LinkType.PROMETHEUS_GENERATOR_URL))
 
     labels = alert.alert.labels
     alert.add_enrichment(
