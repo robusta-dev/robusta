@@ -306,29 +306,122 @@ Holmes allows you to define custom toolsets that enhance its functionality by en
 
 In this guide, we will show how to add a custom toolset to Holmes in your ``generated_values.yaml`` file.
 
+How to define a toolset?
+-------------------------------------
+A toolset is defined in ``generated_values.yaml``. Each toolset has a unique name and has to contain tools.
+
 .. code-block:: yaml
 
-    enableHolmesGPT: true
-    holmes:
-      additionalEnvVars:
-        - name: ROBUSTA_AI
-          value: "true"
-      toolsets:
-        # Name of the toolset (for example "mycompany/internal-tools")
-        # Used for informational purposes only (e.g. to print the name of the toolset if it can't be loaded)
-        - name: "resource_explanation"
-          # List of tools the LLM can use - this is the important part
-          tools:
-          # Name is a unique identifier for the tool
-            - name: "explain_resource"
-              # The LLM looks at this description when deciding what tools are relevant for each task
-              description: "Provides detailed explanation of Kubernetes resources using kubectl explain"
-              # A templated bash command using Jinja2 templates
-              # The LLM can only control parameters that you expose as template variables like {{ resource_name }}
-              command: "kubectl explain {{ resource_name }}"
+  toolsets:
+    <toolset_name>:
+      enabled: <true|false>
+      name: "<string>"
+      description: "<string>"
+      docs_url: "<string>"
+      icon_url: "<string>"
+      installation_instructions: "<string>"
+      variables:
+        <variable_name>: "<value>"
+      prerequisites:
+        - command: "<shell_command>"
+        - env:
+            - "<environment_variable>"
+      additional_instructions: "<string>"
+      tools:
+        - name: "<string>"
+          description: "<string>"
+          command: "<shell_command_template>"
+          script: "<script_content>"
+          parameters:
+            <parameter_name>:
+              type: "<string>"
+              description: "<string>"
+              required: <true|false>
 
+Field Descriptions
+Toolset Fields
 
-``toolsets``: Defines a custom toolset, in this case, a ``resource_explanation``, which allows Holmes to use the ``kubectl explain`` command to provide details about various Kubernetes resources.
+    enabled: (Optional, boolean) Indicates whether the toolset is enabled. Defaults to true. If set to false, the toolset will be disabled.
+
+    name: (Required, string) A unique identifier for the toolset. Used for informational purposes and logging.
+
+    description: (Optional, string) A brief description of the toolset's purpose. Helps users understand what the toolset does.
+
+    docs_url: (Optional, string) A URL pointing to documentation related to the toolset.
+
+    icon_url: (Optional, string) A URL to an icon representing the toolset.
+
+    installation_instructions: (Optional, string) Instructions on how to install prerequisites required by the toolset.
+
+    variables: (Optional, dictionary) A set of key-value pairs defining variables that can be used within tools and commands. Values can reference environment variables using the $VARIABLE_NAME syntax.
+
+    prerequisites: (Optional, list) A list of conditions that must be met for the toolset to be enabled. Prerequisites can be:
+
+        command: (string) A shell command that must execute successfully (exit code 0) for the prerequisite to be satisfied.
+
+        env: (list of strings) A list of environment variables that must be set.
+
+        enabled: (boolean) A static prerequisite that can forcibly enable or disable the toolset.
+
+        disabled_reason: (string) Provides a reason why the toolset is disabled if enabled is set to false.
+
+    additional_instructions: (Optional, string) Additional shell commands or processing instructions applied to the output of tools in this toolset.
+
+    tools: (Required, list) A list of tools defined within the toolset. Each tool is an object with its own set of fields.
+
+Tool Fields
+
+    name: (Required, string) A unique identifier for the tool within the toolset.
+
+    description: (Required, string) A brief description of the tool's purpose. Helps Holmes decide when to use this tool.
+
+    command: (Optional, string) A shell command template that the tool will execute. Can include variables and parameters using Jinja2 syntax ({{ variable_name }}).
+
+    script: (Optional, string) The content of a script that the tool will execute. Use this if your tool requires a multi-line script.
+
+    .. note::
+
+    Either command or script must be provided, but not both.
+
+    parameters: (Optional, dictionary) Defines the inputs required for the tool. Each parameter has:
+
+        type: (string) The data type of the parameter (e.g., string, integer).
+
+        description: (Optional, string) A description of the parameter.
+
+        required: (Optional, boolean) Indicates whether the parameter is required. Defaults to true.
+
+    user_description: (Optional, string) A templated string shown to the user describing this tool invocation. Not seen by the LLM (Language Model).
+
+    additional_instructions: (Optional, string) Additional shell commands or processing instructions applied to the output of this tool.
+
+Defining Variables and Parameters
+
+    Variables are defined at the toolset level under variables and can be used in any tool within the toolset. They can reference environment variables using $VARIABLE_NAME.
+
+    Parameters are defined at the tool level under parameters and represent inputs that the user or LLM must provide when invoking the tool. They are used within command or script templates using the {{ parameter_name }} syntax.
+
+Prerequisites
+
+Prerequisites determine whether a toolset is enabled based on certain conditions:
+
+    Command Prerequisite: Uses the command key to specify a shell command that must execute successfully.
+
+    .. code-block:: yaml
+
+    prerequisites: - command: "docker version"
+
+    Environment Variable Prerequisite: Uses the env key to specify environment variables that must be set.
+
+    .. code-block:: yaml
+
+    prerequisites: - env: - "API_ENDPOINT"
+
+    Static Prerequisite: Uses the enabled key to forcibly enable or disable the toolset, optionally providing a disabled_reason.
+
+    .. code-block:: yaml
+
+    prerequisites: - enabled: false disabled_reason: "Toolset is disabled for maintenance."
 
 Once you have updated the ``generated_values.yaml`` file, apply the changes by running the Helm upgrade command:
 
@@ -412,7 +505,8 @@ After pushing your custom Docker image, update your ``generated_values.yaml`` to
         - name: ROBUSTA_AI
           value: "true"
       toolsets:
-        - name: "json_processor"
+        json_processor:
+          description: "A toolset for processing JSON data using jq"
           prerequisites:
             - command: "jq --version"  # Ensure jq is installed
           tools:
