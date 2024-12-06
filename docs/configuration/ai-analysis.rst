@@ -299,12 +299,48 @@ Advanced - Customizing HolmesGPT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Adding Custom Tools to Holmes
+Holmes Toolsets
 -------------------------------------
 
-Holmes allows you to define custom toolsets that enhance its functionality by enabling additional tools to run Kubernetes commands or other tasks.
+Holmes allows you to define tools that enhance its functionality by enabling additional tools to run Kubernetes commands or other tasks.
 
-In this guide, we will show how to add a custom toolset to Holmes in your ``generated_values.yaml`` file.
+Default Toolsets in Holmes
+--------------------------
+Holmes comes with a set of default toolsets that provide tools out-of-the-box. Some of these toolsets are enabled by default such as interacting with Kubernetes resources, or fetching logs and metrics.
+Full list can be found `here <https://github.com/robusta-dev/holmesgpt/tree/master/holmes/plugins/toolsets>`_
+
+By default, any of the toolsets may be disabled. You can enable or disable them by modifying the ``generated_values.yaml`` file.
+
+.. code-block:: yaml
+  enableHolmesGPT: true
+  holmes:
+    additionalEnvVars:
+      - name: ROBUSTA_AI
+        value: "true"
+    toolsets:
+      kubernetes/logs:
+        enabled: false
+
+After making changes, apply them using Helm:
+
+.. code-block:: bash
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+
+
+Additionally, you can overwrite any of the fields in the default toolsets, such as updating the tools, prerequisites, or descriptions, to customize them for your specific needs.
+For example:
+
+.. code-block:: yaml
+  enableHolmesGPT: true
+  holmes:
+    additionalEnvVars:
+      - name: ROBUSTA_AI
+        value: "true"
+    toolsets:
+      kubernetes/logs:
+        description: "My custom description for default toolset."
+
 
 How to define a toolset?
 -------------------------------------
@@ -319,19 +355,22 @@ A toolset is defined in ``generated_values.yaml``. Each toolset has a unique nam
       description: "<string>"
       docs_url: "<string>"
       icon_url: "<string>"
+      tags:
+        - <cli|cluster|core>
       installation_instructions: "<string>"
       variables:
         <variable_name>: "<value>"
       prerequisites:
         - command: "<shell_command>"
+          expected_output: "<expected output of the command>"
         - env:
-            - "<environment_variable>"
+            - "<environment variable>"
       additional_instructions: "<string>"
       tools:
         - name: "<string>"
           description: "<string>"
-          command: "<shell_command_template>"
-          script: "<script_content>"
+          command: "<shell command template>"
+          script: "<script content>"
           parameters:
             <parameter_name>:
               type: "<string>"
@@ -368,6 +407,10 @@ Toolset Fields
    * - ``icon_url``
      - string
      - A URL to an icon representing the toolset.
+     - No
+   * - ``tags``
+     - list
+     - Tags for categorizing toolsets, ``core`` will be used for all Holmes features (both cli's commands and chats in UI). The ``cluster`` tag is used for UI functionality, while ``cli`` is for for command-line specific tools. Default to ``[core,]``.
      - No
    * - ``installation_instructions``
      - string
@@ -449,95 +492,132 @@ Toolset Fields
      - No
 
 
-Example 1: AWS S3 Management Toolset
-------------------------------------
+Toolsets Examples
+-----------------
+
+**Example 1: AWS S3 Management Toolset**
+
 This toolset enables Holmes to interact with fetch information from github repositories.
 
 .. code-block:: yaml
   holmes:
-  toolsets:
-    - name: "github_tools"
-      description: "Tools for managing GitHub repositories"
-      variables:
-        github_token: "$GITHUB_TOKEN"
-      prerequisites:
-        - env:
+    toolsets:
+      github_tools:
+        description: "Tools for managing GitHub repositories"
+        tags:
+          - cli
+        variables:
+          github_token: "$GITHUB_TOKEN"
+        prerequisites:
+          - env:
             - "GITHUB_TOKEN"
-        - command: "curl --version"
-      tools:
-        - name: "list_user_repos"
-          description: "Lists all repositories for a GitHub user"
-          command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
+          - command: "curl --version"
+        tools:
+          - name: "list_user_repos"
+            description: "Lists all repositories for a GitHub user"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
 
           - name: "show_recent_commits"
-          description: "Shows the most recent commits for a repository"
-          command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
+            description: "Shows the most recent commits for a repository"
+            command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
 
-        - name: "get_repo_details"
-          description: "Fetches details of a specific repository"
-          command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
-          parameters:
-            owner:
-              type: "string"
-              description: "Owner of the repository."
-              required: true
-            repo:
-              type: "string"
-              description: "Name of the repository."
-              required: true
+          - name: "get_repo_details"
+            description: "Fetches details of a specific repository"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
+            parameters:
+              owner:
+                type: "string"
+                description: "Owner of the repository."
+                required: true
+              repo:
+                type: "string"
+                description: "Name of the repository."
+                required: true
 
-        - name: "get_recent_commits"
-          description: "Fetches the most recent commits for a repository"
-          command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
+          - name: "get_recent_commits"
+            description: "Fetches the most recent commits for a repository"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
 
-Example 2: Kubernetes Advanced Diagnostics Toolset
---------------------------------------------------
+
+**Example 2: Kubernetes Diagnostics Toolset**
+
 This toolset provides diagnostics for Kubernetes clusters, helping developers identify and resolve issues.
 
 .. code-block:: yaml
     toolsets:
-  kubernetes/diagnostics:
-    description: "Advanced diagnostics and troubleshooting tools for Kubernetes clusters"
-    docs_url: "https://kubernetes.io/docs/home/"
-    icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPKA-U9m5BxYQDF1O7atMfj9EMMXEoGu4t0Q&s"
-    prerequisites:
-      - command: "kubectl version --client"
+      kubernetes/diagnostics:
+        description: "Advanced diagnostics and troubleshooting tools for Kubernetes clusters"
+        docs_url: "https://kubernetes.io/docs/home/"
+        icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPKA-U9m5BxYQDF1O7atMfj9EMMXEoGu4t0Q&s"
+        tags:
+          - core
+        prerequisites:
+          - command: "kubectl version --client"
 
-    tools:
-      - name: "kubectl_node_health"
-        description: "Check the health status of all nodes in the cluster."
-        command: "kubectl get nodes -o wide"
+        tools:
+          - name: "kubectl_node_health"
+            description: "Check the health status of all nodes in the cluster."
+            command: "kubectl get nodes -o wide"
 
-      - name: "kubectl_troubleshoot_pod"
-        description: "Fetch logs and describe output for a problematic pod."
-        command: >
-          echo "Logs:" &&
-          kubectl logs {{ pod_name }} -n {{ namespace }} &&
-          echo "\nDescription:" &&
-          kubectl describe pod {{ pod_name }} -n {{ namespace }}
+          - name: "kubectl_troubleshoot_pod"
+            description: "Fetch logs and describe output for a problematic pod."
+            command: |
+              echo "Logs:" &&
+              kubectl logs {{ pod_name }} -n {{ namespace }} &&
+              echo "\nDescription:" &&
+              kubectl describe pod {{ pod_name }} -n {{ namespace }}
 
-      - name: "kubectl_check_resource_quota"
-        description: "Fetch the resource quota for a specific namespace."
-        command: "kubectl get resourcequota -n {{ namespace }} -o yaml"
+          - name: "kubectl_check_resource_quota"
+            description: "Fetch the resource quota for a specific namespace."
+            command: "kubectl get resourcequota -n {{ namespace }} -o yaml"
 
-      - name: "kubectl_pod_disk_usage"
-        description: "Check the disk usage of a specific pod."
-        command: |
-          kubectl exec -n {{ namespace }} {{ pod_name }} -- du -sh /
+          - name: "kubectl_pod_disk_usage"
+            description: "Check the disk usage of a specific pod."
+            command: |
+              kubectl exec -n {{ namespace }} {{ pod_name }} -- du -sh /
 
-      - name: "kubectl_find_evicted_pods"
-        description: "List all evicted pods in a specific namespace."
-        command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
+          - name: "kubectl_find_evicted_pods"
+            description: "List all evicted pods in a specific namespace."
+            command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
 
-      - name: "kubectl_drain_node"
-        description: "Drain a node safely by evicting all pods."
-        command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
+          - name: "kubectl_drain_node"
+            description: "Drain a node safely by evicting all pods."
+            command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
 
-      - name: "kubectl_pod_restart_count"
-        description: "Check the restart count for all pods in a namespace."
-        command: |
-          kubectl get pods -n {{ namespace }} -o jsonpath="{.items[*].status.containerStatuses[*].restartCount}" \
-          | awk '{s+=$1} END {print s}'
+          - name: "kubectl_pod_restart_count"
+            description: "Check the restart count for all pods in a namespace."
+            command: |
+              kubectl get pods -n {{ namespace }} -o jsonpath="{.items[*].status.containerStatuses[*].restartCount}" \
+              | awk '{s+=$1} END {print s}'
+
+Adding Custom Tools to Holmes
+-----------------------------
+As an example, let's add custom toolset named ``http_tools`` that  makes requests to ``example.com``
+
+.. code-block:: yaml
+  enableHolmesGPT: true
+  holmes:
+    additionalEnvVars:
+      - name: ROBUSTA_AI
+        value: "true"
+    toolsets:
+      http_tools:
+        description: "A simple toolset for HTTP requests to example.com"
+        docs_url: "https://example.com"
+        icon_url: "https://example.com/favicon.ico"
+        tags:
+          - cluster
+        prerequisites:
+          - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
+            expected_output: "200"
+
+        tools:
+          - name: "curl_example"
+            description: "Perform a GET request to example.com"
+            command: "curl -X GET https://example.com"
+          - name: "curl_with_params"
+            description: "Perform a GET request to example.com with query parameters"
+            command: "curl -X GET 'https://example.com?key={{ key }}&value={{ value }}'"
 
 
 Once you have updated the ``generated_values.yaml`` file, apply the changes by running the Helm upgrade command:
