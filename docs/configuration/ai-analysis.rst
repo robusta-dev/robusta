@@ -584,12 +584,6 @@ This toolset provides diagnostics for Kubernetes clusters, helping developers id
             description: "Drain a node safely by evicting all pods."
             command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
 
-          - name: "kubectl_pod_restart_count"
-            description: "Check the restart count for all pods in a namespace."
-            command: |
-              kubectl get pods -n {{ namespace }} -o jsonpath="{.items[*].status.containerStatuses[*].restartCount}" \
-              | awk '{s+=$1} END {print s}'
-
 Adding Custom Tools to Holmes
 -----------------------------
 As an example, let's add custom toolset named ``http_tools`` that  makes requests to ``example.com``
