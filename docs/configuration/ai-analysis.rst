@@ -499,51 +499,54 @@ Toolsets Examples
 
 This toolset enables Holmes to interact with fetch information from github repositories.
 
+
 .. code-block:: yaml
-    holmes:
-      toolsets:
-        github_tools:
-          description: "Tools for managing GitHub repositories"
-          tags:
-            - cli
-          variables:
-            github_token: "$GITHUB_TOKEN"
-          prerequisites:
-            - env:
-              - "GITHUB_TOKEN"
-            - command: "curl --version"
-          tools:
-            - name: "list_user_repos"
-              description: "Lists all repositories for a GitHub user"
-              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
 
-            - name: "show_recent_commits"
-              description: "Shows the most recent commits for a repository"
-              command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
+    toolsets:
+      github_tools:
+        description: "Tools for managing GitHub repositories"
+        tags:
+          - cli
+        variables:
+          github_token: "$GITHUB_TOKEN"
+        prerequisites:
+          - env:
+            - "GITHUB_TOKEN"
+          - command: "curl --version"
+        tools:
+          - name: "list_user_repos"
+            description: "Lists all repositories for a GitHub user"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
 
-            - name: "get_repo_details"
-              description: "Fetches details of a specific repository"
-              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
-              parameters:
-                owner:
-                  type: "string"
-                  description: "Owner of the repository."
-                  required: true
-                repo:
-                  type: "string"
-                  description: "Name of the repository."
-                  required: true
+          - name: "show_recent_commits"
+            description: "Shows the most recent commits for a repository"
+            command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
 
-            - name: "get_recent_commits"
-              description: "Fetches the most recent commits for a repository"
-              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
+          - name: "get_repo_details"
+            description: "Fetches details of a specific repository"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
+            parameters:
+              owner:
+                type: "string"
+                description: "Owner of the repository."
+                required: true
+              repo:
+                type: "string"
+                description: "Name of the repository."
+                required: true
+
+          - name: "get_recent_commits"
+            description: "Fetches the most recent commits for a repository"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
 
 
 **Example 2: Kubernetes Diagnostics Toolset**
 
 This toolset provides diagnostics for Kubernetes clusters, helping developers identify and resolve issues.
 
+
 .. code-block:: yaml
+
     toolsets:
       kubernetes/diagnostics:
         description: "Advanced diagnostics and troubleshooting tools for Kubernetes clusters"
@@ -553,12 +556,10 @@ This toolset provides diagnostics for Kubernetes clusters, helping developers id
           - core
         prerequisites:
           - command: "kubectl version --client"
-
         tools:
           - name: "kubectl_node_health"
             description: "Check the health status of all nodes in the cluster."
             command: "kubectl get nodes -o wide"
-
           - name: "kubectl_troubleshoot_pod"
             description: "Fetch logs and describe output for a problematic pod."
             command: |
@@ -566,29 +567,27 @@ This toolset provides diagnostics for Kubernetes clusters, helping developers id
               kubectl logs {{ pod_name }} -n {{ namespace }} &&
               echo "\nDescription:" &&
               kubectl describe pod {{ pod_name }} -n {{ namespace }}
-
           - name: "kubectl_check_resource_quota"
             description: "Fetch the resource quota for a specific namespace."
             command: "kubectl get resourcequota -n {{ namespace }} -o yaml"
-
           - name: "kubectl_pod_disk_usage"
             description: "Check the disk usage of a specific pod."
             command: |
               kubectl exec -n {{ namespace }} {{ pod_name }} -- du -sh /
-
           - name: "kubectl_find_evicted_pods"
             description: "List all evicted pods in a specific namespace."
             command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
-
           - name: "kubectl_drain_node"
             description: "Drain a node safely by evicting all pods."
             command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
+
 
 Adding Custom Tools to Holmes
 -----------------------------
 As an example, let's add custom toolset named ``http_tools`` that  makes requests to ``example.com``
 
 .. code-block:: yaml
+
     enableHolmesGPT: true
     holmes:
       additionalEnvVars:
@@ -604,7 +603,6 @@ As an example, let's add custom toolset named ``http_tools`` that  makes request
           prerequisites:
             - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
               expected_output: "200"
-
           tools:
             - name: "curl_example"
               description: "Perform a GET request to example.com"
