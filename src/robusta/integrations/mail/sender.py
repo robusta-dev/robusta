@@ -31,8 +31,9 @@ class MailSender(HTMLBaseSender):
 
         if include_headers:
             blocks.append(self.__create_finding_header(finding, status))
-            if platform_enabled:
-                blocks.append(self.create_links(finding, html_class="header_links"))
+            links_block = self.create_links(finding, "header_links", platform_enabled)
+            if links_block:
+                blocks.append(links_block)
 
             blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
 

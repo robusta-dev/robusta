@@ -528,7 +528,6 @@ class PrometheusBlock(BaseBlock):
     class Config:
         arbitrary_types_allowed = True
 
-
     def __init__(
         self,
         data: PrometheusQueryResult,

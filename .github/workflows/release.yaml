@@ -105,10 +105,6 @@ jobs:
         name: helm-chart
         path: helm/robusta/
 
-    - name: Upload helm chart
-      run: |
-        cd helm && ./upload_chart.sh
-
     - name: Release Docker to Dockerhub
       run: |-
         docker buildx build \
@@ -118,3 +114,7 @@ jobs:
         --tag robustadev/robusta-runner:${{env.RELEASE_VER}} \
         --push \
         .
+
+    - name: Upload helm chart
+      run: |
+        cd helm && ./upload_chart.sh

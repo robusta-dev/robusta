@@ -49,8 +49,9 @@ class MattermostSender:
         self.sink_params = sink_params
 
     @classmethod
-    def __add_mattermost_title(cls, title: str, status: FindingStatus, severity: FindingSeverity,
-                               add_silence_url: bool) -> str:
+    def __add_mattermost_title(
+        cls, title: str, status: FindingStatus, severity: FindingSeverity, add_silence_url: bool
+    ) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
         status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
         return f"{status_str}{icon} {severity.name} - **{title}**"
@@ -89,13 +90,13 @@ class MattermostSender:
         return "\n".join(_blocks)
 
     def __send_blocks_to_mattermost(
-            self,
-            report_blocks: List[BaseBlock],
-            title: str,
-            status: FindingStatus,
-            severity: FindingSeverity,
-            msg_color: str,
-            add_silence_url: bool,
+        self,
+        report_blocks: List[BaseBlock],
+        title: str,
+        status: FindingStatus,
+        severity: FindingSeverity,
+        msg_color: str,
+        add_silence_url: bool,
     ):
 
         # Process attachment blocks
@@ -112,8 +113,9 @@ class MattermostSender:
         output_blocks = []
         header_block = {}
         if title:
-            title = self.__add_mattermost_title(title=title, status=status, severity=severity,
-                                                add_silence_url=add_silence_url)
+            title = self.__add_mattermost_title(
+                title=title, status=status, severity=severity, add_silence_url=add_silence_url
+            )
             header_block = self.__to_mattermost(HeaderBlock(title), self.sink_params.name)
         for block in other_blocks:
             output_blocks.append(self.__to_mattermost(block, self.sink_params.name))
@@ -130,16 +132,31 @@ class MattermostSender:
 
         self.client.post_message(header_block, attachments, file_attachments)
 
+    def _get_actions_markdown(self, finding: Finding, platform_enabled: bool):
+        actions: list[str] = []
+        if platform_enabled:  # add link to the robusta ui, if it's configured
+            actions.append(
+                f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
+            )
+            if finding.add_silence_url:
+                actions.append(
+                    f"[:no_bell: Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
+                )
+
+        for link in finding.links:
+            actions.append(f"[:clapper: {link.name}]({link.url})")
+
+        if actions:
+            return MarkdownBlock(" ".join(actions))
+
+        return None
+
     def send_finding_to_mattermost(self, finding: Finding, platform_enabled: bool):
         blocks: List[BaseBlock] = []
-        if platform_enabled:  # add link to the robusta ui, if it's configured
-            actions = f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
-            if finding.add_silence_url:
-                actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
-            for video_link in finding.video_links:
-                actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
 
-            blocks.append(MarkdownBlock(actions))
+        actions_block = self._get_actions_markdown(finding, platform_enabled)
+        if actions_block:
+            blocks.append(actions_block)
 
         blocks.append(MarkdownBlock(f"*Source:* `{self.cluster_name}`\n"))
 

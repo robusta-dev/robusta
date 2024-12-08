@@ -9,8 +9,15 @@ class MsTeamsSink(SinkBase):
         super().__init__(sink_config.ms_teams_sink, registry)
         self.webhook_url = sink_config.ms_teams_sink.webhook_url
         self.webhook_override = sink_config.ms_teams_sink.webhook_override
+        self.sink_config = sink_config.ms_teams_sink
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         MsTeamsSender.send_finding_to_ms_teams(
-            self.webhook_url, finding, platform_enabled, self.cluster_name, self.account_id, self.webhook_override
+            self.webhook_url,
+            finding,
+            platform_enabled,
+            self.cluster_name,
+            self.account_id,
+            self.webhook_override,
+            self.sink_config.prefer_redirect_to_platform,
         )

@@ -24,6 +24,7 @@ class OpsGenieSink(SinkBase):
         self.api_key = sink_config.opsgenie_sink.api_key
         self.teams = sink_config.opsgenie_sink.teams
         self.tags = sink_config.opsgenie_sink.tags
+        self.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
 
         opsgenie_sdk.configuration.Configuration.set_default(None)
         self.conf = opsgenie_sdk.configuration.Configuration()
@@ -31,9 +32,6 @@ class OpsGenieSink(SinkBase):
 
         if sink_config.opsgenie_sink.host is not None:
             self.conf.host = sink_config.opsgenie_sink.host
-
-        if sink_config.opsgenie_sink.extra_details_labels is not None:
-            self.conf.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
 
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
@@ -80,19 +78,25 @@ class OpsGenieSink(SinkBase):
             self.__open_alert(finding, platform_enabled)
 
     def __to_description(self, finding: Finding, platform_enabled: bool) -> str:
-        description = ""
+        actions_block: list[str] = []
         if platform_enabled:
-            description = (
+            actions_block.append(
                 f'<a href="{finding.get_investigate_uri(self.account_id, self.cluster_name)}">🔎 Investigate</a>'
             )
             if finding.add_silence_url:
-                description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}">🔕 Silence</a>'
+                actions_block.append(
+                    f'<a href="{finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}">🔕 Silence</a>'
+                )
 
-            for video_link in finding.video_links:
-                description = f'{description}  <a href="{video_link.url}">🎬 {video_link.name}</a>'
-            description = f"{description}\n"
+        for link in finding.links:
+            actions_block.append(f'<a href="{link.url}">{link.link_text}</a>')
 
-        return f"{description}{self.__enrichments_as_text(finding.enrichments)}"
+        if actions_block:
+            actions = f"{' '.join(actions_block)}\n"
+        else:
+            actions = ""
+
+        return f"{actions}{self.__enrichments_as_text(finding.enrichments)}"
 
     def __to_details(self, finding: Finding) -> dict:
         details = {
@@ -105,9 +109,9 @@ class OpsGenieSink(SinkBase):
         lower_details_key = [k.lower() for k in details.keys()]
         # If there are extra details labels in the config extra_details_labels,
         # add them without altering the already existing details.
-        if self.conf.extra_details_labels:
+        if self.extra_details_labels:
             for key, value in finding.subject.labels:
-                if key in self.conf.extra_details_labels and not key in lower_details_key:
+                if not key in lower_details_key:
                     details[key] = value
         return details
 
