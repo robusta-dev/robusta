@@ -14,7 +14,8 @@ from robusta.core.reporting import (
     MarkdownBlock,
     TableBlock,
 )
-from robusta.core.reporting.base import FindingStatus
+from robusta.core.reporting.base import FindingStatus, LinkType
+from robusta.core.reporting.url_helpers import convert_prom_graph_url_to_robusta_metrics_explorer
 from robusta.integrations.msteams.msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
 from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
 from robusta.integrations.msteams.msteams_elements.msteams_card import MsTeamsCard
@@ -31,11 +32,12 @@ class MsTeamsMsg:
     # a safe zone of less then 28K
     MAX_SIZE_IN_BYTES = 1024 * 20
 
-    def __init__(self, webhook_url: str):
+    def __init__(self, webhook_url: str, prefer_redirect_to_platform: bool):
         self.entire_msg: List[MsTeamsBase] = []
         self.current_section: List[MsTeamsBase] = []
         self.text_file_containers = []
         self.webhook_url = webhook_url
+        self.prefer_redirect_to_platform = prefer_redirect_to_platform
 
     def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
         status: FindingStatus = (
@@ -46,20 +48,32 @@ class MsTeamsMsg:
 
         block = MsTeamsTextBlock(text=f"{title}", font_size="extraLarge")
         self.__write_to_entire_msg([block])
-        if platform_enabled:  # add link to the Robusta ui, if it's configured
-            silence_url = finding.get_prometheus_silence_url(account_id, cluster_name)
-            actions = f"[🔎 Investigate]({finding.get_investigate_uri(account_id, cluster_name)})"
-            if finding.add_silence_url:
-                actions = f"{actions}  [🔕 Silence]({silence_url})"
-            for video_link in finding.video_links:
-                actions = f"{actions} [🎬 {video_link.name}]({video_link.url})"
-            self.__write_to_entire_msg([MsTeamsTextBlock(text=actions)])
+        self._add_actions(platform_enabled, finding, cluster_name, account_id)
 
         self.__write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])
 
         if finding.description is not None:
             block = MsTeamsTextBlock(text=finding.description)
             self.__write_to_entire_msg([block])
+
+    def _add_actions(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
+        actions: list[str] = []
+        if platform_enabled:  # add link to the Robusta ui, if it's configured
+            actions.append(f"[🔎 Investigate]({finding.get_investigate_uri(account_id, cluster_name)})")
+
+            if finding.add_silence_url:
+                silence_url = finding.get_prometheus_silence_url(account_id, cluster_name)
+                actions.append(f"[🔕 Silence]({silence_url})")
+
+        for link in finding.links:
+            link_url = link.url
+            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and self.prefer_redirect_to_platform:
+                link_url = convert_prom_graph_url_to_robusta_metrics_explorer(link.url, cluster_name, account_id)
+            action: str = f"[{link.link_text}]({link_url})"
+            actions.append(action)
+
+        if actions:
+            self.__write_to_entire_msg([MsTeamsTextBlock(text=" ".join(actions))])
 
     @classmethod
     def __build_msteams_title(

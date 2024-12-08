@@ -548,17 +548,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "WeeklyPopeyeScan"
-  triggers:
-  - on_schedule:
-      fixed_delay_repeat:
-        repeat: 1
-        seconds_delay: 120
-  actions:
-  - popeye_scan: {}
-  sinks:
-    - "robusta_ui_sink"
-
 - name: "WeeklyKRRScan"
   triggers:
   - on_schedule:
@@ -691,6 +680,10 @@ runner:
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
+  # k8s service config
+  service:
+    # custom service annotations
+    annotations: {}
   serviceMonitor:
     path: /metrics
   securityContext:

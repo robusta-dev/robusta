@@ -24,8 +24,9 @@ class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
         super().__init__(sink_config.telegram_sink, registry)
 
-        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.thread_id,
-                                     sink_config.telegram_sink.bot_token)
+        self.client = TelegramClient(
+            sink_config.telegram_sink.chat_id, sink_config.telegram_sink.thread_id, sink_config.telegram_sink.bot_token
+        )
         self.send_files = sink_config.telegram_sink.send_files
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
@@ -52,16 +53,9 @@ class TelegramSink(SinkBase):
 
         message_content = self.__build_telegram_title(title, status, finding.severity, finding.add_silence_url)
 
-        if platform_enabled:
-            message_content += (
-                f"[{INVESTIGATE_ICON} Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)}) "
-            )
-            if finding.add_silence_url:
-                message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
-
-            for video_link in finding.video_links:
-                message_content = f"[{VIDEO_ICON} {video_link.name}]({video_link.url})"
-            message_content += "\n\n"
+        actions_content: str = self._get_actions_block(finding, platform_enabled)
+        if actions_content:
+            message_content += actions_content
 
         blocks = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]
 
@@ -80,14 +74,32 @@ class TelegramSink(SinkBase):
 
         return message_content
 
+    def _get_actions_block(self, finding: Finding, platform_enabled: bool):
+        actions_content = ""
+        if platform_enabled:
+            actions_content += (
+                f"[{INVESTIGATE_ICON} Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)}) "
+            )
+            if finding.add_silence_url:
+                actions_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
+
+        for link in finding.links:
+            actions_content = f"[{link.link_text}]({link.url})"
+
+        if actions_content:
+            actions_content += "\n\n"
+
+        return actions_content
+
     @classmethod
     def __is_telegram_text_block(cls, block: BaseBlock) -> bool:
         # enrichments text tables are too big for mobile device
         return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
 
     @classmethod
-    def __build_telegram_title(cls, title: str, status: FindingStatus, severity: FindingSeverity,
-                               add_silence_url: bool) -> str:
+    def __build_telegram_title(
+        cls, title: str, status: FindingStatus, severity: FindingSeverity, add_silence_url: bool
+    ) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
         status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
         return f"{status_str}{icon} {severity.name} - *{title}*\n\n"

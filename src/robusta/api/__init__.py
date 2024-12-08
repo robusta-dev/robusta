@@ -170,7 +170,7 @@ from robusta.core.reporting import (
     ScanReportBlock,
     ScanReportRow,
     TableBlock,
-    VideoLink,
+    Link,
 )
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,
