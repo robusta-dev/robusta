@@ -312,14 +312,14 @@ Full list can be found `here <https://github.com/robusta-dev/holmesgpt/tree/mast
 By default, any of the toolsets may be disabled. You can enable or disable them by modifying the ``generated_values.yaml`` file.
 
 .. code-block:: yaml
-  enableHolmesGPT: true
-  holmes:
-    additionalEnvVars:
-      - name: ROBUSTA_AI
-        value: "true"
-    toolsets:
-      kubernetes/logs:
-        enabled: false
+    enableHolmesGPT: true
+    holmes:
+      additionalEnvVars:
+        - name: ROBUSTA_AI
+          value: "true"
+      toolsets:
+        kubernetes/logs:
+          enabled: false
 
 After making changes, apply them using Helm:
 
@@ -332,12 +332,12 @@ Additionally, you can overwrite any of the fields in the default toolsets, such 
 For example:
 
 .. code-block:: yaml
-  enableHolmesGPT: true
-  holmes:
-    additionalEnvVars:
-      - name: ROBUSTA_AI
-        value: "true"
-    toolsets:
+    enableHolmesGPT: true
+    holmes:
+      additionalEnvVars:
+        - name: ROBUSTA_AI
+          value: "true"
+      toolsets:
       kubernetes/logs:
         description: "My custom description for default toolset."
 
@@ -348,34 +348,34 @@ A toolset is defined in ``generated_values.yaml``. Each toolset has a unique nam
 
 .. code-block:: yaml
 
-  toolsets:
-    <toolset_name>:
-      enabled: <true|false>
-      name: "<string>"
-      description: "<string>"
-      docs_url: "<string>"
-      icon_url: "<string>"
-      tags:
-        - <cli|cluster|core>
-      installation_instructions: "<string>"
-      variables:
-        <variable_name>: "<value>"
-      prerequisites:
-        - command: "<shell_command>"
-          expected_output: "<expected output of the command>"
-        - env:
+    toolsets:
+      <toolset_name>:
+        enabled: <true|false>
+        name: "<string>"
+        description: "<string>"
+        docs_url: "<string>"
+        icon_url: "<string>"
+        tags:
+          - <cli|cluster|core>
+        installation_instructions: "<string>"
+        variables:
+          <variable_name>: "<value>"
+        prerequisites:
+          - command: "<shell_command>"
+            expected_output: "<expected output of the command>"
+          - env:
             - "<environment variable>"
-      additional_instructions: "<string>"
-      tools:
-        - name: "<string>"
-          description: "<string>"
-          command: "<shell command template>"
-          script: "<script content>"
-          parameters:
-            <parameter_name>:
-              type: "<string>"
-              description: "<string>"
-              required: <true|false>
+        additional_instructions: "<string>"
+        tools:
+          - name: "<string>"
+            description: "<string>"
+            command: "<shell command template>"
+            script: "<script content>"
+            parameters:
+              <parameter_name>:
+                type: "<string>"
+                description: "<string>"
+                required: <true|false>
 
 Toolset Fields
 --------------
@@ -500,43 +500,43 @@ Toolsets Examples
 This toolset enables Holmes to interact with fetch information from github repositories.
 
 .. code-block:: yaml
-  holmes:
-    toolsets:
-      github_tools:
-        description: "Tools for managing GitHub repositories"
-        tags:
-          - cli
-        variables:
-          github_token: "$GITHUB_TOKEN"
-        prerequisites:
-          - env:
-            - "GITHUB_TOKEN"
-          - command: "curl --version"
-        tools:
-          - name: "list_user_repos"
-            description: "Lists all repositories for a GitHub user"
-            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
+    holmes:
+      toolsets:
+        github_tools:
+          description: "Tools for managing GitHub repositories"
+          tags:
+            - cli
+          variables:
+            github_token: "$GITHUB_TOKEN"
+          prerequisites:
+            - env:
+              - "GITHUB_TOKEN"
+            - command: "curl --version"
+          tools:
+            - name: "list_user_repos"
+              description: "Lists all repositories for a GitHub user"
+              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
 
-          - name: "show_recent_commits"
-            description: "Shows the most recent commits for a repository"
-            command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
+            - name: "show_recent_commits"
+              description: "Shows the most recent commits for a repository"
+              command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
 
-          - name: "get_repo_details"
-            description: "Fetches details of a specific repository"
-            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
-            parameters:
-              owner:
-                type: "string"
-                description: "Owner of the repository."
-                required: true
-              repo:
-                type: "string"
-                description: "Name of the repository."
-                required: true
+            - name: "get_repo_details"
+              description: "Fetches details of a specific repository"
+              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
+              parameters:
+                owner:
+                  type: "string"
+                  description: "Owner of the repository."
+                  required: true
+                repo:
+                  type: "string"
+                  description: "Name of the repository."
+                  required: true
 
-          - name: "get_recent_commits"
-            description: "Fetches the most recent commits for a repository"
-            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
+            - name: "get_recent_commits"
+              description: "Fetches the most recent commits for a repository"
+              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
 
 
 **Example 2: Kubernetes Diagnostics Toolset**
@@ -595,29 +595,29 @@ Adding Custom Tools to Holmes
 As an example, let's add custom toolset named ``http_tools`` that  makes requests to ``example.com``
 
 .. code-block:: yaml
-  enableHolmesGPT: true
-  holmes:
-    additionalEnvVars:
-      - name: ROBUSTA_AI
-        value: "true"
-    toolsets:
-      http_tools:
-        description: "A simple toolset for HTTP requests to example.com"
-        docs_url: "https://example.com"
-        icon_url: "https://example.com/favicon.ico"
-        tags:
-          - cluster
-        prerequisites:
-          - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
-            expected_output: "200"
+    enableHolmesGPT: true
+    holmes:
+      additionalEnvVars:
+        - name: ROBUSTA_AI
+          value: "true"
+      toolsets:
+        http_tools:
+          description: "A simple toolset for HTTP requests to example.com"
+          docs_url: "https://example.com"
+          icon_url: "https://example.com/favicon.ico"
+          tags:
+            - cluster
+          prerequisites:
+            - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
+              expected_output: "200"
 
-        tools:
-          - name: "curl_example"
-            description: "Perform a GET request to example.com"
-            command: "curl -X GET https://example.com"
-          - name: "curl_with_params"
-            description: "Perform a GET request to example.com with query parameters"
-            command: "curl -X GET 'https://example.com?key={{ key }}&value={{ value }}'"
+          tools:
+            - name: "curl_example"
+              description: "Perform a GET request to example.com"
+              command: "curl -X GET https://example.com"
+            - name: "curl_with_params"
+              description: "Perform a GET request to example.com with query parameters"
+              command: "curl -X GET 'https://example.com?key={{ key }}&value={{ value }}'"
 
 
 Once you have updated the ``generated_values.yaml`` file, apply the changes by running the Helm upgrade command:
