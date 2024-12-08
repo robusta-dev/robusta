@@ -17,6 +17,7 @@ from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.jira.jira_sink_params import JiraSinkParams
 from robusta.integrations.jira.client import JiraClient
+from robusta.integrations.jira.constants import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
@@ -29,13 +30,6 @@ SEVERITY_COLOR_MAP = {
     FindingSeverity.MEDIUM: "#e48301",
     FindingSeverity.LOW: "#ffdc06",
     FindingSeverity.INFO: "#05aa01",
-}
-# Jira priorities, see: https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-priorities/#api-group-issue-priorities
-SEVERITY_JIRA_ID = {
-    FindingSeverity.HIGH: "Critical",
-    FindingSeverity.MEDIUM: "Major",
-    FindingSeverity.LOW: "Minor",
-    FindingSeverity.INFO: "Minor",
 }
 
 STRONG_MARK_REGEX = r"\*{1}[\w|\s\d%!><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+\*{1}"
@@ -237,16 +231,27 @@ class JiraSender:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
 
-        # Default priority is "Major" if not a standard severity is given
-        severity = SEVERITY_JIRA_ID.get(finding.severity, "Major")
+        # Convert string-based priority_mapping to enum-based if it exists
+        priority_mapping = {}
+        if self.params.priority_mapping:
+            priority_mapping = {
+                getattr(FindingSeverity, k): v
+                for k, v in self.params.priority_mapping.items()
+            }
 
+        # Default priority is "Major" if not a standard severity is given
+        severity = (priority_mapping or SEVERITY_JIRA_ID).get(finding.severity, "Major")
+
+        issue_data = {
+            "description": {"type": "doc", "version": 1, "content": actions + output_blocks},
+            "summary": finding.title,
+            "labels": labels,
+            "priority": {"name": severity},
+        }
+
+        # Let client.manage_issue handle the fallback to ID if name fails
         self.client.manage_issue(
-            {
-                "description": {"type": "doc", "version": 1, "content": actions + output_blocks},
-                "summary": finding.title,
-                "labels": labels,
-                "priority": {"name": severity},
-            },
+            issue_data,
             {"status": status, "source": finding.source},
             file_blocks,
         )

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
@@ -20,6 +20,7 @@ class JiraSinkParams(SinkBaseParams):
     noReopenResolution: Optional[str] = ""
     epic: Optional[str] = ""
     assignee: Optional[str] = ""
+    priority_mapping: Optional[Dict[str, str]] = None
 
 
     @classmethod

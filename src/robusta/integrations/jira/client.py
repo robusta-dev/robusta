@@ -1,7 +1,8 @@
 import logging
-from typing import Optional
+from typing import Optional, Dict
 
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import HTTPError
 from requests_toolbelt import MultipartEncoder
 
 from robusta.core.reporting.base import FindingStatus
@@ -13,6 +14,7 @@ from robusta.integrations.common.requests import (
     check_response_succeed,
     process_request,
 )
+from robusta.integrations.jira.constants import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
 
 _API_PREFIX = "rest/api/3"
 
@@ -58,6 +60,24 @@ class JiraClient:
                 f"Jira initialized successfully. Project: {self.default_project_id} issue type: {self.default_issue_type_id}"
             )
 
+        if jira_params.priority_mapping:
+            if logging.getLogger().getEffectiveLevel() <= logging.DEBUG:
+                self._validate_priorities(jira_params.priority_mapping)
+
+    def _validate_priorities(self, priority_mapping: Dict[str, str]) -> None:
+        """Validate that configured priorities exist in Jira"""
+        endpoint = "priority"
+        url = self._get_full_jira_url(endpoint)
+        available_priorities = self._call_jira_api(url) or []
+        available_priority_names = {p.get("name") for p in available_priorities}
+
+        for severity, priority in priority_mapping.items():
+            if priority not in available_priority_names:
+                logging.warning(
+                    f"Configured priority '{priority}' for severity '{severity}' "
+                    f"is not available in Jira. Available priorities: {available_priority_names}"
+                )
+
     def _get_full_jira_url(self, endpoint: str) -> str:
         return "/".join([self.params.url, _API_PREFIX, endpoint])
 
@@ -86,7 +106,7 @@ class JiraClient:
                 f"request: url: {response.request.url} "
                 f"headers: {response.request.headers} body: {response.request.body}"
             )
-            return None
+            raise HTTPError(f"Jira API error: {response.status_code} - {response.text}", response=response)
 
     def _get_transition_id(self, issue_id, status_name):
         transitions = self._get_transitions_for_issue(issue_id)
@@ -160,6 +180,46 @@ class JiraClient:
             return default_issue["id"]
         return None
 
+    def _resolve_priority(self, priority_name: str) -> dict:
+        """Resolve Jira priority in this order:
+        1. User configured priority mapping (by name)
+        2. Default Robusta priority names (SEVERITY_JIRA_ID)
+        3. Fallback to standard Jira IDs (1-4)
+
+        Returns:
+            dict: Priority field in format {"name": str} or {"id": str}
+        """
+        # 1. Try user configured priority mapping
+        if hasattr(self, "params") and self.params.priority_mapping:
+            for severity, mapped_name in self.params.priority_mapping.items():
+                if mapped_name == priority_name:
+                    return {"name": mapped_name}
+
+        # 2. Use default Jira Robusta priority names directly
+        # 3. Or fallback to IDs if not found
+        severity = next((sev for sev, name in SEVERITY_JIRA_ID.items() if name == priority_name), None)
+        if severity:
+            return {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
+            
+        # If we get here, use the priority name as-is
+        return {"name": priority_name}
+
+    def _create_issue_payload(self, issue_data):
+        return {
+            "update": {},
+            "fields": {
+                **issue_data,
+                "issuetype": {"id": str(self.default_issue_type_id)},
+                "project": {"id": str(self.default_project_id)},
+            },
+        }
+
+    def _handle_attachment_and_return(self, response, issue_attachments):
+        issue_id = response.get("id")
+        if issue_id and issue_attachments:
+            self.add_attachment(issue_id, issue_attachments)
+        return response
+
     def list_issues(self, search_params: Optional[str] = None):
         endpoint = "search"
         search_params = search_params or ""
@@ -205,23 +265,20 @@ class JiraClient:
         response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
         logging.debug(response)
 
-    def create_issue(self, issue_data, issue_attachments=None):
+    def create_issue(self, issue_data: dict, issue_attachments=None):
         endpoint = "issue"
         url = self._get_full_jira_url(endpoint)
-        payload = {
-            "update": {},
-            "fields": {
-                **issue_data,
-                "issuetype": {"id": str(self.default_issue_type_id)},
-                "project": {"id": str(self.default_project_id)},
-            },
-        }
-        logging.debug(f"Create issue with payload: {payload}")
-        response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
-        logging.debug(response)
-        issue_id = response.get("id")
-        if issue_id and issue_attachments:
-            self.add_attachment(issue_id, issue_attachments)
+
+        priority_name = issue_data.get("priority", {}).get("name")
+        try:
+            priority = self._resolve_priority(priority_name)
+            issue_data["priority"] = priority
+            payload = self._create_issue_payload(issue_data)
+            response = self._call_jira_api(url, HttpMethod.POST, json=payload)
+            return self._handle_attachment_and_return(response, issue_attachments)
+        except HTTPError as e:
+            logging.error(f"Failed to create issue with priority '{priority_name}': {str(e)}")
+            return None
 
     def update_issue(self, issue_id, issue_data):
         summary = self._get_nested_property(issue_data, "summary", "")
