@@ -114,7 +114,7 @@ redirects = {
     "tutorials/playbook-track-secrets.html": "/master/playbook-reference/kubernetes-examples//playbook-track-secrets.html",
     "tutorials/alert-remediation.html": "/master/playbook-reference/prometheus-examples/alert-remediation.html",
     "tutorials/alert-custom-enrichment.html": "/master/playbook-reference/prometheus-examples/alert-custom-enrichment.html",
-    "/catalog/sinks/slack.html": "/master/configuration/sinks/slack.html"
+    "catalog/sinks/slack.html": "/master/configuration/sinks/slack.html"
 
 
 }
