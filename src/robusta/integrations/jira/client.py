@@ -105,7 +105,7 @@ class JiraClient:
                 f"request: url: {response.request.url} "
                 f"headers: {response.request.headers} body: {response.request.body}"
             )
-            raise HTTPError(f"Jira API error: {response.status_code} - {response.text}", response=response)
+            return None
 
     def _get_transition_id(self, issue_id, status_name):
         transitions = self._get_transitions_for_issue(issue_id)
