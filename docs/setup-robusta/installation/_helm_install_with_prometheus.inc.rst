@@ -74,7 +74,7 @@ On some clusters this can take a while, so don't panic if it appears stuck:
             helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
             helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
-    .. tab-item:: Kind/Colima
+    .. tab-item:: Local/Test Cluster
         :name: install-test-clusters
 
         Test clusters tend to have fewer resources. To lower Robusta's resource requests, set ``isSmallCluster=true``.
@@ -83,7 +83,10 @@ On some clusters this can take a while, so don't panic if it appears stuck:
             :name: cb-helm-install-test-clusters
 
             helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-            helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true
+            helm upgrade robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true \
+                --set kube-prometheus-stack.prometheus.prometheusSpec.retentionSize=9GB \
+                --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
+                --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
 
 Verifying Installation
 ------------------------------
