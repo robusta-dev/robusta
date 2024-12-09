@@ -21,7 +21,7 @@ Prerequisites
    :header_update_levels:
    :file: setup-robusta/installation/_generate_config.jinja
 
-.. include:: ./_helm_install.inc.rst
+.. include:: ./_helm_install_no_prometheus.inc.rst
 
 .. include:: ./_see_robusta_in_action.rst
 
