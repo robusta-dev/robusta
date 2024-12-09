@@ -196,22 +196,6 @@ class JiraClient:
         # 2. Fallback to current behavior
         return {"name": priority_name}
 
-    def _create_issue_payload(self, issue_data):
-        return {
-            "update": {},
-            "fields": {
-                **issue_data,
-                "issuetype": {"id": str(self.default_issue_type_id)},
-                "project": {"id": str(self.default_project_id)},
-            },
-        }
-
-    def _handle_attachment_and_return(self, response, issue_attachments):
-        issue_id = response.get("id")
-        if issue_id and issue_attachments:
-            self.add_attachment(issue_id, issue_attachments)
-        return response
-
     def list_issues(self, search_params: Optional[str] = None):
         endpoint = "search"
         search_params = search_params or ""
