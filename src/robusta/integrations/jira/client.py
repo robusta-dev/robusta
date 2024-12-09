@@ -271,14 +271,28 @@ class JiraClient:
 
         priority_name = issue_data.get("priority", {}).get("name")
         try:
-            priority = self._resolve_priority(priority_name)
-            issue_data["priority"] = priority
+            # First attempt - with priority
+            if priority_name:
+                priority = self._resolve_priority(priority_name)
+                issue_data["priority"] = priority
             payload = self._create_issue_payload(issue_data)
             response = self._call_jira_api(url, HttpMethod.POST, json=payload)
             return self._handle_attachment_and_return(response, issue_attachments)
         except HTTPError as e:
-            logging.error(f"Failed to create issue with priority '{priority_name}': {str(e)}")
-            return None
+            if "priority" in str(e) and priority_name:
+                # If error is priority-related, retry without priority
+                logging.warning(f"Failed to set priority '{priority_name}', retrying without priority")
+                issue_data.pop("priority", None)
+                payload = self._create_issue_payload(issue_data)
+                try:
+                    response = self._call_jira_api(url, HttpMethod.POST, json=payload)
+                    return self._handle_attachment_and_return(response, issue_attachments)
+                except HTTPError as retry_error:
+                    logging.error(f"Failed to create issue without priority: {str(retry_error)}")
+                    return None
+            else:
+                logging.error(f"Failed to create issue with priority '{priority_name}': {str(e)}")
+                return None
 
     def update_issue(self, issue_id, issue_data):
         summary = self._get_nested_property(issue_data, "summary", "")
