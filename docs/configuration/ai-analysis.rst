@@ -554,29 +554,23 @@ This toolset provides diagnostics for Kubernetes clusters, helping developers id
         icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPKA-U9m5BxYQDF1O7atMfj9EMMXEoGu4t0Q&s"
         tags:
           - core
+          - cluster
         prerequisites:
           - command: "kubectl version --client"
         tools:
+
           - name: "kubectl_node_health"
             description: "Check the health status of all nodes in the cluster."
             command: "kubectl get nodes -o wide"
-          - name: "kubectl_troubleshoot_pod"
-            description: "Fetch logs and describe output for a problematic pod."
-            command: |
-              echo "Logs:" &&
-              kubectl logs {{ pod_name }} -n {{ namespace }} &&
-              echo "\nDescription:" &&
-              kubectl describe pod {{ pod_name }} -n {{ namespace }}
+
           - name: "kubectl_check_resource_quota"
             description: "Fetch the resource quota for a specific namespace."
             command: "kubectl get resourcequota -n {{ namespace }} -o yaml"
-          - name: "kubectl_pod_disk_usage"
-            description: "Check the disk usage of a specific pod."
-            command: |
-              kubectl exec -n {{ namespace }} {{ pod_name }} -- du -sh /
+
           - name: "kubectl_find_evicted_pods"
             description: "List all evicted pods in a specific namespace."
             command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
+
           - name: "kubectl_drain_node"
             description: "Drain a node safely by evicting all pods."
             command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
@@ -607,6 +601,7 @@ As an example, let's add custom toolset named ``http_tools`` that  makes request
             - name: "curl_example"
               description: "Perform a GET request to example.com"
               command: "curl -X GET https://example.com"
+
             - name: "curl_with_params"
               description: "Perform a GET request to example.com with query parameters"
               command: "curl -X GET 'https://example.com?key={{ key }}&value={{ value }}'"
