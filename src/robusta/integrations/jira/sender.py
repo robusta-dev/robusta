@@ -17,7 +17,13 @@ from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.jira.jira_sink_params import JiraSinkParams
 from robusta.integrations.jira.client import JiraClient
-from robusta.integrations.jira.constants import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
+
+SEVERITY_JIRA_ID = {
+    FindingSeverity.HIGH: "Critical",
+    FindingSeverity.MEDIUM: "Major",
+    FindingSeverity.LOW: "Minor",
+    FindingSeverity.INFO: "Minor",
+}
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
@@ -231,16 +237,10 @@ class JiraSender:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
 
-        # Convert string-based priority_mapping to enum-based if it exists
-        priority_mapping = {}
+        # Use user priority mapping if available, otherwise fall back to default
+        severity = SEVERITY_JIRA_ID.get(finding.severity, "Major")
         if self.params.priority_mapping:
-            priority_mapping = {
-                getattr(FindingSeverity, k): v
-                for k, v in self.params.priority_mapping.items()
-            }
-
-        # Default priority is "Major" if not a standard severity is given
-        severity = (priority_mapping or SEVERITY_JIRA_ID).get(finding.severity, "Major")
+            severity = self.params.priority_mapping.get(finding.severity.name, severity)
 
         issue_data = {
             "description": {"type": "doc", "version": 1, "content": actions + output_blocks},

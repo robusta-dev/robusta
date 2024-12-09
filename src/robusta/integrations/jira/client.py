@@ -14,7 +14,6 @@ from robusta.integrations.common.requests import (
     check_response_succeed,
     process_request,
 )
-from robusta.integrations.jira.constants import SEVERITY_JIRA_ID, SEVERITY_JIRA_FALLBACK_ID
 
 _API_PREFIX = "rest/api/3"
 
@@ -181,13 +180,12 @@ class JiraClient:
         return None
 
     def _resolve_priority(self, priority_name: str) -> dict:
-        """Resolve Jira priority in this order:
-        1. User configured priority mapping (by name)
-        2. Default Robusta priority names (SEVERITY_JIRA_ID)
-        3. Fallback to standard Jira IDs (1-4)
+        """Resolve Jira priority:
+        1. User configured priority mapping (if defined)
+        2. Fallback to current behavior (use priority name as-is)
 
         Returns:
-            dict: Priority field in format {"name": str} or {"id": str}
+            dict: Priority field in format {"name": str}
         """
         # 1. Try user configured priority mapping
         if hasattr(self, "params") and self.params.priority_mapping:
@@ -195,13 +193,7 @@ class JiraClient:
                 if mapped_name == priority_name:
                     return {"name": mapped_name}
 
-        # 2. Use default Jira Robusta priority names directly
-        # 3. Or fallback to IDs if not found
-        severity = next((sev for sev, name in SEVERITY_JIRA_ID.items() if name == priority_name), None)
-        if severity:
-            return {"id": SEVERITY_JIRA_FALLBACK_ID[severity]}
-            
-        # If we get here, use the priority name as-is
+        # 2. Fallback to current behavior
         return {"name": priority_name}
 
     def _create_issue_payload(self, issue_data):
@@ -265,34 +257,30 @@ class JiraClient:
         response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
         logging.debug(response)
 
-    def create_issue(self, issue_data: dict, issue_attachments=None):
+    def create_issue(self, issue_data, issue_attachments=None):
         endpoint = "issue"
         url = self._get_full_jira_url(endpoint)
 
-        priority_name = issue_data.get("priority", {}).get("name")
-        try:
-            # First attempt - with priority
+        # Add priority resolution if it exists
+        if "priority" in issue_data:
+            priority_name = issue_data["priority"].get("name")
             if priority_name:
-                priority = self._resolve_priority(priority_name)
-                issue_data["priority"] = priority
-            payload = self._create_issue_payload(issue_data)
-            response = self._call_jira_api(url, HttpMethod.POST, json=payload)
-            return self._handle_attachment_and_return(response, issue_attachments)
-        except HTTPError as e:
-            if "priority" in str(e) and priority_name:
-                # If error is priority-related, retry without priority
-                logging.warning(f"Failed to set priority '{priority_name}', retrying without priority")
-                issue_data.pop("priority", None)
-                payload = self._create_issue_payload(issue_data)
-                try:
-                    response = self._call_jira_api(url, HttpMethod.POST, json=payload)
-                    return self._handle_attachment_and_return(response, issue_attachments)
-                except HTTPError as retry_error:
-                    logging.error(f"Failed to create issue without priority: {str(retry_error)}")
-                    return None
-            else:
-                logging.error(f"Failed to create issue with priority '{priority_name}': {str(e)}")
-                return None
+                issue_data["priority"] = self._resolve_priority(priority_name)
+
+        payload = {
+            "update": {},
+            "fields": {
+                **issue_data,
+                "issuetype": {"id": str(self.default_issue_type_id)},
+                "project": {"id": str(self.default_project_id)},
+            },
+        }
+        logging.debug(f"Create issue with payload: {payload}")
+        response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
+        logging.debug(response)
+        issue_id = response.get("id")
+        if issue_id and issue_attachments:
+            self.add_attachment(issue_id, issue_attachments)
 
     def update_issue(self, issue_id, issue_data):
         summary = self._get_nested_property(issue_data, "summary", "")
