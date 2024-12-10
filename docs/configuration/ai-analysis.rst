@@ -249,7 +249,7 @@ Reading the Robusta UI Token from a secret in HolmesGPT
 .. code-block:: yaml
 
     holmes:
-      additional_env_vars:
+      additionalEnvVars:
       ....
       - name: ROBUSTA_UI_TOKEN
         valueFrom:

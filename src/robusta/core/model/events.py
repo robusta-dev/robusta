@@ -17,7 +17,8 @@ from robusta.core.reporting.base import (
     FindingSource,
     FindingSubject,
     FindingSubjectType,
-    VideoLink,
+    Link,
+    LinkType,
 )
 from robusta.core.sinks import SinkBase
 from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
@@ -95,10 +96,15 @@ class ExecutionBaseEvent:
                 sink_finding.id = finding_id  # share the same finding id between different sinks
                 self.sink_findings[sink].append(sink_finding)
 
-    def add_video_link(self, video_link: VideoLink):
+    def add_link(self, link: Link, suppress_warning: bool = False) -> None:
         self.__prepare_sinks_findings()
         for sink in self.named_sinks:
-            self.sink_findings[sink][0].add_video_link(video_link, True)
+            self.sink_findings[sink][0].add_link(link, suppress_warning)
+
+    def add_video_link(self, video_link: Link) -> None:
+        # For backward compatability
+        video_link.type = LinkType.VIDEO
+        self.add_link(video_link, True)
 
     def emit_event(self, event_name: str, **kwargs):
         """Publish an event to the pubsub. It will be processed by the sinks during the execution of the playbook."""

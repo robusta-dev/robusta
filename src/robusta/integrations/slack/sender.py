@@ -1,3 +1,4 @@
+import copy
 import logging
 import ssl
 import tempfile
@@ -12,9 +13,14 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
-from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, SLACK_REQUEST_TIMEOUT, HOLMES_ENABLED, SLACK_TABLE_COLUMNS_LIMIT
+from robusta.core.model.env_vars import (
+    ADDITIONAL_CERTIFICATE,
+    SLACK_REQUEST_TIMEOUT,
+    HOLMES_ENABLED,
+    SLACK_TABLE_COLUMNS_LIMIT,
+)
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
-from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus
+from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
 from robusta.core.reporting.blocks import (
     BaseBlock,
     CallbackBlock,
@@ -33,6 +39,7 @@ from robusta.core.reporting.blocks import (
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations
 from robusta.core.reporting.holmes import HolmesResultsBlock, ToolCallResult
+from robusta.core.reporting.url_helpers import convert_prom_graph_url_to_robusta_metrics_explorer
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base import KeyT
@@ -302,6 +309,31 @@ class SlackSender:
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
+
+    def __limit_labels_size(self, labels: dict, max_size: int = 1000) -> dict:
+        # slack can only send 2k tokens in a callback so the labels are limited in size
+
+        low_priority_labels = ["job", "prometheus", "severity", "service"]
+        current_length = len(str(labels))
+        if current_length <= max_size:
+            return labels
+        
+        limited_labels = copy.deepcopy(labels)
+
+        # first remove the low priority labels if needed
+        for key in low_priority_labels:
+            if current_length <= max_size:
+                break
+            if key in limited_labels:
+                del limited_labels[key]
+                current_length = len(str(limited_labels))
+
+        while current_length > max_size and limited_labels:
+            limited_labels.pop(next(iter(limited_labels)))
+            current_length = len(str(limited_labels))
+
+        return limited_labels
+
     def __create_holmes_callback(self, finding: Finding) -> CallbackBlock:
         resource = ResourceInfo(
             name=finding.subject.name if finding.subject.name else "",
@@ -315,6 +347,7 @@ class SlackSender:
             "robusta_issue_id": str(finding.id),
             "issue_type": finding.aggregation_key,
             "source": finding.source.name,
+            "labels": self.__limit_labels_size(labels=finding.subject.labels)
         }
 
         return CallbackBlock(
@@ -350,26 +383,39 @@ class SlackSender:
 {title}"""
         )
 
-    def __create_links(self, finding: Finding, include_investigate_link: bool):
+    def __create_links(
+        self,
+        finding: Finding,
+        platform_enabled: bool,
+        include_investigate_link: bool,
+        prefer_redirect_to_platform: bool,
+    ):
         links: List[LinkProp] = []
-        if include_investigate_link:
-            links.append(
-                LinkProp(
-                    text="Investigate 🔎",
-                    url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+        if platform_enabled:
+            if include_investigate_link:
+                links.append(
+                    LinkProp(
+                        text="Investigate 🔎",
+                        url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+                    )
                 )
-            )
 
-        if finding.add_silence_url:
-            links.append(
-                LinkProp(
-                    text="Configure Silences 🔕",
-                    url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+            if finding.add_silence_url:
+                links.append(
+                    LinkProp(
+                        text="Configure Silences 🔕",
+                        url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    )
                 )
-            )
 
-        for video_link in finding.video_links:
-            links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
+        for link in finding.links:
+            link_url = link.url
+            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and prefer_redirect_to_platform:
+                link_url = convert_prom_graph_url_to_robusta_metrics_explorer(
+                    link.url, self.cluster_name, self.account_id
+                )
+
+            links.append(LinkProp(text=link.link_text, url=link_url))
 
         return LinksBlock(links=links)
 
@@ -489,8 +535,10 @@ class SlackSender:
         if finding.title:
             blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
 
-        if platform_enabled:
-            blocks.append(self.__create_links(finding, sink_params.investigate_link))
+        links_block: LinksBlock = self.__create_links(
+            finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
+        )
+        blocks.append(links_block)
 
         if HOLMES_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))

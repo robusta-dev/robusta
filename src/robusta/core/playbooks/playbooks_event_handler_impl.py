@@ -249,7 +249,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
                 )
                 logging.error(msg)
-                execution_event.response = self.__error_resp(e.type, e.code, log=False)
+                execution_event.response = self.__error_resp(msg, e.code, log=False)
                 playbooks_errors_count.labels(source).inc()
             except PrometheusNotFound as e:
                 logging.error(str(e))
@@ -311,14 +311,19 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
                     # only write the finding if is matching against the sink matchers
                     if sink.accepts(finding):
-                        # create deep copy, so that iterating on one sink enrichments won't affect the others
-                        # Each sink has a different findings, but enrichments are shared
-                        finding_copy = copy.deepcopy(finding)
-                        sink.write_finding(finding_copy, self.registry.get_sinks().platform_enabled)
+                        try:
+                            # create deep copy, so that iterating on one sink enrichments won't affect the others
+                            # Each sink has a different findings, but enrichments are shared
+                            finding_copy = copy.deepcopy(finding)
+                            sink.write_finding(finding_copy, self.registry.get_sinks().platform_enabled)
 
-                        sink_info = sinks_info[sink_name]
-                        sink_info.type = sink.__class__.__name__
-                        sink_info.findings_count += 1
+                            sink_info = sinks_info[sink_name]
+                            sink_info.type = sink.__class__.__name__
+                            sink_info.findings_count += 1
+                        except Exception:  # if we have an error, we should still respect stop
+                            logging.exception(
+                                f"Failed to send finding {finding.aggregation_key} to sink {sink.sink_name}"
+                            )
 
                         if sink.params.stop:
                             return

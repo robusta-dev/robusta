@@ -11,6 +11,8 @@ from robusta.api import PORT, ActionParams, AlertManagerEvent, ExecutionBaseEven
 from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.silence_utils import AlertManagerParams, gen_alertmanager_headers, get_alertmanager_url
 
+FALLBACK_PROMETHUES_GENERATOR_URL = "http://localhost:9090/graph?g0.expr=up%7Bjob%3D%22apiserver%22%7D&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h"
+
 
 def parse_by_operator(pairs: str, operator: str) -> Dict[str, str]:
     if not pairs:
@@ -61,7 +63,7 @@ class PrometheusAlertParams(ActionParams):
     severity: str = "error"
     description: str = "simulated prometheus alert"
     summary: Optional[str]
-    generator_url = ""
+    generator_url = FALLBACK_PROMETHUES_GENERATOR_URL
     runbook_url: Optional[str] = ""
     fingerprint: Optional[str] = ""
     labels: Optional[str] = None

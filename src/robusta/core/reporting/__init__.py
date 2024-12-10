@@ -9,7 +9,7 @@ from robusta.core.reporting.base import (
     FindingStatus,
     FindingSubject,
     FindingSubjectType,
-    VideoLink,
+    Link,
 )
 from robusta.core.reporting.blocks import (
     CallbackBlock,
@@ -39,7 +39,7 @@ __all__ = [
     "Emojis",
     "FindingSeverity",
     "FindingStatus",
-    "VideoLink",
+    "Link",
     "FindingSource",
     "Enrichment",
     "Filterable",

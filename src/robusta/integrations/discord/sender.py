@@ -2,7 +2,7 @@ import logging
 import re
 from enum import Enum
 from itertools import chain
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import requests
 
@@ -112,8 +112,8 @@ class DiscordSender:
         regex = re.compile(r"\*.+\*")
         match = re.match(regex, block.text)
         if match:
-            title = text[match.span()[0]: match.span()[1]]
-            text = text[match.span()[1]:]
+            title = text[match.span()[0] : match.span()[1]]
+            text = text[match.span()[1] :]
         return title, DiscordSender.__transform_markdown_links(text) or BLANK_CHAR
 
     @staticmethod
@@ -193,12 +193,12 @@ class DiscordSender:
             return []  # no reason to crash the entire report
 
     def __send_blocks_to_discord(
-            self,
-            report_blocks: List[BaseBlock],
-            title: str,
-            status: FindingStatus,
-            severity: FindingSeverity,
-            msg_color: str,
+        self,
+        report_blocks: List[BaseBlock],
+        title: str,
+        status: FindingStatus,
+        severity: FindingSeverity,
+        msg_color: str,
     ):
         # Process attachment blocks
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
@@ -250,20 +250,14 @@ class DiscordSender:
             logging.debug("Message was delivered successfully")
 
     def send_finding_to_discord(
-            self,
-            finding: Finding,
-            platform_enabled: bool,
+        self,
+        finding: Finding,
+        platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
-        if platform_enabled:  # add link to the robusta ui, if it's configured
-            actions = f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
-            if finding.add_silence_url:
-                actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
-
-            for video_link in finding.video_links:
-                actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
-            blocks.append(DiscordDescriptionBlock(description=actions))
-
+        actions_block = self._get_actions_block(finding, platform_enabled)
+        if actions_block:
+            blocks.append(actions_block)
         blocks.append(DiscordFieldBlock(name="Source", value=f"`{self.cluster_name}`"))
 
         # first add finding description block
@@ -298,3 +292,22 @@ class DiscordSender:
             severity=finding.severity,
             msg_color=msg_color,
         )
+
+    def _get_actions_block(self, finding: Finding, platform_enabled: bool) -> Optional[DiscordDescriptionBlock]:
+        actions: list[str] = []
+        if platform_enabled:  # add link to the robusta ui, if it's configured
+            actions.append(
+                "[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
+            )
+            if finding.add_silence_url:
+                actions.append(
+                    f"[:no_bell: Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
+                )
+
+        for link in finding.links:
+            actions.append(f"[:clapper: {link.name}]({link.url})")
+
+        if actions:
+            return DiscordDescriptionBlock(description=" ".join(actions))
+
+        return None
