@@ -299,36 +299,320 @@ Advanced - Customizing HolmesGPT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Adding Custom Tools to Holmes
+Holmes Toolsets
 -------------------------------------
 
-Holmes allows you to define custom toolsets that enhance its functionality by enabling additional tools to run Kubernetes commands or other tasks.
+Holmes allows you to define integrations (toolsets) that fetch data from external sources. This data will be automatically used in investigations when relevant.
 
-In this guide, we will show how to add a custom toolset to Holmes in your ``generated_values.yaml`` file.
+Default Toolsets in Holmes
+--------------------------
+Holmes comes with a set of builtin toolsets. Most of these toolsets are enabled by default, such as toolsets to read Kubernetes resources and fetch logs. Some builtin toolsets are disabled by default and can be enabled by the user by providing credentials or API keys to external systems.
+The full list can be found `here <https://github.com/robusta-dev/holmesgpt/tree/master/holmes/plugins/toolsets>`_
+
+You can enable or disable toolsets with the ``holmes.toolsets`` Helm value:
+
+.. code-block:: yaml
+    enableHolmesGPT: true
+    holmes:
+      toolsets:
+        kubernetes/logs:
+          enabled: false # disable the builtin kubernetes/logs toolset - e.g. if you want Holmes to only read logs from Loki instead (requires enabling a loki toolset)
+
+After making changes, apply them using Helm:
+
+.. code-block:: bash
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+
+
+You can override fields from the default toolsets to customize them for your needs.
+For example:
+
+.. code-block:: yaml
+    enableHolmesGPT: true
+    holmes:
+      toolsets:
+      confluence:
+      description: "Enhanced Confluence toolset for fetching and searching pages."
+      prerequisites:
+        - command: "curl --version"
+        - env:
+          - CONFLUENCE_USER
+          - CONFLUENCE_API_KEY
+          - CONFLUENCE_BASE_URL
+      tools:
+      - name: "search_confluence_pages"
+        description: "Search for pages in Confluence using a query string."
+        user_description: "search confluence for pages containing {{ query_string }}"
+        command: "curl -u ${CONFLUENCE_USER}:${CONFLUENCE_API_KEY} -X GET -H 'Content-Type: application/json' ${CONFLUENCE_BASE_URL}/wiki/rest/api/content/search?cql=text~{{ query_string }}"
+
+      - name: "fetch_pages_with_label"
+        description: "Fetch all pages in Confluence with a specific label."
+        user_description: "fetch all confluence pages with label {{ label }}"
+        command: "curl -u ${CONFLUENCE_USER}:${CONFLUENCE_API_KEY} -X GET -H 'Content-Type: application/json' ${CONFLUENCE_BASE_URL}/wiki/rest/api/content/?expand=body.storage&label={{ label }}"
+
+
+
+How to define a new toolset?
+-------------------------------------
+A toolset is defined in your Helm values (``generated_values.yaml``). Each toolset has a unique name and has to contain tools.
+.. code-block:: yaml
+
+    toolsets:
+      <toolset_name>:
+        enabled: <true|false>
+        name: "<string>"
+        description: "<string>"
+        docs_url: "<string>"
+        icon_url: "<string>"
+        tags:
+          - <cli|cluster|core>
+        installation_instructions: "<string>"
+        variables:
+          <variable_name>: "<value>"
+        prerequisites:
+          - command: "<shell_command>"
+            expected_output: "<expected output of the command>"
+          - env:
+            - "<environment variable>"
+        additional_instructions: "<string>"
+        tools:
+          - name: "<string>"
+            description: "<string>"
+            command: "<shell command template>"
+            script: "<script content>"
+            parameters:
+              <parameter_name>:
+                type: "<string>"
+                description: "<string>"
+                required: <true|false>
+
+Toolset Fields
+--------------
+
+.. list-table::
+   :widths: 20 10 60 10
+   :header-rows: 1
+
+   * - **Parameter**
+     - **Type**
+     - **Description**
+     - **Required**
+   * - ``enabled``
+     - boolean
+     - Indicates whether the toolset is enabled. Defaults to ``true``. If set to ``false``, the toolset will be disabled.
+     - No
+   * - ``name``
+     - string
+     - A unique identifier for the toolset. Used for informational purposes and logging.
+     - **Yes**
+   * - ``description``
+     - string
+     - A summary of the toolset's purpose. This description is visible to the LLM and helps it decide when to use the toolset for specific tasks.
+     - No
+   * - ``docs_url``
+     - string
+     - A URL pointing to documentation related to the toolset.
+     - No
+   * - ``icon_url``
+     - string
+     - A URL to an icon representing the toolset.
+     - No
+   * - ``tags``
+     - list
+     - Tags for categorizing toolsets, ``core`` will be used for all Holmes features (both cli's commands and chats in UI). The ``cluster`` tag is used for UI functionality, while ``cli`` is for for command-line specific tools. Default to ``[core,]``.
+     - No
+   * - ``installation_instructions``
+     - string
+     - Instructions on how to install prerequisites required by the toolset.
+     - No
+   * - ``variables``
+     - dictionary
+     - A set of key-value pairs defined by the user, not seen by LLM. These variables are typically used for configuring API keys, credentials, or other sensitive values that the LLM does not have visibility into. Values can reference environment variables using the $VARIABLE_NAME syntax.
+     - No
+   * - ``prerequisites``
+     - list
+     - A list of conditions that must be met for the toolset to be enabled. Prerequisites can include commands or environment variables, or both.
+     - No
+   * - ``additional_instructions``
+     - string
+     - Additional shell commands or processing instructions applied to the output of tools in this toolset.
+     - No
+   * - ``tools``
+     - list
+     - A list of tools defined within the toolset. Each tool is an object with its own set of fields.
+     - **Yes**
+
+  **Tool Fields**
+
+.. list-table::
+   :widths: 20 10 60 10
+   :header-rows: 1
+
+   * - **Parameter**
+     - **Type**
+     - **Description**
+     - **Required**
+   * - ``name``
+     - string
+     - A unique identifier for the tool within the toolset.
+     - **Yes**
+   * - ``description``
+     - string
+     - A brief description of the tool's purpose. Helps Holmes decide when to use this tool.
+     - **Yes**
+   * - ``command``
+     - string
+     - A shell command template that the tool will execute. Can include variables and parameters using Jinja2 syntax (``{{ variable_name }}``).
+     - At least one of ``command`` or ``script`` is required
+   * - ``script``
+     - string
+     - The content of a script that the tool will execute. Use this if your tool requires a multi-line script.
+     - At least one of ``command`` or ``script`` is required
+   * - ``parameters``
+     - dictionary
+     - Defines the inputs required for the tool. These parameters are filled in by the LLM based on the context of the task, allowing dynamic customization of the tool's execution. Each parameter has its own fields, such as type, description, and whether it is required.
+     - No
+   * - ``additional_instructions``
+     - string
+     - Additional shell commands or processing instructions applied to the output of this tool.
+     - No
+
+**Parameter Fields (Within `parameters`, if missing we infer it)**
+
+.. list-table::
+   :widths: 20 10 60 10
+   :header-rows: 1
+
+   * - **Parameter**
+     - **Type**
+     - **Description**
+     - **Required**
+   * - ``type``
+     - string
+     - The data type of the parameter (e.g., ``string``, ``integer``).
+     - No (defaults to ``string``)
+   * - ``description``
+     - string
+     - A description of the parameter.
+     - No
+   * - ``required``
+     - boolean
+     - Indicates whether the parameter is required. Defaults to ``true``.
+     - No
+
+
+Toolsets Examples
+-----------------
+
+**Example 1: Github Toolset**
+
+This toolset enables Holmes to interact with fetch information from github repositories.
+
+
+.. code-block:: yaml
+
+    toolsets:
+      github_tools:
+        description: "Tools for managing GitHub repositories"
+        tags:
+          - cli
+        variables:
+          github_token: "$GITHUB_TOKEN"
+        prerequisites:
+          - env:
+            - "GITHUB_TOKEN"
+          - command: "curl --version"
+        tools:
+          - name: "list_user_repos"
+            description: "Lists all repositories for a GitHub user"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
+
+          - name: "show_recent_commits"
+            description: "Shows the most recent commits for a repository"
+            command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
+
+          - name: "get_repo_details"
+            description: "Fetches details of a specific repository"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
+            parameters:
+              owner:
+                type: "string"
+                description: "Owner of the repository."
+                required: true
+              repo:
+                type: "string"
+                description: "Name of the repository."
+                required: true
+
+          - name: "get_recent_commits"
+            description: "Fetches the most recent commits for a repository"
+            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
+
+
+**Example 2: Kubernetes Diagnostics Toolset**
+
+This toolset provides diagnostics for Kubernetes clusters, helping developers identify and resolve issues.
+
+
+.. code-block:: yaml
+
+    toolsets:
+      kubernetes/diagnostics:
+        description: "Advanced diagnostics and troubleshooting tools for Kubernetes clusters"
+        docs_url: "https://kubernetes.io/docs/home/"
+        icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPKA-U9m5BxYQDF1O7atMfj9EMMXEoGu4t0Q&s"
+        tags:
+          - core
+          - cluster
+        prerequisites:
+          - command: "kubectl version --client"
+        tools:
+
+          - name: "kubectl_node_health"
+            description: "Check the health status of all nodes in the cluster."
+            command: "kubectl get nodes -o wide"
+
+          - name: "kubectl_check_resource_quota"
+            description: "Fetch the resource quota for a specific namespace."
+            command: "kubectl get resourcequota -n {{ namespace }} -o yaml"
+
+          - name: "kubectl_find_evicted_pods"
+            description: "List all evicted pods in a specific namespace."
+            command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
+
+          - name: "kubectl_drain_node"
+            description: "Drain a node safely by evicting all pods."
+            command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
+
+
+Adding Custom Tools to Holmes
+-----------------------------
+As an example, let's add custom toolset named ``http_tools`` that  makes requests to ``example.com``
 
 .. code-block:: yaml
 
     enableHolmesGPT: true
     holmes:
-      additionalEnvVars:
-        - name: ROBUSTA_AI
-          value: "true"
       toolsets:
-        # Name of the toolset (for example "mycompany/internal-tools")
-        # Used for informational purposes only (e.g. to print the name of the toolset if it can't be loaded)
-        - name: "resource_explanation"
-          # List of tools the LLM can use - this is the important part
+        http_tools:
+          description: "A simple toolset for HTTP requests to example.com"
+          docs_url: "https://example.com"
+          icon_url: "https://example.com/favicon.ico"
+          tags:
+            - cluster
+          prerequisites:
+            - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
+              expected_output: "200"
           tools:
-          # Name is a unique identifier for the tool
-            - name: "explain_resource"
-              # The LLM looks at this description when deciding what tools are relevant for each task
-              description: "Provides detailed explanation of Kubernetes resources using kubectl explain"
-              # A templated bash command using Jinja2 templates
-              # The LLM can only control parameters that you expose as template variables like {{ resource_name }}
-              command: "kubectl explain {{ resource_name }}"
+            - name: "curl_example"
+              description: "Use this to fetch the content of example.com."
+              command: "curl -X GET https://example.com"
 
+            - name: "curl_with_params"
+              description: "Use this to fetch example.com with query parameters, such as filtering or searching specific content."
+              command: "curl -X GET 'https://example.com?key={{ key }}&value={{ value }}'"
 
-``toolsets``: Defines a custom toolset, in this case, a ``resource_explanation``, which allows Holmes to use the ``kubectl explain`` command to provide details about various Kubernetes resources.
 
 Once you have updated the ``generated_values.yaml`` file, apply the changes by running the Helm upgrade command:
 
@@ -412,7 +696,8 @@ After pushing your custom Docker image, update your ``generated_values.yaml`` to
         - name: ROBUSTA_AI
           value: "true"
       toolsets:
-        - name: "json_processor"
+        json_processor:
+          description: "A toolset for processing JSON data using jq"
           prerequisites:
             - command: "jq --version"  # Ensure jq is installed
           tools:
