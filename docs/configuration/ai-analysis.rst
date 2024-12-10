@@ -302,24 +302,21 @@ Advanced - Customizing HolmesGPT
 Holmes Toolsets
 -------------------------------------
 
-Holmes allows you to define tools that enhance its functionality by enabling additional tools to run Kubernetes commands or other tasks.
+Holmes allows you to define integrations (toolsets) that fetch data from external sources. This data will be automatically used in investigations when relevant.
 
 Default Toolsets in Holmes
 --------------------------
-Holmes comes with a set of default toolsets that provide tools out-of-the-box. Some of these toolsets are enabled by default such as interacting with Kubernetes resources, or fetching logs and metrics.
-Full list can be found `here <https://github.com/robusta-dev/holmesgpt/tree/master/holmes/plugins/toolsets>`_
+Holmes comes with a set of builtin toolsets. Most of these toolsets are enabled by default, such as toolsets to read Kubernetes resources and fetch logs. Some builtin toolsets are disabled by default and can be enabled by the user by providing credentials or API keys to external systems.
+The full list can be found `here <https://github.com/robusta-dev/holmesgpt/tree/master/holmes/plugins/toolsets>`_
 
-By default, any of the toolsets may be disabled. You can enable or disable them by modifying the ``generated_values.yaml`` file.
+You can enable or disable toolsets with the ``holmes.toolsets`` Helm value:
 
 .. code-block:: yaml
     enableHolmesGPT: true
     holmes:
-      additionalEnvVars:
-        - name: ROBUSTA_AI
-          value: "true"
       toolsets:
         kubernetes/logs:
-          enabled: false
+          enabled: false # disable the builtin kubernetes/logs toolset - e.g. if you want Holmes to only read logs from Loki instead (requires enabling a loki toolset)
 
 After making changes, apply them using Helm:
 
@@ -328,7 +325,7 @@ After making changes, apply them using Helm:
     helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
 
-Additionally, you can overwrite any of the fields in the default toolsets, such as updating the tools, prerequisites, or descriptions, to customize them for your specific needs.
+You can override fields from the default toolsets to customize them for your needs.
 For example:
 
 .. code-block:: yaml
@@ -342,10 +339,9 @@ For example:
         description: "My custom description for default toolset."
 
 
-How to define a toolset?
+How to define a new toolset?
 -------------------------------------
-A toolset is defined in ``generated_values.yaml``. Each toolset has a unique name and has to contain tools.
-
+A toolset is defined in your Helm values (``generated_values.yaml``). Each toolset has a unique name and has to contain tools.
 .. code-block:: yaml
 
     toolsets:
@@ -468,7 +464,7 @@ Toolset Fields
      - Additional shell commands or processing instructions applied to the output of this tool.
      - No
 
-**Parameter Fields (Within `parameters`, not required)**
+**Parameter Fields (Within `parameters`, if missing we infer it)**
 
 .. list-table::
    :widths: 20 10 60 10
@@ -495,7 +491,7 @@ Toolset Fields
 Toolsets Examples
 -----------------
 
-**Example 1: AWS S3 Management Toolset**
+**Example 1: Github Toolset**
 
 This toolset enables Holmes to interact with fetch information from github repositories.
 
@@ -584,9 +580,6 @@ As an example, let's add custom toolset named ``http_tools`` that  makes request
 
     enableHolmesGPT: true
     holmes:
-      additionalEnvVars:
-        - name: ROBUSTA_AI
-          value: "true"
       toolsets:
         http_tools:
           description: "A simple toolset for HTTP requests to example.com"
