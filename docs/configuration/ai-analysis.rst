@@ -331,12 +331,26 @@ For example:
 .. code-block:: yaml
     enableHolmesGPT: true
     holmes:
-      additionalEnvVars:
-        - name: ROBUSTA_AI
-          value: "true"
       toolsets:
-      kubernetes/logs:
-        description: "My custom description for default toolset."
+      confluence:
+      description: "Enhanced Confluence toolset for fetching and searching pages."
+      prerequisites:
+        - command: "curl --version"
+        - env:
+          - CONFLUENCE_USER
+          - CONFLUENCE_API_KEY
+          - CONFLUENCE_BASE_URL
+      tools:
+      - name: "search_confluence_pages"
+        description: "Search for pages in Confluence using a query string."
+        user_description: "search confluence for pages containing {{ query_string }}"
+        command: "curl -u ${CONFLUENCE_USER}:${CONFLUENCE_API_KEY} -X GET -H 'Content-Type: application/json' ${CONFLUENCE_BASE_URL}/wiki/rest/api/content/search?cql=text~{{ query_string }}"
+
+      - name: "fetch_pages_with_label"
+        description: "Fetch all pages in Confluence with a specific label."
+        user_description: "fetch all confluence pages with label {{ label }}"
+        command: "curl -u ${CONFLUENCE_USER}:${CONFLUENCE_API_KEY} -X GET -H 'Content-Type: application/json' ${CONFLUENCE_BASE_URL}/wiki/rest/api/content/?expand=body.storage&label={{ label }}"
+
 
 
 How to define a new toolset?
@@ -394,7 +408,7 @@ Toolset Fields
      - **Yes**
    * - ``description``
      - string
-     - A brief description of the toolset's purpose. Helps users understand what the toolset does.
+     - A summary of the toolset's purpose. This description is visible to the LLM and helps it decide when to use the toolset for specific tasks.
      - No
    * - ``docs_url``
      - string
@@ -414,7 +428,7 @@ Toolset Fields
      - No
    * - ``variables``
      - dictionary
-     - A set of key-value pairs defining variables that can be used within tools and commands. Values can reference environment variables using the ``$VARIABLE_NAME`` syntax.
+     - A set of key-value pairs defined by the user, not seen by LLM. These variables are typically used for configuring API keys, credentials, or other sensitive values that the LLM does not have visibility into. Values can reference environment variables using the $VARIABLE_NAME syntax.
      - No
    * - ``prerequisites``
      - list
@@ -457,7 +471,7 @@ Toolset Fields
      - At least one of ``command`` or ``script`` is required
    * - ``parameters``
      - dictionary
-     - Defines the inputs required for the tool. Each parameter has its own fields.
+     - Defines the inputs required for the tool. These parameters are filled in by the LLM based on the context of the task, allowing dynamic customization of the tool's execution. Each parameter has its own fields, such as type, description, and whether it is required.
      - No
    * - ``additional_instructions``
      - string
@@ -592,11 +606,11 @@ As an example, let's add custom toolset named ``http_tools`` that  makes request
               expected_output: "200"
           tools:
             - name: "curl_example"
-              description: "Perform a GET request to example.com"
+              description: "Use this to fetch the content of example.com."
               command: "curl -X GET https://example.com"
 
             - name: "curl_with_params"
-              description: "Perform a GET request to example.com with query parameters"
+              description: "Use this to fetch example.com with query parameters, such as filtering or searching specific content."
               command: "curl -X GET 'https://example.com?key={{ key }}&value={{ value }}'"
 
 
