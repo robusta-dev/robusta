@@ -36,6 +36,7 @@ from robusta.integrations.prometheus.utils import generate_prometheus_config
 IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.18.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
+KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -119,7 +120,7 @@ class KRRParams(PrometheusParams, PodRunningParams):
     """
 
     serviceAccountName: str = RUNNER_SERVICE_ACCOUNT
-    strategy: str = "simple"
+    strategy: str = KRR_STRATEGY
     args: Optional[str] = None
     krr_args: str = ""
     timeout: int = 3600
