@@ -247,3 +247,29 @@ Alert Manager is not working
                             resources:
                               requests:
                                 storage: 10Gi
+
+
+CRD issues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid: metadata.annotations: Too long
+
+      This is often a CRD issue which can be fixed with :ref:`these instructions <Manual Upgrade>` To verify this, open the ArgoCD error logs and look for more details.
+
+      .. image:: /images/Argocd_crd_issue_fix.png 
+      :width: 400
+      :align: center
+
+.. details:: one or more objects failed to apply... CustomResourceDefinition.apiextensions.k8s.io "prometheusagents.monitoring.coreos.com" is invalid
+
+      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+
+      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
+
+.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid
+
+
+      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+
+      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
+
