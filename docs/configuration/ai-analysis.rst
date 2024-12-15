@@ -469,11 +469,11 @@ Toolset Fields
      - Either ``command`` or ``script`` is required
    * - ``parameters``
      - dictionary
-     - Defines the inputs required for the tool. These parameters are filled in by the LLM based on the context of the task, allowing dynamic customization of the tool's execution. Each parameter has its own fields, such as type, description, and whether it is required.
+     - Specifying parameters is optional, as they can be inferred by the LLM from the prompt context. When defined, parameters specify the inputs required for the tool, allowing dynamic customization of its execution. Each parameter has its own fields, such as type, description, and whether it is required.
      - No
    * - ``additional_instructions``
      - string
-     - Additional shell commands or processing instructions applied to the output of this tool.
+     - Additional shell commands or processing instructions applied to the output of this tool. This is can be useful for post-processing the results of a command, such as filtering, formatting, or transforming the data before it is returned to the user. For example, you could use ``"jq '.items[] | {reason, message}'"`` to extract and display specific fields (``reason`` and ``message``) from JSON output.
      - No
 
 **Parameter Fields (Within `parameters`, if missing we infer it)**
@@ -499,7 +499,32 @@ Toolset Fields
      - Indicates whether the parameter is required. Defaults to ``true``.
      - No
 
+Variable Syntax in Commands
+---------------------------
 
+In toolset commands, variables can be defined using two syntaxes: ``{{ }}`` and ``${ }``.
+
+Variables written as ``{{ variable_name }}`` are placeholders that are inferred by Holmes and dynamically filled by the LLM based on the context or user prompts. These variables are visible to the LLM and allow flexible, context-aware execution. For example:
+
+.. code-block:: bash
+
+  command: "kubectl describe pod {{ pod_name }} -n {{ namespace }}"
+
+
+Here, ``{{ pod_name }}`` and ``{{ namespace }}``` are inferred and dynamically filled during execution.
+
+Variables written as ``${VARIABLE_NAME}`` are static or environment-specific values, such as API keys or configuration parameters. These are not visible to the LLM and are expanded directly by the shell at runtime. For example:
+
+.. code-block:: bash
+    command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
+
+
+In this case, ``${GITHUB_TOKEN}`` is an environment variable, while ``{{ owner }}`` and ``{{ repo }}`` are dynamically inferred by Holmes.
+
+**Best Practices for Variable Usage**:
+
+  * Use ``${}`` for sensitive or static environment variables, such as API keys and credentials.
+  * Use ``{{}}`` for parameters that the LLM can dynamically infer and fill based on the context or user inputs.
 
 Adding Custom Tools to Holmes
 -----------------------------
@@ -525,6 +550,8 @@ This toolset enables Holmes to interact with fetch information from github repos
               - "GITHUB_TOKEN"
             - command: "curl --version"
           tools:
+            # Parameters are inferred from placeholders such as `{{ username }}` in the command.
+            # Holmes uses these placeholders to identify and request the required inputs for the tool.
             - name: "list_user_repos"
               description: "Lists all repositories for a GitHub user"
               command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/users/{{ username }}/repos"
@@ -533,6 +560,11 @@ This toolset enables Holmes to interact with fetch information from github repos
               description: "Shows the most recent commits for a repository"
               command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
 
+            # Here, parameters `owner` and `repo` are explicitly defined with details like type,
+            # description, and whether they are required. Explicitly defining parameters is
+            # particularly useful if:
+            # - You want to enforce parameter requirements (e.g., `owner` and `repo` are required).
+            # - You want to define optional parameters with default behavior.
             - name: "get_repo_details"
               description: "Fetches details of a specific repository"
               command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
