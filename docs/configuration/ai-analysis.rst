@@ -368,8 +368,6 @@ A toolset is defined in your Helm values (``generated_values.yaml``). Each tools
         tags:
           - <cli|cluster|core>
         installation_instructions: "<string>"
-        variables:
-          <variable_name>: "<value>"
         prerequisites:
           - command: "<shell_command>"
             expected_output: "<expected output of the command>"
@@ -464,11 +462,11 @@ Toolset Fields
    * - ``command``
      - string
      - A shell command template that the tool will execute. Can include variables and parameters using Jinja2 syntax (``{{ variable_name }}``).
-     - At least one of ``command`` or ``script`` is required
+     - Either ``command`` or ``script`` is required
    * - ``script``
      - string
      - The content of a script that the tool will execute. Use this if your tool requires a multi-line script.
-     - At least one of ``command`` or ``script`` is required
+     - Either ``command`` or ``script`` is required
    * - ``parameters``
      - dictionary
      - Defines the inputs required for the tool. These parameters are filled in by the LLM based on the context of the task, allowing dynamic customization of the tool's execution. Each parameter has its own fields, such as type, description, and whether it is required.
@@ -502,93 +500,116 @@ Toolset Fields
      - No
 
 
-Toolsets Examples
------------------
 
-**Example 1: Github Toolset**
+Adding Custom Tools to Holmes
+-----------------------------
+Below are examples of predefined toolsets for various use cases, such as managing GitHub repositories, diagnosing Kubernetes clusters, and making HTTP requests. In these examples, we will demonstrate how to add these toolsets to Holmes.
+
+
+Example 1: Github Toolset
+-------------------------
 
 This toolset enables Holmes to interact with fetch information from github repositories.
 
 
 .. code-block:: yaml
 
-    toolsets:
-      github_tools:
-        description: "Tools for managing GitHub repositories"
-        tags:
-          - cli
-        variables:
-          github_token: "$GITHUB_TOKEN"
-        prerequisites:
-          - env:
-            - "GITHUB_TOKEN"
-          - command: "curl --version"
-        tools:
-          - name: "list_user_repos"
-            description: "Lists all repositories for a GitHub user"
-            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/users/{{ username }}/repos"
+    holmes:
+      toolsets:
+        github_tools:
+          description: "Tools for managing GitHub repositories"
+          tags:
+            - cli
+          prerequisites:
+            - env:
+              - "GITHUB_TOKEN"
+            - command: "curl --version"
+          tools:
+            - name: "list_user_repos"
+              description: "Lists all repositories for a GitHub user"
+              command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/users/{{ username }}/repos"
 
-          - name: "show_recent_commits"
-            description: "Shows the most recent commits for a repository"
-            command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
+            - name: "show_recent_commits"
+              description: "Shows the most recent commits for a repository"
+              command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
 
-          - name: "get_repo_details"
-            description: "Fetches details of a specific repository"
-            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
-            parameters:
-              owner:
-                type: "string"
-                description: "Owner of the repository."
-                required: true
-              repo:
-                type: "string"
-                description: "Name of the repository."
-                required: true
+            - name: "get_repo_details"
+              description: "Fetches details of a specific repository"
+              command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
+              parameters:
+                owner:
+                  type: "string"
+                  description: "Owner of the repository."
+                  required: true
+                repo:
+                  type: "string"
+                  description: "Name of the repository."
+                  required: true
 
-          - name: "get_recent_commits"
-            description: "Fetches the most recent commits for a repository"
-            command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
+            - name: "get_recent_commits"
+              description: "Fetches the most recent commits for a repository"
+              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
 
 
-**Example 2: Kubernetes Diagnostics Toolset**
+Update the ``generated_values.yaml`` file with the provided YAML configuration, then apply the changes by executing the Helm upgrade command:
+
+.. code-block:: bash
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+
+After the deployment is complete, the GitHub toolset will be available for Holmes. LLM will be able to use these tools to interact with GitHub repositories directly.
+
+
+Example 2: Kubernetes Diagnostics Toolset
+-----------------------------------------
 
 This toolset provides diagnostics for Kubernetes clusters, helping developers identify and resolve issues.
 
 
 .. code-block:: yaml
 
-    toolsets:
-      kubernetes/diagnostics:
-        description: "Advanced diagnostics and troubleshooting tools for Kubernetes clusters"
-        docs_url: "https://kubernetes.io/docs/home/"
-        icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPKA-U9m5BxYQDF1O7atMfj9EMMXEoGu4t0Q&s"
-        tags:
-          - core
-          - cluster
-        prerequisites:
-          - command: "kubectl version --client"
-        tools:
+    holmes:
+      toolsets:
+        kubernetes/diagnostics:
+          description: "Advanced diagnostics and troubleshooting tools for Kubernetes clusters"
+          docs_url: "https://kubernetes.io/docs/home/"
+          icon_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPKA-U9m5BxYQDF1O7atMfj9EMMXEoGu4t0Q&s"
+          tags:
+            - core
+            - cluster
+          prerequisites:
+            - command: "kubectl version --client"
+          tools:
 
-          - name: "kubectl_node_health"
-            description: "Check the health status of all nodes in the cluster."
-            command: "kubectl get nodes -o wide"
+            - name: "kubectl_node_health"
+              description: "Check the health status of all nodes in the cluster."
+              command: "kubectl get nodes -o wide"
 
-          - name: "kubectl_check_resource_quota"
-            description: "Fetch the resource quota for a specific namespace."
-            command: "kubectl get resourcequota -n {{ namespace }} -o yaml"
+            - name: "kubectl_check_resource_quota"
+              description: "Fetch the resource quota for a specific namespace."
+              command: "kubectl get resourcequota -n {{ namespace }} -o yaml"
 
-          - name: "kubectl_find_evicted_pods"
-            description: "List all evicted pods in a specific namespace."
-            command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
+            - name: "kubectl_find_evicted_pods"
+              description: "List all evicted pods in a specific namespace."
+              command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
 
-          - name: "kubectl_drain_node"
-            description: "Drain a node safely by evicting all pods."
-            command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
+            - name: "kubectl_drain_node"
+              description: "Drain a node safely by evicting all pods."
+              command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
 
 
-Adding Custom Tools to Holmes
------------------------------
-As an example, let's add custom toolset named ``http_tools`` that  makes requests to ``example.com``
+Update the ``generated_values.yaml`` file with the provided YAML configuration, then apply the changes by executing the Helm upgrade command:
+
+.. code-block:: bash
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+
+Once deployed, Holmes will have access to advanced diagnostic tools for Kubernetes clusters. For example, you can ask Holmes, "Can you do a node health check?" and it will automatically use the newly added tools to provide you the answer.
+
+
+Example 3: HTTP Toolset
+
+The HTTP Toolset allows Holmes to retrieve website content and execute queries with customizable parameters.
 
 .. code-block:: yaml
 
@@ -596,7 +617,7 @@ As an example, let's add custom toolset named ``http_tools`` that  makes request
     holmes:
       toolsets:
         http_tools:
-          description: "A simple toolset for HTTP requests to example.com"
+          description: "A simple toolset for fetching a website's content."
           docs_url: "https://example.com"
           icon_url: "https://example.com/favicon.ico"
           tags:
@@ -605,13 +626,13 @@ As an example, let's add custom toolset named ``http_tools`` that  makes request
             - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
               expected_output: "200"
           tools:
-            - name: "curl_example"
-              description: "Use this to fetch the content of example.com."
-              command: "curl -X GET https://example.com"
+             - name: "fetch_url"
+               description: "Fetch the content of any website using a GET request."
+               command: "curl -X GET {{ url }}"
 
-            - name: "curl_with_params"
-              description: "Use this to fetch example.com with query parameters, such as filtering or searching specific content."
-              command: "curl -X GET 'https://example.com?key={{ key }}&value={{ value }}'"
+            - name: "fetch_url_with_params"
+              description: "Fetch a website's content with query parameters."
+              command: "curl -X GET '{{ url }}?{{ key }}={{ value }}'"
 
 
 Once you have updated the ``generated_values.yaml`` file, apply the changes by running the Helm upgrade command:
@@ -620,7 +641,7 @@ Once you have updated the ``generated_values.yaml`` file, apply the changes by r
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
-After the deployment, the custom toolset is automatically available for Holmes to use. Holmes will now be able to run the ``kubectl explain`` tool whenever required, allowing it to provide details about various Kubernetes resources.
+Once deployed, you can ask Holmes, "Can you fetch data from https://example.com with key=search and value=tools?".
 
 
 Adding a tool that requires a new binary
