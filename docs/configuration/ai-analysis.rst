@@ -641,16 +641,16 @@ Update the ``generated_values.yaml`` file with the provided YAML configuration, 
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
-Once deployed, Holmes will have access to advanced diagnostic tools for Kubernetes clusters. For example, you can ask Holmes, "Can you do a node health check?" and it will automatically use the newly added tools to provide you the answer.
+Once deployed, Holmes will have access to advanced diagnostic tools for Kubernetes clusters. For example, you can ask Holmes, ``"Can you do a node health check?"`` and it will automatically use the newly added tools to provide you the answer.
 
 
 Example 3: HTTP Toolset
+-----------------------
 
 The HTTP Toolset allows Holmes to retrieve website content and execute queries with customizable parameters.
 
 .. code-block:: yaml
 
-    enableHolmesGPT: true
     holmes:
       toolsets:
         http_tools:
@@ -663,6 +663,7 @@ The HTTP Toolset allows Holmes to retrieve website content and execute queries w
             - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
               expected_output: "200"
           tools:
+
              - name: "fetch_url"
                description: "Fetch the content of any website using a GET request."
                command: "curl -X GET {{ url }}"
@@ -678,7 +679,7 @@ Once you have updated the ``generated_values.yaml`` file, apply the changes by r
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
-Once deployed, you can ask Holmes, "Can you fetch data from https://example.com with key=search and value=tools?".
+Once deployed, you can ask Holmes, ``"Can you fetch data from https://example.com with key=search and value=tools?"``.
 
 
 Adding a tool that requires a new binary
