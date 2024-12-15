@@ -356,6 +356,8 @@ For example:
 How to define a new toolset?
 -------------------------------------
 A toolset is defined in your Helm values (``generated_values.yaml``). Each toolset has a unique name and has to contain tools.
+
+
 .. code-block:: yaml
 
     toolsets:
@@ -441,7 +443,8 @@ Toolset Fields
      - A list of tools defined within the toolset. Each tool is an object with its own set of fields.
      - **Yes**
 
-  **Tool Fields**
+
+**Tool Fields**
 
 .. list-table::
    :widths: 20 10 60 10
@@ -475,6 +478,7 @@ Toolset Fields
      - string
      - Additional shell commands or processing instructions applied to the output of this tool. This is can be useful for post-processing the results of a command, such as filtering, formatting, or transforming the data before it is returned to the user. For example, you could use ``"jq '.items[] | {reason, message}'"`` to extract and display specific fields (``reason`` and ``message``) from JSON output.
      - No
+
 
 **Parameter Fields (Within `parameters`, if missing we infer it)**
 
@@ -516,6 +520,7 @@ Here, ``{{ pod_name }}`` and ``{{ namespace }}``` are inferred and dynamically f
 Variables written as ``${VARIABLE_NAME}`` are static or environment-specific values, such as API keys or configuration parameters. These are not visible to the LLM and are expanded directly by the shell at runtime. For example:
 
 .. code-block:: bash
+
     command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
 
 
@@ -523,8 +528,8 @@ In this case, ``${GITHUB_TOKEN}`` is an environment variable, while ``{{ owner }
 
 **Best Practices for Variable Usage**:
 
-  * Use ``${}`` for sensitive or static environment variables, such as API keys and credentials.
-  * Use ``{{}}`` for parameters that the LLM can dynamically infer and fill based on the context or user inputs.
+* Use ``${}`` for sensitive or static environment variables, such as API keys and credentials.
+* Use ``{{}}`` for parameters that the LLM can dynamically infer and fill based on the context or user inputs.
 
 Adding Custom Tools to Holmes
 -----------------------------
