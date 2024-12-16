@@ -254,7 +254,7 @@ CRD issues
 
 .. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid: metadata.annotations: Too long
 
-      This is often a CRD issue which can be fixed by enabling service-side apply option as shown below. Check out `this blog <https://blog.ediri.io/kube-prometheus-stack-and-argocd-25-server-side-apply-to-the-rescue>`_ to learn more. 
+      This is often a CRD issue which can be fixed by enabling server-side apply option as shown below. Check out `this blog <https://blog.ediri.io/kube-prometheus-stack-and-argocd-25-server-side-apply-to-the-rescue>`_ to learn more. 
 
       .. image:: /images/Argocd_crd_issue_fix.png 
       :width: 400
