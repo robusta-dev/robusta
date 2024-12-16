@@ -426,10 +426,6 @@ Toolset Fields
      - string
      - Instructions on how to install prerequisites required by the toolset.
      - No
-   * - ``variables``
-     - dictionary
-     - A set of key-value pairs defined by the user, not seen by LLM. These variables are typically used for configuring API keys, credentials, or other sensitive values that the LLM does not have visibility into. Values can reference environment variables using the $VARIABLE_NAME syntax.
-     - No
    * - ``prerequisites``
      - list
      - A list of conditions that must be met for the toolset to be enabled. Prerequisites can include commands or environment variables, or both.
@@ -464,7 +460,7 @@ Toolset Fields
      - **Yes**
    * - ``command``
      - string
-     - A shell command template that the tool will execute. Can include variables and parameters using Jinja2 syntax (``{{ variable_name }}``).
+     - A shell command template that the tool will execute. Can include environment variables using ``${ENV_VAR}`` or parameters that the LLM will fill in, using Jinja2 syntax (``{{ param_name }}``).
      - Either ``command`` or ``script`` is required
    * - ``script``
      - string
