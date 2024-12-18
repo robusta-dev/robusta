@@ -209,6 +209,16 @@ def alert_explanation_enricher(alert: PrometheusKubernetesAlert, params: AlertEx
 
 
 @action
+def minimal_default_enricher(alert: PrometheusKubernetesAlert):
+    """
+    Enrich an alert with the original message only, without any labels or annotations.
+
+    This can be used to get more concise alerts notifications
+    """
+    alert.add_enrichment([])
+
+
+@action
 def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherParams):
     """
     Enrich an alert with the original message and labels.
