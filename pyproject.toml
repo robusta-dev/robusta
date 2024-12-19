@@ -118,6 +118,7 @@ all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "Cair
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 sphinx-reredirects = "^0.1.1"
 freezegun = "^1.4.0"
+tornado = "^6.4.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
