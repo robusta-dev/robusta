@@ -197,7 +197,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         start_time = time.time()
         source: str = (
             "manual_action"
-            if any(name == SYNC_RESPONSE_SINK for name in getattr(execution_event, "named_sinks", []))
+            if any(name == SYNC_RESPONSE_SINK for name in (execution_event.named_sinks or []))
             else ""
         )
         self.__prepare_execution_event(execution_event)
