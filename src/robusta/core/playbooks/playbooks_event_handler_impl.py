@@ -368,3 +368,40 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         self.set_cluster_active(False)
         sys.exit(0)
+
+    def run_external_stream_action(
+        self,
+        action_name: str,
+        action_params: Optional[dict],
+        ws
+    ) -> Optional[Dict[str, Any]]:
+        action_def = self.registry.get_actions().get_action(action_name)
+        if not action_def:
+            return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
+
+        if not action_def.from_params_func:
+            return self.__error_resp(
+                f"Action {action_name} cannot run using external event", ErrorCodes.NOT_EXTERNAL_ACTION.value
+            )
+
+        try:
+            instantiation_params = action_def.from_params_parameter_class(**action_params)
+        except Exception:
+            return self.__error_resp(
+                f"Failed to create execution instance for"
+                f" {action_name} {action_def.from_params_parameter_class}"
+                f" {action_params} {traceback.format_exc()}",
+                ErrorCodes.EVENT_PARAMS_INSTANTIATION_FAILED.value,
+            )
+
+        execution_event = action_def.from_params_func(instantiation_params)
+        if not execution_event:
+            return self.__error_resp(
+                f"Failed to create execution event for {action_name} {action_params}",
+                ErrorCodes.EVENT_INSTANTIATION_FAILED.value,
+            )
+
+        execution_event.ws = ws
+        playbook_action = PlaybookAction(action_name=action_name, action_params=action_params)
+
+        return self.__run_playbook_actions(execution_event, [playbook_action])
