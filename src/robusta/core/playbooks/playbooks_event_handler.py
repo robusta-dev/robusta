@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import TriggerEvent
@@ -41,10 +41,7 @@ class PlaybooksEventHandler(ABC):
 
     @abstractmethod
     def run_external_stream_action(
-        self,
-        action_name: str,
-        action_params: Optional[dict],
-        stream: Callable[str, Optional[str]]
+        self, action_name: str, action_params: Optional[dict], stream: Callable[str, Optional[str]]
     ) -> Optional[Dict[str, Any]]:
         """Execute an external stream action"""
         pass

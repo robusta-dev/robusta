@@ -370,10 +370,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         sys.exit(0)
 
     def run_external_stream_action(
-        self,
-        action_name: str,
-        action_params: Optional[dict],
-        ws
+        self, action_name: str, action_params: Optional[dict], ws
     ) -> Optional[Dict[str, Any]]:
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
