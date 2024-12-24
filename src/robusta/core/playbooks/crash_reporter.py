@@ -62,4 +62,4 @@ def send_crash_report(
         except Exception:
             logging.error("Failed to get pod logs", exc_info=True)
 
-        event.add_finding(finding)
+    event.add_finding(finding)
