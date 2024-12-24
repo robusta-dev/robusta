@@ -238,6 +238,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     playbooks_errors_count.labels(source).inc()
                     continue
             try:
+                logging.info("Calling action: %s", registered_action.action_name)
                 if action_with_params:
                     registered_action.func(execution_event, params)
                 else:
