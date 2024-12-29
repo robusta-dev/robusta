@@ -340,11 +340,6 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
                         title="Deployment Events",
                     )
     else:
-        available_replicas = dep.status.availableReplicas if dep.status.availableReplicas else 0
-        event.add_enrichment(
-            [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({available_replicas})*")]
-        )
-
         events_table_block = get_resource_events_table(
             "*Deployment events:*",
             dep.kind,
