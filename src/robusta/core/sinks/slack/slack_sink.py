@@ -13,7 +13,7 @@ class SlackSink(SinkBase):
         self.slack_channel = sink_config.slack_sink.slack_channel
         self.api_key = sink_config.slack_sink.api_key
         self.slack_sender = slack_module.SlackSender(
-            self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel
+            self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel, registry
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool) -> None:

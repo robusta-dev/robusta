@@ -1,3 +1,5 @@
+import re
+import copy
 import logging
 import ssl
 import tempfile
@@ -19,7 +21,7 @@ from robusta.core.model.env_vars import (
     SLACK_TABLE_COLUMNS_LIMIT,
 )
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
-from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
+from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType, FindingSeverity
 from robusta.core.reporting.blocks import (
     BaseBlock,
     CallbackBlock,
@@ -35,6 +37,7 @@ from robusta.core.reporting.blocks import (
     ScanReportBlock,
     TableBlock,
 )
+
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations
 from robusta.core.reporting.holmes import HolmesResultsBlock, ToolCallResult
@@ -55,7 +58,7 @@ class SlackSender:
     verified_api_tokens: Set[str] = set()
     channel_name_to_id = {}
 
-    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str):
+    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, registry):
         """
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
@@ -71,6 +74,7 @@ class SlackSender:
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
+        self.registry = registry
 
         if slack_token not in self.verified_api_tokens:
             try:
@@ -290,12 +294,19 @@ class SlackSender:
                 kwargs = {}
             resp = self.slack_client.chat_postMessage(
                 channel=channel,
-                text=message,
-                blocks=output_blocks,
+                text=" ",
+                # blocks=output_blocks,
                 display_as_bot=True,
-                attachments=(
-                    [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
-                ),
+                attachments=[
+                    {
+                        "color": status.to_color_hex(),
+                        "fallback": message,
+                        "blocks": output_blocks + attachment_blocks
+                    }
+                ],
+                # attachments=(
+                #     [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
+                # ),
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
                 **kwargs,
@@ -307,6 +318,31 @@ class SlackSender:
             logging.error(
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
+
+
+    def __limit_labels_size(self, labels: dict, max_size: int = 1000) -> dict:
+        # slack can only send 2k tokens in a callback so the labels are limited in size
+
+        low_priority_labels = ["job", "prometheus", "severity", "service"]
+        current_length = len(str(labels))
+        if current_length <= max_size:
+            return labels
+        
+        limited_labels = copy.deepcopy(labels)
+
+        # first remove the low priority labels if needed
+        for key in low_priority_labels:
+            if current_length <= max_size:
+                break
+            if key in limited_labels:
+                del limited_labels[key]
+                current_length = len(str(limited_labels))
+
+        while current_length > max_size and limited_labels:
+            limited_labels.pop(next(iter(limited_labels)))
+            current_length = len(str(limited_labels))
+
+        return limited_labels
 
     def __create_holmes_callback(self, finding: Finding) -> CallbackBlock:
         resource = ResourceInfo(
@@ -321,6 +357,7 @@ class SlackSender:
             "robusta_issue_id": str(finding.id),
             "issue_type": finding.aggregation_key,
             "source": finding.source.name,
+            "labels": self.__limit_labels_size(labels=finding.subject.labels)
         }
 
         return CallbackBlock(
@@ -334,26 +371,113 @@ class SlackSender:
             }
         )
 
+    def __get_finding_prefix(self, title: str, status: FindingStatus) -> tuple[str, str]:
+        """
+        Returns (prefix, remainder). The prefix is determined by the FindingStatus argument:
+        - FindingStatus.FIRING   => [FIRING]
+        - FindingStatus.RESOLVED => [RESOLVED]
+        If the title already starts with a bracketed prefix like "[FIRING]" or "[RESOLVED]",
+        it is stripped from the remainder, and we still override the prefix with the one
+        matching 'status'.
+
+        Examples:
+        title="[FIRING] NodeAddedTest3",  status=FIRING   => ("[FIRING]", "NodeAddedTest3")
+        title="NodeAddedTest3",          status=RESOLVED => ("[RESOLVED]", "NodeAddedTest3")
+        """
+
+        prefix_map = {
+            FindingStatus.FIRING: "[FIRING]",
+            FindingStatus.RESOLVED: "[RESOLVED]",
+        }
+
+        # Regex to detect any [XYZ] prefix at the start of the string
+        prefix_pattern = re.compile(r'^(\[[^\]]+\])\s*(.*)$')
+        match = prefix_pattern.match(title)
+        if match:
+            # The remainder is whatever follows the bracketed text
+            remainder = match.group(2)
+        else:
+            # No bracketed prefix found in the title
+            remainder = title
+
+        # Always override prefix based on status
+        prefix = prefix_map.get(status, "")
+
+        return prefix, remainder
+        
+    def __get_severity_emoji(self, severity: FindingSeverity, status: FindingStatus) -> str:
+        """
+        Return an emoji based on the severity and status of the finding.
+        """
+        emoji_map = {
+            (FindingSeverity.HIGH, FindingStatus.FIRING): "🔥",
+            (FindingSeverity.HIGH, FindingStatus.RESOLVED): "✅",
+            (FindingSeverity.LOW, FindingStatus.FIRING): "⚠️",
+            (FindingSeverity.LOW, FindingStatus.RESOLVED): "✅",
+            (FindingSeverity.INFO, FindingStatus.FIRING): "ℹ️",
+            (FindingSeverity.INFO, FindingStatus.RESOLVED): "✅",
+        }
+
+        return emoji_map.get((severity, status))
+
     def __create_finding_header(
         self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
     ) -> MarkdownBlock:
-        title = finding.title.removeprefix("[RESOLVED] ")
-        sev = finding.severity
+               
+        global_config = self.registry.get_global_config()
+        alertmanager_url = global_config.get("alertmanager_public_url")
+        alertname = finding.subject.labels.get("alertname", "Event Detected")
+        severity_status = finding.severity
+        severity_name = finding.subject.labels.get("severity", "notification")
+
+        # Define prefix and summary based on status
+        prefix, summary = self.__get_finding_prefix(finding.title, status)
+
+        # Define emoji based on severity
+        severity_emoji = self.__get_severity_emoji(severity_status, status)
+
+        logging.debug(
+            f"--Finding Information--\n"
+            f"finding:{finding}\n"
+            f"status:{status}\n"
+            f"global_config:{global_config}\n"
+            f"summary:{summary}\n"
+            f"severity_status:{severity_status}\n"
+            f"severity_name:{severity_name}\n"
+            f"alertname:{alertname}\n"
+            f"prefix:{prefix}\n"
+            f"severity_emoji:{severity_emoji}\n"
+        )
+
+        # Cleanup the title
         if finding.source == FindingSource.PROMETHEUS:
             status_name: str = (
-                f"{status.to_emoji()} `Prometheus Alert Firing` {status.to_emoji()}"
-                if status == FindingStatus.FIRING
-                else f"{status.to_emoji()} *Prometheus resolved*"
+                f"{severity_emoji} *{prefix} {alertname}*"
             )
+
+            # Remove Prefix for Notifications
+            if (severity_status == FindingSeverity.INFO):
+                status_name: str = (
+                    f"{severity_emoji} *{alertname}*"
+                )
+
         elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-            status_name: str = "👀 *K8s event detected*"
+            status_name: str = (
+                f"*{prefix} {alertname}*"
+            )
         else:
-            status_name: str = "👀 *Notification*"
+            status_name: str = (
+                f"{severity_emoji} *{prefix} {alertname}*"
+            )
         if platform_enabled and include_investigate_link:
             title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
+
+        # Make status_name a hyperlink
+        linked_status_name = f"<{alertmanager_url}|{status_name}>"
+
         return MarkdownBlock(
-            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*
-{title}"""
+            f"""*{linked_status_name}*
+*{severity_name.upper()}: {summary}*"""
         )
 
     def __create_links(
@@ -508,18 +632,12 @@ class SlackSender:
         if finding.title:
             blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
 
-        links_block: LinksBlock = self.__create_links(
-            finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
-        )
-        blocks.append(links_block)
-
         if HOLMES_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
 
-        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
             if finding.source == FindingSource.PROMETHEUS:
-                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+                blocks.append(MarkdownBlock(f"{finding.description}"))
             elif finding.source == FindingSource.KUBERNETES_API_SERVER:
                 blocks.append(
                     MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
@@ -539,10 +657,15 @@ class SlackSender:
             else:
                 blocks.extend(enrichment.blocks)
 
-        blocks.append(DividerBlock())
+        # blocks.append(DividerBlock())
 
         if len(attachment_blocks):
             attachment_blocks.append(DividerBlock())
+
+        links_block: LinksBlock = self.__create_links(
+            finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
+        )
+        blocks.append(links_block)
 
         return self.__send_blocks_to_slack(
             blocks,
@@ -593,7 +716,6 @@ class SlackSender:
             MarkdownBlock(f"*Alerts Summary - {n_total_alerts} Notifications*"),
         ]
 
-        source_txt = f"*Source:* `{self.cluster_name}`"
         if platform_enabled:
             blocks.extend(
                 [
