@@ -52,7 +52,7 @@ class ValidationResponse(BaseModel):
 class SlackExternalActionRequest(ExternalActionRequest):
     # Optional Slack Params
     slack_username: Optional[str] = None
-    slack_message: Optional[Dict[str, Any]] = None
+    slack_message: Optional[Any] = None
 
 
 class SlackActionRequest(BaseModel):
@@ -211,7 +211,7 @@ class ActionRequestReceiver:
         slack_actions_message = SlackActionsMessage.parse_raw(message)  # this is slack callback format
         for action in slack_actions_message.actions:
             action.value.slack_username = slack_actions_message.user.username
-            action.value.slack_message = slack_actions_message.message
+            action.value.slack_message = json.loads(message)
         return slack_actions_message
 
     def on_message(self, ws: websocket.WebSocketApp, message: str) -> None:

@@ -20,7 +20,7 @@ class OpsGenieAckParams(ActionParams):
 
     alert_fingerprint: str
     slack_username: Optional[str]
-    slack_message: Optional[Dict[str, Any]]
+    slack_message: Optional[Any]
 
 
 @action
@@ -32,8 +32,20 @@ def ack_opsgenie_alert(event: ExecutionBaseEvent, params: OpsGenieAckParams):
             user=params.slack_username,
             note=f"This alert was ack-ed from a Robusta Slack message by {params.slack_username}"
         )
-    logging.info(f"Acking {params.alert_fingerprint} {params.slack_username}")
-    logging.warning(params.slack_message)
+
+        # slack action block
+        actions = params.slack_message.get("actions", [])
+        if len(actions) == 0:
+            return
+        block_id = actions[0].get("block_id")
+
+        event.emit_event(
+            "replace_callback_with_string",
+            slack_message=params.slack_message,
+            block_id=block_id,
+            message_string=f"✅ *OpsGenie Ack by @{params.slack_username}*"
+        )
+
     ack_opsgenie_alert()
 
 
