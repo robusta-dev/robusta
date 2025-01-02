@@ -94,6 +94,7 @@ class FindingStatus(Enum):
 class LinkType(StrEnum):
     VIDEO = "video"
     PROMETHEUS_GENERATOR_URL = "prometheus_generator_url"
+    OPSGENIE = "opsgenie"
 
 
 class Link(BaseModel):
