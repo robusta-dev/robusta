@@ -134,7 +134,7 @@ def event_resource_events(event: EventChangeEvent):
         return
     obj = event.obj.regarding
     events_table = get_resource_events_table(
-        f"Event related to {obj.kind} {obj.name}",
+        "Related Events",
         obj.kind,
         obj.name,
         obj.namespace,
