@@ -15,8 +15,8 @@ from slack_sdk.errors import SlackApiError
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
-    SLACK_REQUEST_TIMEOUT,
     HOLMES_ENABLED,
+    SLACK_REQUEST_TIMEOUT,
     SLACK_TABLE_COLUMNS_LIMIT,
 )
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
@@ -695,3 +695,33 @@ class SlackSender:
             return resp["ts"]
         except Exception as e:
             logging.exception(f"error sending message to slack\n{e}\nchannel={channel}\n")
+
+    def update_slack_message(self, channel: str, ts: str, blocks: list, text: str = ""):
+        """
+        Update a Slack message with new blocks and optional text.
+
+        Args:
+            channel (str): Slack channel ID.
+            ts (str): Timestamp of the message to update.
+            blocks (list): List of Slack Block Kit blocks for the updated message.
+            text (str, optional): Plain text summary for accessibility. Defaults to "".
+        """
+        try:
+            # Ensure channel ID exists in the mapping
+            if channel not in self.channel_name_to_id.values():
+                logging.error(f"Channel ID for {channel} could not be determined. Update aborted.")
+                return
+
+            # Call Slack's chat_update method
+            resp = self.slack_client.chat_update(
+                channel=channel,
+                ts=ts,
+                text=text,
+                blocks=blocks
+            )
+            logging.debug(f"Message updated successfully: {resp['ts']}")
+            return resp["ts"]
+
+        except Exception as e:
+            logging.exception(f"Error updating Slack message: {e}")
+            return None
