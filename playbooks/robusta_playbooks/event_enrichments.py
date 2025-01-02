@@ -325,7 +325,7 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
             selected_pods = pods if len(pods) <= params.max_pods else pods[: params.max_pods]
             for pod in selected_pods:
                 events_table_block = get_resource_events_table(
-                    "Pod Events",
+                    f"Pod events for {pod.metadata.name}",
                     "Pod",
                     pod.metadata.name,
                     pod.metadata.namespace,
