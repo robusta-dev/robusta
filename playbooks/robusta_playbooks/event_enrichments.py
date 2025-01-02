@@ -245,7 +245,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
             [
                 EventsBlock(
                     events=events_row,
-                    table_name=f"{kind} Events*",
+                    table_name=f"{kind} Events",
                     column_renderers={"time": RendererType.DATETIME},
                     headers=["reason", "type", "time", "kind", "name", "message"],
                     rows=rows,
