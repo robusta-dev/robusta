@@ -269,7 +269,7 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
         return
 
     events_table_block = get_resource_events_table(
-        "Events for pod {pod.metadata.name}",
+        "Pod Events",
         pod.kind,
         pod.metadata.name,
         pod.metadata.namespace,
@@ -292,7 +292,7 @@ def enrich_pod_with_node_events(event: PodEvent, params: EventEnricherParams):
     """
     pod = event.get_pod()
     events_table_block = get_resource_events_table(
-        f"Events for node {pod.spec.nodeName}",
+        "Node Events",
         kind="Node",
         name=pod.spec.nodeName,
         included_types=params.included_types,
@@ -325,7 +325,7 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
             selected_pods = pods if len(pods) <= params.max_pods else pods[: params.max_pods]
             for pod in selected_pods:
                 events_table_block = get_resource_events_table(
-                    f"Events for pod {pod.metadata.name}",
+                    "Pod Events",
                     "Pod",
                     pod.metadata.name,
                     pod.metadata.namespace,
@@ -341,7 +341,7 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
                     )
     else:
         events_table_block = get_resource_events_table(
-            f"Events for deployment {dep.metadata.name}",
+            "Deployment Events",
             dep.kind,
             dep.metadata.name,
             dep.metadata.namespace,
