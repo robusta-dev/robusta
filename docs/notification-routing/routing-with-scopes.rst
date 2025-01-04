@@ -7,8 +7,8 @@ Routing Alerts To Specific Sinks
 
 You can define routing-rules using a :ref:`scope block <All Scope Options>`.
 
-A Basic Example
-^^^^^^^^^^^^^^^^^^
+Simple Scope Example
+-----------------------
 
 To send high-severity alerts to Slack (and not other alerts), add a ``scope`` to your slack sink:
 
@@ -25,17 +25,46 @@ To send high-severity alerts to Slack (and not other alerts), add a ``scope`` to
 
 See below for :ref:`All Scope Options`.
 
-AND Between Two Conditions
+
+Stopping Further Notifications After a Match
+---------------------------------------------
+
+When using multiple sinks, notifications are processed in the order in which sinks are defined.
+
+To prevent processing a notification by further sinks after a match, you can specify ``stop: true`` in the sink.
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: production_sink
+        slack_channel: production-notifications
+        api_key: secret-key
+        scope:
+          include:
+            - namespace: production
+        stop: true
+
+    # because the previous sink sets stop: true, this sink will only receive alerts not matched by the previous sink
+    - slack_sink:
+        name: non_production_sink
+        slack_channel: non-production-notifications
+        api_key: secret-key
+
+Advanced Scope Conditions
+---------------------------------
+
+AND Between Conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-More complex logic is possible. For example, we can match high-severity alerts from the ``prod`` namespace:
+In the following example, we define a sink that matches notifications which are both high-severity and in namespace ``prod``:
 
 .. code-block:: yaml
 
     sinksConfig:
     - slack_sink:
         name: test_sink
-        slack_channel: test-notifications
+        slack_channel: high-severity-and-prod
         api_key: secret-key
         scope:
           include:
@@ -43,26 +72,28 @@ More complex logic is possible. For example, we can match high-severity alerts f
             - namespace: prod
               severity: HIGH
 
-Note that namespace and severity appear within a single YAML list element that starts with a dash (``-``). 
-There is no dash (``-``) character prior to ``severity``. (If this was written as ``- severity`` then it would be treated as 2 separate conditions with an OR between them. See below.)
+Note that there is no dash character (``-``) before ``severity``. Therefore, ``namespace`` and ``severity`` are treated as a single condition, with AND logic between them.
+(Due to how YAML works, this is equivalent to the json ``[{"namespace": "prod", "severity": "HIGH"}]``.)
 
-OR Between Two Conditions
+If you were to write ``- severity: HIGH`` instead, it would be treated as a separate condition with an OR between them (see next section), as this would be equivalent to the json ``[{"namespace": "prod"}, {"severity": "HIGH"}]``.
+
+OR Between Conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If there are multiple list elements (each starting with ``-``) inside the ``include`` block, they are combined with OR logic:
+To use OR logic, use multiple list elements inside the ``include`` block (each element starting with ``-``).
 
 .. code-block:: yaml
 
     sinksConfig:
     - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
+        name: test_sink
+        slack_channel: high-severity-or-prod
         api_key: secret-key
         scope:
-          # define 2 include elements, with an OR between them
           include:
-            - namespace: default
-            - namespace: bla
+            # OR between both conditions
+            - namespace: prod
+            - severity: HIGH
 
 You can combine AND syntax with OR syntax:
 
@@ -70,18 +101,18 @@ You can combine AND syntax with OR syntax:
 
     sinksConfig:
     - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
+        name: test_sink
+        slack_channel: prod-or-high-severity-staging
         api_key: secret-key
         scope:
           # define 2 include elements, with an OR between them
           include:
-            # this is a single include section. to match it, the alert's subject must be in namespace 'default' and have name 'foo'
-            - namespace: default
-              name: "foo"
+            # this is the first include element - made up of two conditions with AND between them
+            - namespace: staging
+              severity: HIGH
 
-            # this is another include section. to match it, the alert's subject must be in namespace 'bla'
-            - namespace: bla
+            # this is the 2nd include element, with a single condition
+            - namespace: prod
 
 Exclusion Rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -106,7 +137,7 @@ In addition to inclusion rules, you can add exclusion rules:
 
 The general rule is that an alert must match **one of** the ``include`` sections, and **must not match all** the ``exclude`` sections.
 
-Special Syntax for Matching One of Many Values
+Syntax for Matching One of Many Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each attribute can be a single value or a list of values:
@@ -234,33 +265,8 @@ Within a specific ``labels`` or ``annotations`` expression, the logic is ``AND``
 
 The above requires that the ``instance`` will have a value of ``1`` **AND** the ``foo`` label values starts with ``x``
 
-Fall-through routing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Sinks are matched in the order they are defined in ``generated_values.yaml``.
-
-To prevent sending alerts to more sinks after the current one matches, you can specify ``stop: true`` in the sink.
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: production_sink
-        slack_channel: production-notifications
-        api_key: secret-key
-        scope:
-          include:
-            - namespace: production
-        stop: true
-
-    # because the previous sink sets stop: true, this sink will only receive alerts not matched by the previous sink
-    - slack_sink:
-        name: non_production_sink
-        slack_channel: non-production-notifications
-        api_key: secret-key
-
 Alternative Routing Methods
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 For :ref:`customPlaybooks <defining-playbooks>`, there is another option for routing notifications.
 
