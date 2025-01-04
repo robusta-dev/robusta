@@ -91,6 +91,37 @@ Note that the order of sinks matters! The first sink that matches a notification
 Advanced Scope Conditions
 --------------------------
 
+Mapping Prometheus Alerts to Kubernetes Resources
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In Kubernetes environments, Robusta automatically maps Prometheus alerts to Kubernetes resources according to alert labels.
+This lets you route alerts not only based on Prometheus metric labels, but also based on Kubernetes metadata.
+
+For example, to route a Prometheus ``KubePodCrashLooping`` alert based on the related pod's ``app.kubernetes.io/name`` label:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        scope:
+          include:
+            - identifier: "KubePodCrashLooping"
+              labels: "app.kubernetes.io/name=my-app"
+
+Note that we routed based on Kubernetes metadata, not present in Prometheus itself!
+
+.. details:: How does Robusta map Prometheus alerts to Kubernetes resources?
+
+  Robusta uses alert labels to map Prometheus alerts to Kubernetes resources.
+
+  For example, if a Prometheus alert has labels ``pod=my-pod`` and ``namespace=foo``, Robusta will fetch the relevant Kubernetes pod and associate it with the alert.
+  
+  If an alert has a label ``deployment=my-deployment``, Robusta will do something similar for Deployments. And so on.
+
+  This mapping is done automatically, but can be customized if needed. For more details, refer to :ref:`Relabel Prometheus Alerts`.
+
 AND Logic
 ^^^^^^^^^^^
 
