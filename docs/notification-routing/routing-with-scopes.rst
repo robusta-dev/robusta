@@ -30,14 +30,14 @@ For example, to only send notifications with severity HIGH:
 
 For all attributes that can go inside ``include``, refer to :ref:`Scope Reference`.
 
-An undefined include section will effectively all alerts.
+An undefined include section will effectively include all alerts.
 
 Exclusion Scopes
 -------------------
 
 If ``scope.exclude`` is defined, sinks will skip matching notifications.
 
-For example, we can include notifications from namespace ``DEFAULT`` but ignore certain notifications by name even if they come from that namespace.
+This can be combined with ``scope.include``. For example, we can include notifications from namespace ``default`` but ignore specific notifications by name even in that namespace.
 
 .. code-block:: yaml
 
