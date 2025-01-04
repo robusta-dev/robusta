@@ -108,16 +108,7 @@ In the following example, we define a sink that matches notifications which are 
             - namespace: prod
               severity: HIGH
 
-Important: there is no dash character before ``severity``. The following configuration is **not equivalent**:
-
-.. code-block:: yaml
-
-  ...
-  include:
-  - namespace: prod
-  - severity: HIGH
-
-As we'll see in the next section, the extra ``-`` character converts AND logic to OR logic.
+Important: there is no dash character before ``severity``. As we'll see in the next section, this is the difference between AND/OR syntax.
 
 OR Logic
 ^^^^^^^^^^^
@@ -165,7 +156,7 @@ Important: note the dash character in``- severity``. This dash is critical as it
 
   In short, make sure you're careful with ``-`` characters when defining your rules!
 
-Combining AND with OR Logic
+Combining AND/OR Logic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can define complex conditions, such as *HIGH severity notifications from staging + all alerts from prod*:
@@ -187,7 +178,7 @@ You can define complex conditions, such as *HIGH severity notifications from sta
             # this is the 2nd include element, with a single condition
             - namespace: prod
 
-Matching from a List of Values
+Matching Lists of Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following will match any value in the list (either ``prod`` or ``default``):
@@ -250,11 +241,6 @@ You can match on Kubernetes label selectors with special syntax:
           include:
             # label selectors are interpreted like Kubernetes - selectors separated by comma are ANDED together
             - labels: "instance=1,foo!=x.*"
-
-.. tip::
-
-    Using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/simulate-alert/>`_.
-
 
 Testing Alert Routing
 ----------------------
