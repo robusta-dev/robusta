@@ -52,9 +52,26 @@ Robusta is installed with Helm. For convenience, we provide a CLI wizard to gene
 
 You can install Robusta alongside your existing Prometheus, or as an all-in-one bundle with Robusta and a preconfigured `kube-prometheus-stack`.
 
+To get *even more* out of Robusta, we recommend creating [a free Robusta UI account](#-free-robusta-ui). Learn more below.
+
+
+[Create a free Robusta UI account »]((https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=installing_robusta_section))
+
+
 [Installation instructions »](https://docs.robusta.dev/master/setup-robusta/installation/index.html)
 
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
+
+## 🖥 Free Robusta UI
+Take your Kubernetes monitoring to the next level with the [Robusta SaaS platform](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=free_robusta_ui_section). Creating an account is free, and you can:
+
+- **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
+- **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
+- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta’s automatic change tracking for Kubernetes
+
+  <a href="https://www.loom.com/share/9c40ab750e5c4dfabd80f0f6b65f3813">
+      <img src="https://cdn.loom.com/sessions/thumbnails/9c40ab750e5c4dfabd80f0f6b65f3813-09b3e571da873a2c-full-play.gif">
+  </a>
 
 ## 📝 Documentation
 Interested? Learn more about Robusta.
