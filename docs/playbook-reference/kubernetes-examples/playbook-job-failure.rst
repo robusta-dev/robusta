@@ -1,7 +1,7 @@
 Track Failed Kubernetes Jobs
 ##############################
 
-Notify about failed Kubernetes Jobs in Slack, MSTeams, DataDog, or other :ref:`Sinks <Sinks Reference>`.
+Notify about failed Kubernetes Jobs in Slack, MSTeams or other :ref:`Sinks <Sinks Reference>`.
 
 .. image:: /images/failingjobs.png
     :alt: Failing Kubernetes jobs notification on Slack
@@ -11,7 +11,7 @@ Notify about failed Kubernetes Jobs in Slack, MSTeams, DataDog, or other :ref:`S
 
     If you installed Robusta with the embedded Prometheus stack, you don't need to configure this playbook. It's configured by default.
 
-Defining a Playbook
+Defining a Playbook to Track Failed Jobs
 ------------------------------------------
 
 Add the following YAML to the ``customPlaybooks`` Helm value:

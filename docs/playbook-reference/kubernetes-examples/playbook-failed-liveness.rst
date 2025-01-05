@@ -1,10 +1,10 @@
 Track Failed Liveness Probes
 ##############################
 
-Lets track failed Liveness Probes and notify the user. Notifications will be sent to all configured :ref:`Sinks <Sinks Reference>`
-like Slack, MSTeams, or DataDog. It is also possible to :ref:`route notifications to specific sinks<Routing Alerts to Specific Sinks>`.
+Lets track failed Liveness Probes and notify the user. Notifications will be sent to configured :ref:`Sinks <Sinks Reference>`
+like Slack or MSTeams. It is also possible to :ref:`route notifications to specific sinks<Routing Alerts to Specific Sinks>`.
 
-Defining a Playbook
+Define a Playbook to Track Liveness Probes
 -----------------------------------------------------
 
 Add the following YAML to the ``customPlaybooks`` Helm value:
@@ -34,7 +34,9 @@ Apply the following command the create a failing liveness probe.
     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/liveness_probe_fail/failing_liveness_probe.yaml
 
 
-.. details:: Output
+You should get a notification in your configured sink.
+
+.. details:: Example Slack Notification
 
     .. image:: /images/failedlivenessprobe.png
         :alt: Failed liveness probe notification on Slack
@@ -43,7 +45,7 @@ Apply the following command the create a failing liveness probe.
 How it Works
 -------------
 
-This playbook uses the :ref:`on_kubernetes_warning_event_create<on_kubernetes_warning_event_create>` trigger, that fires once for each Liveness probe failure.
+This playbook uses the :ref:`on_kubernetes_warning_event_create<on_kubernetes_warning_event_create>` trigger, which fires for Liveness probe failures in your cluster.
 
 It uses the :ref:`create_finding <create_finding>` action to generate a notification message, and :ref:`event_resource_events <event_resource_events>` action to gather all other events on the same resource in the near past.
 
