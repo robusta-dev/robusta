@@ -52,7 +52,7 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
     )
 
     try:
-        logs = RobustaJob.run_simple_job_spec(
+        kubectl_response = RobustaJob.run_simple_job_spec(
             spec,
             f"debug-kubectl-{str(uuid.uuid4())}",
             params.timeout,
@@ -63,9 +63,9 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
         )
         event.add_enrichment(
             [
-                MarkdownBlock(f"kubectl_command ran\n{formatted_kubectl_command}"),
-                FileBlock(f"kubectl.txt", logs.encode()),
-            ]
+                MarkdownBlock(f"*{formatted_kubectl_command}*"),
+                FileBlock(f"kubectl.txt", kubectl_response.encode()),
+            ], title="Kubectl Command"
         )
     except Exception:
         logging.exception("Error running kubectl command")
