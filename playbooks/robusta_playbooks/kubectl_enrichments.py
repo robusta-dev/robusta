@@ -34,7 +34,7 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
     """
 
     subject = event.get_subject()
-    formatted_kubectl_command = format_event_templated_string(subject, params.kubectl_command)
+    formatted_kubectl_command = format_event_templated_string(subject, params.command)
     logging.warning(f"{formatted_kubectl_command}")
 
     spec = PodSpec(
