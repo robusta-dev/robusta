@@ -1,7 +1,7 @@
 import logging
 import re
-from abc import abstractmethod, ABC
-from typing import Dict, Optional, Union, List
+from abc import ABC, abstractmethod
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, root_validator
 
@@ -51,22 +51,24 @@ class BaseScopeMatcher(ABC):
                 return False
         return True
 
+    def match_attribute(self, attr_name: str, attr_value, attr_matcher: str) -> bool:
+        if attr_name == "attributes":
+            return self.scope_match_attributes(attr_matcher, attr_value)
+        elif attr_name == "namespace_labels":
+            return self.scope_match_namespace_labels(attr_matcher, attr_value)
+        elif attr_name in ["labels", "annotations"]:
+            return self.match_labels_annotations(attr_matcher, attr_value)
+        elif re.fullmatch(attr_matcher, attr_value):
+            return True
+        return False
+
     def scope_attribute_matches(self, attr_name: str, attr_matchers: List[str]) -> bool:
         data = self.get_data()
         if attr_name not in data:
             logging.warning(f'Scope match on non-existent attribute "{attr_name}" ({data=})')
             return False
         attr_value = data[attr_name]
-        for attr_matcher in attr_matchers:
-            if attr_name == "attributes":
-                return self.scope_match_attributes(attr_matcher, attr_value)
-            elif attr_name == "namespace_labels":
-                return self.scope_match_namespace_labels(attr_matcher, attr_value)
-            elif attr_name in ["labels", "annotations"]:
-                return self.match_labels_annotations(attr_matcher, attr_value)
-            elif re.fullmatch(attr_matcher, attr_value):
-                return True
-        return False
+        return any([self.match_attribute(attr_name, attr_value, matcher) for matcher in attr_matchers])
 
     def scope_match_attributes(self, attr_matcher: str, attr_value: Dict[str, Union[List, Dict]]) -> bool:
         raise NotImplementedError

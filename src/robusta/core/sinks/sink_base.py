@@ -151,7 +151,7 @@ class SinkBase(ABC):
     def _interval_to_time_slice(self, timezone: str, interval: ActivityInterval):
         return TimeSlice(interval.days, [(time.start, time.end) for time in interval.hours], timezone)
 
-    def is_global_config_changed(self):
+    def is_global_config_changed(self) -> bool:
         # registry global config can be updated without these stored values being changed
         global_config = self.registry.get_global_config()
         account_id = global_config.get("account_id", "")

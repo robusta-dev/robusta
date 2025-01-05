@@ -127,11 +127,15 @@ Robusta runner, Prometheus or Holmes failures
                         limits:
                           memory: 1Gi
 
-        If using a test cluster like Kind/Colima, re-install Robusta with the ``isSmallCluster=true`` property:
+        If using a test cluster like Kind/Colima, re-install Robusta with the ``isSmallCluster=true`` property.
+        If you're also using Robusta's kube-prometheus-stack, add the lines involving prometheusSpec.
 
         .. code-block:: bash
 
-                helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true
+                helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true \
+                    --set kube-prometheus-stack.prometheus.prometheusSpec.retentionSize=9GB \
+                    --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
+                    --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
 
 
 .. details:: robusta-runner isn't working or has exceptions
@@ -243,3 +247,29 @@ Alert Manager is not working
                             resources:
                               requests:
                                 storage: 10Gi
+
+
+CRD issues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid: metadata.annotations: Too long
+
+      This is often a CRD issue which can be fixed by enabling server-side apply option as shown below. Check out `this blog <https://blog.ediri.io/kube-prometheus-stack-and-argocd-25-server-side-apply-to-the-rescue>`_ to learn more. 
+
+      .. image:: /images/Argocd_crd_issue_fix.png 
+      :width: 400
+      :align: center
+
+.. details:: one or more objects failed to apply... CustomResourceDefinition.apiextensions.k8s.io "prometheusagents.monitoring.coreos.com" is invalid
+
+      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+
+      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
+
+.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid
+
+
+      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+
+      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
+

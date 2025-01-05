@@ -51,8 +51,9 @@ class SinksRegistry:
             existing_sinks[deleted_sink].stop()
             del existing_sinks[deleted_sink]
 
-        new_sinks = existing_sinks.copy()
-        # create new sinks, or update existing if changed
+        new_sinks: Dict[str, SinkBase] = dict()
+        
+        # Reload sinks, order does matter and should be loaded & added to the dict by config order.
         for sink_config in new_sinks_config:
             # temporary workaround to skip the default and unconfigured robusta token
             if (
@@ -60,21 +61,25 @@ class SinksRegistry:
                 and sink_config.robusta_sink.token == "<ROBUSTA_ACCOUNT_TOKEN>"
             ):
                 continue
-            if sink_config.get_name() not in new_sinks.keys():
-                logging.info(f"Adding {type(sink_config)} sink named {sink_config.get_name()}")
-                new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
-            elif (
-                sink_config.get_params() != new_sinks[sink_config.get_name()].params
-                or new_sinks[sink_config.get_name()].is_global_config_changed()
-            ):
-                config_change_msg = (
-                    "due to global config change"
-                    if new_sinks[sink_config.get_name()].is_global_config_changed()
-                    else "due to param change"
-                )
+
+            sink_name = sink_config.get_name()
+            exists_sink = existing_sinks.get(sink_name, None)
+            if not exists_sink:
+                logging.info(f"Adding {type(sink_config)} sink named {sink_name}")
+                new_sinks[sink_name] = SinkFactory.create_sink(sink_config, registry)
+                continue
+
+            is_global_config_changed = exists_sink.is_global_config_changed()
+            is_sink_changed = sink_config.get_params() != exists_sink.params or is_global_config_changed
+            if is_sink_changed:
+                config_change_msg = "due to global config change" if is_global_config_changed else "due to param change"
                 logging.info(f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}")
-                new_sinks[sink_config.get_name()].stop()
-                new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
+                exists_sink.stop()
+                new_sinks[sink_name] = SinkFactory.create_sink(sink_config, registry)
+                continue
+
+            logging.info("Sink %s not changed", sink_name)
+            new_sinks[sink_name] = exists_sink
 
         return new_sinks
 

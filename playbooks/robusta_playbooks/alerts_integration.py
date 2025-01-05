@@ -45,6 +45,7 @@ from robusta.api import (
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 from robusta.core.reporting import FindingSubject
+from robusta.core.reporting.base import Link, LinkType
 from robusta.core.reporting.blocks import TableBlockFormat
 from robusta.utils.parsing import format_event_templated_string
 
@@ -208,12 +209,25 @@ def alert_explanation_enricher(alert: PrometheusKubernetesAlert, params: AlertEx
 
 
 @action
+def minimal_default_enricher(alert: PrometheusKubernetesAlert):
+    """
+    Enrich an alert with the original message only, without any labels or annotations.
+
+    This can be used to get more concise alerts notifications
+    """
+    alert.add_enrichment([])
+
+
+@action
 def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherParams):
     """
     Enrich an alert with the original message and labels.
 
     By default, this enricher is last in the processing order, so it will be added to all alerts, that aren't silenced.
     """
+    if alert.alert.generatorURL:
+        alert.add_link(Link(url=alert.alert.generatorURL, name="View Graph", type=LinkType.PROMETHEUS_GENERATOR_URL))
+
     labels = alert.alert.labels
     alert.add_enrichment(
         [
@@ -441,7 +455,7 @@ def format_pod_templated_string(pod: RobustaPod, template: Optional[str]) -> Opt
         subject_type=FindingSubjectType.from_kind("pod"),
         namespace=pod.metadata.namespace,
         labels=pod.metadata.labels,
-        annotations=pod.metadata.annotations
+        annotations=pod.metadata.annotations,
     )
     return format_event_templated_string(subject, template)
 
@@ -468,6 +482,7 @@ def alert_foreign_logs_enricher(event: PrometheusKubernetesAlert, params: Foreig
     subject = event.get_subject()
     params.label_selectors = [format_event_templated_string(subject, selector) for selector in params.label_selectors]
     return foreign_logs_enricher(event, params)
+
 
 @action
 def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):

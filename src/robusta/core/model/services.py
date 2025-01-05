@@ -22,7 +22,7 @@ class Resources(BaseModel):
 
 class ContainerInfo(BaseModel):
     name: str
-    image: str
+    image: Optional[str]
     env: List[EnvVar]
     resources: Resources
     ports: List[int] = []

@@ -29,6 +29,8 @@ from robusta.core.sinks.webhook import WebhookSink, WebhookSinkConfigWrapper
 from robusta.core.sinks.yamessenger import YaMessengerSink, YaMessengerSinkConfigWrapper
 from robusta.core.sinks.pushover import PushoverSink, PushoverSinkConfigWrapper
 from robusta.core.sinks.zulip import ZulipSink, ZulipSinkConfigWrapper
+from robusta.core.sinks.incidentio.incidentio_sink import IncidentioSink
+from robusta.core.sinks.incidentio.incidentio_sink_params import IncidentioSinkConfigWrapper
 
 class SinkFactory:
     __sink_config_mapping: Dict[Type[SinkConfigBase], Type[SinkBase]] = {
@@ -53,7 +55,8 @@ class SinkFactory:
         PushoverSinkConfigWrapper: PushoverSink,
         GoogleChatSinkConfigWrapper: GoogleChatSink,
         ServiceNowSinkConfigWrapper: ServiceNowSink,
-        ZulipSinkConfigWrapper: ZulipSink
+        ZulipSinkConfigWrapper: ZulipSink,
+        IncidentioSinkConfigWrapper: IncidentioSink
     }
 
     @classmethod
