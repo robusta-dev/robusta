@@ -35,7 +35,8 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
 
     subject = event.get_subject()
     formatted_kubectl_command = format_event_templated_string(subject, params.command)
-    logging.warning(f"{formatted_kubectl_command}")
+    
+    logging.debug(f"kubectl_command running '{formatted_kubectl_command}'")
 
     spec = PodSpec(
         serviceAccountName=RUNNER_SERVICE_ACCOUNT,
