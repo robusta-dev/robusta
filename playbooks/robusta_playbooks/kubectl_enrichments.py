@@ -1,4 +1,5 @@
 import logging
+import os
 import uuid
 
 from hikaru.model.rel_1_26 import Container, PodSpec
@@ -13,20 +14,25 @@ from robusta.api import (
 )
 from robusta.utils.parsing import format_event_templated_string
 
+IMAGE: str = os.getenv("KUBECTL_IMAGE_OVERRIDE", f"bitnami/kubectl:latest")
+
 
 class KubectlParams(PodRunningParams):
     """
-    :var kubectl_command: the kubectl command to run
+    :var kubectl_command: The full kubectl command to run, formatted as a shell command string.
+    :var timeout: The maximum time (in seconds) to wait for the kubectl command to complete. Default is 3600 seconds.
     """
 
-    kubectl_command: str = None  # type: ignore
+    command: str = None  # type: ignore
+    timeout: int = 3600
 
 
 @action
 def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
     """
-    Runs jmap on a specific pid in your pod
+    Runs a custom kubectl command inside a Kubernetes pod using a Job.
     """
+
     subject = event.get_subject()
     formatted_kubectl_command = format_event_templated_string(subject, params.kubectl_command)
     logging.warning(f"{formatted_kubectl_command}")
@@ -36,7 +42,7 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
         containers=[
             Container(
                 name="kubectl",
-                image="bitnami/kubectl:latest",
+                image=IMAGE,
                 imagePullPolicy="Always",
                 command=["/bin/sh", "-c"],
                 args=[formatted_kubectl_command]
@@ -49,16 +55,15 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
         logs = RobustaJob.run_simple_job_spec(
             spec,
             f"debug-kubectl-{str(uuid.uuid4())}",
-            3600,
+            params.timeout,
             custom_annotations=params.custom_annotations,
             ttl_seconds_after_finished=43200,  # 12 hours
-            delete_job_post_execution=False,
-            finalizers=["robusta.dev/krr-job-output"],
+            delete_job_post_execution=True,
             process_name=False,
         )
         event.add_enrichment(
             [
-                MarkdownBlock(f"kubectl_enricher ran {params.kubectl_command}"),
+                MarkdownBlock(f"kubectl_command ran\n{formatted_kubectl_command}"),
                 FileBlock(f"kubectl.txt", logs.encode()),
             ]
         )
