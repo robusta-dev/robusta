@@ -20,10 +20,12 @@ IMAGE: str = os.getenv("KUBECTL_IMAGE_OVERRIDE", f"bitnami/kubectl:latest")
 class KubectlParams(PodRunningParams):
     """
     :var kubectl_command: The full kubectl command to run, formatted as a shell command string.
+    :var description: A description of the command ran.
     :var timeout: The maximum time (in seconds) to wait for the kubectl command to complete. Default is 3600 seconds.
     """
 
     command: str = None  # type: ignore
+    description: str = None
     timeout: int = 3600
 
 
@@ -62,11 +64,12 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
             delete_job_post_execution=True,
             process_name=False,
         )
+        descriptiont_text = params.description if params.description else "Kubectl Command"
         event.add_enrichment(
             [
                 MarkdownBlock(f"*{formatted_kubectl_command}*"),
                 FileBlock(f"kubectl.txt", kubectl_response.encode()),
-            ], title="Kubectl Command"
+            ], title=descriptiont_text
         )
     except Exception:
         logging.exception("Error running kubectl command")
