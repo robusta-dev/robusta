@@ -33,4 +33,4 @@ In this example we'll route alerts to different support teams based on the time 
             - start: 12:00  # 12 PM
                 end: 23:59  # 11:59 PM
 
-For more information on time-based routing, :ref:`view <Route by Time>`
+For more information on time-based routing, view :ref:`Route by Time`.
