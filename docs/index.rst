@@ -46,10 +46,7 @@
    notification-routing/configuring-sinks
    Routing (Scopes) <notification-routing/routing-with-scopes>
    Grouping (Slack Threads) <notification-routing/notification-grouping>
-   notification-routing/routing-by-namespace
-   notification-routing/routing-by-type
    notification-routing/routing-by-time
-   notification-routing/routing-exclusion
    notification-routing/routing-silencing
    notification-routing/notification-routing-examples
 

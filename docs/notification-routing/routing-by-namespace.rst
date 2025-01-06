@@ -1,9 +1,7 @@
 Route By Namespace
 =============================
 
-Route alerts based on Kubernetes namespace. Ideal for teams that "own" specific namespaces.
-
-This guide can be applied to all events passing through Robusta, including forwarded Prometheus alerts.
+You can route alerts based on the Kubernetes namespace they relate to. This is ideal for organizations where different teams "own" specific namespaces.
 
 Prerequisites
 ----------------
@@ -60,13 +58,9 @@ We now have two sinks, both receiving all notifications. Restrict the notificati
 
 Alerts will be now routed according to Kubernetes namespace.
 
-You can apply this method with as many sinks as you like. If the number of sinks is large, consider setting the channel dynamically. (See instructions for :ref:`Slack <Dynamic Alert Routing>` or :ref:`MS Teams <Dynamically Route MS Teams Alerts>`.)
+You can apply this method with as many sinks as you like. If the number of sinks is large, consider setting the channel dynamically. See instructions for :ref:`Slack <Dynamic Alert Routing>` or :ref:`MS Teams <Dynamically Route MS Teams Alerts>`.
 
 Troubleshooting Issues
 ------------------------
 
-For this guide to work, alerts must be tagged with ``namespace`` metadata. Alerts without ``namespace`` metadata will be
-sent to default sinks (without namespace matchers) if they exist.
-
-If you forward custom Prometheus alerts to Robusta (and don't use Robusta's builtin Prometheus alerts), make sure they
-have a ``namespace`` label. Otherwise this method will not work.
+For this guide to work, alerts must be tagged with ``namespace`` metadata. It is recommended that you setup a :ref:`Fallback Sink <Stop Further Notifications>` to catch alerts that don't have a namespace.

@@ -21,13 +21,11 @@ For example, lets add a :ref:`Microsoft Teams <MS Teams sink>`:
         scope: {}                     # optional routing rules
         default: true                 # optional (see below)
 
-Many sinks have unique parameters which can be found under :ref:`Sinks Reference`.
+In addition to the above attributes, some sinks have additional attributes that can be found in their documentation.
 
 Defining Multiple Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You can define multiple sinks and by default, notifications will be sent to all of them.
-
-If you'd like to selectively send notifications to different sinks, you can define :ref:`routing rules <sink-scope-matching>`.
 
 In the following example, we define a :ref:`Slack sink <Slack>` and a :ref:`MS Teams sink <MS Teams>` without any routing rules, so both sinks receive all notifications:
 
@@ -41,6 +39,8 @@ In the following example, we define a :ref:`Slack sink <Slack>` and a :ref:`MS T
     - ms_teams_sink:
         name: my_teams_sink
         webhook_url: <placeholder>
+
+To selectively send notifications to different sinks, refer to :ref:`routing (scopes) <sink-scope-matching>`.
 
 See Also
 ^^^^^^^^^^^^
