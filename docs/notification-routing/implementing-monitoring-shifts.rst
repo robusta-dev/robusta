@@ -1,4 +1,4 @@
-Monitoring Shifts
+Route By Time of Day
 ####################
 
 In this example we'll route alerts to different support teams based on the time of day:
