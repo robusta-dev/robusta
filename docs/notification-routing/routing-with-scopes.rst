@@ -3,243 +3,70 @@
 .. _sink-scope-matching:
 
 Routing Alerts To Specific Sinks
-####################################
+################################
 
-You can define routing-rules using a :ref:`scope block <All Scope Options>`.
+This guide covers routing notifications to specific sinks by defining a ``scope``.
 
-A Basic Example
-^^^^^^^^^^^^^^^^^^
+Sinks in Robusta determine where notifications are sent (e.g. Slack, email). 
+By defining scopes, you can send notifications to different channels based on severity, namespace, and other conditions.
 
-To send high-severity alerts to Slack (and not other alerts), add a ``scope`` to your slack sink:
+Inclusion Scopes
+---------------------
+
+If ``scope.include`` is defined, sinks will only receive matching notifications.
+
+For example, to only send notifications with severity HIGH:
 
 .. code-block:: yaml
 
     sinksConfig:
     - slack_sink:
-        name: test_sink
-        slack_channel: test-notifications
+        name: slack_urgent
+        slack_channel: urgent
         api_key: secret-key
         scope:
           include:
             - severity: HIGH
 
-See below for :ref:`All Scope Options`.
+For all attributes that can go inside ``include``, refer to :ref:`Scope Reference`.
 
-AND Between Two Conditions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+An undefined include section will effectively include all alerts.
 
-More complex logic is possible. For example, we can match high-severity alerts from the ``prod`` namespace:
+Exclusion Scopes
+-------------------
 
-.. code-block:: yaml
+If ``scope.exclude`` is defined, sinks will skip matching notifications.
 
-    sinksConfig:
-    - slack_sink:
-        name: test_sink
-        slack_channel: test-notifications
-        api_key: secret-key
-        scope:
-          include:
-            # AND between both conditions
-            - namespace: prod
-              severity: HIGH
-
-Note that namespace and severity appear within a single YAML list element that starts with a dash (``-``). 
-There is no dash (``-``) character prior to ``severity``. (If this was written as ``- severity`` then it would be treated as 2 separate conditions with an OR between them. See below.)
-
-OR Between Two Conditions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If there are multiple list elements (each starting with ``-``) inside the ``include`` block, they are combined with OR logic:
+This can be combined with ``scope.include``. For example, we can include notifications from namespace ``default`` but ignore specific notifications by name even in that namespace.
 
 .. code-block:: yaml
 
     sinksConfig:
     - slack_sink:
-        name: prod_slack_sink
+        name: prod_sink
         slack_channel: prod-notifications
         api_key: secret-key
         scope:
-          # define 2 include elements, with an OR between them
           include:
             - namespace: default
-            - namespace: bla
-
-You can combine AND syntax with OR syntax:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        scope:
-          # define 2 include elements, with an OR between them
-          include:
-            # this is a single include section. to match it, the alert's subject must be in namespace 'default' and have name 'foo'
-            - namespace: default
-              name: "foo"
-
-            # this is another include section. to match it, the alert's subject must be in namespace 'bla'
-            - namespace: bla
-
-Exclusion Rules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In addition to inclusion rules, you can add exclusion rules:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        scope:
-          # only include alerts from namespace default
-          include:
-            - namespace: default
- 
           exclude:
             # regardless of the include sections, this will drop all alerts with name CrashLoopBackoff or ImagePullBackoff
             - identifier: [CrashLoopBackoff, ImagePullBackoff]
 
-The general rule is that an alert must match **one of** the ``include`` sections, and **must not match all** the ``exclude`` sections.
+The general rule is that a notification must match **one of** the ``include`` sections, and **must not match all** the ``exclude`` sections.
 
-Special Syntax for Matching One of Many Values
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can use the same attributes in ``exclude`` as ``include`` - refer to :ref:`Scope Reference`.
 
-Each attribute can be a single value or a list of values:
+An undefined ``exclude`` section will not exclude anything.
 
-.. code-block:: yaml
+Stop Further Notifications
+---------------------------
 
-    sinksConfig:
-    - slack_sink:
-        name: test_sink
-        slack_channel: test-notifications
-        api_key: secret-key
-        scope:
-          include:
-            # here we use a list with a single value
-            - namespace: [prod]
-            # this is equivalent to the above
-            - namespace: prod
-            # this would match EITHER the namespace 'prod' OR the namespace 'default'
-            - namespace: [prod, default]
+When using multiple sinks, **notifications are sent to all matching sinks by default**.
 
-Using Regexes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To stop sending notifications after a match, set ``stop: true``.
 
-You can also use `regexes <https://docs.python.org/3/library/re.html#re.match>`_:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: test_sink
-        slack_channel: test-notifications
-        api_key: secret-key
-        scope:
-          include:
-            # this will match kube-system
-            - namespace: kube-.*
-
-Using Kubernetes Label Selectors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can match on Kubernetes label selectors with special syntax:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        scope:
-          include:
-            # label selectors are interpreted like Kubernetes - selectors separated by comma are ANDED together
-            - labels: "instance=1,foo!=x.*"
-
-.. tip::
-
-    Using the Robusta UI, you can test alert routing by `Simulating an alert <https://platform.robusta.dev/simulate-alert/>`_.
-
-All Scope Options
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Here is the complete list of attributes that can be used in ``include`` / ``exclude`` sections:
-
-- ``title``: e.g. ``Crashing pod foo in namespace default``
-- ``name`` : the Kubernetes object name
-- ``namespace``: the Kubernetes object namespace
-- ``namespace_labels``: labels assigned to the namespace; matching these is done in the same way as matching ``labels`` (see below)
-- ``node`` : the Kubernetes node name
-- ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
-- ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
-- ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
-- ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
-- ``identifier``: e.g. ``CrashLoopBackoff``
-- ``labels``: A comma separated list of ``key=val`` e.g. ``foo=bar,instance=123``
-- ``annotations``: A comma separated list of ``key=val`` e.g. ``app.kubernetes.io/name=prometheus``
-
-.. note::
-
-    ``labels`` and ``annotations`` are both the Kubernetes resource labels and annotations
-    (e.g. pod labels) and the Prometheus alert labels and annotations. If both contains the
-    same label/annotation, the value from the Prometheus alert is preferred.
-
-.. note::
-
-    For performance reasons, the namespace information used for matching ``namespace_labels``
-    is cached (with a default cache timeout of 30 minutes). If you change namespace labels
-    and want these changes to be immediately reflected in the sink ``scope`` matching
-    mechanism, you will need to manually restart the Robusta runner.
-
-.. details:: How do I find the ``identifier`` value to use in a match block? (deprecated)
-
-    For Prometheus alerts, it's always the alert name.
-
-    .. TODO: update after we finish our improvements here:
-    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoff``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
-
-    For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
-
-    Ask us in Slack if you need help.
-
-When processing the ``scope`` block, the following rules apply:
-
-#. If the notification is **excluded** by any of the sink ``scope`` excludes - drop it
-#. If the notification is **included** by any of the sink ``scope`` includes - accept it
-#. If the notification is **included** by any of the sink ``matchers`` (deprecated) - accept it
-
-Any of (but not both) of the ``include`` and ``exclude`` may be left undefined or empty.
-An undefined/empty ``include`` section will effectively allow all alerts, and an
-undefined/empty ``exclude`` section will not exclude anything.
-
-Inside the ``include`` and ``exclude`` section, at the topmost level, the consecutive
-items act with the OR logic, meaning that it's enough to match a single item in the
-list in order to allow/reject a message. The same applies to the items listed under
-each attribute name.
-
-Within a specific ``labels`` or ``annotations`` expression, the logic is ``AND``
-
-.. code-block:: yaml
-
-    ....
-        scope:
-          include:
-            - labels: "instance=1,foo=x.*"
-    .....
-
-The above requires that the ``instance`` will have a value of ``1`` **AND** the ``foo`` label values starts with ``x``
-
-Fall-through routing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Sinks are matched in the order they are defined in ``generated_values.yaml``.
-
-To prevent sending alerts to more sinks after the current one matches, you can specify ``stop: true`` in the sink.
+You can use ``stop`` to define a **fallback sink**:
 
 .. code-block:: yaml
 
@@ -255,12 +82,275 @@ To prevent sending alerts to more sinks after the current one matches, you can s
 
     # because the previous sink sets stop: true, this sink will only receive alerts not matched by the previous sink
     - slack_sink:
-        name: non_production_sink
-        slack_channel: non-production-notifications
+        name: fallback_sink
+        slack_channel: all-other-notifications
         api_key: secret-key
 
+Note that the order of sinks matters! The first sink that matches a notification will receive it. That sink's ``stop`` value will determine if further sinks have a chance to receive the notification.
+
+Advanced Scope Conditions
+--------------------------
+
+Mapping Prometheus Alerts to Kubernetes Resources
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In Kubernetes environments, Robusta automatically maps Prometheus alerts to Kubernetes resources according to alert labels.
+This lets you route alerts not only based on Prometheus metric labels, but also based on Kubernetes metadata.
+
+For example, to route a Prometheus ``KubePodCrashLooping`` alert based on the related pod's ``app.kubernetes.io/name`` label:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        scope:
+          include:
+            - identifier: "KubePodCrashLooping"
+              labels: "app.kubernetes.io/name=my-app"
+
+Note that we routed based on Kubernetes metadata, not present in Prometheus itself!
+
+.. details:: How does Robusta map Prometheus alerts to Kubernetes resources?
+
+  Robusta uses alert labels to map Prometheus alerts to Kubernetes resources.
+
+  For example, if a Prometheus alert has labels ``pod=my-pod`` and ``namespace=foo``, Robusta will fetch the relevant Kubernetes pod and associate it with the alert.
+  
+  If an alert has a label ``deployment=my-deployment``, Robusta will do something similar for Deployments. And so on.
+
+  This mapping is done automatically, but can be customized if needed. For more details, refer to :ref:`Relabel Prometheus Alerts`.
+
+AND Logic
+^^^^^^^^^^^
+
+In the following example, we define a sink that matches notifications which are both high-severity and in namespace ``prod``:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: high-severity-and-prod
+        api_key: secret-key
+        scope:
+          include:
+            - namespace: prod
+              severity: HIGH
+
+Important: there is no dash character before ``severity``. As we'll see in the next section, this is the difference between AND/OR syntax.
+
+OR Logic
+^^^^^^^^^^^
+
+To use OR logic, use multiple list elements inside the ``include`` block (each element starting with ``-``).
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: high-severity-or-prod
+        api_key: secret-key
+        scope:
+          include:
+            # OR between both conditions
+            - namespace: prod
+            - severity: HIGH
+
+Important: note the dash character in``- severity``. This dash is critical as it separates the two conditions by OR.
+
+.. details:: Understanding the Syntax for AND vs OR
+
+  In the above examples, the difference between AND/OR is a single character - an extra dash (``-``).
+  This is due to how YAML works.
+  
+  The above AND example is equivalent to the following JSON:
+
+  .. code-block:: json
+
+      "include": [
+        {"namespace": "prod", "severity": "HIGH"}
+      ]
+
+  Whereas the OR example is equivalent to:
+
+  .. code-block:: json
+
+      "include": [
+        {"namespace": "prod"},
+        {"severity": "HIGH"}
+      ]
+
+  Each item in the ``include`` list is a set of AND conditions, whereas there is OR between each list element.
+
+  In short, make sure you're careful with ``-`` characters when defining your rules!
+
+Combining AND/OR Logic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can define complex conditions, such as *HIGH severity notifications from staging + all alerts from prod*:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: high-severity-staging-or-prod
+        slack_channel: high-severity-staging-or-prod
+        api_key: secret-key
+        scope:
+          # define 2 include elements, with an OR between them
+          include:
+            # this is the first include element - made up of two conditions with AND between them
+            - namespace: staging
+              severity: HIGH
+
+            # this is the 2nd include element, with a single condition
+            - namespace: prod
+
+Matching Lists of Values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following will match any value in the list (either ``prod`` or ``default``):
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        scope:
+          include:
+            - namespace: [prod, default]
+
+This is equivalent to:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        scope:
+          include:
+            - namespace: prod
+            - namespace: default
+
+Using Regexes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also use `regexes <https://docs.python.org/3/library/re.html#re.match>`_:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        scope:
+          include:
+            # this will match kube-system
+            - namespace: kube-.*
+
+Kubernetes Label Selectors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can match on Kubernetes label selectors with special syntax:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        scope:
+          include:
+            # label selectors are interpreted like Kubernetes - selectors separated by comma are ANDED together
+            - labels: "instance=1,foo!=x.*"
+
+Testing Alert Routing
+----------------------
+
+.. tip::
+   Use the Robusta UI to test your alert routing rules by `simulating an alert <https://platform.robusta.dev/simulate-alert/>`_.
+
+Scope Reference
+-----------------
+
+Here is the complete list of attributes that can be used in ``include`` / ``exclude`` sections:
+
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| **Attribute**       | **Value**                                                 | **Notes**                                |
++=====================+===========================================================+==========================================+
+| ``identifier``      | For Prometheus alerts, the alert name - e.g.              |                                          |
+|                     | ``KubePodCrashLooping``                                   |                                          |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``title``           | Title of the notification. e.g.                           |                                          |
+|                     | ``Crashing pod foo in namespace default``                 |                                          |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``name``            | Kubernetes object name.                                   | For Prometheus alerts, automatically     |
+|                     |                                                           | determined by alert labels like          |
+|                     |                                                           | ``pod`` or ``deployment``                |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``namespace``       | Kubernetes object namespace.                              | For Prometheus alerts, automatically     |
+|                     |                                                           | determined by ``namespace`` label        |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``node``            | Kubernetes node name.                                     | For Prometheus alerts,                   |
+|                     |                                                           | determined by the alert labels ``node``  |
+|                     |                                                           | or ``instance``, with automatic          | 
+|                     |                                                           | normalization to node-name if the label  |
+|                     |                                                           | had an IP:PORT value as if common in     |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``severity``        | One of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``.           |                                          |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``type``            | One of ``ISSUE``, ``CONF_CHANGE``,                        |                                          |
+|                     | ``HEALTH_CHECK``, ``REPORT``.                             |                                          |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``kind``            | Kubernetes resource type. One of ``deployment``, ``node``,| For Prometheus alerts, automatically     |
+|                     | ``pod``, ``job``, ``daemonset``.                          | determined by alert labels               |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``source``          | One of ``NONE``, ``KUBERNETES_API_SERVER``,               |                                          |
+|                     | ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``.                 |                                          |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``labels``          | Same as Kubernetes selectors: a comma-separated list of   | Can refer to both Kubernetes resource    |
+|                     | ``key=val`` pairs with AND between them. e.g.,            | labels  and Prometheus alert             |
+|                     | ``foo=bar,instance=123``. Supports regex in the value like| labels.             Prometheus values    |
+|                     | ``foo=x.*``                                               | are prioritized when both exist.         |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``annotations``     | Same as Kubernetes selectors: a comma-separated list of   | Can refer to both Kubernetes resource    |
+|                     | ``key=val`` pairs with AND between them. e.g.             | annotations and Prometheus alert         |
+|                     | ``app.kubernetes.io/name=prometheus``. Supports regex in  |        annotations. Prometheus values    |
+|                     | the value.                                                | are prioritized when both exist.         |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+| ``namespace_labels``| Labels on the Kubernetes namespace containing this object.| Same matching syntax as ``labels``. For  |
+|                     |                                                           | performance reasons, namespace label     |
+|                     |                                                           | information is cached for 30 minutes by  |
+|                     |                                                           | default. If you change namespace labels  |
+|                     |                                                           | and want to reflect this change          |
+|                     |                                                           | immediately in Robusta's scope mechanism,|
+|                     |                                                           | you can restart the robusta-runner pod.  |
++---------------------+-----------------------------------------------------------+------------------------------------------+
+
+.. .. details:: How do I find the ``identifier`` value to use in a match block? (deprecated)
+..    For Prometheus alerts, it's always the alert name.
+..    .. TODO: update after we finish our improvements here:
+..    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoff``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
+..    For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
+..    Ask us in Slack if you need help.
+
+When processing the ``scope`` block, the following rules apply:
+
+#. If the notification is **excluded** by any of the sink ``scope`` excludes - drop it
+#. If the notification is **included** by any of the sink ``scope`` includes - accept it
+#. If the notification is **included** by any of the sink ``matchers`` (deprecated) - accept it
+
 Alternative Routing Methods
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 For :ref:`customPlaybooks <defining-playbooks>`, there is another option for routing notifications.
 
