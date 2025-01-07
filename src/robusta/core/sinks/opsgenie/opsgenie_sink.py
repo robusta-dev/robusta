@@ -63,7 +63,7 @@ class OpsGenieSink(SinkBase):
         body = opsgenie_sdk.AcknowledgeAlertPayload(
             user=user,
             note=note,
-            source="Robusta Opsgenie Ack",
+            source="Robusta OpsGenie Ack",
         )
         try:
             self.alert_api.acknowledge_alert(

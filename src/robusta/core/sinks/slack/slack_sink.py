@@ -92,7 +92,7 @@ class SlackSink(SinkBase):
         Replace a specific block in a Slack message with a given string while preserving other blocks.
 
         Args:
-            json_message (dict): The JSON payload received from Slack.
+            slack_message (dict): The payload received from Slack.
             block_id (str): The ID of the block to replace.
             message_string (str): The text to replace the block content with.
         """
@@ -136,4 +136,4 @@ class SlackSink(SinkBase):
             )
 
         except Exception as e:
-            logging.exception(f"❌ Error updating Slack message: {e}")
+            logging.exception(f"Error updating Slack message: {e}")
