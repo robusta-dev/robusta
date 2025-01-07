@@ -7,8 +7,8 @@ Routing Cookbook
 
    routing-by-namespace
    routing-by-type
-   routing-to-multiple-slack-channels
    implementing-monitoring-shifts
+   routing-to-multiple-slack-channels
    routing-exclusion
 
 In this section you'll find example configurations for common routing patterns.
