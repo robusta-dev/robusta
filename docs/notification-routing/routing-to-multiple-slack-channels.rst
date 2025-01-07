@@ -22,3 +22,4 @@ In this example, we'll route alerts to different Slack channels depending on an 
             include:
             - namespace: [backend]
 
+For more details, refer to :ref:`scopes <sink-scope-matching>`.
