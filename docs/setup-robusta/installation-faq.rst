@@ -39,7 +39,7 @@ For example, to install in the ``robusta`` namespace:
 
     helm install robusta robusta/robusta -f ./generated_values.yaml -n robusta --create-namespace --set clusterName=<YOUR_CLUSTER_NAME>
 
-Verify success by checking that two Robusta pods are running:
+Verify success by checking that Robusta pods are running:
 
 .. code-block:: bash
    :name: cb-get-pods-robusta-logs-custom
