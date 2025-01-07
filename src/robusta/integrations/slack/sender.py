@@ -294,19 +294,12 @@ class SlackSender:
                 kwargs = {}
             resp = self.slack_client.chat_postMessage(
                 channel=channel,
-                text=" ",
-                # blocks=output_blocks,
+                text=message,
+                blocks=output_blocks,
                 display_as_bot=True,
-                attachments=[
-                    {
-                        "color": status.to_color_hex(),
-                        "fallback": message,
-                        "blocks": output_blocks + attachment_blocks
-                    }
-                ],
-                # attachments=(
-                #     [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
-                # ),
+                attachments=(
+                    [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
+                ),
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
                 **kwargs,
@@ -318,6 +311,78 @@ class SlackSender:
             logging.error(
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
+
+    # def __send_blocks_to_slack(
+    #     self,
+    #     report_blocks: List[BaseBlock],
+    #     report_attachment_blocks: List[BaseBlock],
+    #     title: str,
+    #     sink_params: SlackSinkParams,
+    #     unfurl: bool,
+    #     status: FindingStatus,
+    #     channel: str,
+    #     thread_ts: str = None,
+    # ) -> str:
+    #     file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
+    #     if not sink_params.send_svg:
+    #         file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
+
+    #     other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
+
+    #     # wide tables aren't displayed properly on slack. looks better in a text file
+    #     file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
+    #     file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
+
+    #     message = self.prepare_slack_text(
+    #         title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
+    #     )
+    #     output_blocks = []
+    #     for block in other_blocks:
+    #         output_blocks.extend(self.__to_slack(block, sink_params.name))
+    #     attachment_blocks = []
+    #     for block in report_attachment_blocks:
+    #         attachment_blocks.extend(self.__to_slack(block, sink_params.name))
+
+    #     logging.debug(
+    #         f"--sending to slack--\n"
+    #         f"channel:{channel}\n"
+    #         f"title:{title}\n"
+    #         f"blocks: {output_blocks}\n"
+    #         f"attachment_blocks: {report_attachment_blocks}\n"
+    #         f"message:{message}"
+    #     )
+
+    #     try:
+    #         if thread_ts:
+    #             kwargs = {"thread_ts": thread_ts}
+    #         else:
+    #             kwargs = {}
+    #         resp = self.slack_client.chat_postMessage(
+    #             channel=channel,
+    #             text=" ",
+    #             # blocks=output_blocks,
+    #             display_as_bot=True,
+    #             attachments=[
+    #                 {
+    #                     "color": status.to_color_hex(),
+    #                     "fallback": message,
+    #                     "blocks": output_blocks + attachment_blocks
+    #                 }
+    #             ],
+    #             # attachments=(
+    #             #     [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
+    #             # ),
+    #             unfurl_links=unfurl,
+    #             unfurl_media=unfurl,
+    #             **kwargs,
+    #         )
+    #         # We will need channel ids for future message updates
+    #         self.channel_name_to_id[channel] = resp["channel"]
+    #         return resp["ts"]
+    #     except Exception as e:
+    #         logging.error(
+    #             f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
+    #         )
 
 
     def __limit_labels_size(self, labels: dict, max_size: int = 1000) -> dict:
@@ -469,11 +534,12 @@ class SlackSender:
             status_name: str = (
                 f"{severity_emoji} *{prefix} {alertname}*"
             )
-        if platform_enabled and include_investigate_link:
-            title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
 
         # Make status_name a hyperlink
         linked_status_name = f"<{alertmanager_url}|{status_name}>"
+
+        if platform_enabled and include_investigate_link:
+            linked_status_name = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|{status_name}>"
 
         return MarkdownBlock(
             f"""*{linked_status_name}*
