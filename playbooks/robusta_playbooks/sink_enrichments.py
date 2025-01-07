@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 from robusta.api import (
@@ -13,18 +13,27 @@ from robusta.api import (
 from robusta.core.reporting.base import Link, LinkType
 
 
-class OpsGenieAckParams(ActionParams):
+class SlackCallbackParams(ActionParams):
     """
-    :var alertmanager_url: Alternative Alert Manager url to send requests.
+    :var slack_username: The username that clicked the slack callback. - Auto-populated by slack
+    :var slack_message: The message from the slack callback. - Auto-populated by slack
     """
-
-    alert_fingerprint: str
     slack_username: Optional[str]
     slack_message: Optional[Any]
 
 
+class OpsGenieAckParams(SlackCallbackParams):
+    """
+    :var alertmanager_url: Alternative Alert Manager url to send requests.
+    """
+    alert_fingerprint: str
+
+
 @action
-def ack_opsgenie_alert(event: ExecutionBaseEvent, params: OpsGenieAckParams):
+def ack_opsgenie_alert_from_slack(event: ExecutionBaseEvent, params: OpsGenieAckParams):
+    """
+        Sends an ack to opsgenie alert
+    """
     def ack_opsgenie_alert() -> None:
         event.emit_event(
             "opsgenie_ack",
@@ -33,11 +42,20 @@ def ack_opsgenie_alert(event: ExecutionBaseEvent, params: OpsGenieAckParams):
             note=f"This alert was ack-ed from a Robusta Slack message by {params.slack_username}"
         )
 
+        if not params.slack_message:
+            logging.warning("No action Slack found, unable to update slack message.")
+            return
+
         # slack action block
         actions = params.slack_message.get("actions", [])
-        if len(actions) == 0:
+        if not actions:
+            logging.warning("No actions found in the Slack message.")
             return
+
         block_id = actions[0].get("block_id")
+        if not block_id:
+            logging.warning("Block ID is missing in the first action of the Slack message.")
+            return
 
         event.emit_event(
             "replace_callback_with_string",
@@ -50,20 +68,16 @@ def ack_opsgenie_alert(event: ExecutionBaseEvent, params: OpsGenieAckParams):
 
 
 @action
-def ack_opsgenie_enricher(alert: PrometheusKubernetesAlert):
+def ack_slack_opsgenie_enricher(alert: PrometheusKubernetesAlert):
     """
     Add a button to the alert - clicking it will ask chat gpt to help find a solution.
     """
-    alert_name = alert.alert.labels.get("alertname", "")
-    if not alert_name:
-        return
-
     alert.add_enrichment(
         [
             CallbackBlock(
                 {
                     f'Ack Opsgenie Alert': CallbackChoice(
-                        action=ack_opsgenie_alert,
+                        action=ack_opsgenie_alert_from_slack,
                         action_params=OpsGenieAckParams(
                             alert_fingerprint=alert.alert.fingerprint,
                         ),
@@ -74,7 +88,10 @@ def ack_opsgenie_enricher(alert: PrometheusKubernetesAlert):
     )
 
 
-class OpsgenieLinkParams(ActionParams):
+class OpsGenieLinkParams(ActionParams):
+    """
+    :var url_base: The base url for your opsgenie account for example: "robusta-test-url.app.eu.opsgenie.com"
+    """
     url_base: Optional[str] = None
 
 
@@ -91,6 +108,9 @@ def normalize_url_base(url_base: str) -> str:
 
 
 @action
-def opsgenie_link_enricher(alert: PrometheusKubernetesAlert, params: OpsgenieLinkParams):
+def opsgenie_link_enricher(alert: PrometheusKubernetesAlert, params: OpsGenieLinkParams):
+    """
+        Adds a link to finding of for the opsgenie alert.
+    """
     normalized_url_base = normalize_url_base(params.url_base)
     alert.add_link(Link(url=f"https://{normalized_url_base}/alert/list?query=alias:{alert.alert.fingerprint}", name="OpsGenie Alert", type=LinkType.OPSGENIE))
