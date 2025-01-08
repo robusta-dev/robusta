@@ -34,44 +34,52 @@ def ack_opsgenie_alert_from_slack(event: ExecutionBaseEvent, params: OpsGenieAck
     """
         Sends an ack to opsgenie alert
     """
-    def ack_opsgenie_alert() -> None:
-        event.emit_event(
-            "opsgenie_ack",
-            fingerprint=params.alert_fingerprint,
-            user=params.slack_username,
-            note=f"This alert was ack-ed from a Robusta Slack message by {params.slack_username}"
-        )
+    event.emit_event(
+        "opsgenie_ack",
+        fingerprint=params.alert_fingerprint,
+        user=params.slack_username,
+        note=f"This alert was ack-ed from a Robusta Slack message by {params.slack_username}"
+    )
 
-        if not params.slack_message:
-            logging.warning("No action Slack found, unable to update slack message.")
-            return
+    if not params.slack_message:
+        logging.warning("No action Slack found, unable to update slack message.")
+        return
 
-        # slack action block
-        actions = params.slack_message.get("actions", [])
-        if not actions:
-            logging.warning("No actions found in the Slack message.")
-            return
+    # slack action block
+    actions = params.slack_message.get("actions", [])
+    if not actions:
+        logging.warning("No actions found in the Slack message.")
+        return
 
-        block_id = actions[0].get("block_id")
-        if not block_id:
-            logging.warning("Block ID is missing in the first action of the Slack message.")
-            return
+    block_id = actions[0].get("block_id")
+    if not block_id:
+        logging.warning("Block ID is missing in the first action of the Slack message.")
+        return
 
-        event.emit_event(
-            "replace_callback_with_string",
-            slack_message=params.slack_message,
-            block_id=block_id,
-            message_string=f"✅ *OpsGenie Ack by @{params.slack_username}*"
-        )
+    event.emit_event(
+        "replace_callback_with_string",
+        slack_message=params.slack_message,
+        block_id=block_id,
+        message_string=f"✅ *OpsGenie Ack by @{params.slack_username}*"
+    )
 
-    ack_opsgenie_alert()
+
+class OpsGenieLinkParams(ActionParams):
+    """
+    :var url_base: The base url for your opsgenie account for example: "robusta-test-url.app.eu.opsgenie.com"
+    """
+    url_base: str
 
 
 @action
-def ack_slack_opsgenie_enricher(alert: PrometheusKubernetesAlert):
+def opsgenie_slack_enricher(alert: PrometheusKubernetesAlert, params: OpsGenieLinkParams):
     """
-    Add a button to the alert - clicking it will ask chat gpt to help find a solution.
+        Add a button to the alert - clicking it will ask chat gpt to help find a solution.
     """
+    normalized_url_base = normalize_url_base(params.url_base)
+    alert.add_link(Link(url=f"https://{normalized_url_base}/alert/list?query=alias:{alert.alert.fingerprint}",
+                        name="OpsGenie Alert", type=LinkType.OPSGENIE_LIST_ALERT_BY_ALIAS))
+
     alert.add_enrichment(
         [
             CallbackBlock(
@@ -88,12 +96,6 @@ def ack_slack_opsgenie_enricher(alert: PrometheusKubernetesAlert):
     )
 
 
-class OpsGenieLinkParams(ActionParams):
-    """
-    :var url_base: The base url for your opsgenie account for example: "robusta-test-url.app.eu.opsgenie.com"
-    """
-    url_base: Optional[str] = None
-
 
 def normalize_url_base(url_base: str) -> str:
     """
@@ -105,12 +107,3 @@ def normalize_url_base(url_base: str) -> str:
 
     # Remove trailing slash if present
     return url_base.rstrip('/')
-
-
-@action
-def opsgenie_link_enricher(alert: PrometheusKubernetesAlert, params: OpsGenieLinkParams):
-    """
-        Adds a link to finding of for the opsgenie alert.
-    """
-    normalized_url_base = normalize_url_base(params.url_base)
-    alert.add_link(Link(url=f"https://{normalized_url_base}/alert/list?query=alias:{alert.alert.fingerprint}", name="OpsGenie Alert", type=LinkType.OPSGENIE))

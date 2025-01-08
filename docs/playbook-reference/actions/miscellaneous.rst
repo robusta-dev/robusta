@@ -8,6 +8,11 @@ ArgoCD
 
 .. robusta-action:: playbooks.robusta_playbooks.argo_cd.argo_app_sync
 
+Slack-OpsGenie sync
+^^^^^^^^^^^^^^
+
+.. robusta-action:: playbooks.robusta_playbooks.sink_enrichments.opsgenie_slack_enricher
+
 Kubernetes Optimization
 -----------------------
 

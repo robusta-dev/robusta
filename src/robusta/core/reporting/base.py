@@ -6,11 +6,11 @@ import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from strenum import StrEnum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 from pydantic.main import BaseModel
+from strenum import StrEnum
 
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
@@ -94,7 +94,7 @@ class FindingStatus(Enum):
 class LinkType(StrEnum):
     VIDEO = "video"
     PROMETHEUS_GENERATOR_URL = "prometheus_generator_url"
-    OPSGENIE = "opsgenie"
+    OPSGENIE_LIST_ALERT_BY_ALIAS = "opsgenie_list_alert_by_alias"
 
 
 class Link(BaseModel):

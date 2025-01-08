@@ -107,31 +107,23 @@ class SlackSink(SinkBase):
                 raise ValueError("Missing required fields: channel_id, message_ts, or blocks.")
 
             # Update the specific block
-            updated_blocks = []
-            block_found = False
-
-            for block in blocks:
+            for i, block in enumerate(blocks):
                 if block.get("block_id") == block_id:
-                    updated_blocks.append({
+                    blocks[i] = {
                         "type": "section",
                         "block_id": block_id,
                         "text": {
                             "type": "mrkdwn",
                             "text": message_string
                         }
-                    })
-                    block_found = True
-                else:
-                    updated_blocks.append(block)
-
-            if not block_found:
-                raise ValueError(f"No block found with block_id: {block_id}")
+                    }
+                    break
 
             # Call the shorter update function
             return self.slack_sender.update_slack_message(
                 channel=channel_id,
                 ts=message_ts,
-                blocks=updated_blocks,
+                blocks=blocks,
                 text=message_string
             )
 

@@ -73,7 +73,6 @@ class SlackUserID(BaseModel):
 class SlackActionsMessage(BaseModel):
     actions: List[SlackActionRequest]
     user: Optional[SlackUserID]
-    message: Optional[Dict[str, Any]]
 
 
 class ActionRequestReceiver:

@@ -42,7 +42,7 @@ class OpsGenieSink(SinkBase):
         if event_name == "opsgenie_ack":
             self.__ack_alert(**kwargs)
         else:
-            logging.warning("OpsGenieSink subscriber called with unknown event")
+            logging.warning(f"OpsGenieSink subscriber called with unknown event {event_name}")
 
     def __close_alert(self, finding: Finding):
         body = opsgenie_sdk.CloseAlertPayload(
@@ -63,7 +63,7 @@ class OpsGenieSink(SinkBase):
         body = opsgenie_sdk.AcknowledgeAlertPayload(
             user=user,
             note=note,
-            source="Robusta OpsGenie Ack",
+            source="Robusta",
         )
         try:
             self.alert_api.acknowledge_alert(
