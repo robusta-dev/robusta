@@ -24,7 +24,7 @@ class KubectlParams(PodRunningParams):
     :var timeout: The maximum time (in seconds) to wait for the kubectl command to complete. Default is 3600 seconds.
     """
 
-    command: str = None  # type: ignore
+    command: str = None
     description: str = None
     timeout: int = 3600
 
@@ -57,7 +57,7 @@ def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
     try:
         kubectl_response = RobustaJob.run_simple_job_spec(
             spec,
-            f"debug-kubectl-{str(uuid.uuid4())}",
+            f"robusta-kubectl-command-{str(uuid.uuid4())}",
             params.timeout,
             custom_annotations=params.custom_annotations,
             ttl_seconds_after_finished=43200,  # 12 hours
