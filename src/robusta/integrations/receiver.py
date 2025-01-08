@@ -208,9 +208,10 @@ class ActionRequestReceiver:
     @staticmethod
     def _parse_slack_message(message: Union[str, bytes, bytearray]) -> SlackActionsMessage:
         slack_actions_message = SlackActionsMessage.parse_raw(message)  # this is slack callback format
+        json_slack_message = json.loads(message)
         for action in slack_actions_message.actions:
             action.value.slack_username = slack_actions_message.user.username
-            action.value.slack_message = json.loads(message)
+            action.value.slack_message = json_slack_message
         return slack_actions_message
 
     def on_message(self, ws: websocket.WebSocketApp, message: str) -> None:
