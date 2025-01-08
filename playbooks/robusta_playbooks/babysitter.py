@@ -86,7 +86,8 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
 
 class UrlParam(ActionParams):
     """
-    :var url: url that should be used in the action
+    :var url: Url that should be used in the action
+    :var headers: A dictionary of headers to be added to the request.
     """
 
     url: str
@@ -96,8 +97,8 @@ class UrlParam(ActionParams):
 @action
 def json_change_tracker(event: KubernetesAnyChangeEvent, params: UrlParam):
     """
-    post change json to the specified url
-    this action doesn't create a finding
+    Posts Kubernetes resource changes as JSON to a specified URL.
+    This action doesn't create a finding
     """
     try:
         event_dict = event.obj.to_dict()
