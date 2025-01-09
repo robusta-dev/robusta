@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: {{ include "robusta.fullname" . }}-forwarder
   namespace: {{ .Release.Namespace }}
+  labels:
+    robusta: forwarder
 spec:
   selector:
     matchLabels:
