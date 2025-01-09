@@ -43,3 +43,27 @@ Save the file and run
     .. image:: /images/deployment-babysitter-opsgenie.png
       :width: 1000
       :align: center
+
+
+Action to connect Slack to OpsGenie
+------------------------------------------------
+
+The `opsgenie_slack_enricher` action enriches Slack alerts with OpsGenie integration. It performs the following:
+
+- Adds a button in Slack to acknowledge the OpsGenie alert directly.
+- Includes a link in Slack messages that redirects to the alert in OpsGenie for easy access.
+
+To use this action, ensure it is included in your playbook configuration.
+
+**Example Configuration:**
+
+.. code-block:: yaml
+
+   customPlaybooks:
+   - actions:
+     - opsgenie_slack_enricher:
+         url_base: team-name.app.eu.opsgenie.com
+     triggers:
+     - on_prometheus_alert: {}
+
+With this integration, teams can efficiently manage OpsGenie alerts directly from Slack.
