@@ -112,7 +112,7 @@ types-toml = "^0.10.2"
 types-tabulate = "^0.8.10"
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase", "datadog-api-client", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
+all = ["Flask", "grafana-api", "watchdog", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase", "datadog-api-client", "sentry-sdk", "poetry-core"]
 
 [tool.poetry.group.dev.dependencies]
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
