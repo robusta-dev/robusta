@@ -3,8 +3,6 @@ Dropping Specific Alerts
 
 This guide defines a sink that receives all notifications *except* for a specific alert.
 
-To drop a specific notification globally from *all sinks*, see :ref:`Silencing Alerts`.
-
 Exclude Alerts by Alert Name
 ------------------------------------------------
 
@@ -38,3 +36,7 @@ Using :ref:`sink scopes <sink-scope-matching>`, you can drop all alerts from a s
         scope:
           exclude:
             - namespace: ["kube-system"]
+
+Dropping Alerts Globally
+------------------------------------------------
+To exclude an alert from **all sinks**, refer to :ref:`Silencing Alerts`.

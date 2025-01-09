@@ -26,7 +26,7 @@ Alternatively, you can :ref:`integrate an existing Prometheus with Robusta <Inte
 Web UI (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The Robusta `SaaS platform <http://home.robusta.dev/ui?from=docs>`_ provides a single pane of glass for all your alerts and clusters.
+The Robusta `SaaS platform <http://home.robusta.dev/?from=docs>`_ provides a single pane of glass for all your alerts and clusters.
 
 On commercial plans, the UI is available for self-hosting in your own environment.
 
