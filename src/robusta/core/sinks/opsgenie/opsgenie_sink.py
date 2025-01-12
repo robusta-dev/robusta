@@ -33,8 +33,16 @@ class OpsGenieSink(SinkBase):
         if sink_config.opsgenie_sink.host is not None:
             self.conf.host = sink_config.opsgenie_sink.host
 
+        self.registry.subscribe("opsgenie_ack", self)
+
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
+
+    def handle_event(self, event_name: str, **kwargs):
+        if event_name == "opsgenie_ack":
+            self.__ack_alert(**kwargs)
+        else:
+            logging.warning(f"OpsGenieSink subscriber called with unknown event {event_name}")
 
     def __close_alert(self, finding: Finding):
         body = opsgenie_sdk.CloseAlertPayload(
@@ -50,6 +58,21 @@ class OpsGenieSink(SinkBase):
             )
         except opsgenie_sdk.ApiException as err:
             logging.error(f"Error closing opsGenie alert {finding} {err}", exc_info=True)
+
+    def __ack_alert(self, fingerprint: str, user: str, note: str):
+        body = opsgenie_sdk.AcknowledgeAlertPayload(
+            user=user,
+            note=note,
+            source="Robusta",
+        )
+        try:
+            self.alert_api.acknowledge_alert(
+                identifier=fingerprint,
+                acknowledge_alert_payload=body,
+                identifier_type="alias",
+            )
+        except opsgenie_sdk.ApiException as err:
+            logging.error(f"Error acking opsGenie alert {fingerprint} {err}", exc_info=True)
 
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
