@@ -12,4 +12,6 @@ These actions were built for tracking changes in your cluster
 
 .. robusta-action:: playbooks.robusta_playbooks.babysitter.resource_babysitter on_deployment_update
 
+.. robusta-action:: playbooks.robusta_playbooks.babysitter.json_change_tracker on_deployment_update
+
 
