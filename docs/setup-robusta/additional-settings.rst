@@ -58,9 +58,9 @@ If your alerts have different labels, you can change the mapping with the ``aler
 
 A relabeling has 3 attributes:
 
-* ``source``: Use the value from this label
-* ``target``: This label will contain the value from ``source``
-* ``operation``: Operation can be ``add`` (default) or ``replace``.
+* ``source``: The label's name on your alerts (which differs from the expected value in the above table)
+* ``target``: The standard label name that Robusta expects (a value from the table above)
+* ``operation``: Either ``add`` (default) or ``replace``. If ``add``, your custom mapping will be recognized *in addition* to Robusta's default mapping.
 
 For example:
 
@@ -79,18 +79,51 @@ For example:
 Mapping Custom Alert Severity
 ------------------------------------
 
-To correctly map your custom alert severity, you need to add ``custom_severity_map``. The values for each alert should be: high, medium, low, info, and debug.
+To help you prioritize alerts from different sources, Robusta maps alert severity to four standard levels:
 
-For example:
+* HIGH - requires your immediate attention - may indicate a service outage
+* MEDIUM - likely not a current outage, but could be a warning sign beforehand - should be investigated within a reasonable timeframe (hours to days)
+* LOW - minor problems and areas for improvement (e.g. performance) - to be reviewed periodically on a weekly or bi-weekly cadence
+* DEBUG - informational only - can be ignored unless you're actively debugging an issue
+
+You are free to interpret these levels differently, but the above is a good starting point for most companies.
+
+Prometheus alerts are normalized to the above levels as follows:
+
+.. list-table::
+  :header-rows: 1
+
+  * - Prometheus Severity
+    - Robusta Severity
+  * - critical
+    - HIGH
+  * - high
+    - HIGH
+  * - medium
+    - MEDIUM
+  * - error
+    - MEDIUM
+  * - warning
+    - LOW
+  * - low
+    - LOW
+  * - info
+    - INFO
+  * - debug
+    - DEBUG
+
+You can map your own Prometheus severities, using the ``custom_severity_map`` Helm value. For example:
 
 .. code-block:: yaml
 
     globalConfig:
       custom_severity_map:
-        devs_high: high
-        ops_high: high
-        devs_low: low
+        # maps a p1 value on your own alerts to Robusta's HIGH value
+        p1: high
+        # maps a p2 value on your own alerts to Robusta's HIGH value
+        p2: medium
 
+The mapped values must be one of: high, medium, low, info, and debug.
 
 Two-way Interactivity
 ------------------------
