@@ -133,7 +133,7 @@ class OpsGenieSink(SinkBase):
         # If there are extra details labels in the config extra_details_labels,
         # add them without altering the already existing details.
         if self.extra_details_labels:
-            for key, value in finding.subject.labels:
+            for key, value in finding.subject.labels.items():
                 if not key in lower_details_key:
                     details[key] = value
         return details
