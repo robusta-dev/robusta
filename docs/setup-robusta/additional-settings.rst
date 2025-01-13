@@ -52,7 +52,7 @@ The following labels determine which Kubernetes resource relates to an alert:
    * - HorizontalPodAutoscaler
      - horizontalpodautoscaler, namespace
    * - Node
-     - node
+     - node or instance (used as a fallback if node doesn't exist)
 
 If your alerts have different labels, you can change the mapping with the ``alertRelabel`` helm value.
 
@@ -79,12 +79,13 @@ For example:
 Mapping Custom Alert Severity
 ------------------------------------
 
-To help you prioritize alerts from different sources, Robusta maps alert severity to four standard levels:
+To help you prioritize alerts from different sources, Robusta maps alert severity to five standard levels:
 
 * HIGH - requires your immediate attention - may indicate a service outage
 * MEDIUM - likely not a current outage, but could be a warning sign beforehand - should be investigated within a reasonable timeframe (hours to days)
 * LOW - minor problems and areas for improvement (e.g. performance) - to be reviewed periodically on a weekly or bi-weekly cadence
-* DEBUG - informational only - can be ignored unless you're actively debugging an issue
+* INFO - you probably want to be aware of these, but do not necessarily need to take action
+* DEBUG - debug only - can be ignored unless you're actively debugging an issue
 
 You are free to interpret these levels differently, but the above is a good starting point for most companies.
 
@@ -111,6 +112,8 @@ Prometheus alerts are normalized to the above levels as follows:
     - INFO
   * - debug
     - DEBUG
+
+Prometheus alerts with a severity **not in the above list** are mapped to Robusta's INFO level.
 
 You can map your own Prometheus severities, using the ``custom_severity_map`` Helm value. For example:
 
