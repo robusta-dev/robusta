@@ -25,5 +25,5 @@ Configure Slack to send high-severity alerts to one channel and all others to an
               source: PROMETHEUS
 
 
-**Important:** ``severity`` above refers to the Robusta severity for this alert. `Robusta maps Prometheus severities onto standardized levels.<https://docs.robusta.dev/master/setup-robusta/additional-settings.html#mapping-custom-alert-severity>`_. When specifying the severity, use the Robusta severity not the original Prometheus severity.
+**Important:** ``severity`` above refers to the Robusta severity for this alert. :ref:`Robusta maps Prometheus severities onto standardized levels.<Mapping Custom Alert Severity>`. When specifying the severity, use the Robusta severity not the original Prometheus severity.
 
