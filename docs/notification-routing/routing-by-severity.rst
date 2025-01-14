@@ -1,7 +1,7 @@
 Route by Severity
 ==============================
 
-To configure Slack so that only high-severity alerts go to one channel and everything else goes to another, use the following configuration example:
+Configure Slack to send high-severity alerts to one channel and all others to another using this example:
 
 .. code-block:: yaml
 
