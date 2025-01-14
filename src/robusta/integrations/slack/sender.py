@@ -3,6 +3,7 @@ import copy
 import logging
 import ssl
 import tempfile
+import time
 from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Set
@@ -223,7 +224,15 @@ class SlackSender:
             f.write(truncated_content)
             f.flush()
             result = self.slack_client.files_upload_v2(title=block.filename, file=f.name, filename=block.filename)
-            return result["file"]["permalink"]
+
+            return result
+        
+    def __sanitize_filename(self, filename: str) -> str:
+        """
+        Replace any characters not in a set of 'safe' characters 
+        with an underscore. Adjust the regex as needed.
+        """
+        return re.sub(r"[^A-Za-z0-9._ -]+", "_", filename)
 
     def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):
         if files:
@@ -231,21 +240,32 @@ class SlackSender:
             # in order to be actually shared. well, I'm actually not sure about that, but when I tried adding the files
             # to a separate block and not including them in `title` or the first block then the link was present but
             # the file wasn't actually shared and the link was broken
-            uploaded_files = []
+            # uploaded_files = []
+            image_blocks = []
             for file_block in files:
                 # slack throws an error if you write empty files, so skip it
                 if len(file_block.contents) == 0:
                     continue
-                permalink = self.__upload_file_to_slack(file_block, max_log_file_limit_kb=max_log_file_limit_kb)
-                uploaded_files.append(f"* <{permalink} | {file_block.filename}>")
+                # permalink = self.__upload_file_to_slack(file_block, max_log_file_limit_kb=max_log_file_limit_kb)
+                file_img = self.__upload_file_to_slack(file_block, max_log_file_limit_kb=max_log_file_limit_kb)
+                file_data = file_img.get('file')
+                sanitized_filename = self.__sanitize_filename(file_block.filename)
 
-            file_references = "\n".join(uploaded_files)
-            message = f"{message}\n{file_references}"
-
+                image_blocks.append({
+                    "type": "image",
+                    "slack_file": {
+                        "url": file_img.get('file')['permalink_public']
+                    },
+                    "alt_text": sanitized_filename,
+                })
+        
         if len(message) == 0:
-            return "empty-message"  # blank messages aren't allowed
+            message = "Uploaded files"  # blank messages aren't allowed
+        
+        message = Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
+        time.sleep(10)
 
-        return Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
+        return message, image_blocks
 
     def __send_blocks_to_slack(
         self,
@@ -268,15 +288,19 @@ class SlackSender:
         file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
         file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
 
-        message = self.prepare_slack_text(
+        message, image_blocks = self.prepare_slack_text(
             title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
         )
+
         output_blocks = []
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))
         attachment_blocks = []
         for block in report_attachment_blocks:
             attachment_blocks.extend(self.__to_slack(block, sink_params.name))
+
+        output_blocks.extend(image_blocks)
+        output_blocks.extend(attachment_blocks)
 
         logging.debug(
             f"--sending to slack--\n"
@@ -294,12 +318,16 @@ class SlackSender:
                 kwargs = {}
             resp = self.slack_client.chat_postMessage(
                 channel=channel,
-                text=message,
-                blocks=output_blocks,
+                text=message or " ",
+                # blocks=output_blocks,
                 display_as_bot=True,
-                attachments=(
-                    [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
-                ),
+                attachments=[
+                    {
+                        "color": status.to_color_hex(),
+                        "fallback": message,
+                        "blocks": output_blocks
+                    }
+                ],
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
                 **kwargs,
@@ -309,81 +337,8 @@ class SlackSender:
             return resp["ts"]
         except Exception as e:
             logging.error(
-                f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
+                f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}"
             )
-
-    # def __send_blocks_to_slack(
-    #     self,
-    #     report_blocks: List[BaseBlock],
-    #     report_attachment_blocks: List[BaseBlock],
-    #     title: str,
-    #     sink_params: SlackSinkParams,
-    #     unfurl: bool,
-    #     status: FindingStatus,
-    #     channel: str,
-    #     thread_ts: str = None,
-    # ) -> str:
-    #     file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
-    #     if not sink_params.send_svg:
-    #         file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
-
-    #     other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
-
-    #     # wide tables aren't displayed properly on slack. looks better in a text file
-    #     file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
-    #     file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
-
-    #     message = self.prepare_slack_text(
-    #         title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
-    #     )
-    #     output_blocks = []
-    #     for block in other_blocks:
-    #         output_blocks.extend(self.__to_slack(block, sink_params.name))
-    #     attachment_blocks = []
-    #     for block in report_attachment_blocks:
-    #         attachment_blocks.extend(self.__to_slack(block, sink_params.name))
-
-    #     logging.debug(
-    #         f"--sending to slack--\n"
-    #         f"channel:{channel}\n"
-    #         f"title:{title}\n"
-    #         f"blocks: {output_blocks}\n"
-    #         f"attachment_blocks: {report_attachment_blocks}\n"
-    #         f"message:{message}"
-    #     )
-
-    #     try:
-    #         if thread_ts:
-    #             kwargs = {"thread_ts": thread_ts}
-    #         else:
-    #             kwargs = {}
-    #         resp = self.slack_client.chat_postMessage(
-    #             channel=channel,
-    #             text=" ",
-    #             # blocks=output_blocks,
-    #             display_as_bot=True,
-    #             attachments=[
-    #                 {
-    #                     "color": status.to_color_hex(),
-    #                     "fallback": message,
-    #                     "blocks": output_blocks + attachment_blocks
-    #                 }
-    #             ],
-    #             # attachments=(
-    #             #     [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
-    #             # ),
-    #             unfurl_links=unfurl,
-    #             unfurl_media=unfurl,
-    #             **kwargs,
-    #         )
-    #         # We will need channel ids for future message updates
-    #         self.channel_name_to_id[channel] = resp["channel"]
-    #         return resp["ts"]
-    #     except Exception as e:
-    #         logging.error(
-    #             f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
-    #         )
-
 
     def __limit_labels_size(self, labels: dict, max_size: int = 1000) -> dict:
         # slack can only send 2k tokens in a callback so the labels are limited in size
