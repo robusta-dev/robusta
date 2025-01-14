@@ -23,3 +23,7 @@ Configure Slack to send high-severity alerts to one channel and all others to an
         exclude: # excludes so you don't get the same alert in two channels
             - severity: HIGH
               source: PROMETHEUS
+
+
+**Important:** ``severity`` above refers to the Robusta severity for this alert. `Robusta maps Prometheus severities onto standardized levels.<https://docs.robusta.dev/master/setup-robusta/additional-settings.html#mapping-custom-alert-severity>`_. When specifying the severity, use the Robusta severity not the original Prometheus severity.
+
