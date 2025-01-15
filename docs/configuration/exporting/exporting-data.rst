@@ -41,13 +41,13 @@ The following ``curl`` command demonstrates how to export alert history data for
 
 .. code-block:: bash
 
-    curl --location 'https://api.robusta.dev/api/alerts?alert_name=CrashLoopBackoff&account_id=ACCOUNT_ID&start_ts=2024-09-02T04%3A02%3A05.032Z&end_ts=2024-09-17T05%3A02%3A05.032Z' \
-    --header 'Authorization: Bearer TOKEN_HERE'
+    curl --location 'https://api.robusta.dev/api/query/alerts?alert_name=CrashLoopBackoff&account_id=ACCOUNT_ID&start_ts=2024-09-02T04%3A02%3A05.032Z&end_ts=2024-09-17T05%3A02%3A05.032Z' \
+    --header 'Authorization: Bearer API-KEY'
 
 In the command, make sure to replace the following placeholders:
 
 - ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
-- ``TOKEN_HERE``: Your API token for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
+- ``API-KEY``: Your API Key for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
 
 Request Headers
 ^^^^^^^^^^^^^^^
@@ -188,13 +188,13 @@ The following `curl` command demonstrates how to query aggregated alert data for
 .. code-block:: bash
 
     curl --location 'https://api.robusta.dev/api/query/report?account_id=XXXXXX-XXXX_XXXX_XXXXX7&start_ts=2024-10-27T04:02:05.032Z&end_ts=2024-11-27T05:02:05.032Z' \
-    --header 'Authorization: Bearer TOKEN_HERE'
+    --header 'Authorization: Bearer API-KEY'
 
 
 In the command, make sure to replace the following placeholders:
 
-- **`account_id`**: Your account ID, which can be found in your `generated_values.yaml` file.
-- **`TOKEN_HERE`**: Your API token for authentication. Generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
+- `account_id`: Your account ID, which can be found in your `generated_values.yaml` file.
+- `API-KEY`: Your API Key for authentication. Generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
 
 
 
@@ -383,7 +383,7 @@ Here is an example of a ``POST`` request to send a list of alerts:
 .. code-block:: bash
 
     curl --location --request POST 'https://api.robusta.dev/api/alerts' \
-    --header 'Authorization: Bearer TOKEN_HERE' \
+    --header 'Authorization: Bearer API-KEY' \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "account_id": "ACCOUNT_ID",
@@ -412,7 +412,7 @@ Here is an example of a ``POST`` request to send a list of alerts:
 In this request, replace the following placeholders:
 
 - ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
-- ``TOKEN_HERE``: Your API token for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
+- ``API-KEY``: Your API Key for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
 
 Request Headers
 ^^^^^^^^^^^^^^^
@@ -563,7 +563,7 @@ Here is an example of a ``POST`` request to send a list of configuration changes
 .. code-block:: bash
 
     curl --location --request POST 'https://api.robusta.dev/api/config-changes' \
-    --header 'Authorization: Bearer TOKEN_HERE' \
+    --header 'Authorization: Bearer API-KEY' \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "account_id": "ACCOUNT_ID",
@@ -591,7 +591,7 @@ Here is an example of a ``POST`` request to send a list of configuration changes
 In this request, replace the following placeholders:
 
 - ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
-- ``TOKEN_HERE``: Your API token for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
+- ``API-KEY``: Your API Key for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
 
 Request Headers
 ^^^^^^^^^^^^^^^
