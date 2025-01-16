@@ -199,7 +199,7 @@ builtinPlaybooks:
       attach_logs: true
       container_memory_graph: true
       node_memory_graph: true
-      dmesg_log: true
+      dmesg_log: false
   stop: true
 
 # playbooks for prometheus alerts enrichment
@@ -303,7 +303,6 @@ builtinPlaybooks:
   - node_running_pods_enricher: {}
   - status_enricher:
       show_details: true
-  - node_dmesg_enricher: {}
 
 - name: "KubeNodeUnreachable"
   triggers:
