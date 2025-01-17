@@ -235,13 +235,12 @@ class SlackSender:
         return re.sub(r"[^A-Za-z0-9._ -]+", "_", filename)
 
     def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):
+        image_blocks = []
         if files:
             # it's a little annoying but it seems like files need to be referenced in `title` and not just `blocks`
             # in order to be actually shared. well, I'm actually not sure about that, but when I tried adding the files
             # to a separate block and not including them in `title` or the first block then the link was present but
             # the file wasn't actually shared and the link was broken
-            # uploaded_files = []
-            image_blocks = []
             for file_block in files:
                 # slack throws an error if you write empty files, so skip it
                 if len(file_block.contents) == 0:
