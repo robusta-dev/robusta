@@ -10,6 +10,7 @@ import certifi
 import humanize
 from dateutil import tz
 from slack_sdk import WebClient
+from slack_sdk.http_retry import all_builtin_retry_handlers
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
@@ -68,7 +69,7 @@ class SlackSender:
             except Exception as e:
                 logging.exception(f"Failed to use custom certificate. {e}")
 
-        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT)
+        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT, retry_handlers=all_builtin_retry_handlers())
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
