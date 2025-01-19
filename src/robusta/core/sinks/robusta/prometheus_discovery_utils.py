@@ -64,8 +64,11 @@ class PrometheusDiscoveryUtils:
             global_config = self.get_global_config()
             prometheus_params = PrometheusParams(**global_config)
             query_result = run_prometheus_query(prometheus_params=prometheus_params, query=query)
-            if query_result.result_type == "error" or not query_result.vector_result:
-                logging.error("PrometheusDiscoveryUtils failed to get prometheus results.")
+            if query_result.result_type == "error":
+                logging.error(f"Error getting prometheus results: {query_result.string_result}")
+                return
+            if not query_result.vector_result:
+                logging.info("Prometheus query returned no results.")
                 return
             value = query_result.vector_result[0]["value"]["value"]
             return_value = float("%.2f" % float(value))

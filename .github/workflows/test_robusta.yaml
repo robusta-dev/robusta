@@ -3,7 +3,16 @@ name: Test robusta with pytest
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
+    check:
+      name: Pre-commit checks
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-python@v5
+        - uses: pre-commit/action@v3.0.1
+
     run_tests:
+      needs: check
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v2

@@ -141,6 +141,43 @@ A Robusta notification will arrive in your configured :ref:`sinks <Sinks Referen
   :width: 600
   :align: center
 
+Use Case 3: Notification when a Deployment image change - including the Deployment manifest
+********************************************************************************************
+**Scenario**: You want to get the Deployment manifest, each time the image changes
+
+**Implementation**:
+
+Add the following YAML to the ``customPlaybooks`` Helm value:
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+      - on_deployment_update:
+          change_filters:
+            include:
+            - image
+      actions:
+      - json_change_tracker:
+          url: "https://SOME-WEBHOOL-URL"
+
+.. details:: How does it work?
+
+  1. **Initialize Custom Playbook**: Create a custom playbook where you'll outline the rules for when and how you'll be notified.
+  2. **Set Up the Deployment Trigger**: In your custom playbook, add the ``on_deployment_change`` trigger, with a ``scope`` including only image changes. This ensures you'll receive notifications for deployment image changes.
+
+This playbook doesn't use a Sink! It sends the to the url specified in the action parameters.
+
+Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+**Testing**:
+
+Modify a Deployment image in your cluster.
+
+A notification with the Deployment manifest, as json, should be sent to the webhook url
+
+
+
 Cleanup
 ------------------------------
 Remove the playbook you added based on your specific use case from the ``customPlaybooks`` in your ``generated_values.yaml`` file. Then, perform a :ref:`Helm Upgrade <Simple Upgrade>`.
