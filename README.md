@@ -54,9 +54,7 @@ You can install Robusta alongside your existing Prometheus, or as an all-in-one 
 
 To get *even more* out of Robusta, we recommend creating [a free Robusta UI account](#-free-robusta-ui). Learn more below.
 
-
-[Create a free Robusta UI account »]((https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=installing_robusta_section))
-
+[Create a free Robusta UI account »](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=installing_robusta_section)
 
 [Installation instructions »](https://docs.robusta.dev/master/setup-robusta/installation/index.html)
 
