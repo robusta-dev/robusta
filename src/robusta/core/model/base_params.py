@@ -234,6 +234,19 @@ class HolmesWorkloadHealthParams(HolmesParams):
     silent_healthy: bool = False
 
 
+class HolmesWorkloadHealthChatParams(HolmesParams):
+    """
+    :var ask: User's prompt for holmes
+    :var workload_health_result: Result from the workload health check
+    :var resource: The resource related to this investigation
+    """
+
+    ask: str
+    workload_health_result: HolmesInvestigationResult
+    resource: ResourceInfo
+    conversation_history: Optional[list[dict]] = None
+
+
 class NamespacedResourcesParams(ActionParams):
     """
     :var name: Resource name
