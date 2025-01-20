@@ -43,6 +43,9 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
 
 @action
 def auto_ask_holmes(event: ExecutionBaseEvent):
+    """
+    Runs holmes investigation on an alert/event.
+    """
     subject: FindingSubject = event.get_subject()
     resource = ResourceInfo(
         name=subject.name,
