@@ -50,6 +50,7 @@ class ToolCallResult(BaseModel):
 class HolmesResult(BaseModel):
     tool_calls: Optional[List[ToolCallResult]] = None
     analysis: Optional[str] = None
+    sections: Optional[Dict[str, str]] = None
     instructions: List[str] = []
 
 
