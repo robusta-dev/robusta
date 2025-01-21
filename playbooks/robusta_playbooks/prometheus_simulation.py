@@ -19,8 +19,15 @@ def parse_by_operator(pairs: str, operator: str) -> Dict[str, str]:
         return {}
 
     results: Dict[str, str] = {}
-    for pairs in pairs.split(","):
-        key, val = pairs.split(operator)
+
+    # Split on comma to get individual "key-value" segments
+    for segment in pairs.split(","):
+        # If the operator does not exist in the segment, skip or handle accordingly
+        if operator not in segment:
+            continue
+
+        # Split on the first occurrence of the operator only
+        key, val = segment.split(operator, 1)
         results[key.strip()] = val.strip()
 
     return results
@@ -123,7 +130,9 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         "summary": prometheus_event_data.summary if prometheus_event_data.summary else prometheus_event_data.alert_name,
         "runbook_url": prometheus_event_data.runbook_url,
     }
-    annotations.update(parse_by_operator(prometheus_event_data.annotations, "="))
+
+    if prometheus_event_data.annotations is not None:
+        annotations.update(parse_by_operator(prometheus_event_data.annotations, ":"))
 
     fingerprint = prometheus_event_data.fingerprint
     if not fingerprint:  # if user didn't provide fingerprint, generate random one, to avoid runner deduplication
