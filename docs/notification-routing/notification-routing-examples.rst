@@ -11,5 +11,7 @@ Routing Cookbook
    routing-to-multiple-slack-channels
    routing-exclusion
    routing-by-severity
+   excluding-resolved
+   disable-oomkill-notifications
 
 In this section you'll find example configurations for common routing patterns.
