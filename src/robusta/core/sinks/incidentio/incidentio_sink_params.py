@@ -12,6 +12,10 @@ class IncidentioSinkParams(SinkBaseParams):
     base_url: Optional[str] = "https://api.incident.io/v2/"
     token: str
     source_config_id: str
+    severity_alert_label_name: Optional[str] = "robusta_incidentio_severity"
+    severity_default: str
+    dashboard_url_annotation_name: Optional[str] = "dashboard_url"
+    runbook_url_annotation_name: Optional[str] = "runbook_url"
 
     @classmethod
     def _get_sink_type(cls):
