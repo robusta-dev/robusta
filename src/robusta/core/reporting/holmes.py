@@ -19,6 +19,7 @@ class HolmesRequest(BaseModel):
     context: Dict[str, Any]
     include_tool_calls: bool = False
     include_tool_call_results: bool = False
+    sections: Optional[Dict[str, str]] = None
 
 
 class HolmesConversationRequest(BaseModel):

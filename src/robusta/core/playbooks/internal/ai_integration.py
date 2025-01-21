@@ -58,6 +58,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             context=params.context if params.context else {},
             include_tool_calls=True,
             include_tool_call_results=True,
+            sections=params.sections
         )
         result = requests.post(f"{holmes_url}/api/investigate", data=holmes_req.json())
         result.raise_for_status()
