@@ -61,14 +61,14 @@ To get *even more* out of Robusta, we recommend creating [a free Robusta UI acco
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
 
 ## 🖥 Free Robusta UI
-Take your Kubernetes monitoring to the next level with the [Robusta SaaS platform](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=free_robusta_ui_section). Creating an account is free, and you can:
+Take your Kubernetes monitoring to the next level with the [Robusta SaaS platform](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=free_robusta_ui_section). Creating an account is free, and includes:
 
 - **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
 - **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
 - **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta’s automatic change tracking for Kubernetes
 
-  <a href="https://www.loom.com/share/9c40ab750e5c4dfabd80f0f6b65f3813">
-      <img src="https://cdn.loom.com/sessions/thumbnails/9c40ab750e5c4dfabd80f0f6b65f3813-09b3e571da873a2c-full-play.gif">
+  <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0">
+      <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
   </a>
 
 ## 📝 Documentation
