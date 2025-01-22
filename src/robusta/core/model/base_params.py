@@ -238,7 +238,8 @@ class HolmesWorkloadHealthChatParams(HolmesParams):
     """
     :var ask: User's prompt for holmes
     :var workload_health_result: Result from the workload health check
-    :var resource: The resource related to this investigation
+    :var resource: The resource related to the initial investigation
+    :var conversation_history: List of previous user prompts and responses.
     """
 
     ask: str
