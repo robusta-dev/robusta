@@ -3686,4 +3686,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "grafana-
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8, <3.12"
-content-hash = "7a1c463e2651218a2a101582a599c6adc3c808ea9c6fc6af8a570a8d832b4fa6"
+content-hash = "2256f7a6bedaa7f54699d7705985734eb56fae937db9bd9461fa7a0d2bca99a5"
