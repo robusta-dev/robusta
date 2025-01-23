@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Optional
 
 import requests
 
@@ -15,6 +16,7 @@ from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import action
 from robusta.core.reporting import Finding, FindingSubject
 from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.blocks import MarkdownBlock
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
 from robusta.core.reporting.holmes import (
     HolmesChatRequest,
@@ -67,11 +69,11 @@ def auto_ask_holmes(event: ExecutionBaseEvent):
     action_params = AIInvestigateParams(
         resource=resource, investigation_type="issue", ask="Why is this alert firing?", context=context
     )
-    ask_holmes(event, params=action_params)
+    ask_holmes(event, params=action_params, create_new_finding=False)
 
 
 @action
-def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
+def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams, create_new_finding: bool = True):
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
         raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
@@ -93,6 +95,10 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         result.raise_for_status()
 
         holmes_result = HolmesResult(**json.loads(result.text))
+
+        if not create_new_finding:
+            event.add_enrichment([MarkdownBlock(f"{holmes_result.analysis}")])
+
         title_suffix = (
             f" on {params.resource.name}"
             if params.resource and params.resource.name and params.resource.name.lower() != "unresolved"
