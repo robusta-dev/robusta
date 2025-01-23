@@ -99,9 +99,9 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, f"{e.response.text} (HTTP {e.response.status_code}) {e}.")
+            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, f"{e}.")
         else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, f"Unexpected error: {e}")
+            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, f"Unexpected error: {e}.")
 
 
 @action
