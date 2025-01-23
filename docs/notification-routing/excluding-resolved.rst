@@ -1,7 +1,7 @@
 Exclude "Resolved" Notifications
 ===================================
 
-Configure Robusta to not send notifications for issues that are resolved. This helps you reduce noise and focus on just the alerts 
+Configure Robusta to not send notifications for issues that are resolved. This helps you reduce noise and focus on just firing alerts 
 
 .. code-block:: yaml
 

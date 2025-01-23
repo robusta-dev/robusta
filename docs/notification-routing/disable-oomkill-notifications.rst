@@ -8,4 +8,4 @@ Configure Robusta to not send OOMKill notifications by disabling the built-in OO
     disabledPlaybooks:
     - PodOOMKill
 
-However you can still create your custom OOMKill notification using the ``kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}`` Prometheus metric.
+Similarly you can to disable any built-in notification using the name of the playbook. Find all the built-in playbooks `here <https://github.com/robusta-dev/robusta/blob/cc686ed893d24aed1096fe805d483dfd7007508a/helm/robusta/values.yaml#L169>`_ and `here <https://github.com/robusta-dev/robusta/blob/cc686ed893d24aed1096fe805d483dfd7007508a/helm/robusta/values.yaml#L113>`_
