@@ -90,18 +90,18 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         event.add_finding(finding)
 
     except Exception as e:
+        # TODO: add cluster name to the error message
         logging.exception(
             f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}", exc_info=True
         )
         if isinstance(e, requests.ConnectionError):
-            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
+            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, f"Holmes endpoint currently unreachable: {e}")
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
+            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, f"Error analyzing with Holmes: {e.response.text}")
         else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, f"Unexpected error: {e}")
 
 
 @action
