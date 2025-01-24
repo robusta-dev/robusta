@@ -372,8 +372,8 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
         )
         result = requests.post(f"{holmes_url}/api/workload_health_chat", data=holmes_req.json())
         result.raise_for_status()
-
-        holmes_result = HolmesConversationResult(**json.loads(result.text))
+        
+        holmes_result = HolmesChatResult(**json.loads(result.text))
 
         finding = Finding(
             title=f"AI Chat for Health Check of {params.resource}",
@@ -391,7 +391,7 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
             failure=False,
         )
         finding.add_enrichment(
-            [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
+            [HolmesChatResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
         )
 
         event.add_finding(finding)
