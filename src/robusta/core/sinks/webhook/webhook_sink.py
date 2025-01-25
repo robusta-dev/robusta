@@ -5,6 +5,7 @@ from typing import List
 
 import requests
 
+from robusta.core.reporting import TableBlock, FileBlock
 from robusta.core.reporting import HeaderBlock, JsonBlock, KubernetesDiffBlock, ListBlock, MarkdownBlock
 from robusta.core.reporting.base import BaseBlock, Finding
 from robusta.core.sinks.sink_base import SinkBase
@@ -25,6 +26,8 @@ class WebhookSink(SinkBase):
         )
         self.size_limit = sink_config.webhook_sink.size_limit
         self.slack_webhook = sink_config.webhook_sink.slack_webhook
+        self.send_table_block = sink_config.webhook_sink.table_blocks
+        self.send_file_block = sink_config.webhook_sink.file_blocks
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         if self.format == "text":
@@ -134,6 +137,10 @@ class WebhookSink(SinkBase):
             lines.append(cls.__to_clear_text(block.text))
         elif isinstance(block, JsonBlock):
             lines.append(block.json_str)
+        elif isinstance(block, TableBlock) and cls.send_table_block:
+            lines.append(block.to_table_string())
+        elif isinstance(block, FileBlock) and cls.send_file_block and block.is_text_file():
+            lines.append(str(block.contents))
         elif isinstance(block, KubernetesDiffBlock):
             for diff in block.diffs:
                 lines.append(f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}")
