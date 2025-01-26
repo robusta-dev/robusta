@@ -69,10 +69,15 @@ class TopServiceResolver:
 
     @classmethod
     def guess_workload_from_labels(cls, labels: Dict[Any, Any] = None) -> Optional[TopLevelResource]:
+        if not labels or "namespace" not in labels:
+            return None
+        namespace = labels["namespace"]
         relevant_label_keys = ["job_name", "deployment", "statefulset", "daemonset", "pod"]
         for label in relevant_label_keys:
-            if label in labels:
-                return labels[label]
+            if not label in labels:
+                continue
+            cls.guess_cached_resource(name=labels[label], namespace=namespace)
+            return labels[label]
         return None
 
     @classmethod
