@@ -518,11 +518,11 @@ platformPlaybooks:
 
 - name: "IngressChangeTracking"
   triggers:
-    - on_ingress_all_changes: {}
+    - on_kubernetes_resource_operation:
+        resources: ["ingress"]
   actions:
     - resource_babysitter: {}
     - customise_finding:
-        title: Ingress Changes
         aggregation_key: IngressChange
   sinks:
     - "robusta_ui_sink"
