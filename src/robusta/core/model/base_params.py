@@ -2,6 +2,7 @@ import logging
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Union
 
+from hikaru.model.rel_1_26 import Volume, VolumeMount
 from pydantic import BaseModel, SecretStr, validator
 
 from robusta.integrations import openshift
@@ -81,7 +82,6 @@ class ResourceInfo(BaseModel):
 
 
 class HolmesParams(ActionParams):
-
     holmes_url: Optional[str]
 
     @validator("holmes_url", allow_reuse=True)
@@ -250,6 +250,8 @@ class PodRunningParams(ActionParams):
     """
 
     custom_annotations: Optional[Dict[str, str]] = None
+    custom_volume_mounts: Optional[List[VolumeMount]]
+    custom_volumes: Optional[List[Volume]]
 
 
 class VideoEnricherParams(ActionParams):
