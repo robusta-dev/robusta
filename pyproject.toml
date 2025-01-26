@@ -29,8 +29,8 @@ supabase = "^2.4"
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.23.0" }
 Flask = { version = "^3.0.0", optional = true }
-werkzeug = { version = ">=3.0.3", optional = true }
-jinja2 = { version = ">=3.1.4", optional = true }
+werkzeug = { version = ">=3.0.6", optional = true }
+jinja2 = { version = ">=3.1.5", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
