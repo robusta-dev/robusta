@@ -3,7 +3,7 @@ import logging
 import random
 import string
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import requests
 
@@ -14,13 +14,49 @@ from robusta.utils.silence_utils import AlertManagerParams, gen_alertmanager_hea
 FALLBACK_PROMETHUES_GENERATOR_URL = "http://localhost:9090/graph?g0.expr=up%7Bjob%3D%22apiserver%22%7D&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h"
 
 
-def parse_by_operator(pairs: str, operator: str) -> Dict[str, str]:
+def parse_by_operator(pairs: str, operators: List[str]) -> Dict[str, str]:
+    """
+    Parses a comma-separated string of key-value segments where each segment
+    can be split by one of multiple possible operators.
+    For example:
+        pairs_str = "foo:bar,baz=qux"
+        operators = [":", "="]
+    would return:
+        {"foo": "bar", "baz": "qux"}
+
+    :param pairs_str: Comma-separated string of key-value segments
+    :param operators: List of possible operators (e.g., [":", "="])
+    :return: Dictionary of parsed key-value pairs
+    """
+
     if not pairs:
         return {}
 
     results: Dict[str, str] = {}
-    for pairs in pairs.split(","):
-        key, val = pairs.split(operator)
+    segments = pairs.split(",")
+
+    for segment in segments:
+        segment = segment.strip()
+        # If segment is empty, skip
+        if not segment:
+            continue
+
+        # Find which operator appears first (lowest index) in this segment
+        lowest_index = None
+        chosen_operator = None
+
+        for op in operators:
+            idx = segment.find(op)
+            if idx != -1 and (lowest_index is None or idx < lowest_index):
+                lowest_index = idx
+                chosen_operator = op
+
+        # If none of the operators is found, skip or handle differently
+        if chosen_operator is None:
+            continue
+
+        # Split once, using the chosen operator
+        key, val = segment.split(chosen_operator, 1)
         results[key.strip()] = val.strip()
 
     return results
@@ -106,7 +142,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
     if prometheus_event_data.daemonset_name is not None:
         labels["daemonset"] = prometheus_event_data.daemonset_name
     if prometheus_event_data.labels is not None:
-        labels.update(parse_by_operator(prometheus_event_data.labels, ":"))
+        labels.update(parse_by_operator(prometheus_event_data.labels, [":", "="]))
 
     starts_at = prometheus_event_data.starts_at if prometheus_event_data.starts_at else datetime.now().astimezone()
 
@@ -123,7 +159,9 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         "summary": prometheus_event_data.summary if prometheus_event_data.summary else prometheus_event_data.alert_name,
         "runbook_url": prometheus_event_data.runbook_url,
     }
-    annotations.update(parse_by_operator(prometheus_event_data.annotations, "="))
+
+    if prometheus_event_data.annotations is not None:
+        annotations.update(parse_by_operator(prometheus_event_data.annotations, [":", "="]))
 
     fingerprint = prometheus_event_data.fingerprint
     if not fingerprint:  # if user didn't provide fingerprint, generate random one, to avoid runner deduplication
