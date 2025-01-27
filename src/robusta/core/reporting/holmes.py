@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -51,7 +51,7 @@ class ToolCallResult(BaseModel):
 class HolmesResult(BaseModel):
     tool_calls: Optional[List[ToolCallResult]] = None
     analysis: Optional[str] = None
-    sections: Optional[Dict[str, str]] = None
+    sections: Optional[Dict[str, Union[str, None]]] = None
     instructions: List[str] = []
 
 
