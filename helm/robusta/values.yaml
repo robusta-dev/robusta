@@ -90,6 +90,7 @@ lightActions:
 - holmes_conversation
 - holmes_issue_chat
 - holmes_chat
+- holmes_workload_chat
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
