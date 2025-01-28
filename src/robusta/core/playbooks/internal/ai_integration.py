@@ -58,6 +58,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             context=params.context if params.context else {},
             include_tool_calls=True,
             include_tool_call_results=True,
+            sections=params.sections
         )
         result = requests.post(f"{holmes_url}/api/investigate", data=holmes_req.json())
         result.raise_for_status()
@@ -123,7 +124,7 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
             analysis = json.loads(holmes_result.analysis)
             healthy = analysis.get("workload_healthy")
         except Exception:
-            logging.exception("Error in holmes response format, analysis did not return the expecrted json format.")
+            logging.exception("Error in holmes response format, analysis did not return the expected json format.")
             pass
 
         if params.silent_healthy and healthy:
