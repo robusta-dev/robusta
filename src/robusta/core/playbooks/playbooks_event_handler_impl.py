@@ -25,6 +25,7 @@ from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.stack_tracer import StackTracer
+from robusta.core.playbooks.validators import BaseValidator, AccountTypeValidator
 
 playbooks_errors_count = prometheus_client.Counter(
     "playbooks_errors", "Number of playbooks failures.", labelnames=("source",)
@@ -37,7 +38,16 @@ playbooks_summary = prometheus_client.Summary(
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     def __init__(self, registry: Registry):
         self.registry = registry
+        self.dal = None
+        self.validators: List[BaseValidator] = []
 
+    def set_dal(self, dal):
+        self.dal = dal
+        if dal:
+            self.validators = [
+                AccountTypeValidator(dal),
+            ]
+    
     def handle_trigger(self, trigger_event: TriggerEvent) -> Optional[Dict[str, Any]]:
         playbooks = self.registry.get_playbooks().get_playbooks(trigger_event)
         if not playbooks:  # no registered playbooks for this event type
@@ -237,7 +247,12 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.response = self.__error_resp(msg, ErrorCodes.PARAMS_INSTANTIATION_FAILED.value)
                     playbooks_errors_count.labels(source).inc()
                     continue
+            
             try:
+                for validator in self.validators:
+                    if validator.is_applicable(action):
+                        validator.validate(self.registry.get_global_config().get("account_id", ""))
+
                 if action_with_params:
                     registered_action.func(execution_event, params)
                 else:

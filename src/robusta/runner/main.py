@@ -33,8 +33,21 @@ def main():
     registry = Registry()
     event_handler = PlaybooksEventHandlerImpl(registry)
     loader = ConfigLoader(registry, event_handler)
+
+    # Initialize database access layer (dal) for AI features
+    # Note: This must be done after ConfigLoader initialization because:
+    # 1. RobustaSink (which contains dal) is fully initialized during ConfigLoader creation
+    # 2. AI features (like ask_holmes) are only available when robusta_ui_sink is configured
+    # 3. We want to avoid accessing sink registry repeatedly during action execution
     sink_registry = registry.get_sinks()
     ui_sink_enabled = "robusta_ui_sink" in sink_registry.get_all()
+    if ui_sink_enabled:
+        robusta_sink = sink_registry.get_sink_by_name("robusta_ui_sink")
+        dal = getattr(robusta_sink, 'dal', None)
+        if not dal:
+            logging.error("Robusta UI sink found but database access is not properly configured")
+        event_handler.set_dal(dal)
+
     if ui_sink_enabled or ENABLE_TELEMETRY:
         if not ENABLE_TELEMETRY:
             logging.warning("Telemetry could not be disabled when Robusta UI is used.")

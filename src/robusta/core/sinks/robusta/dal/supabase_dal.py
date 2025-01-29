@@ -49,6 +49,7 @@ RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
 ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
 OPENSHIFT_GROUPS_TABLE = "OpenshiftGroups"
+ACCOUNT_BILLING_TABLE = "AccountBilling"
 
 
 class SupabaseDal(AccountResourceFetcher):
@@ -753,3 +754,12 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to set cluster status active=False error: {e}")
+
+    def is_account_free(self) -> bool:
+        try:
+            res = self.client.table(ACCOUNT_BILLING_TABLE).select(
+                "plan").eq("account_id", self.account_id).execute()
+        except Exception as e:
+            logging.error(f"Failed to check if account is free error: {e}")
+            raise
+        return res.data[0]["plan"] == "free"
