@@ -72,3 +72,8 @@ class HolmesChatResult(BaseModel):
 
 class HolmesChatResultsBlock(BaseBlock):
     holmes_result: Optional[HolmesChatResult]
+
+
+class HolmesWorkloadHealthRequest(HolmesChatRequest):
+    workload_health_result: HolmesInvestigationResult
+    resource: ResourceInfo
