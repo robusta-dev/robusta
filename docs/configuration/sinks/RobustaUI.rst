@@ -1,10 +1,22 @@
 Robusta UI
 #################
 
-Robusta can send issues and events in your Kubernetes cluster to the `Robusta UI <https://home.robusta.dev/>`_.
+.. tip::
+    This guide is for users who have already installed Robusta on their cluster. If you haven't installed Robusta yet, we recommend starting by `creating a free Robusta UI account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=robusta-ui-sink-page>`_ instead.
 
-.. image:: /images/robusta-ui.gif
-  :align: center
+Take your Kubernetes monitoring to the next level with a Robusta UI integration:
+
+- **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
+- **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
+- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta’s automatic change tracking for Kubernetes
+
+.. raw:: html
+
+    <div style="text-align: center;">
+      <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
+      </a>
+    </div>
 
 
 Configuring the Robusta UI Sink
