@@ -17,6 +17,7 @@
    how-it-works/oss-vs-saas
    how-it-works/coverage
    how-it-works/usage-faq
+   how-it-works/alert-builtin-enrichment
 
 .. toctree::
    :maxdepth: 4
@@ -56,13 +57,6 @@
    :hidden:
 
    playbook-reference/index
-
-.. toctree::
-   :maxdepth: 4
-   :caption: 🎓 Tutorials
-   :hidden:
-
-   tutorials/index
 
 .. toctree::
    :maxdepth: 4
