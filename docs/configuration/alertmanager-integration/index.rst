@@ -17,6 +17,7 @@ Integrating with Prometheus
    grafana-alert-manager
    embedded-prometheus
    troubleshooting-alertmanager
+   alert-custom-prometheus
 
 
 
