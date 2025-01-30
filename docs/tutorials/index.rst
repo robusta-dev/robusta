@@ -9,21 +9,6 @@ Overview
 
     We're working on adding more tutorials. Refer to other areas of the docs for now!
 
-
-Discover Builtin Features
----------------------------
-
-No customization needed. Here's a teaser of what Robusta does out of the box:
-
-.. toctree::
-   :maxdepth: 1
-
-   alert-builtin-enrichment
-
-* :ref:`Alert Investigation with AI <AI Analysis>`
-
-.. _playbook-tutorials:
-
 Customizing the Built-in Prometheus Stack
 --------------------------------------------
 
