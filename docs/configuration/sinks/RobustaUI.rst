@@ -1,9 +1,6 @@
 Robusta UI
 #################
 
-.. tip::
-    This guide is for users who have already installed Robusta on their cluster. If you haven't installed Robusta yet, we recommend starting by `creating a free Robusta UI account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=robusta-ui-sink-page>`_ instead.
-
 Take your Kubernetes monitoring to the next level with a Robusta UI integration:
 
 - **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
@@ -22,6 +19,9 @@ Take your Kubernetes monitoring to the next level with a Robusta UI integration:
 Configuring the Robusta UI Sink
 ------------------------------------------------
 
+.. tip::
+    This guide is for users who have already installed Robusta on their cluster. If you haven't installed Robusta yet, we recommend starting by `creating a free Robusta UI account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=robusta-ui-sink-page>`_ instead.
+
 Use the ``robusta`` CLI to generate a token:
 
 .. code-block::
@@ -29,18 +29,16 @@ Use the ``robusta`` CLI to generate a token:
 
     robusta integrations ui
 
-Add a new sink to your Helm values, under ``sinksConfig``, with the token you generated:
+Add a new sink to your Helm values (``generated_values.yaml``), under ``sinksConfig``, with the token you generated:
 
-.. admonition:: Add this to your generated_values.yaml
+.. code-block:: bash
+  :name: cb-robusta-ui-sink-config
 
-    .. code-block:: bash
-      :name: cb-robusta-ui-sink-config
-
-        sinksConfig:
-        - robusta_sink:
-            name: robusta_ui_sink
-            token: <your-token>
-            ttl_hours: 4380
+  sinksConfig:
+  - robusta_sink:
+      name: robusta_ui_sink
+      token: <your-token>
+      ttl_hours: 4380
 
 Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
