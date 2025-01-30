@@ -16,6 +16,7 @@
    multi-cluster
    upgrade
    configuration-secrets
+   robusta-runner-metrics
    supported-clusters
    openshift
    node-selector
@@ -24,4 +25,5 @@
    alertsui
    additional-settings
    installation-faq
+   
    
