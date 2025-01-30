@@ -15,6 +15,7 @@ Installation Guides
    extend-prometheus-installation
    standalone-installation
    dev-setup
+   
 
 
 .. grid:: 1 1 2 2
