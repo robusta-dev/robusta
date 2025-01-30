@@ -114,8 +114,12 @@ redirects = {
     "tutorials/playbook-track-secrets.html": "/master/playbook-reference/kubernetes-examples//playbook-track-secrets.html",
     "tutorials/alert-remediation.html": "/master/playbook-reference/prometheus-examples/alert-remediation.html",
     "tutorials/alert-custom-enrichment.html": "/master/playbook-reference/prometheus-examples/alert-custom-enrichment.html",
-    "catalog/sinks/slack.html": "/master/configuration/sinks/slack.html"
-
+    "catalog/sinks/slack.html": "/master/configuration/sinks/slack.html",
+    "user-guide/sinks-configuration.html": "/master/notification-routing/routing-with-scopes.html",
+    "tutorials/alert-builtin-enrichment.html": "/master/how-it-works/alert-builtin-enrichment.html",
+    "tutorials/robusta-runner-metrics.html": "/master/setup-robusta/robusta-runner-metrics.html",
+    "tutorials/alert-custom-prometheus.html": "/master/configuration/alertmanager-integration/alert-custom-prometheus.html",
+    "catalog/triggers/prometheus.html": "/master/configuration/alertmanager-integration/index.html",
 
 }
 

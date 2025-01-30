@@ -99,6 +99,7 @@ class AIInvestigateParams(HolmesParams):
     :var runbooks: List of human readable recommended runbooks that holmes can use for the investigation.
     :var ask: Override question to ask holmes
     :var context: Additional information that can assist with the investigation
+    :var sections: Sections that Holmes should return. Dictionary where the key is the section's title and the value a description for Holmes (LLM)
 
     :example ask: What are all the issues in my cluster right now?
     :example runbooks: ["Try to get the pod logs and find errors", "get the pod yaml and check if there are finalizers"]
@@ -109,6 +110,7 @@ class AIInvestigateParams(HolmesParams):
     runbooks: Optional[List[str]]
     ask: Optional[str]
     context: Optional[Dict[str, Any]]
+    sections: Optional[Dict[str, str]] = None
 
 
 class HolmesToolsResult(BaseModel):
@@ -232,6 +234,20 @@ class HolmesWorkloadHealthParams(HolmesParams):
     include_tool_calls: bool = True
     include_tool_call_results: bool = True
     silent_healthy: bool = False
+
+
+class HolmesWorkloadHealthChatParams(HolmesParams):
+    """
+    :var ask: User's prompt for holmes
+    :var workload_health_result: Result from the workload health check
+    :var resource: The resource related to the initial investigation
+    :var conversation_history: List of previous user prompts and responses.
+    """
+
+    ask: str
+    workload_health_result: HolmesInvestigationResult
+    resource: ResourceInfo
+    conversation_history: Optional[list[dict]] = None
 
 
 class NamespacedResourcesParams(ActionParams):
