@@ -77,8 +77,7 @@ class TopServiceResolver:
             if not label in labels:
                 continue
             resource_type = label.capitalize() if label != "job_name" else "Job"
-            TopLevelResource(name=labels[label], namespace=namespace, resource_type=resource_type)
-            return labels[label]
+            return TopLevelResource(name=labels[label], namespace=namespace, resource_type=resource_type)
         return None
 
     @classmethod
