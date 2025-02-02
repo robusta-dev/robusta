@@ -283,7 +283,8 @@ class Finding(Filterable):
         self.links: List[Link] = []
         self.service = TopServiceResolver.guess_cached_resource(name=subject.name, namespace=subject.namespace)
         # this is only used by the slack sink in the case that self.service is None, like if the recourse is deleted
-        self.backup_workload_name = TopServiceResolver.guess_workload_from_labels(labels=silence_labels)
+        if self.service is None and silence_labels:
+            self.service = TopServiceResolver.guess_workload_from_labels(labels=silence_labels)
         self.service_key = self.service.get_resource_key() if self.service else ""
         uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"

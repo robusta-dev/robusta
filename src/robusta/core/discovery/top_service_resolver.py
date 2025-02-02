@@ -76,7 +76,8 @@ class TopServiceResolver:
         for label in relevant_label_keys:
             if not label in labels:
                 continue
-            cls.guess_cached_resource(name=labels[label], namespace=namespace)
+            resource_type = label.capitalize() if label != "job_name" else "Job"
+            TopLevelResource(name=labels[label], namespace=namespace, resource_type=resource_type)
             return labels[label]
         return None
 

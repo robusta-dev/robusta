@@ -42,7 +42,7 @@ class SlackSink(SinkBase):
             investigate_uri = self.get_timeline_uri(self.account_id, self.cluster_name)
             finding_data = finding.attribute_map
             # The top level entity name (the owner of the pod etc)
-            finding_data["workload"] = finding.service.name if finding.service else finding.backup_workload_name
+            finding_data["workload"] = finding.service.name if finding.service else None
             finding_data["cluster"] = self.cluster_name
             resolved = finding.title.startswith("[RESOLVED]")
 
