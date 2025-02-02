@@ -282,7 +282,7 @@ class Finding(Filterable):
         self.enrichments: List[Enrichment] = []
         self.links: List[Link] = []
         self.service = TopServiceResolver.guess_cached_resource(name=subject.name, namespace=subject.namespace)
-        # this is only used by the slack sink in the case that self.service is None, like if the recourse is deleted
+        # An alert can be fired on a deleted resource that we cant resolve
         if self.service is None and silence_labels:
             self.service = TopServiceResolver.guess_workload_from_labels(labels=silence_labels)
         self.service_key = self.service.get_resource_key() if self.service else ""
