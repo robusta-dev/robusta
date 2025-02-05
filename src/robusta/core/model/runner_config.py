@@ -30,6 +30,7 @@ from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.base64_utils import is_base64_encoded
 from robusta.core.sinks.sink_config import SinkConfigBase
+from robusta.core.sinks.incidentio.incidentio_sink_params import IncidentioSinkConfigWrapper
 
 
 class PlaybookRepo(BaseModel):
@@ -73,7 +74,8 @@ class RunnerConfig(BaseModel):
                 PushoverSinkConfigWrapper,
                 GoogleChatSinkConfigWrapper,
                 ServiceNowSinkConfigWrapper,
-                ZulipSinkConfigWrapper
+                ZulipSinkConfigWrapper,
+                IncidentioSinkConfigWrapper
             ]
         ]
     ]

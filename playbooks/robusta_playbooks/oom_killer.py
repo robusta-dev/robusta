@@ -11,6 +11,7 @@ from robusta.api import (
     EnrichmentType,
     Finding,
     FindingSeverity,
+    FindingSource,
     OOMGraphEnricherParams,
     OomKillParams,
     PodContainer,
@@ -97,6 +98,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
     finding = Finding(
         title=f"Pod {pod.metadata.name} in namespace {pod.metadata.namespace} OOMKilled results",
         aggregation_key="PodOOMKilled",
+        source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.HIGH,
         subject=PodFindingSubject(pod),
     )

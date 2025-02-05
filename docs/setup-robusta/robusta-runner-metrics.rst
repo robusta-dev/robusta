@@ -1,4 +1,4 @@
-Monitoring Robusta with Prometheus
+Self-Monitoring
 ======================================
 
 Robusta Metrics Graphs
