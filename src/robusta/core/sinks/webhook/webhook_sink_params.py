@@ -10,6 +10,8 @@ class WebhookSinkParams(SinkBaseParams):
     authorization: SecretStr = None
     format: str = "text"
     slack_webhook: bool = False
+    table_blocks: bool = False
+    file_blocks: bool = False
 
     @classmethod
     def _get_sink_type(cls):
