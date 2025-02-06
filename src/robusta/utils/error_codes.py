@@ -26,6 +26,8 @@ class ErrorCodes(Enum):
     RESOURCE_NOT_FOUND = 4702
     ILLEGAL_ACTION_PARAMS = 4703
 
+    FREE_ACCOUNT_ACTION_FORBIDDEN = 4800
+
     ALERT_MANAGER_DISCOVERY_FAILED = 5000
     ALERT_MANAGER_REQUEST_FAILED = 5001
     ADD_SILENCE_FAILED = 5002
@@ -36,6 +38,7 @@ class ErrorCodes(Enum):
     HOLMES_REQUEST_ERROR = 5201
     HOLMES_UNEXPECTED_ERROR = 5202
     HOLMES_DISCOVERY_FAILED = 5203
+
 
 class ActionException(Exception):
     def __init__(self, error: ErrorCodes, msg: Optional[str] = None):

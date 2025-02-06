@@ -101,7 +101,9 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
+            if e.response.status_code == 500 and "free account" in e.response.text:
+                raise ActionException(ErrorCodes.FREE_ACCOUNT_ACTION_FORBIDDEN, "This feature is not available in free accounts.")
+            
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
@@ -159,7 +161,9 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
+            if e.response.status_code == 500 and "free account" in e.response.text:
+                raise ActionException(ErrorCodes.FREE_ACCOUNT_ACTION_FORBIDDEN, "This feature is not available in free accounts.")
+            
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
@@ -228,7 +232,9 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
+            if e.response.status_code == 500 and "free account" in e.response.text:
+                raise ActionException(ErrorCodes.FREE_ACCOUNT_ACTION_FORBIDDEN, "This feature is not available in free accounts.")
+            
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
@@ -310,7 +316,9 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
+            if e.response.status_code == 500 and "free account" in e.response.text:
+                raise ActionException(ErrorCodes.FREE_ACCOUNT_ACTION_FORBIDDEN, "This feature is not available in free accounts.")
+            
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
@@ -352,7 +360,9 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
+            if e.response.status_code == 500 and "free account" in e.response.text:
+                raise ActionException(ErrorCodes.FREE_ACCOUNT_ACTION_FORBIDDEN, "This feature is not available in free accounts.")
+            
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
@@ -404,7 +414,9 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
         elif isinstance(e, requests.HTTPError):
             if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
                 raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
+            if e.response.status_code == 500 and "free account" in e.response.text:
+                raise ActionException(ErrorCodes.FREE_ACCOUNT_ACTION_FORBIDDEN, "This feature is not available in free accounts.")
+            
             raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
         else:
             raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
