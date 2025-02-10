@@ -1,8 +1,19 @@
 Alert History Import and Export API
 ===================================
 
+The Robusta SaaS platform exposes several HTTP APIs:
+
+* :ref:`API to export alerts <alert-export-api>`
+* :ref:`API to fetch aggregate alert statistics <alert-reporting-api>`
+* :ref:`API to send alerts <send-alerts-api>`
+* :ref:`API to send configuration changes <send-configuration-changes-api>`
+
+There is an quick-start `Prometheus report-generator <https://github.com/robusta-dev/prometheus-report-generator>`_  on GitHub that demonstrates how to use the export APIs.
+
+.. _alert-export-api:
+
 GET https://api.robusta.dev/api/query/alerts
---------------------------------------
+----------------------------------------------
 
 Use this endpoint to export alert history data. You can filter the results based on specific criteria using query parameters such as ``alert_name``, ``account_id``, and time range.
 
@@ -148,9 +159,10 @@ Response Fields
      - string
      - The node where the resource is located.
 
+.. _alert-reporting-api:
 
 GET `https://api.robusta.dev/api/query/report`
---------------------------------------
+------------------------------------------------
 
 Use this endpoint to retrieve aggregated alert data, including the count of each type of alert during a specified time range. Filters can be applied using query parameters such as `account_id` and the time range.
 
@@ -269,6 +281,7 @@ Notes
 - Ensure that the `start_ts` and `end_ts` parameters are in ISO 8601 format and are correctly set to cover the desired time range.
 - Use the correct `Authorization` token with sufficient permissions to access the alert data.
 
+.. _send-alerts-api:
 
 POST https://api.robusta.dev/api/alerts
 --------------------------------------
@@ -456,6 +469,7 @@ If there is an error in processing the request, the API will return the followin
 
 - **Status Code**: Varies based on the error (e.g., `400 Bad Request`, `500 Internal Server Error`).
 
+.. _send-configuration-changes-api:
 
 POST https://api.robusta.dev/api/config-changes
 -----------------------------------------------

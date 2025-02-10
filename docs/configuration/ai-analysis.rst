@@ -39,9 +39,10 @@ Choose an AI provider below and follow the instructions:
     .. tab-item:: Robusta AI
         :name: robusta-ai
 
-        Robusta AI is the premium AI service provided by Robusta. It is currently free to use while in beta. To use Robusta AI, you must have a Robusta account and be using the Robusta UI.
-
-        To use Robusta AI, update your helm values (``generated_values.yaml`` file) with the following configuration:
+        Robusta AI is a premium AI service hosted by Robusta. To use Robusta AI, you must:
+        
+        1. :ref:`Have a Robusta account and enable the Robusta UI sink in Robusta's Helm values <Configuring the Robusta UI Sink>`.
+        2. Add the following to your Helm values (``generated_values.yaml`` file) and run a :ref:`Helm Upgrade <Simple Upgrade>`
 
         .. code-block:: yaml
 
@@ -51,7 +52,7 @@ Choose an AI provider below and follow the instructions:
               - name: ROBUSTA_AI
                 value: "true"
 
-        Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
+        3. If you store the Robusta UI token in a Kubernetes secret, follow the instructions in :ref:`Configuring HolmesGPT Access to SaaS Data <Configuring HolmesGPT Access to SaaS Data>`.
 
     .. tab-item:: OpenAI
         :name: open-ai
