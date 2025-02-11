@@ -32,7 +32,7 @@
    :hidden:
 
    configuration/index
-   🪄 AI Analysis - HolmesGPT <configuration/ai-analysis>
+   🪄 AI Analysis - HolmesGPT <configuration/holmesgpt/index>
    🔔 Sinks <configuration/sinks/index>
    🔥 Prometheus/AlertManager <configuration/alertmanager-integration/index>
    Cost Savings - KRR <configuration/resource-recommender>
