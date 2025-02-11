@@ -12,6 +12,17 @@ AI Analysis
    permissions
    custom_toolsets
    builtin_toolsets
+   toolset_argocd
+   toolset_aws
+   toolset_confluence
+   toolset_docker
+   toolset_grafana
+   toolset_helm
+   toolset_internet
+   toolset_kubernetes
+   toolset_opensearch
+   toolset_robusta
+   toolset_slab
 
 Why use HolmesGPT?
 ^^^^^^^^^^^^^^^^^^^

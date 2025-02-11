@@ -3,7 +3,7 @@ Confluence
 
 Fetch confluence pages. This is particularly useful if you store runbooks in Confluence.
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+To enable this integration, update the Helm values for Robusta (``generated_values.yaml``).
 
 .. code-block:: yaml
 

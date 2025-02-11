@@ -6,7 +6,7 @@ Security
 
 Set of tools to audit AWS security
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+To enable this integration, update the Helm values for Robusta (``generated_values.yaml``).
 
 .. code-block:: yaml
 

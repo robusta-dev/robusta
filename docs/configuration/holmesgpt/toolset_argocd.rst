@@ -1,9 +1,13 @@
 Argocd
 ======
 
-Set of tools to get argocd metadata like list of apps, repositories, projects, etc.
+Holmes can use the ``argocd`` CLI to get details about the ArgoCD setup like the apps configuration and status,
+clusters and projects within ArgoCD.
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+This toolset requires an ``ARGOCD_AUTH_TOKEN`` environment variable as described in
+the `argocd documentation <https://argo-cd.readthedocs.io/en/latest/user-guide/commands/argocd_account_generate-token/>`_.
+
+To enable this integration, update the Helm values for Robusta (``generated_values.yaml``).
 
 .. code-block:: yaml
 
