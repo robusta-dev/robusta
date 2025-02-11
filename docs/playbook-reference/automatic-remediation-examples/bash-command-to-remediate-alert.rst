@@ -21,7 +21,7 @@ To run a command on a Kubernetes node (the node is chosen according to alert met
   
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-Run Bash Command on a Kuberntes Pod
+Run Bash Command on a Kubernetes Pod
 ***************************************
 
 To run a command inside existing pods (the pod is chosen according to alert metadata) add the following to your Helm values file:

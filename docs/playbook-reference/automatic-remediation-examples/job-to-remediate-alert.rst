@@ -1,7 +1,7 @@
 Remediate using Kubernetes Jobs
 ######################################
 
-Robusta can run a Kuberntes Job to remediate any Prometheus Alert. In this example we'll remediate a Prometheus alert named ``TestAlert`` by running a Kubernetes job in response.
+Robusta can run a Kubernetes Job to remediate any Prometheus Alert. In this example we'll remediate a Prometheus alert named ``TestAlert`` by running a Kubernetes job in response.
 
 Add the following to your Helm values, under the :ref:`customPlaybooks<customPlaybooks>` value:
 
@@ -34,7 +34,7 @@ Trigger the newly added playbook by simulating a Prometheus alert.
     robusta playbooks trigger prometheus_alert alert_name=TestAlert
 
 
-Refer Alert Metadata in Remediation Jobs
+Reference Alert Metadata in Remediation Jobs
 -------------------------------------------
 
 When remediating based on alerts, you can access all the alert metadata like name, namespace, cluster name, pod, node and more as environment variables.
@@ -80,7 +80,7 @@ Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 Mount Sensitve Values in Remediation Jobs
 -------------------------------------------
 
-Sometimes you might want to reference sensite values like API keys in your remediation jobs. In such cases, Robusta lets you add them as a Kuberntes secret and reference them as environment variables.
+Sometimes you might want to reference sensite values like API keys in your remediation jobs. In such cases, Robusta lets you add them as a Kubernetes secret and reference them as environment variables.
 
 Implementation
 ^^^^^^^^^^^^^^^^^
