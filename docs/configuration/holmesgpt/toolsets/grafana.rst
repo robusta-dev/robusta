@@ -58,6 +58,7 @@ Capabilities
    * - fetch_loki_logs_by_label
      - Fetches the Loki logs for a label and value from a Tempo trace
    * - fetch_loki_logs_by_pod
+     - Fetches the Loki logs for a given pod
 
 
 Tempo

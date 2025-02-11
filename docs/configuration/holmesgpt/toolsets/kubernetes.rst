@@ -2,13 +2,12 @@
 Kubernetes Toolsets
 ===================
 
-Core
-----
+Core :checkmark:`_`
+--------------------
+.. include:: ./_toolset_enabled_by_default.inc.rst
 
 By enabling this toolset, HolmesGPT will be able to describe and find kubernetes resources like
 nodes, deployments, pods, etc.
-
-.. include:: ./_toolset_enabled_by_default.inc.rst
 
 Configuration
 ^^^^^^^^^^^^^
@@ -54,12 +53,12 @@ Capabilities
      - Query Kubernetes resources using jq filters
 
 
-Logs
-----
-
-Read kubernetes pod logs.
+Logs :checkmark:`_`
+-------------------
 
 .. include:: ./_toolset_enabled_by_default.inc.rst
+
+Read kubernetes pod logs.
 
 Configuration
 ^^^^^^^^^^^^^

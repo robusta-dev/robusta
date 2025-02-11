@@ -1,10 +1,9 @@
-Internet
-========
+Internet :checkmark:`_`
+=======================
+.. include:: ./_toolset_enabled_by_default.inc.rst
 
 By enabling this toolset, HolmesGPT will be able to fetch webpages. This tool is beneficial if
 you provide Holmes with publicly accessible web based runbooks.
-
-.. include:: ./_toolset_enabled_by_default.inc.rst
 
 Configuration
 -------------

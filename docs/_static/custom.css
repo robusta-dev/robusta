@@ -6,7 +6,8 @@
     width: 90%;
 }
 
-h2, h3 {
+h2,
+h3 {
     border-bottom: 2px solid whitesmoke;
 }
 
@@ -27,7 +28,7 @@ h2, h3 {
     display: none;
 }
 
-.md-source__fact:nth-child(1n+2):before {
+.md-source__fact:nth-child(1n + 2):before {
     margin-left: 0 !important;
 }
 
@@ -56,7 +57,6 @@ h2, h3 {
     display: flex;
     align-items: center;
 }
-
 
 .md-tabs__community svg {
     width: 22px;
@@ -88,7 +88,7 @@ h2, h3 {
 }
 
 .md-header__button:not(.focus-visible) {
-    color: #27C499;
+    color: #27c499;
 }
 
 .md-source {
@@ -164,30 +164,52 @@ h2, h3 {
     font-weight: 600;
 }
 
-.md-typeset :-webkit-any(.admonition,details):-webkit-any(.warning,.caution,.attention),
-.md-typeset :is(.admonition,details):is(.warning,.caution,.attention),
-.md-typeset :-webkit-any(.admonition,details):-webkit-any(.tip,.hint,.important),
-.md-typeset :is(.admonition,details):is(.tip,.hint,.important),
-.md-typeset :-webkit-any(.admonition,details),
-.md-typeset :is(.admonition,details) {
+.md-typeset
+    :-webkit-any(.admonition, details):-webkit-any(
+        .warning,
+        .caution,
+        .attention
+    ),
+.md-typeset :is(.admonition, details):is(.warning, .caution, .attention),
+.md-typeset
+    :-webkit-any(.admonition, details):-webkit-any(.tip, .hint, .important),
+.md-typeset :is(.admonition, details):is(.tip, .hint, .important),
+.md-typeset :-webkit-any(.admonition, details),
+.md-typeset :is(.admonition, details) {
     border-color: var(--md-color-warning-primary);
 }
 
-.md-typeset :-webkit-any(.warning,.caution,.attention)>:-webkit-any(.admonition-title,summary),
-.md-typeset :is(.warning,.caution,.attention)>:is(.admonition-title,summary),
-.md-typeset :-webkit-any(.tip,.hint,.important)>:-webkit-any(.admonition-title,summary)
-.md-typeset :is(.tip,.hint,.important)>:is(.admonition-title,summary),
-.md-typeset :-webkit-any(.admonition-title,summary),
-.md-typeset :is(.admonition-title,summary) {
+.md-typeset
+    :-webkit-any(.warning, .caution, .attention)
+    > :-webkit-any(.admonition-title, summary),
+.md-typeset
+    :is(.warning, .caution, .attention)
+    > :is(.admonition-title, summary),
+.md-typeset
+    :-webkit-any(.tip, .hint, .important)
+    > :-webkit-any(.admonition-title, summary)
+    .md-typeset
+    :is(.tip, .hint, .important)
+    > :is(.admonition-title, summary),
+.md-typeset :-webkit-any(.admonition-title, summary),
+.md-typeset :is(.admonition-title, summary) {
     background: var(--md-color-warning-secondary) !important;
 }
 
-.md-typeset :-webkit-any(.warning,.caution,.attention)>:-webkit-any(.admonition-title,summary):before,
-.md-typeset :is(.warning,.caution,.attention)>:is(.admonition-title,summary):before,
-.md-typeset :-webkit-any(.tip,.hint,.important)>:-webkit-any(.admonition-title,summary):before,
-.md-typeset :is(.tip,.hint,.important)>:is(.admonition-title,summary):before,
-.md-typeset :-webkit-any(.admonition-title,summary):before,
-.md-typeset :is(.admonition-title,summary):before {
+.md-typeset
+    :-webkit-any(.warning, .caution, .attention)
+    > :-webkit-any(.admonition-title, summary):before,
+.md-typeset
+    :is(.warning, .caution, .attention)
+    > :is(.admonition-title, summary):before,
+.md-typeset
+    :-webkit-any(.tip, .hint, .important)
+    > :-webkit-any(.admonition-title, summary):before,
+.md-typeset
+    :is(.tip, .hint, .important)
+    > :is(.admonition-title, summary):before,
+.md-typeset :-webkit-any(.admonition-title, summary):before,
+.md-typeset :is(.admonition-title, summary):before {
     background-color: var(--md-color-warning-primary);
 }
 
@@ -233,20 +255,19 @@ h2, h3 {
 }
 
 .sd-card .sd-card-body {
-    color: #1E2941;
+    color: #1e2941;
 }
-
 
 .sd-card:hover .sd-card-body {
     color: var(--md-primary-bg-color) !important;
 }
 
-.sd-tab-set>input:checked + label {
+.sd-tab-set > input:checked + label {
     border-color: var(--md-typeset-a-color) !important;
     color: var(--md-typeset-a-color) !important;
 }
 
-.sd-tab-set>input:not(:checked)+label:hover {
+.sd-tab-set > input:not(:checked) + label:hover {
     border-color: transparent !important;
     color: var(--md-typeset-a-color) !important;
 }
@@ -263,8 +284,8 @@ h2, h3 {
     color: var(--md-typeset-a-color);
 }
 
-.highlight :-webkit-any(.nd,.ni,.nl,.nt),
-.highlight :is(.nd,.ni,.nl,.nt) {
+.highlight :-webkit-any(.nd, .ni, .nl, .nt),
+.highlight :is(.nd, .ni, .nl, .nt) {
     color: var(--md-default-fg-color);
 }
 
@@ -281,7 +302,7 @@ h2, h3 {
     margin-bottom: 0px;
 }
 
-.sd-tab-set>label {
+.sd-tab-set > label {
     font-size: 16px;
 }
 
@@ -290,9 +311,13 @@ h2, h3 {
 }
 
 .DocSearch-Hit-title {
-    font-size: 1.10em !important;
+    font-size: 1.1em !important;
 }
 
 .DocSearch-Hit-path {
     font-size: 1em !important;
+}
+
+.success-icon {
+    color: #28a745; /* or any green color you prefer */
 }

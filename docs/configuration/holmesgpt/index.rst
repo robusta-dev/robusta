@@ -5,7 +5,7 @@ AI Analysis
 
 .. toctree::
    :hidden:
-   :maxdepth: 2
+   :maxdepth: 1
 
    builtin_toolsets
    permissions
