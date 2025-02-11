@@ -12,7 +12,7 @@ Configuration
 
     holmes:
         toolsets:
-            opensearch:
+            opensearch/status:
                 enabled: true
                 config:
                     opensearch_clusters:
@@ -28,6 +28,31 @@ Configuration
                           http_auth:
                             username: <basic auth username>
                             password: <basic auth password>
+
+Here is an example of an insecure Opensearch configuration for local development using a bearer token:
+
+.. code-block:: yaml
+
+    holmes:
+        additionalEnvVars:
+            - name: OPENSEARCH_URL
+              value: <opensearch host URL>
+            - name: OPENSEARCH_BEARER_TOKEN
+              value: <secret bearer token>
+        toolsets:
+            opensearch:
+                enabled: true
+                config:
+                    opensearch_clusters:
+                        - hosts:
+                            - host: "{{ env.OPENSEARCH_URL }}"
+                            port: 9200
+                        headers:
+                            Authorization: "Basic {{ env.OPENSEARCH_BEARER_TOKEN }}"
+                        use_ssl: true
+                        ssl_assert_hostname: false
+                        verify_certs: false
+                        ssl_show_warn: false
 
 .. include:: ./_toolset_configuration.inc.rst
 
