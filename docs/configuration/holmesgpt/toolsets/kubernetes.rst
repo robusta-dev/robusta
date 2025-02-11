@@ -1,9 +1,9 @@
 
 Kubernetes Toolsets
-==================
+===================
 
 Core
------
+----
 
 By enabling this toolset, HolmesGPT will be able to describe and find kubernetes resources like
 nodes, deployments, pods, etc.
@@ -55,7 +55,7 @@ Capabilities
 
 
 Logs
---------------------
+----
 
 Read kubernetes pod logs.
 
@@ -102,7 +102,7 @@ Capabilities
 
 
 Live metrics
-----------------
+------------
 
 By enabling this toolset, HolmesGPT will be able to retrieve real time CPU and memory usage of pods and nodes.
 
@@ -134,7 +134,7 @@ Capabilities
      - Get real-time CPU and memory usage for all nodes
 
 Prometheus stack
---------------------
+----------------
 
 By enabling this toolset, HolmesGPT will be able to fetch the definition of a Prometheus target.
 
@@ -166,7 +166,7 @@ Capabilities
 
 
 Resource Lineage Extras
---------------------
+-----------------------
 
 Fetches children/dependents and parents/dependencies resources using kube-lineage.
 
@@ -199,7 +199,7 @@ Capabilities
 
 
 Resource Lineage Extras (with krew)
---------------------
+-----------------------------------
 
 
 **This integration is not recommended for in-cluster monitoring. Enable the above toolset

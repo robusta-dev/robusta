@@ -2,7 +2,7 @@
 
 
 Builtin Toolsets
-===============
+================
 
 .. toctree::
    :hidden:
@@ -26,7 +26,7 @@ You can :doc:`write your own toolset <custom_toolsets>` or use the default Holme
 
 
 Builtin toolsets
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 Holmes comes with a set of builtin toolsets. Most of these toolsets are enabled by default, such as toolsets to read Kubernetes resources and fetch logs. Some builtin toolsets are disabled by default and can be enabled by the user by providing credentials or API keys to external systems.
 
 .. grid:: 1 1 2 3

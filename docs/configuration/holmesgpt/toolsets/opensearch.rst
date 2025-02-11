@@ -1,5 +1,5 @@
 Opensearch
-====
+==========
 
 By enabling this toolset, HolmesGPT will be able to access cluster metadata information
 like health, shards, and settings. This allows HolmesGPT to better troubleshoot problems

@@ -1,14 +1,14 @@
 AWS
-====
+===
 
 Security
-------
+--------
 
 Set of tools to audit AWS cloudtrail events and audit logs.
 
 
 Configuration
-************
+*************
 
 .. code-block:: yaml
 
@@ -45,7 +45,7 @@ Capabilities
 
 
 RDS
-------
+---
 
 Read access to Amazon RDS instances, events and logs
 

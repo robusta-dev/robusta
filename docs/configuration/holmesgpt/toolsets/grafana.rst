@@ -1,8 +1,8 @@
 Grafana
-====
+=======
 
 Loki
-------
+----
 
 By enabling this toolset, HolmesGPT will be able to consult logs from `Loki <https://grafana.com/oss/loki/>`_
 by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
@@ -61,7 +61,7 @@ Capabilities
 
 
 Tempo
-------
+-----
 
 By enabling this toolset, HolmesGPT will be able to fetch trace information from Grafana
 Tempo to debug performance related issues.

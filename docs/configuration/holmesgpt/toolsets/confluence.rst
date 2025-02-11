@@ -1,5 +1,5 @@
 Confluence
-====
+==========
 
 By enabling this toolset, HolmesGPT will be able to fetch confluence pages. This is particularly useful if you store runbooks in
 Confluence and want Holmes to run investigations using these runbooks.

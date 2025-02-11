@@ -1,5 +1,5 @@
 Robusta
-====
+=======
 
 By enabling this toolset, HolmesGPT will be able to fetch alerts metadata. It allows HolmesGPT to fetch information
 about specific issues when chatting using "Ask Holmes". This toolset is not necessary for Root Cause Analysis.

@@ -1,5 +1,5 @@
 Internet
-====
+========
 
 By enabling this toolset, HolmesGPT will be able to fetch webpages. This tool is beneficial if
 you provide Holmes with publicly accessible web based runbooks.

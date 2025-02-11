@@ -11,7 +11,7 @@ Below are examples of predefined toolsets for various use cases, such as managin
 
 
 Example 1: Github Toolset
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This toolset enables Holmes to interact with fetch information from github repositories.
 
@@ -72,7 +72,7 @@ After the deployment is complete, the GitHub toolset will be available for Holme
 
 
 Example 2: Kubernetes Diagnostics Toolset
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This toolset provides diagnostics for Kubernetes clusters, helping developers identify and resolve issues.
 
@@ -119,12 +119,12 @@ Once deployed, Holmes will have access to advanced diagnostic tools for Kubernet
 
 
 Example 3: HTTP Toolset
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The HTTP Toolset allows Holmes to retrieve website content and execute queries with customizable parameters.
 
 .. code-block:: yaml
-  
+
 
     holmes:
       toolsets:
@@ -305,7 +305,7 @@ Toolset Fields
      - No
 
 Variable Syntax in Commands
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In toolset commands, variables can be defined using two syntaxes: ``{{ }}`` and ``${ }``.
 
@@ -334,7 +334,7 @@ In this case, ``${GITHUB_TOKEN}`` is an environment variable, while ``{{ owner }
 
 
 Adding a tool that requires a new binary
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some cases, adding a new tool to Holmes might require installing additional packages that are not included in the base Holmes Docker image. This guide explains how to create a custom Docker image that includes the new binaries and update your Helm deployment to use the custom image.
 
