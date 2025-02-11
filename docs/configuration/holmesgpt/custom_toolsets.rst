@@ -1,4 +1,3 @@
-.. _sinks-reference:
 
 Custom toolsets
 ===============
@@ -125,6 +124,7 @@ Example 3: HTTP Toolset
 The HTTP Toolset allows Holmes to retrieve website content and execute queries with customizable parameters.
 
 .. code-block:: yaml
+  
 
     holmes:
       toolsets:

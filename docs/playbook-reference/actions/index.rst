@@ -50,16 +50,6 @@ Built-in Actions
         :link: grafana
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Python App Troubleshooting
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: python-troubleshooting
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Java App Troubleshooting
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: java-troubleshooting
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`cpu;1em;` Scans
         :class-card: sd-bg-light sd-bg-text-light
         :link: scans

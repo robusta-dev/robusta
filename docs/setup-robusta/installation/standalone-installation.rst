@@ -37,4 +37,3 @@ Next Steps
 ---------------------------------
 
 * :ref:`Track Failed Kubernetes Jobs`
-* :ref:`View more tutorials<Tutorials>`
