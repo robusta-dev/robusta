@@ -9,12 +9,12 @@ ArgoCD
 .. robusta-action:: playbooks.robusta_playbooks.argo_cd.argo_app_sync
 
 Slack-OpsGenie sync
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. robusta-action:: playbooks.robusta_playbooks.sink_enrichments.opsgenie_slack_enricher
 
 Kubernetes Optimization
------------------------
+-------------------------------
 
 .. robusta-action:: playbooks.robusta_playbooks.configuration_ab_testing.config_ab_testing
 
@@ -26,7 +26,7 @@ Backups
 .. robusta-action:: playbooks.robusta_playbooks.pvc_snapshots.create_pvc_snapshot on_schedule
 
 Stress Testing and Chaos Engineering
-------------------------------------
+---------------------------------------------
 
 .. robusta-action:: playbooks.robusta_playbooks.chaos_engineering.generate_high_cpu
 
