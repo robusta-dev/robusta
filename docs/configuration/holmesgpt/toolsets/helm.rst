@@ -1,19 +1,25 @@
 Helm
 ====
 
-Read access to cluster's Helm charts and releases
+By enabling this toolset, HolmesGPT will be able to read access to a cluster's Helm charts and releases.
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+.. include:: ./_toolset_enabled_by_default.inc.rst
+
+Configuration
+-------------
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
-
         toolsets:
             helm/core:
                 enabled: true
 
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+------------
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1

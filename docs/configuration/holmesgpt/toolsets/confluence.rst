@@ -1,13 +1,14 @@
 Confluence
 ====
 
-Fetch confluence pages. This is particularly useful if you store runbooks in Confluence.
+By enabling this toolset, HolmesGPT will be able to fetch confluence pages. This is particularly useful if you store runbooks in
+Confluence and want Holmes to run investigations using these runbooks.
 
-To enable this integration, update the Helm values for Robusta (``generated_values.yaml``).
+Configuration
+-------------
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
         additionalEnvVars:
             - name: CONFLUENCE_USER
@@ -16,10 +17,15 @@ To enable this integration, update the Helm values for Robusta (``generated_valu
               value: <Confluence's API key>
             - name: CONFLUENCE_BASE_URL
               value: <Confluence's base URL>
-
         toolsets:
             confluence:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+------------
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1

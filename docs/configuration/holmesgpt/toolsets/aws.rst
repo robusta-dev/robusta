@@ -4,17 +4,31 @@ AWS
 Security
 ------
 
-Set of tools to audit AWS security
+Set of tools to audit AWS cloudtrail events and audit logs.
 
-To enable this integration, update the Helm values for Robusta (``generated_values.yaml``).
+
+Configuration
+************
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
+        additionalEnvVars:
+            - name: AWS_ACCESS_KEY_ID
+              value: AKIAIOSFODNN7EXAMPLE
+            - name: AWS_SECRET_ACCESS_KEY
+              value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            - name: AWS_DEFAULT_REGION
+              value: us-west-2
         toolsets:
             aws/security:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+************
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1
@@ -33,17 +47,30 @@ To enable this integration, update the Helm values for Robusta (``generated_valu
 RDS
 ------
 
-Read access to Amazon RDS resources
+Read access to Amazon RDS instances, events and logs
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+Configuration
+************
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
+        additionalEnvVars:
+            - name: AWS_ACCESS_KEY_ID
+              value: AKIAIOSFODNN7EXAMPLE
+            - name: AWS_SECRET_ACCESS_KEY
+              value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            - name: AWS_DEFAULT_REGION
+              value: us-west-2
         toolsets:
             aws/rds:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+************
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1

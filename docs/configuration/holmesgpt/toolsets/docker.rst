@@ -1,18 +1,26 @@
 Docker
 ======
 
-Read access to Docker resources
+**This integration is not recommended for monitoring a kubernetes cluster because it
+is neither necessary nor useful.** It is documented here for users of HolmesGPT CLI.
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+Read access to Docker resources.
+
+Configuration
+-------------
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
-
         toolsets:
             docker/core:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+------------
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1

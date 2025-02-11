@@ -1,19 +1,26 @@
 Internet
 ====
 
-Fetches webpages. This tool is beneficial if you provide Holmes with publicly accessible web based runbooks.
+By enabling this toolset, HolmesGPT will be able to fetch webpages. This tool is beneficial if
+you provide Holmes with publicly accessible web based runbooks.
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+.. include:: ./_toolset_enabled_by_default.inc.rst
+
+Configuration
+-------------
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
-
         toolsets:
             internet:
                 enabled: true
 
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+------------
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1

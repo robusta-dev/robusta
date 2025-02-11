@@ -1,17 +1,17 @@
 Argocd
 ======
 
-Holmes can use the ``argocd`` CLI to get details about the ArgoCD setup like the apps configuration and status,
-clusters and projects within ArgoCD.
+By enabling this toolset, HolmesGPT will be able to fetch the status, deployment history,
+and configuration of ArgoCD applications.
+
+Configuration
+-------------
 
 This toolset requires an ``ARGOCD_AUTH_TOKEN`` environment variable as described in
 the `argocd documentation <https://argo-cd.readthedocs.io/en/latest/user-guide/commands/argocd_account_generate-token/>`_.
 
-To enable this integration, update the Helm values for Robusta (``generated_values.yaml``).
-
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
         additionalEnvVars:
             - name: ARGOCD_AUTH_TOKEN
@@ -20,6 +20,12 @@ To enable this integration, update the Helm values for Robusta (``generated_valu
             argocd/core:
                 enabled: true
 
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+------------
+
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1

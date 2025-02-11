@@ -4,6 +4,22 @@
 Builtin Toolsets
 ===============
 
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   toolsets/argocd
+   toolsets/aws
+   toolsets/confluence
+   toolsets/docker
+   toolsets/grafana
+   toolsets/helm
+   toolsets/internet
+   toolsets/kubernetes
+   toolsets/opensearch
+   toolsets/robusta
+   toolsets/slab
+
 Holmes allows you to define and configure integrations (toolsets) that fetch data from external sources. This data will be automatically used in investigations when relevant.
 
 You can :doc:`write your own toolset <custom_toolsets>` or use the default Holmes toolsets listed below.
@@ -18,57 +34,51 @@ Holmes comes with a set of builtin toolsets. Most of these toolsets are enabled 
 
     .. grid-item-card:: :octicon:`cpu;1em;` ArgoCD
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_argocd
+        :link: toolsets/argocd
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` AWS
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_aws
+        :link: toolsets/aws
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Confluence
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_confluence
+        :link: toolsets/confluence
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Docker
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_docker
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Robusta
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_robusta
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Helm
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_helm
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Kubernetes
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_kubernetes
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_confluence
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Slab
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_slab
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Kafka
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_kafka
+        :link: toolsets/docker
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Grafana
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolset_grafana
+        :link: toolsets/grafana
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Helm
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/helm
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Kubernetes
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/kubernetes
+        :link-type: doc
+    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/opensearch
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Robusta
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/robusta
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Slab
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/slab
         :link-type: doc
 
 

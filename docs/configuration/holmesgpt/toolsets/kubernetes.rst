@@ -1,24 +1,30 @@
 
-.. kubernetes:
-
 Kubernetes Toolsets
 ==================
 
-
 Core
--------------------
+-----
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+By enabling this toolset, HolmesGPT will be able to describe and find kubernetes resources like
+nodes, deployments, pods, etc.
+
+.. include:: ./_toolset_enabled_by_default.inc.rst
+
+Configuration
+^^^^^^^^^^^^^
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
         toolsets:
             kubernetes/core:
                 enabled: true
 
+.. include:: ./_toolset_configuration.inc.rst
 
+Capabilities
+^^^^^^^^^^^^
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1
@@ -34,7 +40,7 @@ To enable this integration, update the Helm values for Robusta (generated_values
      - List all resources of a given type in a namespace
    * - kubectl_get_by_kind_in_cluster
      - List all resources of a given type across the cluster
-   * - kubectl_find_resour
+   * - kubectl_find_resources
      - Search for resources matching a keyword
    * - kubectl_get_yaml
      - Get YAML definition of a resource
@@ -53,12 +59,23 @@ Logs
 
 Read kubernetes pod logs.
 
+.. include:: ./_toolset_enabled_by_default.inc.rst
+
+Configuration
+^^^^^^^^^^^^^
+
 .. code-block:: yaml
 
     holmes:
         toolsets:
             kubernetes/logs:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+^^^^^^^^^^^^
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1
@@ -87,15 +104,23 @@ Read kubernetes pod logs.
 Live metrics
 ----------------
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+By enabling this toolset, HolmesGPT will be able to retrieve real time CPU and memory usage of pods and nodes.
+
+Configuration
+^^^^^^^^^^^^^
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
         toolsets:
             kubernetes/live-metrics:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+^^^^^^^^^^^^
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1
@@ -111,7 +136,10 @@ To enable this integration, update the Helm values for Robusta (generated_values
 Prometheus stack
 --------------------
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+By enabling this toolset, HolmesGPT will be able to fetch the definition of a Prometheus target.
+
+Configuration
+^^^^^^^^^^^^^
 
 .. code-block:: yaml
 
@@ -119,6 +147,12 @@ To enable this integration, update the Helm values for Robusta (generated_values
         toolsets:
             kubernetes/kube-prometheus-stack:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+^^^^^^^^^^^^
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1
@@ -130,18 +164,27 @@ To enable this integration, update the Helm values for Robusta (generated_values
      - Get Prometheus target definition
 
 
-Resource Lineage Extras (with krew)
+
+Resource Lineage Extras
 --------------------
 
-Fetches children/dependents and parents/dependencies resources using kube-lineage installed via `kubectl krew`.
-To make this toolset work, install kube-lineage with krew.
+Fetches children/dependents and parents/dependencies resources using kube-lineage.
+
+Configuration
+^^^^^^^^^^^^^
 
 .. code-block:: yaml
 
     holmes:
         toolsets:
-            kubernetes/kubernetes/krew-extras:
+            kubernetes/kube-lineage-extras:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+^^^^^^^^^^^^
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1
@@ -155,18 +198,30 @@ To make this toolset work, install kube-lineage with krew.
      - Get all parents/dependencies of a Kubernetes resource, recursively, including their status
 
 
-Resource Lineage Extras (from source)
+Resource Lineage Extras (with krew)
 --------------------
 
-Fetches children/dependents and parents/dependencies resources using kube-lineage.
-To make this work, build kube-lineage from source.
+
+**This integration is not recommended for in-cluster monitoring. Enable the above toolset
+named "Resource Lineage Extras" instead**.
+
+Fetches children/dependents and parents/dependencies resources using kube-lineage installed via `kubectl krew`.
+
+Configuration
+^^^^^^^^^^^^^
 
 .. code-block:: yaml
 
     holmes:
         toolsets:
-            kubernetes/kube-lineage-extras:
+            kubernetes/kubernetes/krew-extras:
                 enabled: true
+
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+^^^^^^^^^^^^
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1

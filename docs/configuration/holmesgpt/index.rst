@@ -1,28 +1,15 @@
 .. _ai-analysis-overview:
 
-:hide-toc:
-
 AI Analysis
 ============
 
 .. toctree::
    :hidden:
-   :maxdepth: 1
+   :maxdepth: 2
 
+   builtin_toolsets
    permissions
    custom_toolsets
-   builtin_toolsets
-   toolset_argocd
-   toolset_aws
-   toolset_confluence
-   toolset_docker
-   toolset_grafana
-   toolset_helm
-   toolset_internet
-   toolset_kubernetes
-   toolset_opensearch
-   toolset_robusta
-   toolset_slab
 
 Why use HolmesGPT?
 ^^^^^^^^^^^^^^^^^^^
@@ -317,30 +304,30 @@ Additionally your alerts on Slack will have an "Ask Holmes" button that sends an
   For the most accurate results, it is best to use the Robusta UI.
 
 
-Advanced - Customizing HolmesGPT
+Adding data sources to HolmesGPT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-HolmesGPT can be customized by changing what tools ara available to it. This is done through
-:doc:`builtin toolsets <builtin_toolsets>` or through writing your own :doc:`custom toolsets <builtin_toolsets>`.
+HolmesGPT's toolsets are fundamental to its ability to investigate and diagnose Kubernetes
+cluster issues effectively. Each toolset provides specialized capabilities for gathering
+and analyzing specific aspects of cluster health, performance, and configuration.
 
-All toolsets support configurations in the same way. Update the `./generated_values.yaml` for your cluster configuring
-the `holmes.toolset` section like shown below. You can use that for your own custom tools or consult the builtin toolsets to learn how to configure each of them.
+The more toolsets available to HolmesGPT, the more comprehensive and nuanced its investigation
+process becomes, enabling it to identify complex issues through multiple perspectives and provide
+more accurate, actionable recommendations for resolution.
 
-For example:
+Builtin toolsets
+----------------
 
-.. code-block:: yaml
+:doc:`Follow this link <builtin_toolsets>` to learn how to configure builtin toolsets.
 
-    holmes:
-        toolsets:
-            toolset_name_here:
-                enabled: true
-                config:
-                    # Custom configuration for your tool
-                    custom_param: "{{ env.CUSTOM_PARAM }}"
+Built-in toolsets cover essential areas like pod status inspection, node health analysis,
+application diagnostics, and resource utilization monitoring. These toolsets include access to
+Kubernetes events and logs, AWS, Grafana, Opensearch, etc. See the full list :doc:`here <builtin_toolsets>`.
 
+Custom toolsets
+----------------
 
-After making changes, apply them using Helm:
+.. include:: ./toolsets/_custom_toolset_appeal.inc.rst
 
-.. code-block:: bash
-
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+Custom toolsets are created through your Helm values file and you can find instructions
+to :doc:`write your own toolsets here <builtin_toolsets>`.

@@ -1,13 +1,13 @@
 Slab
 ====
 
-Fetches slab pages
+By enabling this toolset, HolmesGPT will be able to consult runbooks from Slab pages.
 
-To enable this integration, update the Helm values for Robusta (generated_values.yaml).
+Configuration
+-------------
 
 .. code-block:: yaml
 
-    # Example Configuration:
     holmes:
         additionalEnvVars:
             - name: SLAB_API_KEY
@@ -16,6 +16,11 @@ To enable this integration, update the Helm values for Robusta (generated_values
             slab:
                 enabled: true
 
+.. include:: ./_toolset_configuration.inc.rst
+
+Capabilities
+------------
+.. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
    :header-rows: 1
