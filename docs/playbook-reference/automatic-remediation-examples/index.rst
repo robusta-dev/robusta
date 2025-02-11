@@ -16,11 +16,7 @@ Get started:
    :maxdepth: 1
 
    job-to-remediate-alert
-   mounting-secrets-in-jobs
-   alert-metadata-in-job
    bash-command-to-remediate-alert
-
-
 
 Further Reading
 *****************
