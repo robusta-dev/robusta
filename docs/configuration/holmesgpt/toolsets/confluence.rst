@@ -5,6 +5,7 @@ By enabling this toolset, HolmesGPT will be able to fetch confluence pages. This
 Confluence and want Holmes to run investigations using these runbooks.
 This toolset requires an `API key <https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/>`_.
 
+
 Configuration
 -------------
 
