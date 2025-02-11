@@ -120,7 +120,7 @@ redirects = {
     "tutorials/robusta-runner-metrics.html": "/master/setup-robusta/robusta-runner-metrics.html",
     "tutorials/alert-custom-prometheus.html": "/master/configuration/alertmanager-integration/alert-custom-prometheus.html",
     "catalog/triggers/prometheus.html": "/master/configuration/alertmanager-integration/index.html",
-
+    "playbook-reference/prometheus-examples/alert-remediation.html": "/master/playbook-reference/automatic-remediation-examples/index.html"
 }
 
 
