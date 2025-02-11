@@ -108,6 +108,5 @@ In this example, the trigger was ``on_job_failure``. Robusta generated a notific
 Next Steps
 ^^^^^^^^^^^^^
 
-* :ref:`See more examples <tutorials>`
 * :ref:`See reference guide on defining playbooks <defining-playbooks>`
 * :ref:`Install Robusta with Helm <install>`

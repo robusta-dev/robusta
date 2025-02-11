@@ -313,6 +313,7 @@ The full list can be found `here <https://github.com/robusta-dev/holmesgpt/tree/
 You can enable or disable toolsets with the ``holmes.toolsets`` Helm value:
 
 .. code-block:: yaml
+
     enableHolmesGPT: true
     holmes:
       toolsets:
@@ -330,6 +331,7 @@ You can override fields from the default toolsets to customize them for your nee
 For example:
 
 .. code-block:: yaml
+  
     enableHolmesGPT: true
     holmes:
       toolsets:
