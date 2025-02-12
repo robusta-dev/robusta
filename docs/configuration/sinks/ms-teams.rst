@@ -81,9 +81,9 @@ Example:
 Redirect to Platform
 -------------------------------------------------------------------
 
-Some buttons in ms-teams are redirecting to Robusta UI by default, this could be change to redirect to 
-the originate system. For example `View Graph` Button by default redirect to metrics explorer in 
-Robusta UI. by setting `prefer_redirect_to_platform: false` instead will redirect to Prometheus.
+By default, MS Teams notifications include buttons to view more information in the Robusta SaaS platform.
+If you don't use Robusta SaaS you can modify these links to point at Prometheus instead.
+To do so, set prefer_redirect_to_platform: false.
 
 For example:
 
