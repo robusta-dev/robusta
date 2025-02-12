@@ -5,7 +5,7 @@
   <h2 align="center">Better grouping, enrichment, and remediation of your existing alerts</h2>
   <p align="center">
     <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
-    <a href="#-installing-robusta"><strong>Installation</strong></a> | 
+    <a href="#-installing-robusta"><strong>Installation</strong></a> |
     <a href="https://docs.robusta.dev/master/configuration/index.html"><strong>Integrations ↗</strong></a> |
     <a href="https://docs.robusta.dev/master/index.html"><strong>Docs ↗</strong></a> |
     <a href="https://bit.ly/robusta-slack"><strong>Slack Community ↗</strong></a>
@@ -16,10 +16,10 @@
 
 Compatible with kube-prometheus-stack, Prometheus Operator, and more.
 
-Robusta integrates with Prometheus by webhook and adds features like: 
+Robusta integrates with Prometheus by webhook and adds features like:
 
 * [**Smart Grouping**](https://docs.robusta.dev/master/configuration/notification-grouping.html) - reduce notification spam with Slack threads 🧵
-* [**AI Investigation**](https://docs.robusta.dev/master/configuration/ai-analysis.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
+* [**AI Investigation**](https://docs.robusta.dev/master/configuration/holmesgpt/index.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
 * [**Alert Enrichment**](https://docs.robusta.dev/master/how-it-works/index.html#automatically-investigate-a-prometheus-alert) - see pod logs and other data alongside your alerts
 * [**Self-Healing**](https://docs.robusta.dev/master/tutorials/alert-remediation.html#remediate-prometheus-alerts) - define auto-remediation rules for faster fixes
 * [**Advanced Routing**](https://docs.robusta.dev/master/notification-routing/configuring-sinks.html) based on team, namespace, and more

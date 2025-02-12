@@ -63,9 +63,11 @@ class SeverityParams(ActionParams):
 class DefaultEnricherParams(ActionParams):
     """
     :var alert_annotations_enrichment: will add the alert annotations to the default alerts if true
+    :var alert_generator_link: will add a link to a graph with the alert expression, based on the generator url
     """
 
     alert_annotations_enrichment: bool = False
+    alert_generator_link: bool = True
 
 
 @action
@@ -225,7 +227,7 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
 
     By default, this enricher is last in the processing order, so it will be added to all alerts, that aren't silenced.
     """
-    if alert.alert.generatorURL:
+    if alert.alert.generatorURL and params.alert_generator_link:
         alert.add_link(Link(url=alert.alert.generatorURL, name="View Graph", type=LinkType.PROMETHEUS_GENERATOR_URL))
 
     labels = alert.alert.labels

@@ -97,7 +97,7 @@ Problems when running ``helm install`` command or installing via GitOps.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Robusta runner, Prometheus or Holmes failures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. details:: robusta-runner pod is in Pending state due to memory issues
 

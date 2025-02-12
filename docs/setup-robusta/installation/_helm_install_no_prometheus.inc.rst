@@ -88,7 +88,7 @@ On some clusters this can take a while, so don't panic if it appears stuck:
 Verifying Installation
 ------------------------------
 
-Confirm that two Robusta pods are running with no errors in the logs:
+Confirm that Robusta pods are running with no errors in the logs:
 
 .. code-block:: bash
     :name: cb-get-pods-robusta-logs
