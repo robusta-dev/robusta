@@ -95,6 +95,25 @@ Example:
          slack_channel: my-fallback-channel
          channel_override: "$cluster_name-alerts-$labels.env-${annotations.kubernetes.io/service-name}"
 
+Redirect to Platform
+-------------------------------------------------------------------
+
+Some button in slack are redirecting to Robusta UI by default, this could be change to redirect to 
+the originate system. For example `View Graph` Button by default redirect to metrics explorer in 
+Robusta UI. by setting `prefer_redirect_to_platform: false` instead will redirect to Prometheus.
+
+For example:
+
+.. code-block:: yaml
+
+     sinks_config:
+     # slack integration params
+     - slack_sink:
+         name: main_slack_sink
+         api_key: xoxb-112...
+         slack_channel: my-fallback-channel
+         prefer_redirect_to_platform: false
+
 
 Using Private Channels
 -------------------------------------------------------------------

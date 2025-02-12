@@ -77,3 +77,20 @@ Example:
             name: main_ms_teams_sink
             webhook_url: teams-incoming-webhook  # see instructions below
             webhook_override: ${annotations.kubernetes.io/service-name}
+
+Redirect to Platform
+-------------------------------------------------------------------
+
+Some buttons in ms-teams are redirecting to Robusta UI by default, this could be change to redirect to 
+the originate system. For example `View Graph` Button by default redirect to metrics explorer in 
+Robusta UI. by setting `prefer_redirect_to_platform: false` instead will redirect to Prometheus.
+
+For example:
+
+.. code-block:: yaml
+
+     sinks_config:
+     - ms_teams_sink:
+        name: main_ms_teams_sink
+        webhook_url: teams-incoming-webhook
+        prefer_redirect_to_platform: false
