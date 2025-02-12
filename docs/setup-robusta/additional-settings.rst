@@ -222,7 +222,9 @@ Add this to Robusta's Helm values:
 
 Adding a Cluster Label to Alerts
 ---------------------------------------------
-Robusta uses the ``cluster_name`` you set during installation to identify which cluster an alert belongs to when forwarding alerts via the Robusta API webhook. This is useful when forwarding alerts to Robusta from external services like Grafana/Grafana cloud.
+When using Robusta's built-in Prometheus stack, Robusta uses the ``cluster_name`` you set during installation to identify which alerts belong to which cluster.
+
+If you forward external alerts to Robusta (e.g., from Grafana/Grafana Cloud), you will need to pass the ``cluster_name`` metadata manually. For example, if you use Grafana alerting, ensure that all your metrics and alerts have a ``cluster_name`` label.
 
 You can add this label to all of your metrics using ``prometheus.prometheusSpec.additionalScrapeConfigs`` as mentioned below. Add the following config to your Helm values file.
 
@@ -236,9 +238,10 @@ You can add this label to all of your metrics using ``prometheus.prometheusSpec.
               - role: pod
             metric_relabel_configs:
               - target_label: cluster_name
-                replacement: "YOUR_ROBUSTA_CLUSTER_NAME"
+                replacement: "YOUR_ROBUSTA_CLUSTER_NAME" # This is the cluster name you set in the Helm values during Robusta installation
 
 .. note:: 
   
-  1. ``prometheus.prometheusSpec.externalLabels.cluster`` does not work for cases when you need ``cluster_name`` label in Grafana.
-  2. ``cluster_name`` label will be added only to metrics after you add this config. i.e Previously scraped metrics will not have ``cluster_name`` label. 
+  1. ``cluster_name`` label will be added only to metrics after you add this config. i.e Previously scraped metrics will not have ``cluster_name`` label. **You will need to wait a few hours after adding this configuration for the label to show up on your alerts and be forwarded correctly.**
+  2. ``prometheus.prometheusSpec.externalLabels.cluster`` does not work for cases when you need ``cluster_name`` label in Grafana.
+ 
