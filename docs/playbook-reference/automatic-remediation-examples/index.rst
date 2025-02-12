@@ -3,12 +3,12 @@
 Automatic Remediation
 ===============================
 
-Robusta can automatically remediate Prometheus Alerts by running Kubernetes Jobs, or by running bash commands on existing nodes or pods.
+Robusta can automatically remediate Prometheus Alerts. By automatically remediating alerts you can create self-healing infrastructure.
 
-By automatically remediating alerts you can, 
+For example, you can:
 
-* Delete stuck Kubernetes resources like pods and jobs to keep your clusters healthy.
-* Run Bash commands to gather information about your applications for faster issue resolution.
+* Delete stuck Kubernetes resources like pods and jobs
+* Run bash commands to automatically diagnose why alerts are firing
 
 Get started: 
 
@@ -17,11 +17,4 @@ Get started:
 
    job-to-remediate-alert
    bash-command-to-remediate-alert
-
-Further Reading
-*****************
-
-* Reference for the :ref:`alert_handling_job<alert_handling_job>` action
-* Reference for the :ref:`node_bash_enricher<node_bash_enricher>` action
-* :ref:`More remediation actions <Remediation>`
 

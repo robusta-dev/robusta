@@ -3,12 +3,14 @@ Enrich Alerts with Bash Scripts
 
 Robusta can add extra context to your Prometheus alerts, so you can respond to alerts faster.
 
-In this tutorial, you will learn how to enrich alerts by running a bash script when the alert fires.
+In this tutorial, you will enrich an alert by running a bash script automatically.
 
 Implementation
 -----------------
 
-Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`. This configures Robusta to execute the ``ps aux`` command in response to the ``CPUThrottlingHigh`` alert.
+When the ``CPUThrottlingHigh`` alert fires we can run ``ps aux`` to see which process has high CPU.
+
+Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`:
 
 .. code-block:: yaml
 
