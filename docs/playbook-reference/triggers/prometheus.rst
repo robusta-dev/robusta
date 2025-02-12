@@ -2,7 +2,7 @@ Prometheus and AlertManager
 #############################
 
 Robusta can :ref:`improve your existing Prometheus alerts <Enhanced Prometheus Alerts>`. It can also execute
-:ref:`Remediation Actions <Remediate Prometheus Alerts>` in response to alerts.
+:ref:`Remediation Actions <Automatic Remediation>` in response to alerts.
 
 Prerequisites
 ---------------

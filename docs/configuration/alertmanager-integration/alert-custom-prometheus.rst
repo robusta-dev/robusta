@@ -109,6 +109,6 @@ You will know the alert was defined successfully when Prometheus fires an alert.
 Next Steps
 ---------------
 
-In the next tutorial, discover how to further enhance this Prometheus alert with Robusta. Keep reading to learn more:
+Learn how to enrich Prometheus alerts with more context, so that you can respond faster:
 
-* :ref:`Enrich Prometheus Alerts`
+* :ref:`Prometheus Alert Enrichment`
