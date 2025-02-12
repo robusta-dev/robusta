@@ -3,8 +3,6 @@ Helm
 
 By enabling this toolset, HolmesGPT will be able to read access to a cluster's Helm charts and releases.
 
-.. include:: ./_toolset_enabled_by_default.inc.rst
-
 Configuration
 -------------
 
