@@ -8,6 +8,12 @@ with one or more opensearch clusters.
 Configuration
 -------------
 
+The configuration for Opensearch is passed through to the underlying
+`opensearch-py library <https://github.com/opensearch-project/opensearch-py>`_. Consult this
+library's `user guide <https://github.com/opensearch-project/opensearch-py/blob/main/USER_GUIDE.md>`_ or
+`reference documentation <https://opensearch-project.github.io/opensearch-py/api-ref/clients/opensearch_client.html>`_
+for configuring the connection to Opensearch, including how to authenticate this toolset to an opensearch cluster.
+
 .. code-block:: yaml
 
     holmes:
