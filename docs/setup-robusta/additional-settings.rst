@@ -222,7 +222,7 @@ Add this to Robusta's Helm values:
 
 Adding a Cluster Label to Alerts
 ---------------------------------------------
-When using Robusta's built-in Prometheus stack, Robusta uses the ``cluster_name`` you set during installation to identify which alerts belong to which cluster.
+When using Kube-Prometheus-Stack, Robusta uses the ``cluster_name`` you set during installation to identify which alerts belong to which cluster.
 
 If you forward external alerts to Robusta (e.g., from Grafana/Grafana Cloud), you will need to pass the ``cluster_name`` metadata manually. For example, if you use Grafana alerting, ensure that all your metrics and alerts have a ``cluster_name`` label.
 
