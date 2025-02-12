@@ -213,7 +213,7 @@ Configuration
 
     holmes:
         toolsets:
-            kubernetes/kubernetes/krew-extras:
+            kubernetes/krew-extras:
                 enabled: true
 
 .. include:: ./_toolset_configuration.inc.rst

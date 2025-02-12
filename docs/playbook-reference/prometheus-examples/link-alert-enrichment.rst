@@ -1,45 +1,12 @@
-Enrich Prometheus Alerts
-#################################
+Link Alerts to External Docs
+#################################################
 
-Robusta can add extra context to your Prometheus alerts, so you can respond to alerts faster and without digging elsewhere for information.
+When troubleshooting production incidents, quick access to relevant documentation and runbooks is crucial!
 
-In this tutorial, you will learn how to enrich alerts with two practical use cases.
+This guide demonstrates how to link Prometheus alerts with external links to your technical documentation, GitHub repositories, and internal wikis.
 
-Use Case 1: Enrich Alerts by Running a Bash Script
-*******************************************************
-
-**Implementation**:
-
-Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`. This configures Robusta to execute the ``ps aux`` command in response to the ``CPUThrottlingHigh`` alert.
-
-.. code-block:: yaml
-
-   customPlaybooks:
-   - triggers:
-     - on_prometheus_alert:
-         alert_name: CPUThrottlingHigh
-     actions:
-     - node_bash_enricher:
-         bash_command: ps aux | head -n 5
-
-**Testing**:
-
-Trigger the alert we defined by deploying a Pod that consumes a lot of CPU:
-
-.. code-block:: bash
-
-    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
-
-**Sample Alert**:
-
-.. image:: /images/custom_alert_with_bash_enrichment.png
-  :width: 600
-  :align: center
-
-Use Case 2: Enhance Alerts with Links to External Documentation
-***********************************************************************
-
-**Implementation**:
+Implementation
+-----------------
 
 In this example, we add links to the alert ``KubeContainerCPURequestAlert`` that we created in a :ref:`previous tutorial <Create Custom Prometheus Alerts>`.
 
@@ -67,7 +34,8 @@ Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Ro
     1. We're using custom emojis here that correspond to GitHub and Notion logos. Before you configure this, follow `this guide <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to add emojis to your workspace.
 
 
-**Testing**:
+Testing
+----------------
 
 To test, deploy a resource-intensive pod to intentionally trigger the defined alert:
 
@@ -83,13 +51,14 @@ We can wait for the alert to fire, or we can speed things up and simulate the al
 
 Once the alert fires, a notification will arrive with external links included.
 
-**Sample Alert**:
+Sample Alert
+-------------------
 
 .. image:: /images/custom-alert-with-reference-url.png
   :width: 600
   :align: center
 
 Further Reading
-*********************
+-------------------
 
 * View all :ref:`Prometheus enrichment actions <Prometheus Enrichers>`
