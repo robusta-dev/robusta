@@ -63,6 +63,11 @@ by the user by providing credentials or API keys to external systems.
         :link: toolsets/helm
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Internet
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/internet
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Kubernetes
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/kubernetes
