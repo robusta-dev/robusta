@@ -38,6 +38,6 @@ Capabilities
    * - helm_hooks
      - Get the hooks for a Helm release
    * - helm_chart
-     - Get the hooks for a Helm release
+     - Show the chart used to create a Helm release
    * - helm_notes
      - Show the notes provided by the Helm chart
