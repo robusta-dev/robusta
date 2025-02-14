@@ -7,8 +7,52 @@ and configuration of ArgoCD applications.
 Configuration
 -------------
 
-This toolset requires an ``ARGOCD_AUTH_TOKEN`` environment variable as described in
-the `argocd documentation <https://argo-cd.readthedocs.io/en/latest/user-guide/commands/argocd_account_generate-token/>`_.
+This toolset requires an ``ARGOCD_AUTH_TOKEN`` environment variable. Generate such auth token by following
+`these steps <https://argo-cd.readthedocs.io/en/latest/user-guide/commands/argocd_account_generate-token/>`_.
+You can consult the `available environment variables <https://argo-cd.readthedocs.io/en/latest/user-guide/environment-variables/>`_
+on argocd's official documentation for the CLI.
+
+In addition to the auth token, you will need to tell argocd how to connect to the server. This can be done two ways:
+
+1. **Using port forwarding**. This is the recommended approach if your argocd is inside your Kubernetes cluster.
+2. **Setting the env var** ``SERVER_URL``. This is the recommended approach if your argocd is reachable through a public DNS
+
+1. Port forwarding
+^^^^^^^^^^^^^^^^^^
+
+This is the recommended approach if your argocd is inside your Kubernetes cluster.
+
+HolmesGPT needs permission to establish a port-forward to ArgoCD. The configuration below includes that authorization.
+
+.. code-block:: yaml
+
+    holmes:
+        customClusterRoleRules:
+            - apiGroups: [""]
+              resources: ["pods/portforward"]
+              verbs: ["create"]
+        additionalEnvVars:
+            - name: ARGOCD_AUTH_TOKEN
+              value: <your argocd auth token>
+            - name: ARGOCD_OPTS
+              value: "--port-forward --port-forward-namespace <your_argocd_namespace> --grpc-web"
+        toolsets:
+            argocd/core:
+                enabled: true
+
+.. note::
+
+    Change the namespace ``--port-forward-namespace <your_argocd_namespace>`` to the namespace in which your argocd service
+    is deployed.
+
+    The option ``--grpc-web`` in ``ARGOCD_OPTS`` prevents some connection errors from leaking into the tool responses and
+    provides a cleaner output for HolmesGPT.
+
+
+2. Server URL
+^^^^^^^^^^^^^
+
+This is the recommended approach if your argocd is reachable through a public DNS.
 
 .. code-block:: yaml
 
@@ -16,6 +60,8 @@ the `argocd documentation <https://argo-cd.readthedocs.io/en/latest/user-guide/c
         additionalEnvVars:
             - name: ARGOCD_AUTH_TOKEN
               value: <your argocd auth token>
+            - name: ARGOCD_SERVER
+              value: argocd.example.com
         toolsets:
             argocd/core:
                 enabled: true
