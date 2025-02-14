@@ -34,14 +34,14 @@ establish a port-forward to ArgoCD. The configuration below includes that author
             - name: ARGOCD_AUTH_TOKEN
               value: <your argocd auth token>
             - name: ARGOCD_OPTS
-              value: "--port-forward --port-forward-namespace argocd --grpc-web"
+              value: "--port-forward --port-forward-namespace <my_argocd_namespace> --grpc-web"
         toolsets:
             argocd/core:
                 enabled: true
 
 .. note::
 
-    Change the namespace ``--port-forward-namespace argocd`` to the namespace in which your argocd service is deployed.
+    Change the namespace ``--port-forward-namespace <my_argocd_namespace>`` to the namespace in which your argocd service is deployed.
 
     The option ``--grpc-web`` prevents some connection errors from leaking into stderr and provides a cleaner output for
     HolmesGPT.
