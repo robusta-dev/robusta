@@ -20,8 +20,9 @@ In addition to the auth token, you will need to tell argocd how to connect to th
 1. Port forwarding
 ^^^^^^^^^^^^^^^^^^
 
-This is the recommended approach if your argocd is inside your Kubernetes cluster. Note that HolmesGPT need permission to
-establish a port-forward to ArgoCD. The configuration below includes that authorization.
+This is the recommended approach if your argocd is inside your Kubernetes cluster.
+
+HolmesGPT needs permission to establish a port-forward to ArgoCD. The configuration below includes that authorization.
 
 .. code-block:: yaml
 
@@ -44,8 +45,8 @@ establish a port-forward to ArgoCD. The configuration below includes that author
     Change the namespace ``--port-forward-namespace <your_argocd_namespace>`` to the namespace in which your argocd service
     is deployed.
 
-    The option ``--grpc-web`` in ``ARGOCD_OPTS`` prevents some connection errors from leaking into stderr and provides a
-    cleaner output for HolmesGPT.
+    The option ``--grpc-web`` in ``ARGOCD_OPTS`` prevents some connection errors from leaking into the tool responses and
+    provides a cleaner output for HolmesGPT.
 
 
 2. Server URL
