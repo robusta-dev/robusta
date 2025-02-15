@@ -12,6 +12,22 @@ Configuration
         toolsets:
             helm/core:
                 enabled: true
+        customClusterRoleRules:
+            - apiGroups: [""]
+              resources: ["secrets", "pods", "services", "configmaps", "persistentvolumeclaims"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: [""]
+              resources: ["namespaces"]
+              verbs: ["get"]
+            - apiGroups: ["apps"]
+              resources: ["deployments", "statefulsets", "daemonsets"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["batch"]
+              resources: ["jobs", "cronjobs"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["networking.k8s.io"]
+              resources: ["ingresses"]
+              verbs: ["get", "list", "watch"]
 
 .. include:: ./_toolset_configuration.inc.rst
 
@@ -38,6 +54,6 @@ Capabilities
    * - helm_hooks
      - Get the hooks for a Helm release
    * - helm_chart
-     - Get the hooks for a Helm release
+     - Show the chart used to create a Helm release
    * - helm_notes
      - Show the notes provided by the Helm chart
