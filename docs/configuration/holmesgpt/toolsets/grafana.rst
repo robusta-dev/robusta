@@ -4,7 +4,7 @@ Grafana
 Loki
 ----
 
-By enabling this toolset, HolmesGPT will be able to consult logs from `Loki <https://grafana.com/oss/loki/>`_
+By enabling this toolset, HolmesGPT will be able to consult node and pod logs from `Loki <https://grafana.com/oss/loki/>`_
 by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
 
 Configuration
@@ -22,21 +22,22 @@ from your Grafana instance.
                 config:
                     api_key: <your grafana API key>
                     url: https://grafana-url
+
+You can optionally tweak the search terms used by the toolset. This is only needed if your Loki logs settings for pod,
+namespace and node differ from the defaults listed below. To do so, add these search keys to the configuration:
+
+.. code-block:: yaml
+
+    holmes:
+        toolsets:
+            grafana/loki:
+                enabled: true
+                config:
+                    api_key: <your grafana API key>
+                    url: https://grafana-url
                     pod_name_search_key: "pod"
                     namespace_search_key: "namespace"
                     node_name_search_key: "node"
-
-
-.. details:: Tweaking search terms
-
-    You can optionally tweak the search terms used by the toolset. This is only needed if your Loki logs
-    settings for pod, namespace and node differ from the above defaults.
-
-    To do so, set any of the following configuration setting as it is described above:
-
-    * ``pod_name_search_key``: Loki search key for pods
-    * ``namespace_search_key``: Loki search key for namespaces
-    * ``node_name_search_key``: Loki search key for nodes
 
 .. include:: ./_toolset_configuration.inc.rst
 
