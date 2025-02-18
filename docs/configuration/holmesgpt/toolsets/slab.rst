@@ -2,7 +2,7 @@ Slab
 ====
 
 By enabling this toolset, HolmesGPT will be able to consult runbooks from Slab pages.
-Retrieve your Slab `API token <https://help.slab.com/en/articles/6545629-developer-tools-api-webhooks>`_ prior to configuring this toolset.
+Retrieve your Slab `API token <https://help.slab.com/en/articles/6545629-developer-tools-api-webhooks>`_ prior to configuring this toolset. Do note that Slab API is only available for Slab premium users. See `here <https://help.slab.com/en/articles/6545629-developer-tools-api-webhooks>`_.
 
 Configuration
 -------------
