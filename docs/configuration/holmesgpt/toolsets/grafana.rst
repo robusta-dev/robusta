@@ -7,6 +7,8 @@ Loki
 By enabling this toolset, HolmesGPT will be able to consult node and pod logs from `Loki <https://grafana.com/oss/loki/>`_
 by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
 
+In the future this toolset will be able to run any query against Loki logs.
+
 Configuration
 ^^^^^^^^^^^^^
 
