@@ -12,4 +12,4 @@ Configure Robusta to not send notifications for issues that are resolved. This h
         api_key: secret-key
         scope:
         exclude:
-            - title: ".*[RESOLVED].*"
+            - title: ".*RESOLVED.*"
