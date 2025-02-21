@@ -21,6 +21,25 @@ It is also possible to set the ``PROMETHEUS_URL`` environment variable instead o
 
 .. include:: ./_toolset_configuration.inc.rst
 
+Prior to generating a PromQL query, HolmesQPT tends to list the available metrics. This is done to ensure the metrics used
+in PromQL are actually available. The result of the request to fetch the labels available for each metric is cached. The
+request and the caching behaviour (TTL) can be tweaked:
+
+.. code-block:: yaml
+
+    holmes:
+        toolsets:
+            opensearch/status:
+                enabled: true
+            config:
+                prometheus_url: ...
+                metrics_labels_time_window_hrs: 48 # default value
+                metrics_labels_cache_duration_hrs: 12 # default value
+
+
+- **metrics_labels_time_window_hrs** Represents the time window, in hours, over which labels are fetched. This avoids fetching obsolete labels. Set it to ``null`` to let HolmesGPT fetch labels regardless of when they were generated.
+- **metrics_labels_cache_duration_hrs** How long are labels cached, in hours. Set it to ``null`` to disable caching.
+
 Capabilities
 ------------
 .. include:: ./_toolset_capabilities.inc.rst
