@@ -23,7 +23,7 @@ from your Grafana instance.
                 enabled: true
                 config:
                     api_key: <your grafana API key>
-                    url: https://grafana-url
+                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
 
 You can optionally tweak the search terms used by the toolset. This is only needed if your Loki logs settings for pod,
 namespace and node differ from the defaults listed below. To do so, add these search keys to the configuration:
@@ -36,7 +36,7 @@ namespace and node differ from the defaults listed below. To do so, add these se
                 enabled: true
                 config:
                     api_key: <your grafana API key>
-                    url: https://grafana-url
+                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
                     pod_name_search_key: "pod"
                     namespace_search_key: "namespace"
                     node_name_search_key: "node"
@@ -86,7 +86,7 @@ your Grafana instance.
                 enabled: true
                 config:
                     api_key: <your grafana API key>
-                    url: https://grafana-url
+                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
 
 .. include:: ./_toolset_configuration.inc.rst
 
@@ -106,3 +106,13 @@ Capabilities
      - Lists Tempo traces ids that exceed a specified minimum duration in a given time range
    * - fetch_tempo_trace_by_id
      - Retrieves detailed information about a Tempo trace using its trace ID. Use this to investigate a trace.
+
+
+Getting Grafana URL
+-----------------------
+
+You can find the Grafana URL required for Loki and Tempo in your Grafana cloud account settings. 
+
+.. image:: /images/grafana-url-for-holmes.png
+  :width: 600
+  :align: center
