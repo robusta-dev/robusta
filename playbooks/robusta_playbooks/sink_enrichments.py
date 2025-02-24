@@ -77,8 +77,9 @@ class OpsGenieLinkParams(ActionParams):
 @action
 def opsgenie_slack_enricher(alert: PrometheusKubernetesAlert, params: OpsGenieLinkParams):
     """
-    Adds a button in slack to ack an opsGenie alert
-    Adds a Link to slack to the alert in opsgenie
+    Adds buttons to Robusta alerts in Slack for OpsGenie users:
+    1. A button to  acknowledge OpsGenie alerts from Robusta alerts
+    2. A button to view Robusta alerts in OpsGenie (finds the relevant alert in OpsGenie and takes you there)
     """
     normalized_url_base = normalize_url_base(params.url_base)
     alert.add_link(
