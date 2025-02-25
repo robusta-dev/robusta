@@ -1,3 +1,5 @@
+import logging
+
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.base import Finding, FindingStatus
 from robusta.core.sinks.sink_base import NotificationGroup, NotificationSummary, SinkBase
@@ -15,6 +17,13 @@ class SlackSink(SinkBase):
         self.slack_sender = slack_module.SlackSender(
             self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel
         )
+        self.registry.subscribe("replace_callback_with_string", self)
+
+    def handle_event(self, event_name: str, **kwargs):
+        if event_name == "replace_callback_with_string":
+            self.__replace_callback_with_string(**kwargs)
+        else:
+            logging.warning("SlackSink subscriber called with unknown event")
 
     def write_finding(self, finding: Finding, platform_enabled: bool) -> None:
         if self.grouping_enabled:
@@ -75,6 +84,48 @@ class SlackSink(SinkBase):
                     finding, self.params, platform_enabled, thread_ts=slack_thread_ts
                 )
 
-
     def get_timeline_uri(self, account_id: str, cluster_name: str) -> str:
         return f"{ROBUSTA_UI_DOMAIN}/graphs?account_id={account_id}&cluster={cluster_name}"
+
+    def __replace_callback_with_string(self, slack_message, block_id, message_string):
+        """
+        Replace a specific block in a Slack message with a given string while preserving other blocks.
+
+        Args:
+            slack_message (dict): The payload received from Slack.
+            block_id (str): The ID of the block to replace.
+            message_string (str): The text to replace the block content with.
+        """
+        try:
+            # Extract required fields
+            channel_id = slack_message.get("channel", {}).get("id")
+            message_ts = slack_message.get("container", {}).get("message_ts")
+            blocks = slack_message.get("message", {}).get("blocks", [])
+
+            # Validate required fields
+            if not channel_id or not message_ts or not blocks:
+                raise ValueError("Missing required fields: channel_id, message_ts, or blocks.")
+
+            # Update the specific block
+            for i, block in enumerate(blocks):
+                if block.get("block_id") == block_id:
+                    blocks[i] = {
+                        "type": "section",
+                        "block_id": block_id,
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": message_string
+                        }
+                    }
+                    break
+
+            # Call the shorter update function
+            return self.slack_sender.update_slack_message(
+                channel=channel_id,
+                ts=message_ts,
+                blocks=blocks,
+                text=message_string
+            )
+
+        except Exception as e:
+            logging.exception(f"Error updating Slack message: {e}")

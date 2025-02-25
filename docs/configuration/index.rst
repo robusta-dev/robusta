@@ -12,7 +12,7 @@ Robusta can receive alerts from many sources and send them to many destinations.
 
     .. grid-item-card:: :octicon:`book;1em;` AI Analysis
         :class-card: sd-bg-light sd-bg-text-light
-        :link: ai-analysis
+        :link: holmesgpt/index
         :link-type: doc
 
         Analyze alerts with `Holmes GPT <https://stackoverflow.com/>`_.
@@ -26,7 +26,7 @@ Robusta can receive alerts from many sources and send them to many destinations.
 
     .. grid-item-card:: :octicon:`book;1em;` Sinks (Destinations)
         :class-card: sd-bg-light sd-bg-text-light
-        :link: configuring-sinks
+        :link: sinks/index
         :link-type: doc
 
         Send notifications from Robusta to 15+ integrations like Slack, MS Teams, and Email.

@@ -134,7 +134,7 @@ def event_resource_events(event: EventChangeEvent):
         return
     obj = event.obj.regarding
     events_table = get_resource_events_table(
-        "*Related Events*",
+        "Related Events",
         obj.kind,
         obj.name,
         obj.namespace,
@@ -245,7 +245,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
             [
                 EventsBlock(
                     events=events_row,
-                    table_name=f"*{kind} events:*",
+                    table_name=f"{kind} Events",
                     column_renderers={"time": RendererType.DATETIME},
                     headers=["reason", "type", "time", "kind", "name", "message"],
                     rows=rows,
@@ -269,7 +269,7 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
         return
 
     events_table_block = get_resource_events_table(
-        "*Pod events:*",
+        "Pod Events",
         pod.kind,
         pod.metadata.name,
         pod.metadata.namespace,
@@ -292,7 +292,7 @@ def enrich_pod_with_node_events(event: PodEvent, params: EventEnricherParams):
     """
     pod = event.get_pod()
     events_table_block = get_resource_events_table(
-        "*Node events:*",
+        "Node Events",
         kind="Node",
         name=pod.spec.nodeName,
         included_types=params.included_types,
@@ -325,7 +325,7 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
             selected_pods = pods if len(pods) <= params.max_pods else pods[: params.max_pods]
             for pod in selected_pods:
                 events_table_block = get_resource_events_table(
-                    f"*Pod events for {pod.metadata.name}:*",
+                    f"Pod events for {pod.metadata.name}",
                     "Pod",
                     pod.metadata.name,
                     pod.metadata.namespace,
@@ -340,13 +340,8 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
                         title="Deployment Events",
                     )
     else:
-        available_replicas = dep.status.availableReplicas if dep.status.availableReplicas else 0
-        event.add_enrichment(
-            [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({available_replicas})*")]
-        )
-
         events_table_block = get_resource_events_table(
-            "*Deployment events:*",
+            "Deployment Events",
             dep.kind,
             dep.metadata.name,
             dep.metadata.namespace,

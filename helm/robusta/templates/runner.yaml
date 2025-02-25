@@ -4,6 +4,7 @@ metadata:
   name: {{ include "robusta.fullname" . }}-runner
   namespace: {{ .Release.Namespace }}
   labels:
+    robusta: runner
     app: {{ include "robusta.fullname" . }}-runner
 spec:
   replicas: 1

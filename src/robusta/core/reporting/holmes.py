@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -19,6 +19,7 @@ class HolmesRequest(BaseModel):
     context: Dict[str, Any]
     include_tool_calls: bool = False
     include_tool_call_results: bool = False
+    sections: Optional[Dict[str, str]] = None
 
 
 class HolmesConversationRequest(BaseModel):
@@ -50,6 +51,7 @@ class ToolCallResult(BaseModel):
 class HolmesResult(BaseModel):
     tool_calls: Optional[List[ToolCallResult]] = None
     analysis: Optional[str] = None
+    sections: Optional[Dict[str, Union[str, None]]] = None
     instructions: List[str] = []
 
 
@@ -70,3 +72,8 @@ class HolmesChatResult(BaseModel):
 
 class HolmesChatResultsBlock(BaseBlock):
     holmes_result: Optional[HolmesChatResult]
+
+
+class HolmesWorkloadHealthRequest(HolmesChatRequest):
+    workload_health_result: HolmesInvestigationResult
+    resource: ResourceInfo

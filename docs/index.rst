@@ -17,6 +17,7 @@
    how-it-works/oss-vs-saas
    how-it-works/coverage
    how-it-works/usage-faq
+   how-it-works/alert-builtin-enrichment
 
 .. toctree::
    :maxdepth: 4
@@ -31,7 +32,7 @@
    :hidden:
 
    configuration/index
-   🪄 AI Analysis - HolmesGPT <configuration/ai-analysis>
+   🪄 AI Analysis - HolmesGPT <configuration/holmesgpt/index>
    🔔 Sinks <configuration/sinks/index>
    🔥 Prometheus/AlertManager <configuration/alertmanager-integration/index>
    Cost Savings - KRR <configuration/resource-recommender>
@@ -46,10 +47,7 @@
    notification-routing/configuring-sinks
    Routing (Scopes) <notification-routing/routing-with-scopes>
    Grouping (Slack Threads) <notification-routing/notification-grouping>
-   notification-routing/routing-by-namespace
-   notification-routing/routing-by-type
    notification-routing/routing-by-time
-   notification-routing/routing-exclusion
    notification-routing/routing-silencing
    notification-routing/notification-routing-examples
 
@@ -59,13 +57,6 @@
    :hidden:
 
    playbook-reference/index
-
-.. toctree::
-   :maxdepth: 4
-   :caption: 🎓 Tutorials
-   :hidden:
-
-   tutorials/index
 
 .. toctree::
    :maxdepth: 4
@@ -90,8 +81,8 @@ Better Prometheus Alerts (and more) for Kubernetes
         * :doc:`Smart Grouping <notification-routing/notification-grouping>` - reduce notification spam with Slack threads 🧵
         * :ref:`AI Investigation <AI Analysis>` - Kickstart your alert investigations with AI (optional)
         * :ref:`Alert Enrichment <Automatically Investigate a Prometheus Alert>` - see pods log and other data alongside your alerts
-        * :ref:`Self-Healing <Remediate Prometheus Alerts>` - define auto-remediation rules for faster fixes
-        * :ref:`Advanced Routing <Notification Basics>` by team, namespace, k8s metadata and more
+        * :ref:`Self-Healing <Automatic Remediation>` - define auto-remediation rules for faster fixes
+        * :ref:`Advanced Routing <Defining Sinks>` by team, namespace, k8s metadata and more
         * :ref:`K8s Problem-Detection <Triggers Reference>` - alert on OOMKills or failing Jobs without PromQL
         * :ref:`Change Tracking <Track Kubernetes Changes>` - correlate alerts and Kubernetes rollouts
         * :ref:`Auto-Resolve <Jira>` - send alerts, resolve them when updated (e.g. in Jira)

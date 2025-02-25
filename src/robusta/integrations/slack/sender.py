@@ -10,13 +10,14 @@ import certifi
 import humanize
 from dateutil import tz
 from slack_sdk import WebClient
+from slack_sdk.http_retry import all_builtin_retry_handlers
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
-    SLACK_REQUEST_TIMEOUT,
     HOLMES_ENABLED,
+    SLACK_REQUEST_TIMEOUT,
     SLACK_TABLE_COLUMNS_LIMIT,
 )
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
@@ -68,7 +69,7 @@ class SlackSender:
             except Exception as e:
                 logging.exception(f"Failed to use custom certificate. {e}")
 
-        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT)
+        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT, retry_handlers=all_builtin_retry_handlers())
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
@@ -410,7 +411,7 @@ class SlackSender:
 
         for link in finding.links:
             link_url = link.url
-            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and prefer_redirect_to_platform:
+            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and prefer_redirect_to_platform and platform_enabled:
                 link_url = convert_prom_graph_url_to_robusta_metrics_explorer(
                     link.url, self.cluster_name, self.account_id
                 )
@@ -695,3 +696,33 @@ class SlackSender:
             return resp["ts"]
         except Exception as e:
             logging.exception(f"error sending message to slack\n{e}\nchannel={channel}\n")
+
+    def update_slack_message(self, channel: str, ts: str, blocks: list, text: str = ""):
+        """
+        Update a Slack message with new blocks and optional text.
+
+        Args:
+            channel (str): Slack channel ID.
+            ts (str): Timestamp of the message to update.
+            blocks (list): List of Slack Block Kit blocks for the updated message.
+            text (str, optional): Plain text summary for accessibility. Defaults to "".
+        """
+        try:
+            # Ensure channel ID exists in the mapping
+            if channel not in self.channel_name_to_id.values():
+                logging.error(f"Channel ID for {channel} could not be determined. Update aborted.")
+                return
+
+            # Call Slack's chat_update method
+            resp = self.slack_client.chat_update(
+                channel=channel,
+                ts=ts,
+                text=text,
+                blocks=blocks
+            )
+            logging.debug(f"Message updated successfully: {resp['ts']}")
+            return resp["ts"]
+
+        except Exception as e:
+            logging.exception(f"Error updating Slack message: {e}")
+            return None

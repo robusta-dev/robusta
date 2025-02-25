@@ -87,11 +87,12 @@ On some clusters this can take a while, so don't panic if it appears stuck:
                 --set kube-prometheus-stack.prometheus.prometheusSpec.retentionSize=9GB \
                 --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
                 --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
-
+                --set holmes.resources.requests.memory=512Mi
+                
 Verifying Installation
 ------------------------------
 
-Confirm that two Robusta pods are running with no errors in the logs:
+Confirm that Robusta pods are running with no errors in the logs:
 
 .. code-block:: bash
     :name: cb-get-pods-robusta-logs

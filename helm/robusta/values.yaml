@@ -90,6 +90,7 @@ lightActions:
 - holmes_conversation
 - holmes_issue_chat
 - holmes_chat
+- holmes_workload_chat
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -199,7 +200,7 @@ builtinPlaybooks:
       attach_logs: true
       container_memory_graph: true
       node_memory_graph: true
-      dmesg_log: true
+      dmesg_log: false
   stop: true
 
 # playbooks for prometheus alerts enrichment
@@ -303,7 +304,6 @@ builtinPlaybooks:
   - node_running_pods_enricher: {}
   - status_enricher:
       show_details: true
-  - node_dmesg_enricher: {}
 
 - name: "KubeNodeUnreachable"
   triggers:
@@ -519,11 +519,11 @@ platformPlaybooks:
 
 - name: "IngressChangeTracking"
   triggers:
-    - on_ingress_all_changes: {}
+    - on_kubernetes_resource_operation:
+        resources: ["ingress"]
   actions:
     - resource_babysitter: {}
     - customise_finding:
-        title: Ingress Changes
         aggregation_key: IngressChange
   sinks:
     - "robusta_ui_sink"

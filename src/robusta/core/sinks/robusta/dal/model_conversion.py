@@ -95,6 +95,7 @@ class ModelConversion:
             data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
             structured_data.append(data_obj)
 
+
     @staticmethod
     def add_ai_chat_data(structured_data: List[Dict], block: HolmesChatResultsBlock):
         structured_data.append(
@@ -117,6 +118,8 @@ class ModelConversion:
 
     @staticmethod
     def add_ai_analysis_data(structured_data: List[Dict], block: HolmesResultsBlock):
+        if not block.holmes_result:
+            return
         structured_data.append(
             {
                 "type": "markdown",
@@ -125,6 +128,19 @@ class ModelConversion:
             }
         )
         ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls, structured_data)
+        if block.holmes_result.sections and len(block.holmes_result.sections) > 0:
+            transformed_sections = {}
+            for section_title, section_content in block.holmes_result.sections.items():
+                if section_content:
+                    transformed_sections[section_title] = Transformer.to_github_markdown(section_content)
+
+            structured_data.append(
+                {
+                    "type": "markdown",
+                    "metadata": {"type": "ai_investigation_sections", "createdAt": datetime_to_db_str(datetime.now())},
+                    "data": transformed_sections,
+                }
+            )
 
         structured_data.append({"type": "list", "data": block.holmes_result.instructions})
 

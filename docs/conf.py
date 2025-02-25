@@ -22,6 +22,7 @@ import sys
 from os import environ
 from pathlib import Path
 
+from docutils import nodes
 import sphinx_immaterial.google_fonts as google_fonts
 
 if "ROBUSTA_GOOGLE_FONTS_API_KEY" in environ:
@@ -114,7 +115,14 @@ redirects = {
     "tutorials/playbook-track-secrets.html": "/master/playbook-reference/kubernetes-examples//playbook-track-secrets.html",
     "tutorials/alert-remediation.html": "/master/playbook-reference/prometheus-examples/alert-remediation.html",
     "tutorials/alert-custom-enrichment.html": "/master/playbook-reference/prometheus-examples/alert-custom-enrichment.html",
-    "catalog/sinks/slack.html": "/master/configuration/sinks/slack.html"
+    "catalog/sinks/slack.html": "/master/configuration/sinks/slack.html",
+    "user-guide/sinks-configuration.html": "/master/notification-routing/routing-with-scopes.html",
+    "tutorials/alert-builtin-enrichment.html": "/master/how-it-works/alert-builtin-enrichment.html",
+    "tutorials/robusta-runner-metrics.html": "/master/setup-robusta/robusta-runner-metrics.html",
+    "tutorials/alert-custom-prometheus.html": "/master/configuration/alertmanager-integration/alert-custom-prometheus.html",
+    "catalog/triggers/prometheus.html": "/master/configuration/alertmanager-integration/index.html",
+    "playbook-reference/prometheus-examples/alert-remediation.html": "/master/playbook-reference/automatic-remediation-examples/index.html",
+    "configuration/ai-analysis.html": "/master/configuration/holmesgpt/index.html",
 
 
 }
@@ -271,3 +279,8 @@ html_extra_path = ["robots.txt"]
 
 def setup(app):
     app.add_css_file("custom.css")
+    app.add_role('checkmark', checkmark_role)
+
+def checkmark_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    node = nodes.inline(text='✓', classes=['success-icon'])
+    return [node], []

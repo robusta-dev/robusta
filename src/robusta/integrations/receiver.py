@@ -5,15 +5,14 @@ import json
 import logging
 import os
 import time
-from threading import Thread
-from typing import Dict, Optional, List, Union
-from uuid import UUID
-
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
+from threading import Thread
+from typing import Any, Dict, List, Optional, Union
+from uuid import UUID
 
-import websocket
 import sentry_sdk
+import websocket
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
@@ -22,9 +21,9 @@ from pydantic import BaseModel, ValidationError, validator
 from robusta.core.model.env_vars import (
     INCOMING_REQUEST_TIME_WINDOW_SECONDS,
     RUNNER_VERSION,
+    SENTRY_ENABLED,
     WEBSOCKET_PING_INTERVAL,
     WEBSOCKET_PING_TIMEOUT,
-    SENTRY_ENABLED,
 )
 from robusta.core.playbooks.playbook_utils import to_safe_str
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -50,8 +49,14 @@ class ValidationResponse(BaseModel):
     error_msg: Optional[str] = None
 
 
+class SlackExternalActionRequest(ExternalActionRequest):
+    # Optional Slack Params
+    slack_username: Optional[str] = None
+    slack_message: Optional[Any] = None
+
+
 class SlackActionRequest(BaseModel):
-    value: ExternalActionRequest
+    value: SlackExternalActionRequest
 
     @validator("value", pre=True, always=True)
     def validate_value(cls, v: str) -> dict:
@@ -59,8 +64,15 @@ class SlackActionRequest(BaseModel):
         return json.loads(v)
 
 
+class SlackUserID(BaseModel):
+    username: str
+    name: str
+    team_id: str
+
+
 class SlackActionsMessage(BaseModel):
     actions: List[SlackActionRequest]
+    user: Optional[SlackUserID]
 
 
 class ActionRequestReceiver:
@@ -150,6 +162,13 @@ class ActionRequestReceiver:
                 )
             return
 
+        # add global slack values to callback
+        if hasattr(action_request, 'slack_username'):
+            action_request.body.action_params["slack_username"] = action_request.slack_username
+
+        if hasattr(action_request, 'slack_message'):
+            action_request.body.action_params["slack_message"] = action_request.slack_message
+
         response = self.event_handler.run_external_action(
             action_request.body.action_name,
             action_request.body.action_params,
@@ -208,9 +227,18 @@ class ActionRequestReceiver:
         message: Union[str, bytes, bytearray]
     ) -> Union[SlackActionsMessage, ExternalActionRequest]:
         try:
-            return SlackActionsMessage.parse_raw(message)  # this is slack callback format
+            return ActionRequestReceiver._parse_slack_message(message)  # this is slack callback format
         except ValidationError:
             return ExternalActionRequest.parse_raw(message)
+
+    @staticmethod
+    def _parse_slack_message(message: Union[str, bytes, bytearray]) -> SlackActionsMessage:
+        slack_actions_message = SlackActionsMessage.parse_raw(message)  # this is slack callback format
+        json_slack_message = json.loads(message)
+        for action in slack_actions_message.actions:
+            action.value.slack_username = slack_actions_message.user.username
+            action.value.slack_message = json_slack_message
+        return slack_actions_message
 
     def on_message(self, ws: websocket.WebSocketApp, message: str) -> None:
         """Callback for incoming websocket message from relay.

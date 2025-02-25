@@ -5,7 +5,7 @@
   <h2 align="center">Better grouping, enrichment, and remediation of your existing alerts</h2>
   <p align="center">
     <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
-    <a href="#-installing-robusta"><strong>Installation</strong></a> | 
+    <a href="#-installing-robusta"><strong>Installation</strong></a> |
     <a href="https://docs.robusta.dev/master/configuration/index.html"><strong>Integrations ↗</strong></a> |
     <a href="https://docs.robusta.dev/master/index.html"><strong>Docs ↗</strong></a> |
     <a href="https://bit.ly/robusta-slack"><strong>Slack Community ↗</strong></a>
@@ -16,10 +16,10 @@
 
 Compatible with kube-prometheus-stack, Prometheus Operator, and more.
 
-Robusta integrates with Prometheus by webhook and adds features like: 
+Robusta integrates with Prometheus by webhook and adds features like:
 
 * [**Smart Grouping**](https://docs.robusta.dev/master/configuration/notification-grouping.html) - reduce notification spam with Slack threads 🧵
-* [**AI Investigation**](https://docs.robusta.dev/master/configuration/ai-analysis.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
+* [**AI Investigation**](https://docs.robusta.dev/master/configuration/holmesgpt/index.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
 * [**Alert Enrichment**](https://docs.robusta.dev/master/how-it-works/index.html#automatically-investigate-a-prometheus-alert) - see pod logs and other data alongside your alerts
 * [**Self-Healing**](https://docs.robusta.dev/master/tutorials/alert-remediation.html#remediate-prometheus-alerts) - define auto-remediation rules for faster fixes
 * [**Advanced Routing**](https://docs.robusta.dev/master/notification-routing/configuring-sinks.html) based on team, namespace, and more
@@ -52,9 +52,24 @@ Robusta is installed with Helm. For convenience, we provide a CLI wizard to gene
 
 You can install Robusta alongside your existing Prometheus, or as an all-in-one bundle with Robusta and a preconfigured `kube-prometheus-stack`.
 
+To get *even more* out of Robusta, we recommend creating [a free Robusta UI account](#-free-robusta-ui). Learn more below.
+
+[Create a free Robusta UI account »](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=installing_robusta_section)
+
 [Installation instructions »](https://docs.robusta.dev/master/setup-robusta/installation/index.html)
 
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
+
+## 🖥 Free Robusta UI
+Take your Kubernetes monitoring to the next level with the [Robusta SaaS platform](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=free_robusta_ui_section). Creating an account is free, and includes:
+
+- **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
+- **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
+- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta’s automatic change tracking for Kubernetes
+
+  <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0">
+      <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
+  </a>
 
 ## 📝 Documentation
 Interested? Learn more about Robusta.

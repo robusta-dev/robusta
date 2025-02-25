@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: {{ include "robusta.fullname" . }}-forwarder
   namespace: {{ .Release.Namespace }}
+  labels:
+    robusta: forwarder
 spec:
   selector:
     matchLabels:
@@ -105,8 +107,8 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 2112
----
 {{ if and (.Values.enableServiceMonitors) (or (.Values.enablePrometheusStack) (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") ) }}
+---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -141,4 +143,3 @@ spec:
   targetLabels:
     - target
 {{ end }}
----

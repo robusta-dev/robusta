@@ -97,7 +97,7 @@ Problems when running ``helm install`` command or installing via GitOps.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Robusta runner, Prometheus or Holmes failures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. details:: robusta-runner pod is in Pending state due to memory issues
 
@@ -257,8 +257,8 @@ CRD issues
       This is often a CRD issue which can be fixed by enabling server-side apply option as shown below. Check out `this blog <https://blog.ediri.io/kube-prometheus-stack-and-argocd-25-server-side-apply-to-the-rescue>`_ to learn more. 
 
       .. image:: /images/Argocd_crd_issue_fix.png 
-      :width: 400
-      :align: center
+        :width: 400
+        :align: center
 
 .. details:: one or more objects failed to apply... CustomResourceDefinition.apiextensions.k8s.io "prometheusagents.monitoring.coreos.com" is invalid
 

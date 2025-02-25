@@ -1,13 +1,24 @@
 Alert History Import and Export API
-===================================
+==============================================
+
+The Robusta SaaS platform exposes several HTTP APIs:
+
+* :ref:`API to export alerts <alert-export-api>`
+* :ref:`API to fetch aggregate alert statistics <alert-reporting-api>`
+* :ref:`API to send alerts <send-alerts-api>`
+* :ref:`API to send configuration changes <send-configuration-changes-api>`
+
+There is an quick-start `Prometheus report-generator <https://github.com/robusta-dev/prometheus-report-generator>`_  on GitHub that demonstrates how to use the export APIs.
+
+.. _alert-export-api:
 
 GET https://api.robusta.dev/api/query/alerts
---------------------------------------
+------------------------------------------------------
 
 Use this endpoint to export alert history data. You can filter the results based on specific criteria using query parameters such as ``alert_name``, ``account_id``, and time range.
 
 Query Parameters
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 20 10 70 10
@@ -35,22 +46,22 @@ Query Parameters
      - No
 
 Example Request
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following ``curl`` command demonstrates how to export alert history data for the ``CrashLoopBackoff`` alert:
 
 .. code-block:: bash
 
-    curl --location 'https://api.robusta.dev/api/alerts?alert_name=CrashLoopBackoff&account_id=ACCOUNT_ID&start_ts=2024-09-02T04%3A02%3A05.032Z&end_ts=2024-09-17T05%3A02%3A05.032Z' \
-    --header 'Authorization: Bearer TOKEN_HERE'
+    curl --location 'https://api.robusta.dev/api/query/alerts?alert_name=CrashLoopBackoff&account_id=ACCOUNT_ID&start_ts=2024-09-02T04%3A02%3A05.032Z&end_ts=2024-09-17T05%3A02%3A05.032Z' \
+    --header 'Authorization: Bearer API-KEY'
 
 In the command, make sure to replace the following placeholders:
 
 - ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
-- ``TOKEN_HERE``: Your API token for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
+- ``API-KEY``: Your API Key for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
 
 Request Headers
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 30 70
@@ -62,12 +73,12 @@ Request Headers
      - Bearer token for authentication (e.g., ``Bearer TOKEN_HERE``). The token must have "Read Alerts" permission.
 
 Response Format
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The API will return a list of alerts in JSON format. Each alert object contains detailed information about the alert, including the name, priority, source, and related resource information.
 
 Example Response
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: json
 
@@ -105,7 +116,7 @@ Example Response
     ]
 
 Response Fields
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 25 10 70
@@ -148,15 +159,16 @@ Response Fields
      - string
      - The node where the resource is located.
 
+.. _alert-reporting-api:
 
 GET `https://api.robusta.dev/api/query/report`
---------------------------------------
+------------------------------------------------------------
 
 Use this endpoint to retrieve aggregated alert data, including the count of each type of alert during a specified time range. Filters can be applied using query parameters such as `account_id` and the time range.
 
 
 Query Parameters
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 20 10 70 10
@@ -181,25 +193,25 @@ Query Parameters
 
 
 Example Request
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The following `curl` command demonstrates how to query aggregated alert data for a specified time range:
 
 .. code-block:: bash
 
     curl --location 'https://api.robusta.dev/api/query/report?account_id=XXXXXX-XXXX_XXXX_XXXXX7&start_ts=2024-10-27T04:02:05.032Z&end_ts=2024-11-27T05:02:05.032Z' \
-    --header 'Authorization: Bearer TOKEN_HERE'
+    --header 'Authorization: Bearer API-KEY'
 
 
 In the command, make sure to replace the following placeholders:
 
-- **`account_id`**: Your account ID, which can be found in your `generated_values.yaml` file.
-- **`TOKEN_HERE`**: Your API token for authentication. Generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
+- `account_id`: Your account ID, which can be found in your `generated_values.yaml` file.
+- `API-KEY`: Your API Key for authentication. Generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
 
 
 
 Request Headers
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 30 70
@@ -211,7 +223,7 @@ Request Headers
      - Bearer token for authentication (e.g., ``Bearer TOKEN_HERE``). The token must have "Read Alerts" permission.
 
 Response Format
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 The API will return a JSON array of aggregated alerts, with each object containing:
 
@@ -219,8 +231,9 @@ The API will return a JSON array of aggregated alerts, with each object containi
 - **`alert_count`**: The total count of occurrences of this alert type within the specified time range.
 
 Example Response
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: json
+
     [
         {"aggregation_key": "KubeJobFailed", "alert_count": 17413},
         {"aggregation_key": "KubePodNotReady", "alert_count": 11893},
@@ -248,7 +261,7 @@ Example Response
 
 
 Response Fields
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 .. list-table::
    :widths: 25 10 70
    :header-rows: 1
@@ -269,13 +282,14 @@ Notes
 - Ensure that the `start_ts` and `end_ts` parameters are in ISO 8601 format and are correctly set to cover the desired time range.
 - Use the correct `Authorization` token with sufficient permissions to access the alert data.
 
+.. _send-alerts-api:
 
 POST https://api.robusta.dev/api/alerts
---------------------------------------
+----------------------------------------------------
 Use this endpoint to send alert data to Robusta. You can send up to 1000 alerts in a single request.
 
 Request Body Schema
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The request body must include the following fields:
 
@@ -383,7 +397,7 @@ Here is an example of a ``POST`` request to send a list of alerts:
 .. code-block:: bash
 
     curl --location --request POST 'https://api.robusta.dev/api/alerts' \
-    --header 'Authorization: Bearer TOKEN_HERE' \
+    --header 'Authorization: Bearer API-KEY' \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "account_id": "ACCOUNT_ID",
@@ -412,10 +426,10 @@ Here is an example of a ``POST`` request to send a list of alerts:
 In this request, replace the following placeholders:
 
 - ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
-- ``TOKEN_HERE``: Your API token for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
+- ``API-KEY``: Your API Key for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
 
 Request Headers
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 30 70
@@ -429,7 +443,7 @@ Request Headers
      - Must be set to ``application/json``.
 
 Response Format
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 *Success Response*
 
@@ -456,9 +470,10 @@ If there is an error in processing the request, the API will return the followin
 
 - **Status Code**: Varies based on the error (e.g., `400 Bad Request`, `500 Internal Server Error`).
 
+.. _send-configuration-changes-api:
 
 POST https://api.robusta.dev/api/config-changes
------------------------------------------------
+--------------------------------------------------------------------
 
 Use this endpoint to send configuration changes to Robusta. You can send up to 1000 configuration changes in a single request.
 
@@ -556,14 +571,14 @@ Each configuration change in the ``config_changes`` list must follow the specifi
      - No
 
 Example Request
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 Here is an example of a ``POST`` request to send a list of configuration changes:
 
 .. code-block:: bash
 
     curl --location --request POST 'https://api.robusta.dev/api/config-changes' \
-    --header 'Authorization: Bearer TOKEN_HERE' \
+    --header 'Authorization: Bearer API-KEY' \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "account_id": "ACCOUNT_ID",
@@ -591,10 +606,10 @@ Here is an example of a ``POST`` request to send a list of configuration changes
 In this request, replace the following placeholders:
 
 - ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
-- ``TOKEN_HERE``: Your API token for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
+- ``API-KEY``: Your API Key for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
 
 Request Headers
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 30 70
@@ -608,7 +623,7 @@ Request Headers
      - Must be set to ``application/json``.
 
 Response Format
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 *Success Response*
 
