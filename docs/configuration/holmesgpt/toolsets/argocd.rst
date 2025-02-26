@@ -39,7 +39,7 @@ HolmesGPT needs permission to establish a port-forward to ArgoCD. The configurat
         toolsets:
             argocd/core:
                 enabled: true
-
+                
 .. note::
 
     Change the namespace ``--port-forward-namespace <your_argocd_namespace>`` to the namespace in which your argocd service
@@ -47,6 +47,8 @@ HolmesGPT needs permission to establish a port-forward to ArgoCD. The configurat
 
     The option ``--grpc-web`` in ``ARGOCD_OPTS`` prevents some connection errors from leaking into the tool responses and
     provides a cleaner output for HolmesGPT.
+
+.. include:: ./_toolset_configuration.inc.rst
 
 
 2. Server URL
