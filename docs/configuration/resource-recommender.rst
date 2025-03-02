@@ -1,18 +1,61 @@
 Cost Savings (KRR)
 ************************************************************
 
-Robustas `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool for optimizing resource allocation in Kubernetes clusters.
+Robusta's `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool for optimizing resource allocation in Kubernetes clusters.
 It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory. This reduces costs and improves performance.
 
 By optionally integrating KRR with Robusta you can:
 
-1. Get weekly KRR scan reports in Slack via Robusta OSS (disabled by default, see below to configure)
-2. View KRR scans from all your clusters in the Robusta UI (enabled by default for UI users)
+- Get weekly KRR scan reports in Slack via Robusta OSS
+- View KRR scans from all your clusters in the Robusta UI (enabled by default for UI users)
 
 
-Sending Weekly KRR Scan Reports to Slack
+.. tab-set::
+
+    .. tab-item:: Web Installation (recommended)
+
+    .. tab-item:: Robusta UI
+
+        .. image:: /images/krr_example.png
+            :width: 1000px
+
+    .. tab-item:: Slack
+
+        .. image:: /images/krr_slack_example.png
+            :width: 1000px
+
+
+Configuring a period report
 ===========================================
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
+
+Robusta UI
+-----------------------------------
+
+By default, a scan is performed every Monday at 00:00:00.
+
+To scan more often, add this snippet to your values file and adjust the ``cron_expression``:
+
+.. code-block:: yaml
+
+    customPlaybooks:
+      triggers:
+      - on_schedule:
+          cron_schedule_repeat:
+            cron_expression: "0 12 * * 1" # every Monday at 12:00
+      actions:
+      - krr_scan: {}
+        #  krr_args: "--namespace devs-namespace" ## Optional KRR args here
+      sinks:
+        - "robusta_ui_sink"
+
+
+To lean more about scheduling, see :ref:`schedule <Scheduled>`.
+To tweak the default scan options with ``krr_args``, see [Customizing the KRR Report] below.
+
+Send KRR Reports to Slack as PDF
+-----------------------------------
+
+The results can be sent as a PDF to Slack. Follow the steps below to set it up.
 
 1. Install Robusta with Helm to your cluster and configure Slack sink.
 2. Create your KRR slack playbook by adding the following to ``generated_values.yaml``:
@@ -34,40 +77,8 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
 
 3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 
-.. grid:: 1 1 1 1
 
-    .. grid-item::
-
-        .. md-tab-set::
-
-            .. md-tab-item:: Slack
-
-                .. image:: /images/krr_slack_example.png
-                    :width: 1000px
-
-            .. md-tab-item:: Robusta UI
-
-                .. image:: /images/krr_example.png
-                    :width: 1000px
-
-Taints, Tolerations and NodeSelectors
-============================================
-
-To run KRR on an ARM cluster or on specific nodes you can set custom tolerations or a nodeSelector in your ``generated_values.yaml`` file as follows:
-
-.. code-block:: yaml
-    :name: cb-krr-set-custom-taints
-
-    globalConfig:
-      krr_job_spec:
-        tolerations:
-        - key: "key1"
-          operator: "Exists"
-          effect: "NoSchedule"
-        nodeSelector:
-          nodeName: "your-selector"
-
-Customizing Efficiency Recommendations in the Robusta UI
+Customizing the KRR Report
 ====================================================================================
 You can tweak KRR's recommendation algorithm to suit your environment using the ``krr_args`` setting in Robusta's Helm chart.
 
@@ -138,8 +149,29 @@ Common KRR Settings
      - Whether to bump the memory when OOMKills are detected.
      - FALSE
 
+Troubleshooting
+===========================================
+
+Taints, Tolerations and NodeSelectors
+----------------------------------------
+
+To run KRR on an ARM cluster or on specific nodes you can set custom tolerations or a nodeSelector in your ``generated_values.yaml`` file as follows:
+
+.. code-block:: yaml
+    :name: cb-krr-set-custom-taints
+
+    globalConfig:
+      krr_job_spec:
+        tolerations:
+        - key: "key1"
+          operator: "Exists"
+          effect: "NoSchedule"
+        nodeSelector:
+          nodeName: "your-selector"
+
+
 Configuring KRR Job Memory Requests and Limits
-======================================================
+-------------------------------
 
 To prevent the KRR job from OOMKill (Out of Memory), you can configure the memory requests and limits by adding the following environment variables to your ``generated_values.yaml`` file:
 
