@@ -99,6 +99,9 @@ Problems when running ``helm install`` command or installing via GitOps.
 Robusta runner, Prometheus or Holmes failures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+robusta-runner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. details:: robusta-runner pod is in Pending state due to memory issues
 
     If your cluster has 20 Nodes or less, set robusta-runner's memory request to 512MiB in Robusta's Helm values:
@@ -111,32 +114,6 @@ Robusta runner, Prometheus or Holmes failures
               memory: 512MiB
             limits:
               memory: 512MiB
-
-.. details:: Prometheus' pods are in Pending state due to memory issues
-
-        If your cluster has 20 Nodes or less, set Prometheus memory request to 1Gi in Robusta's Helm values:
-
-        .. code-block:: yaml
-
-                kube-prometheus-stack:
-                  prometheus:
-                    prometheusSpec:
-                      resources:
-                        requests:
-                          memory: 1Gi
-                        limits:
-                          memory: 1Gi
-
-        If using a test cluster like Kind/Colima, re-install Robusta with the ``isSmallCluster=true`` property.
-        If you're also using Robusta's kube-prometheus-stack, add the lines involving prometheusSpec.
-
-        .. code-block:: bash
-
-                helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true \
-                    --set kube-prometheus-stack.prometheus.prometheusSpec.retentionSize=9GB \
-                    --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
-                    --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
-
 
 .. details:: robusta-runner isn't working or has exceptions
 
@@ -181,6 +158,38 @@ Robusta runner, Prometheus or Holmes failures
         .. details:: Blocked by firewall / HTTP proxy
 
                 If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions in :ref:`Deploying Behind Proxies` to ensure Robusta has the necessary access.
+
+
+Prometheus
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. details:: Prometheus' pods are in Pending state due to memory issues
+
+        If your cluster has 20 Nodes or less, set Prometheus memory request to 1Gi in Robusta's Helm values:
+
+        .. code-block:: yaml
+
+                kube-prometheus-stack:
+                  prometheus:
+                    prometheusSpec:
+                      resources:
+                        requests:
+                          memory: 1Gi
+                        limits:
+                          memory: 1Gi
+
+        If using a test cluster like Kind/Colima, re-install Robusta with the ``isSmallCluster=true`` property.
+        If you're also using Robusta's kube-prometheus-stack, add the lines involving prometheusSpec.
+
+        .. code-block:: bash
+
+                helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true \
+                    --set kube-prometheus-stack.prometheus.prometheusSpec.retentionSize=9GB \
+                    --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
+                    --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
+
+Holmes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. details:: Error in Holmes: binascii.a2b_base64(s, strict_mode=validate)
 
