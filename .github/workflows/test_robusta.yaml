@@ -3,69 +3,69 @@ name: Test robusta with pytest
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-    check:
-      name: Pre-commit checks
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-python@v5
-        - uses: pre-commit/action@v3.0.1
+  check:
+    name: Pre-commit checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - uses: pre-commit/action@v3.0.1
 
-    run_tests:
-      needs: check
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-        - name: Set up Python
-          uses: actions/setup-python@v2
-          with:
-            python-version: 3.9
+  run_tests:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
 
-        # setup a KIND cluster for tests which need a kubernetes image
-        - name: Create k8s Kind Cluster
-          uses: helm/kind-action@v1.2.0
-        - name: Output KIND info
-          run: |
-            kubectl config get-contexts
+      # setup a KIND cluster for tests which need a kubernetes image
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.2.0
+      - name: Output KIND info
+        run: |
+          kubectl config get-contexts
 
-        # install robusta so that we can run tests on it
-        - name: Install Robusta
-          run: |
-            curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
-            poetry config virtualenvs.create false
-            poetry install --extras "all"
-            # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
-            pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
-            # robusta-cli is a separate project now, it needs to be installed for gen-config
-            pip install robusta-cli
+      # install robusta so that we can run tests on it
+      - name: Install Robusta
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
+          poetry config virtualenvs.create false
+          poetry install --extras "all"
+          # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
+          pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
+          # robusta-cli is a separate project now, it needs to be installed for gen-config
+          pip install robusta-cli
 
-        # build robusta docker images for tests which run in-cluster on KIND
-        - run: |-
-            curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
-            chmod a+x skaffold
-        - name: Cache skaffold image builds & config
-          uses: actions/cache@v2
-          with:
-            path: ~/.skaffold/
-            key: fixed-${{ github.sha }}
-            restore-keys: |
-              fixed-${{ github.sha }}
-              fixed-
-        - name: Build with skaffold
-          run: |
-            echo 'building with tag test-${{ github.sha }}'
-            ./skaffold build --push=false --file-output=container-ids.json --tag='test-${{ github.sha }}'
-            kind load docker-image --name chart-testing 'us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'
+      # build robusta docker images for tests which run in-cluster on KIND
+      - run: |-
+          curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
+          chmod a+x skaffold
+      - name: Cache skaffold image builds & config
+        uses: actions/cache@v4
+        with:
+          path: ~/.skaffold/
+          key: fixed-${{ github.sha }}
+          restore-keys: |
+            fixed-${{ github.sha }}
+            fixed-
+      - name: Build with skaffold
+        run: |
+          echo 'building with tag test-${{ github.sha }}'
+          ./skaffold build --push=false --file-output=container-ids.json --tag='test-${{ github.sha }}'
+          kind load docker-image --name chart-testing 'us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'
 
-        #  update helm chart to use the image we just built
-        - name: Update package version
-          run: |
-            sed -i 's/0.0.0/test-${{ github.sha }}/g' helm/robusta/Chart.yaml helm/robusta/values.yaml
+      #  update helm chart to use the image we just built
+      - name: Update package version
+        run: |
+          sed -i 's/0.0.0/test-${{ github.sha }}/g' helm/robusta/Chart.yaml helm/robusta/values.yaml
 
-        # run the actual tests
-        - name: Test Robusta
-          env:
-            PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
-            PYTEST_IN_CLUSTER_SLACK_TOKEN: ${{ secrets.PYTEST_IN_CLUSTER_SLACK_TOKEN }}
-          run: |
-            pytest -s --image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'
+      # run the actual tests
+      - name: Test Robusta
+        env:
+          PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
+          PYTEST_IN_CLUSTER_SLACK_TOKEN: ${{ secrets.PYTEST_IN_CLUSTER_SLACK_TOKEN }}
+        run: |
+          pytest -s --image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'
