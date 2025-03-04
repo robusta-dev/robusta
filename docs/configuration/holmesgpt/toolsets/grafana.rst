@@ -120,9 +120,28 @@ with the following permissions:
 Configuration
 ^^^^^^^^^^^^^
 
-.. code-block:: yaml
+.. md-tab-set::
 
-    holmes:
+  .. md-tab-item:: Robusta Helm Chat
+
+    .. code-block:: yaml
+
+      holmes:
+        toolsets:
+          grafana/tempo:
+            enabled: true
+            config:
+              api_key: <your grafana API key>
+              url: https://grafana-url
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+    Add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
       toolsets:
         grafana/tempo:
           enabled: true
@@ -130,7 +149,6 @@ Configuration
             api_key: <your grafana API key>
             url: https://grafana-url
 
-.. include:: ./_toolset_configuration.inc.rst
 
 Capabilities
 ^^^^^^^^^^^^
