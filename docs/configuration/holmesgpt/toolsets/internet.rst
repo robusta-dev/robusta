@@ -14,6 +14,9 @@ Configuration
         toolsets:
             internet:
                 enabled: true
+                config: # optional
+                  additional_headers:
+                    Authorization: Bearer ...
 
 .. include:: ./_toolset_configuration.inc.rst
 
