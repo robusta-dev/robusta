@@ -9,6 +9,10 @@ Loki
 By enabling this toolset, HolmesGPT will fetch node and pods logs from `Loki <https://grafana.com/oss/loki/>`_
 by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
 
+You **should** enable this toolset to replace the default :ref:`kubernetes/logs <toolset_kubernetes_logs>`
+toolset if all your kubernetes/pod logs are consolidated inside Loki. It will make it easier for HolmesGPT
+to fetch incident logs.
+
 Configuration
 ^^^^^^^^^^^^^
 
