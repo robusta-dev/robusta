@@ -13,10 +13,12 @@ Configuration
 -------------
 
 .. code-block:: yaml
+
     holmes:
         toolsets:
             datetime:
                 enabled: true
+
 .. include:: ./_toolset_configuration.inc.rst
 
 Capabilities
