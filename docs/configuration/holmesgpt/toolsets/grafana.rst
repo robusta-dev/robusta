@@ -27,7 +27,7 @@ from Grafana.
                 enabled: true
                 config:
                     api_key: <your grafana API key>
-                    url: https://grafana-url
+                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
                     grafana_datasource_uid: <the UID of the loki data source in Grafana>
                     labels:
                         pod: "pod"
@@ -50,6 +50,7 @@ Use the following commands to list Loki's labels and determine which ones to use
 
     # List all labels. You may have to add the -H 'X-Scope-OrgID:<org id>' option with a valid org id
     curl http://localhost:3100/loki/api/v1/labels
+
 
 
 If Loki is your primary datasource for logs, it is **advised** to disable the default HolmesGPT logging
@@ -137,8 +138,9 @@ your Grafana instance.
                 enabled: true
                 config:
                     api_key: <your grafana API key>
-                    url: https://grafana-url
+                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
                     grafana_datasource_uid: <the UID of the tempo data source in Grafana>
+
 
 .. include:: ./_toolset_configuration.inc.rst
 
@@ -158,3 +160,13 @@ Capabilities
      - Lists Tempo traces ids that exceed a specified minimum duration in a given time range
    * - fetch_tempo_trace_by_id
      - Retrieves detailed information about a Tempo trace using its trace ID. Use this to investigate a trace.
+
+
+Getting Grafana URL
+-----------------------
+
+You can find the Grafana URL required for Loki and Tempo in your Grafana cloud account settings. 
+
+.. image:: /images/grafana-url-for-holmes.png
+  :width: 600
+  :align: center
