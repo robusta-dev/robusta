@@ -4,44 +4,83 @@ Grafana
 Loki
 ----
 
-By enabling this toolset, HolmesGPT will be able to consult node and pod logs from `Loki <https://grafana.com/oss/loki/>`_
+By enabling this toolset, HolmesGPT will be able to query logs from `Loki <https://grafana.com/oss/loki/>`_
 by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
 
-In the future this toolset will be able to run any query against Loki logs.
+After this toolset is enabled, you can ask Holmes questions like: *Look at my cluster with kubectl, pick an arbitrary node, then fetch logs from loki for that node. Summarize all problems you find.*
+
+Prerequisites
+^^^^^^^^^^^^^
+A `Grafana service account token <https://grafana.com/docs/grafana/latest/administration/service-accounts/>`_
+with the following permissions:
+
+* Basic role -> Viewer
+* Data sources -> Reader
 
 Configuration
 ^^^^^^^^^^^^^
 
-The configuration requires a `service account token <https://grafana.com/docs/grafana/latest/administration/service-accounts/>`_
-from your Grafana instance.
+.. md-tab-set::
 
-.. code-block:: yaml
+  .. md-tab-item:: Robusta Helm Chart
 
-    holmes:
-        toolsets:
+    Add the following to **Robusta's Helm values:**
+
+    .. code-block:: yaml
+
+        holmes:
+          toolsets:
             grafana/loki:
-                enabled: true
-                config:
-                    api_key: <your grafana API key>
-                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
+              enabled: true
+              config:
+                api_key: <your grafana API key>
+                url: <your grafana url> # e.g. https://acme-corp.grafana.net 
 
-You can optionally tweak the search terms used by the toolset. This is only needed if your Loki logs settings for pod,
-namespace and node differ from the defaults listed below. To do so, add these search keys to the configuration:
+    .. include:: ./_toolset_configuration.inc.rst
 
-.. code-block:: yaml
+    You can optionally tweak the search terms used by the toolset. This is only needed if your Loki logs settings for pod,
+    namespace and node differ from the defaults listed below. To do so, add these search keys to the configuration:
 
-    holmes:
-        toolsets:
+    .. code-block:: yaml
+
+        holmes:
+          toolsets:
             grafana/loki:
-                enabled: true
-                config:
-                    api_key: <your grafana API key>
-                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
-                    pod_name_search_key: "pod"
-                    namespace_search_key: "namespace"
-                    node_name_search_key: "node"
+              enabled: true
+              config:
+                api_key: <your grafana API key>
+                url: <your grafana url> # e.g. https://acme-corp.grafana.net 
+                pod_name_search_key: "pod"
+                namespace_search_key: "namespace"
+                node_name_search_key: "node"
 
-.. include:: ./_toolset_configuration.inc.rst
+  .. md-tab-item:: Holmes CLI
+
+    Add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
+      toolsets:
+        grafana/loki:
+          enabled: true
+          config:
+            api_key: <your grafana API key>
+            url: https://grafana-url
+    
+    You can optionally tweak the search terms used by the toolset. This is only needed if your Loki logs settings for pod,
+    namespace and node differ from the defaults listed below. To do so, add these search keys to the configuration:
+
+    .. code-block:: yaml
+
+      toolsets:
+        grafana/loki:
+          enabled: true
+          config:
+            api_key: <your grafana API key>
+            url: https://grafana-url
+            pod_name_search_key: "pod"
+            namespace_search_key: "namespace"
+            node_name_search_key: "node"
 
 Capabilities
 ^^^^^^^^^^^^
@@ -68,27 +107,48 @@ Tempo
 -----
 
 By enabling this toolset, HolmesGPT will be able to fetch trace information from Grafana
-Tempo to debug performance related issues.
+Tempo to debug performance related issues, like high latency in your application.
 
+Prerequisites
+^^^^^^^^^^^^^
+A `Grafana service account token <https://grafana.com/docs/grafana/latest/administration/service-accounts/>`_
+with the following permissions:
+
+* Basic role -> Viewer
+* Data sources -> Reader
 
 Configuration
 ^^^^^^^^^^^^^
 
-Tempo is configured the using the same Grafana settings as the Grafana Loki toolset. The configuration requires
-a `service account token <https://grafana.com/docs/grafana/latest/administration/service-accounts/>`_ from
-your Grafana instance.
+.. md-tab-set::
 
-.. code-block:: yaml
+  .. md-tab-item:: Robusta Helm Chat
 
-    holmes:
+    .. code-block:: yaml
+
+      holmes:
         toolsets:
-            grafana/tempo:
-                enabled: true
-                config:
-                    api_key: <your grafana API key>
-                    url: https://xxxxxxx.grafana.net # Your Grafana cloud account URL
+          grafana/tempo:
+            enabled: true
+            config:
+              api_key: <your grafana API key>
+              url: https://grafana-url
 
-.. include:: ./_toolset_configuration.inc.rst
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+    Add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
+      toolsets:
+        grafana/tempo:
+          enabled: true
+          config:
+            api_key: <your grafana API key>
+            url: https://grafana-url
+
 
 Capabilities
 ^^^^^^^^^^^^
