@@ -11,7 +11,7 @@ by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
 
 You **should** enable this toolset to replace the default :ref:`kubernetes/logs <toolset_kubernetes_logs>`
 toolset if all your kubernetes/pod logs are consolidated inside Loki. It will make it easier for HolmesGPT
-to fetch incident logs.
+to fetch incident logs, including the ability to precisely consult past logs.
 
 Configuration
 ^^^^^^^^^^^^^
@@ -30,10 +30,7 @@ from Grafana.
                     url: https://grafana-url
                     grafana_datasource_uid: <the UID of the loki data source in Grafana>
                     labels:
-                        node: "node"
                         pod: "pod"
-                        job: "job"
-                        service: "service"
                         namespace: "namespace"
 
             kubernetes/logs:
@@ -42,8 +39,7 @@ from Grafana.
 .. include:: ./_toolset_configuration.inc.rst
 
 You can tweak the labels used by the toolset to identify kubernetes resources. This is only needed if your
-Loki logs settings for ``job``, ``pod``, ``service``, ``namespace`` and ``node`` differ from the defaults
-in the example above.
+Loki logs settings for ``pod``, and ``namespace`` differ from the defaults in the example above.
 
 Use the following commands to list Loki's labels and determine which ones to use:
 
@@ -56,9 +52,9 @@ Use the following commands to list Loki's labels and determine which ones to use
     curl http://localhost:3100/loki/api/v1/labels
 
 
-If Loki is your primary datasource for logs, it is **strongly advised** to disable the default HolmesGPT logging
-tool by disabling the ``kubernetes/logs`` toolset. Without this. HolmesGPT will still default to using kubectl to
-fetch logs.
+If Loki is your primary datasource for logs, it is **advised** to disable the default HolmesGPT logging
+tool by disabling the ``kubernetes/logs`` toolset. Without this. HolmesGPT may still use kubectl to
+fetch logs instead of Loki.
 
 .. code-block:: yaml
 
