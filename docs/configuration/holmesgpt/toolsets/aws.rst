@@ -10,21 +10,36 @@ Set of tools to audit AWS cloudtrail events and audit logs.
 Configuration
 *************
 
-.. code-block:: yaml
 
-    holmes:
-        additionalEnvVars:
-            - name: AWS_ACCESS_KEY_ID
-              value: AKIAIOSFODNN7EXAMPLE
-            - name: AWS_SECRET_ACCESS_KEY
-              value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-            - name: AWS_DEFAULT_REGION
-              value: us-west-2
+.. md-tab-set::
+
+  .. md-tab-item:: Robusta Helm Chart
+
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: AWS_ACCESS_KEY_ID
+                  value: AKIAIOSFODNN7EXAMPLE
+                - name: AWS_SECRET_ACCESS_KEY
+                  value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+                - name: AWS_DEFAULT_REGION
+                  value: us-west-2
+            toolsets:
+                aws/security:
+                    enabled: true
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+      Add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+      .. code-block:: yaml
+
         toolsets:
             aws/security:
                 enabled: true
-
-.. include:: ./_toolset_configuration.inc.rst
 
 Capabilities
 ************
@@ -50,23 +65,38 @@ RDS
 Read access to Amazon RDS instances, events and logs
 
 Configuration
-************
+****************
 
-.. code-block:: yaml
+.. md-tab-set::
 
-    holmes:
-        additionalEnvVars:
-            - name: AWS_ACCESS_KEY_ID
-              value: AKIAIOSFODNN7EXAMPLE
-            - name: AWS_SECRET_ACCESS_KEY
-              value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-            - name: AWS_DEFAULT_REGION
-              value: us-west-2
+  .. md-tab-item:: Robusta Helm Chart
+
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: AWS_ACCESS_KEY_ID
+                  value: AKIAIOSFODNN7EXAMPLE
+                - name: AWS_SECRET_ACCESS_KEY
+                  value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+                - name: AWS_DEFAULT_REGION
+                  value: us-west-2
+            toolsets:
+                aws/rds:
+                    enabled: true
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+      Add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+      .. code-block:: yaml
+
         toolsets:
-            aws/rds:
+            aws/security:
                 enabled: true
 
-.. include:: ./_toolset_configuration.inc.rst
 
 Capabilities
 ************
