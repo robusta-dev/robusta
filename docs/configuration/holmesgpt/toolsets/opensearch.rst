@@ -14,9 +14,79 @@ library's `user guide <https://github.com/opensearch-project/opensearch-py/blob/
 `reference documentation <https://opensearch-project.github.io/opensearch-py/api-ref/clients/opensearch_client.html>`_
 for configuring the connection to Opensearch, including how to authenticate this toolset to an opensearch cluster.
 
-.. code-block:: yaml
 
-    holmes:
+
+.. md-tab-set::
+
+  .. md-tab-item:: Robusta Helm Chart
+
+    .. code-block:: yaml
+
+        holmes:
+            toolsets:
+                opensearch/status:
+                    enabled: true
+                    config:
+                        opensearch_clusters:
+                            - hosts:
+                                - host1.com
+                                - host2.com
+                              headers:
+                                header1: "value1"
+                              use_ssl: <boolean>
+                              ssl_assert_hostname: <boolean>
+                              verify_certs: <boolean>
+                              ssl_show_warn: <boolean>
+                              http_auth:
+                                username: <basic auth username>
+                                password: <basic auth password>
+
+    Here is an example of an insecure Opensearch configuration for local development using a bearer token:
+
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: OPENSEARCH_URL
+                  value: <opensearch host URL>
+                - name: OPENSEARCH_BEARER_TOKEN
+                  value: <secret bearer token>
+            toolsets:
+                opensearch:
+                    enabled: true
+                    config:
+                        opensearch_clusters:
+                            - hosts:
+                                - host: "{{ env.OPENSEARCH_URL }}"
+                                port: 9200
+                            headers:
+                                Authorization: "Basic {{ env.OPENSEARCH_BEARER_TOKEN }}"
+                            use_ssl: true
+                            ssl_assert_hostname: false
+                            verify_certs: false
+                            ssl_show_warn: false
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+
+
+
+  .. md-tab-item:: Holmes CLI
+
+
+
+    First create the following environment variables:
+
+    .. code-block:: shell
+
+      export OPENSEARCH_URL=" <opensearch host URL>"
+      export OPENSEARCH_BEARER_TOKEN="<secret bearer token>"
+
+    Then add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+
+    .. code-block:: yaml
+
         toolsets:
             opensearch/status:
                 enabled: true
@@ -35,32 +105,30 @@ for configuring the connection to Opensearch, including how to authenticate this
                             username: <basic auth username>
                             password: <basic auth password>
 
-Here is an example of an insecure Opensearch configuration for local development using a bearer token:
+    Here is an example of an insecure Opensearch configuration for local development using a bearer token:
 
-.. code-block:: yaml
+    .. code-block:: yaml
 
-    holmes:
-        additionalEnvVars:
-            - name: OPENSEARCH_URL
-              value: <opensearch host URL>
-            - name: OPENSEARCH_BEARER_TOKEN
-              value: <secret bearer token>
-        toolsets:
-            opensearch:
-                enabled: true
-                config:
-                    opensearch_clusters:
-                        - hosts:
-                            - host: "{{ env.OPENSEARCH_URL }}"
-                            port: 9200
-                        headers:
-                            Authorization: "Basic {{ env.OPENSEARCH_BEARER_TOKEN }}"
-                        use_ssl: true
-                        ssl_assert_hostname: false
-                        verify_certs: false
-                        ssl_show_warn: false
+      toolsets:
+          opensearch:
+              enabled: true
+              config:
+                  opensearch_clusters:
+                      - hosts:
+                          - host: $OPENSEARCH_URL
+                          port: 9200
+                      headers:
+                          Authorization: $OPENSEARCH_BEARER_TOKEN
+                      use_ssl: true
+                      ssl_assert_hostname: false
+                      verify_certs: false
+                      ssl_show_warn: false
 
-.. include:: ./_toolset_configuration.inc.rst
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "why is my application failing? Look into openshift data"
 
 Capabilities
 ------------

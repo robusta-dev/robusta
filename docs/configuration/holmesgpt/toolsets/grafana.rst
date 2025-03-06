@@ -82,6 +82,12 @@ Configuration
             namespace_search_key: "namespace"
             node_name_search_key: "node"
 
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "Which applications have an issue and check the logs on loki for the reasons"
+
 Capabilities
 ^^^^^^^^^^^^
 
@@ -149,6 +155,11 @@ Configuration
             api_key: <your grafana API key>
             url: https://grafana-url
 
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "The payments DB is very slow, check tempo for any trace data"
 
 Capabilities
 ^^^^^^^^^^^^

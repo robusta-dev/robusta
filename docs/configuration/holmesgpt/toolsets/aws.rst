@@ -41,6 +41,13 @@ Configuration
             aws/security:
                 enabled: true
 
+
+      To test, run: 
+
+      .. code-block:: yaml
+        
+          holmes ask "Why is my signup application slow, also look into the database"
+
 Capabilities
 ************
 .. include:: ./_toolset_capabilities.inc.rst
@@ -89,13 +96,25 @@ Configuration
 
   .. md-tab-item:: Holmes CLI
 
-      Add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+    .. code-block:: yaml
 
-      .. code-block:: yaml
+      export AWS_ACCESS_KEY_ID="<your AWS access key ID>"
+      export AWS_SECRET_ACCESS_KEY="<your AWS secret access key>"
+      export AWS_DEFAULT_REGION="us-west-2"
 
-        toolsets:
-            aws/security:
-                enabled: true
+    Add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
+      toolsets:
+          aws/security:
+              enabled: true
+
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "Why is my signup application slow, also look into the database"
 
 
 Capabilities

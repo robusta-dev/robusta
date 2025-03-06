@@ -41,6 +41,13 @@ Configuration
         export CONFLUENCE_API_KEY="<confluence API key>"
         export CONFLUENCE_BASE_URL="<confluence's base URL>"
 
+
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "why is my application failing? Get revelant runbooks from Confluence"
+
 Capabilities
 ------------
 .. include:: ./_toolset_capabilities.inc.rst

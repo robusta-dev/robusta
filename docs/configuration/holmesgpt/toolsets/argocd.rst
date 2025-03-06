@@ -79,19 +79,23 @@ This is the recommended approach if your argocd is reachable through a public DN
 
     First create the `ARGOCD_AUTH_TOKEN` environment variable:
 
-      .. code-block:: shell
+    .. code-block:: shell
 
-        export ARGOCD_AUTH_TOKEN="<your argocd auth token>"
+      export ARGOCD_AUTH_TOKEN="<your argocd auth token>"
 
     Then add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
 
-      .. code-block:: yaml
+    .. code-block:: yaml
 
-            toolsets:
-                argocd/core:
-                    enabled: true
+          toolsets:
+              argocd/core:
+                  enabled: true
 
+    To test, run: 
 
+    .. code-block:: yaml
+      
+        holmes ask "Which argocd applications are failing and why?"
 
 Capabilities
 ------------
