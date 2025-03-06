@@ -56,19 +56,42 @@ HolmesGPT needs permission to establish a port-forward to ArgoCD. The configurat
 
 This is the recommended approach if your argocd is reachable through a public DNS.
 
-.. code-block:: yaml
 
-    holmes:
-        additionalEnvVars:
-            - name: ARGOCD_AUTH_TOKEN
-              value: <your argocd auth token>
-            - name: ARGOCD_SERVER
-              value: argocd.example.com
-        toolsets:
-            argocd/core:
-                enabled: true
+.. md-tab-set::
 
-.. include:: ./_toolset_configuration.inc.rst
+  .. md-tab-item:: Robusta Helm Chart
+
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: ARGOCD_AUTH_TOKEN
+                  value: <your argocd auth token>
+                - name: ARGOCD_SERVER
+                  value: argocd.example.com
+            toolsets:
+                argocd/core:
+                    enabled: true
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+    First create the `ARGOCD_AUTH_TOKEN` environment variable:
+
+      .. code-block:: shell
+
+        export ARGOCD_AUTH_TOKEN="<your argocd auth token>"
+
+    Then add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+      .. code-block:: yaml
+
+            toolsets:
+                argocd/core:
+                    enabled: true
+
+
 
 Capabilities
 ------------
