@@ -15,6 +15,7 @@ library's `user guide <https://github.com/opensearch-project/opensearch-py/blob/
 for configuring the connection to Opensearch, including how to authenticate this toolset to an opensearch cluster.
 
 
+HolmesGPT will be able to access open search cluster metadata information
 
 .. md-tab-set::
 

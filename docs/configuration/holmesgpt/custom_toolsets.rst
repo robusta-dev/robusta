@@ -123,6 +123,11 @@ This toolset lets Holmes view Grafana dashboards and suggest relevant dashboards
 
         export GRAFANA_API_KEY="<grafana_api_key>"
         export GRAFANA_URL="<grafana_url>"
+      
+    To test, run: 
+
+    .. code-block:: bash
+
         holmes ask -t grafana_toolset.yaml "what grafana dashboard should I look at to investigate high pod cpu?"
 
 Example 2: Kubernetes Diagnostics Toolset
@@ -231,7 +236,13 @@ First `create a GitHub Personal Access Token with fine-grained permissions <http
 
   .. md-tab-item:: Holmes CLI
 
-    **github_toolset.yaml:**
+    First, add the following environment vairables:
+
+    .. code-block:: bash
+      
+        export GITHUB_TOKEN="<token_goes_here>"
+
+    Then, add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
 
     .. code-block:: yaml
 
@@ -262,11 +273,10 @@ First `create a GitHub Personal Access Token with fine-grained permissions <http
                     type: "string"
                     description: "Name of the repository."
                     required: true
+    To test, run: 
 
-    Set an environment variable with your GitHub token and run Holmes:
-
-    .. code-block:: bash
-        export GITHUB_TOKEN="<token_goes_here>"
+      .. code-block:: yaml
+        
         holmes ask -t github_toolset.yaml "who made the last commit to the robusta-dev/holmesgpt repo on github?"
 
 

@@ -82,6 +82,7 @@ This is the recommended approach if your argocd is reachable through a public DN
     .. code-block:: shell
 
       export ARGOCD_AUTH_TOKEN="<your argocd auth token>"
+      export ARGOCD_SERVER="argocd.example.com"
 
     Then add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
 
