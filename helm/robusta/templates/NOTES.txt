@@ -12,7 +12,7 @@ Note that if the Robusta UI is enabled, telemetry cannot be disabled even if ENA
 
 {{- range .Values.sinksConfig }}
 {{if .robusta_sink}}
-Visit the web UI at: https://platform.robusta.dev/
+Visit the web UI at: https://platform.robusta.dev/check-connection?clusterName={{ $.Values.clusterName }}&account={{ $.Values.globalConfig.account_id }}
 {{- end }}
 {{- end }}
 
