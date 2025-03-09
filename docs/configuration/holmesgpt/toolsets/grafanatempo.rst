@@ -13,6 +13,8 @@ with the following permissions:
 * Basic role -> Viewer
 * Data sources -> Reader
 
+Check out this `video <https://www.loom.com/share/f969ab3af509444693802254ab040791?sid=aa8b3c65-2696-4f69-ae47-bb96e8e03c47>`_ on creating a Grafana service account token.
+
 Getting Grafana URL
 -----------------------
 

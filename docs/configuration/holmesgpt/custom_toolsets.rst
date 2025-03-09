@@ -18,7 +18,7 @@ This toolset lets Holmes view Grafana dashboards and suggest relevant dashboards
 **Prerequisites:**
 
 - Grafana URL (e.g. http://localhost:3000 or https://grafana.example.com)
-- Grafana service account with Viewer role.
+- Grafana service account token with **Basic role -> Viewer** and **Data sources -> Reader** permissions. Check out this `video <https://www.loom.com/share/f969ab3af509444693802254ab040791?sid=aa8b3c65-2696-4f69-ae47-bb96e8e03c47>`_ on creating a Grafana service account token.
 
 **Configuration:**
 
