@@ -1,5 +1,5 @@
 
-Tempo(Grafana)
+Tempo (Grafana)
 ================
 
 By enabling this toolset, HolmesGPT will be able to fetch trace information from Grafana
@@ -12,6 +12,15 @@ with the following permissions:
 
 * Basic role -> Viewer
 * Data sources -> Reader
+
+Getting Grafana URL
+-----------------------
+
+You can find the Grafana URL required for Loki and Tempo in your Grafana cloud account settings. 
+
+.. image:: /images/grafana-url-for-holmes.png
+  :width: 600
+  :align: center
 
 Configuration
 ^^^^^^^^^^^^^
@@ -68,12 +77,3 @@ Capabilities
    * - fetch_tempo_trace_by_id
      - Retrieves detailed information about a Tempo trace using its trace ID. Use this to investigate a trace.
 
-
-Getting Grafana URL
------------------------
-
-You can find the Grafana URL required for Loki and Tempo in your Grafana cloud account settings. 
-
-.. image:: /images/grafana-url-for-holmes.png
-  :width: 600
-  :align: center

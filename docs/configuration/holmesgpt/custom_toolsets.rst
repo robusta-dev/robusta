@@ -64,7 +64,7 @@ This toolset lets Holmes view Grafana dashboards and suggest relevant dashboards
               command: "curl \"${GRAFANA_URL}/api/search\" -H \"Authorization: Bearer ${GRAFANA_API_KEY}\""
 
             - name: "grafana_get_url"
-              description: "Get the URL of a Grafana dashboard by UID, including the real url of grafana"
+              description: "Get the URL of a Grafana dashboard by UID, including the real URL of Grafana"
               # in this command we use a variable called `{{ dashboard_uid }}`
               # unlike enviroment variables that were provided by the user, variables like `{{ dashboard_uid }}` are provided by the AI model
               # the AI model sees the tool description, decides to use this tool, and then provides a value for all {{ template_variables }} to invoke the tool
@@ -79,6 +79,10 @@ This toolset lets Holmes view Grafana dashboards and suggest relevant dashboards
     After the deployment is complete, you can open the HolmesGPT chat in the Robusta SaaS UI and ask questions like *what grafana dashboard should I look at to investigate high pod cpu?*.
     
     **Suggesting relevant dashboards during alert investigations:** Add runbook instructions to your alert in the Robusta UI, instructing Holmes to search for related Grafana dashboards.
+  
+    .. image:: /images/custom-grafana-toolset.png
+        :width: 600
+        :align: center
 
   .. md-tab-item:: Holmes CLI
 
@@ -171,10 +175,10 @@ Update the ``generated_values.yaml`` file with the provided YAML configuration, 
 Once deployed, Holmes will have access to advanced diagnostic tools for Kubernetes clusters. For example, you can ask Holmes, ``"Can you do a node health check?"`` and it will automatically use the newly added tools to provide you the answer.
 
 
-Example 3: Github Toolset
+Example 3: GitHub Toolset
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This toolset enables Holmes to fetch information from github repositories.
+This toolset enables Holmes to fetch information from GitHub repositories.
 
 First `create a GitHub Personal Access Token with fine-grained permissions <https://github.com/settings/personal-access-tokens>`_. For this example, you can leave the default permissions.
 
@@ -233,6 +237,10 @@ First `create a GitHub Personal Access Token with fine-grained permissions <http
 
     After the deployment is complete, the GitHub toolset will be available. HolmesGPT will be able to use it to interact with GitHub repositories.
     For example, you can now open the HolmesGPT chat in the Robusta SaaS UI and ask, *who made the last commit to the robusta-dev/holmesgpt repo on github?*.
+
+    .. image:: /images/custom-github-toolset.png
+      :width: 600
+      :align: center
 
   .. md-tab-item:: Holmes CLI
 

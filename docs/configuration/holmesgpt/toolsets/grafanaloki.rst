@@ -1,5 +1,5 @@
-Loki(Grafana)
-==========
+Loki (Grafana)
+===============
 
 By enabling this toolset, HolmesGPT will be able to query logs from `Loki <https://grafana.com/oss/loki/>`_
 by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
@@ -13,6 +13,15 @@ with the following permissions:
 
 * Basic role -> Viewer
 * Data sources -> Reader
+
+Getting Grafana URL
+-----------------------
+
+You can find the Grafana URL required for Loki and Tempo in your Grafana cloud account settings. 
+
+.. image:: /images/grafana-url-for-holmes.png
+  :width: 600
+  :align: center
 
 Configuration
 ^^^^^^^^^^^^^
@@ -106,11 +115,4 @@ Capabilities
      - Fetches the Loki logs for a given pod
 
 
-Getting Grafana URL
------------------------
 
-You can find the Grafana URL required for Loki and Tempo in your Grafana cloud account settings. 
-
-.. image:: /images/grafana-url-for-holmes.png
-  :width: 600
-  :align: center
