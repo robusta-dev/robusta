@@ -7,75 +7,137 @@ Custom toolsets
 Examples
 --------
 
-Below are examples of predefined toolsets for various use cases, such as managing GitHub repositories, diagnosing Kubernetes clusters, and making HTTP requests. In these examples, we will demonstrate how to add these toolsets to Holmes.
+Below are examples of custom toolsets and how to add them to Holmes:
 
 
-Example 1: Github Toolset
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Example 1: Grafana Toolset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This toolset enables Holmes to interact with fetch information from github repositories.
+This toolset lets Holmes view Grafana dashboards and suggest relevant dashboards to the user:
 
+**Prerequisites:**
 
-.. code-block:: yaml
+- Grafana URL (e.g. http://localhost:3000 or https://grafana.example.com)
+- Grafana service account token with **Basic role -> Viewer** and **Data sources -> Reader** permissions. Check out this `video <https://www.loom.com/share/f969ab3af509444693802254ab040791?sid=aa8b3c65-2696-4f69-ae47-bb96e8e03c47>`_ on creating a Grafana service account token.
 
-    holmes:
+**Configuration:**
+
+.. md-tab-set::
+
+  .. md-tab-item:: Robusta Helm Chart
+
+    **Helm Values:**
+
+    .. code-block:: yaml
+
+      holmes:
+        # provide environment variables the toolset needs - can be pulled from secrets or provided in plaintext
+        additionalEnvVars:
+        - name: GRAFANA_API_KEY
+          value: <token_goes_here>
+        - name: GRAFANA_URL
+          value: <grafana_url>
+
+        # define the toolset
+        toolsets:
+          grafana:
+            # this tool can only be enabled if these prerequisites are met
+            prerequisites:
+              # we need the GRAFANA_URL and GRAFANA_API_KEY environment variables to be set
+              - env:
+                  - "GRAFANA_URL"
+                  - "GRAFANA_API_KEY"
+              # curl must be installed - we check by running `curl --version` (if it's not installed, the command will fail)
+              - command: "curl --version"
+
+            # human-readable description of the toolset (this is not seen by the AI model - its just for users)
+            description: "Grafana tools"
+
+            # tools (capabilities) that will be provided to HolmesGPT when this toolset is enabled
+            tools:
+            - name: "grafana_get_dashboard"
+              # the LLM sees this description and uses it to decide when to use this tool
+              description: "Get list of grafana dashboards"
+              # the command that will be executed when this tool is used
+              # environment variables like GRAFANA_URL and GRAFANA_API_KEY can be used in the command
+              # they will not be exposed to the AI model, as the AI model doesn't see the command that was run
+              command: "curl \"${GRAFANA_URL}/api/search\" -H \"Authorization: Bearer ${GRAFANA_API_KEY}\""
+
+            - name: "grafana_get_url"
+              description: "Get the URL of a Grafana dashboard by UID, including the real URL of Grafana"
+              # in this command we use a variable called `{{ dashboard_uid }}`
+              # unlike enviroment variables that were provided by the user, variables like `{{ dashboard_uid }}` are provided by the AI model
+              # the AI model sees the tool description, decides to use this tool, and then provides a value for all {{ template_variables }} to invoke the tool
+              command: "echo \"${GRAFANA_URL}/d/{{ dashboard_uid }}\""
+        
+    Update your Helm values with the provided YAML configuration, then apply the changes with Helm upgrade:
+
+    .. code-block:: bash
+
+        helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+
+    After the deployment is complete, you can open the HolmesGPT chat in the Robusta SaaS UI and ask questions like *what grafana dashboard should I look at to investigate high pod cpu?*.
+    
+    **Suggesting relevant dashboards during alert investigations:** Add runbook instructions to your alert in the Robusta UI, instructing Holmes to search for related Grafana dashboards.
+  
+    .. image:: /images/custom-grafana-toolset.png
+        :width: 600
+        :align: center
+
+  .. md-tab-item:: Holmes CLI
+
+    **grafana_toolset.yaml:**
+
+    .. code-block:: yaml
+
       toolsets:
-        github_tools:
-          description: "Tools for managing GitHub repositories"
-          tags:
-            - cli
+        grafana:
+          # this tool can only be enabled if these prerequisites are met
           prerequisites:
+            # we need the GRAFANA_URL and GRAFANA_API_KEY environment variables to be set
             - env:
-              - "GITHUB_TOKEN"
+                - "GRAFANA_URL"
+                - "GRAFANA_API_KEY"
+            # curl must be installed - we check by running `curl --version` (if it's not installed, the command will fail)
             - command: "curl --version"
+
+          # human-readable description of the toolset (this is not seen by the AI model - its just for users)
+          description: "Grafana tools"
+
+          # tools (capabilities) that will be provided to HolmesGPT when this toolset is enabled
           tools:
-            # Parameters are inferred from placeholders such as `{{ username }}` in the command.
-            # Holmes uses these placeholders to identify and request the required inputs for the tool.
-            - name: "list_user_repos"
-              description: "Lists all repositories for a GitHub user"
-              command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/users/{{ username }}/repos"
+          - name: "grafana_get_dashboard"
+            # the LLM sees this description and uses it to decide when to use this tool
+            description: "Get list of grafana dashboards"
+            # the command that will be executed when this tool is used
+            # environment variables like GRAFANA_URL and GRAFANA_API_KEY can be used in the command
+            # they will not be exposed to the AI model, as the AI model doesn't see the command that was run
+            command: "curl \"${GRAFANA_URL}/api/search\" -H \"Authorization: Bearer ${GRAFANA_API_KEY}\""
 
-            - name: "show_recent_commits"
-              description: "Shows the most recent commits for a repository"
-              command: "cd {{ repo_dir }} && git log -{{number_of_commits}} --oneline"
+          - name: "grafana_get_url"
+            description: "Get the URL of a Grafana dashboard by UID, including the real url of grafana"
+            # in this command we use a variable called `{{ dashboard_uid }}`
+            # unlike enviroment variables that were provided by the user, variables like `{{ dashboard_uid }}` are provided by the AI model
+            # the AI model sees the tool description, decides to use this tool, and then provides a value for all {{ template_variables }} to invoke the tool
+            command: "echo \"${GRAFANA_URL}/d/{{ dashboard_uid }}\""
 
-            # Here, parameters `owner` and `repo` are explicitly defined with details like type,
-            # description, and whether they are required. Explicitly defining parameters is
-            # particularly useful if:
-            # - You want to enforce parameter requirements (e.g., `owner` and `repo` are required).
-            # - You want to define optional parameters with default behavior.
-            - name: "get_repo_details"
-              description: "Fetches details of a specific repository"
-              command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
-              parameters:
-                owner:
-                  type: "string"
-                  description: "Owner of the repository."
-                  required: true
-                repo:
-                  type: "string"
-                  description: "Name of the repository."
-                  required: true
+    Set the appropriate environment variables and run Holmes:
 
-            - name: "get_recent_commits"
-              description: "Fetches the most recent commits for a repository"
-              command: "curl -H 'Authorization: token {{ github_token }}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
+    .. code-block:: bash
 
+        export GRAFANA_API_KEY="<grafana_api_key>"
+        export GRAFANA_URL="<grafana_url>"
+      
+    To test, run: 
 
-Update the ``generated_values.yaml`` file with the provided YAML configuration, then apply the changes by executing the Helm upgrade command:
+    .. code-block:: bash
 
-.. code-block:: bash
-
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
-
-After the deployment is complete, the GitHub toolset will be available for Holmes. LLM will be able to use these tools to interact with GitHub repositories directly.
-
+        holmes ask -t grafana_toolset.yaml "what grafana dashboard should I look at to investigate high pod cpu?"
 
 Example 2: Kubernetes Diagnostics Toolset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This toolset provides diagnostics for Kubernetes clusters, helping developers identify and resolve issues.
-
 
 .. code-block:: yaml
 
@@ -104,11 +166,6 @@ This toolset provides diagnostics for Kubernetes clusters, helping developers id
               description: "List all evicted pods in a specific namespace."
               command: "kubectl get pods -n {{ namespace }} --field-selector=status.phase=Failed | grep Evicted"
 
-            - name: "kubectl_drain_node"
-              description: "Drain a node safely by evicting all pods."
-              command: "kubectl drain {{ node_name }} --ignore-daemonsets --force --delete-emptydir-data"
-
-
 Update the ``generated_values.yaml`` file with the provided YAML configuration, then apply the changes by executing the Helm upgrade command:
 
 .. code-block:: bash
@@ -118,43 +175,117 @@ Update the ``generated_values.yaml`` file with the provided YAML configuration, 
 Once deployed, Holmes will have access to advanced diagnostic tools for Kubernetes clusters. For example, you can ask Holmes, ``"Can you do a node health check?"`` and it will automatically use the newly added tools to provide you the answer.
 
 
-Example 3: HTTP Toolset
-^^^^^^^^^^^^^^^^^^^^^^^
+Example 3: GitHub Toolset
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The HTTP Toolset allows Holmes to retrieve website content and execute queries with customizable parameters.
+This toolset enables Holmes to fetch information from GitHub repositories.
 
-.. code-block:: yaml
+First `create a GitHub Personal Access Token with fine-grained permissions <https://github.com/settings/personal-access-tokens>`_. For this example, you can leave the default permissions.
 
+.. md-tab-set::
 
-    holmes:
-      toolsets:
-        http_tools:
-          description: "A simple toolset for fetching a website's content."
-          docs_url: "https://example.com"
-          icon_url: "https://example.com/favicon.ico"
-          tags:
-            - cluster
-          prerequisites:
-            - command: "curl -o /dev/null -s -w '%{http_code}' https://example.com "
-              expected_output: "200"
-          tools:
+  .. md-tab-item:: Robusta Helm Chart
 
-             - name: "fetch_url"
-               description: "Fetch the content of any website using a GET request."
-               command: "curl -X GET {{ url }}"
+    **Helm Values:**
 
-            - name: "fetch_url_with_params"
-              description: "Fetch a website's content with query parameters."
-              command: "curl -X GET '{{ url }}?{{ key }}={{ value }}'"
+    .. code-block:: yaml
 
+        holmes:
+          # provide environment variables the toolset needs
+          additionalEnvVars:
+          - name: GITHUB_TOKEN
+            value: <token_goes_here>
 
-Once you have updated the ``generated_values.yaml`` file, apply the changes by running the Helm upgrade command:
+          # define the toolset itself
+          toolsets:
+            github_tools:
+              description: "Tools for managing GitHub repositories"
+              tags:
+                - cli
+              prerequisites:
+                - env:
+                  - "GITHUB_TOKEN"
+                - command: "curl --version"
+              tools:
+                - name: "get_recent_commits"
+                  description: "Fetches the most recent commits for a repository"
+                  command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
 
-.. code-block:: bash
+              - name: "get_repo_details"
+                description: "Fetches details of a specific repository"
+                command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
 
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+                # In the above examples, LLM-provided parameters like {{ owner }} are inferred automatically from the command
+                # you can also define them explicitly - this is useful if:
+                # - You want to enforce parameter requirements (e.g., `owner` and `repo` are required).
+                # - You want to define provide a default value for optional parameters.
+                parameters:
+                  owner:
+                    type: "string"
+                    description: "Owner of the repository."
+                    required: true
+                  repo:
+                    type: "string"
+                    description: "Name of the repository."
+                    required: true
 
-Once deployed, you can ask Holmes, ``"Can you fetch data from https://example.com with key=search and value=tools?"``.
+    Update your Helm values with the provided YAML configuration, then apply the changes with Helm upgrade:
+
+    .. code-block:: bash
+
+        helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+
+    After the deployment is complete, the GitHub toolset will be available. HolmesGPT will be able to use it to interact with GitHub repositories.
+    For example, you can now open the HolmesGPT chat in the Robusta SaaS UI and ask, *who made the last commit to the robusta-dev/holmesgpt repo on github?*.
+
+    .. image:: /images/custom-github-toolset.png
+      :width: 600
+      :align: center
+
+  .. md-tab-item:: Holmes CLI
+
+    First, add the following environment vairables:
+
+    .. code-block:: bash
+      
+        export GITHUB_TOKEN="<token_goes_here>"
+
+    Then, add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
+        toolsets:
+          github_tools:
+            description: "Tools for managing GitHub repositories"
+            tags:
+              - cli
+            prerequisites:
+              - env:
+                - "GITHUB_TOKEN"
+              - command: "curl --version"
+            tools:
+              - name: "get_recent_commits"
+                description: "Fetches the most recent commits for a repository"
+                command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
+
+                # In the above examples, LLM-provided parameters like {{ owner }} are inferred automatically from the command
+                # you can also define them explicitly - this is useful if:
+                # - You want to enforce parameter requirements (e.g., `owner` and `repo` are required).
+                # - You want to define provide a default value for optional parameters.
+                parameters:
+                  owner:
+                    type: "string"
+                    description: "Owner of the repository."
+                    required: true
+                  repo:
+                    type: "string"
+                    description: "Name of the repository."
+                    required: true
+    To test, run: 
+
+      .. code-block:: yaml
+        
+        holmes ask -t github_toolset.yaml "who made the last commit to the robusta-dev/holmesgpt repo on github?"
 
 
 Reference

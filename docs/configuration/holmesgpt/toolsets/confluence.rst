@@ -3,27 +3,50 @@ Confluence
 
 By enabling this toolset, HolmesGPT will be able to fetch confluence pages. This is particularly useful if you store runbooks in
 Confluence and want Holmes to run investigations using these runbooks.
-This toolset requires an `API key <https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/>`_.
+This toolset requires an `Atlassian API Key <https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/>`_.
 
 
 Configuration
 -------------
 
-.. code-block:: yaml
+.. md-tab-set::
 
-    holmes:
-        additionalEnvVars:
-            - name: CONFLUENCE_USER
-              value: <Confluence's username>
-            - name: CONFLUENCE_API_KEY
-              value: <Confluence's API key>
-            - name: CONFLUENCE_BASE_URL
-              value: <Confluence's base URL>
-        toolsets:
-            confluence:
-                enabled: true
+  .. md-tab-item:: Robusta Helm Chart
 
-.. include:: ./_toolset_configuration.inc.rst
+    **Helm Values:**
+
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: CONFLUENCE_USER
+                  value: <Confluence's username>
+                - name: CONFLUENCE_API_KEY
+                  value: <Confluence's API key>
+                - name: CONFLUENCE_BASE_URL
+                  value: <Confluence's base URL>
+            toolsets:
+                confluence:
+                    enabled: true
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+    Set the following environment variables and the Confluence toolset will be automatically enabled:
+
+    .. code-block:: shell
+
+        export CONFLUENCE_USER="<confluence username>"
+        export CONFLUENCE_API_KEY="<confluence API key>"
+        export CONFLUENCE_BASE_URL="<confluence's base URL>"
+
+
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "why is my application failing? Get revelant runbooks from Confluence"
 
 Capabilities
 ------------

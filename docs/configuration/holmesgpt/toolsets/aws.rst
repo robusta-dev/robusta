@@ -1,5 +1,5 @@
 AWS
-===
+=====
 
 Security
 --------
@@ -8,26 +8,58 @@ Set of tools to audit AWS cloudtrail events and audit logs.
 
 
 Configuration
-*************
+***************
 
-.. code-block:: yaml
 
-    holmes:
-        additionalEnvVars:
-            - name: AWS_ACCESS_KEY_ID
-              value: AKIAIOSFODNN7EXAMPLE
-            - name: AWS_SECRET_ACCESS_KEY
-              value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-            - name: AWS_DEFAULT_REGION
-              value: us-west-2
-        toolsets:
-            aws/security:
-                enabled: true
+.. md-tab-set::
 
-.. include:: ./_toolset_configuration.inc.rst
+  .. md-tab-item:: Robusta Helm Chart
+
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: AWS_ACCESS_KEY_ID
+                  value: AKIAIOSFODNN7EXAMPLE
+                - name: AWS_SECRET_ACCESS_KEY
+                  value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+                - name: AWS_DEFAULT_REGION
+                  value: us-west-2
+            toolsets:
+                aws/security:
+                    enabled: true
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+
+    First, add the following environment vairables:
+
+    .. code-block:: yaml
+
+      export AWS_ACCESS_KEY_ID="<your AWS access key ID>"
+      export AWS_SECRET_ACCESS_KEY="<your AWS secret access key>"
+      export AWS_DEFAULT_REGION="us-west-2"
+
+
+    Then, add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
+      toolsets:
+          aws/security:
+              enabled: true
+
+
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "Are there any security misconfigurations my signup application, particularly in the database?"
 
 Capabilities
-************
+**************
 .. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::
@@ -45,31 +77,61 @@ Capabilities
 
 
 RDS
----
+----
 
 Read access to Amazon RDS instances, events and logs
 
 Configuration
-************
+****************
 
-.. code-block:: yaml
+.. md-tab-set::
 
-    holmes:
-        additionalEnvVars:
-            - name: AWS_ACCESS_KEY_ID
-              value: AKIAIOSFODNN7EXAMPLE
-            - name: AWS_SECRET_ACCESS_KEY
-              value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-            - name: AWS_DEFAULT_REGION
-              value: us-west-2
-        toolsets:
-            aws/rds:
-                enabled: true
+  .. md-tab-item:: Robusta Helm Chart
 
-.. include:: ./_toolset_configuration.inc.rst
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: AWS_ACCESS_KEY_ID
+                  value: AKIXDDDSDSdSA
+                - name: AWS_SECRET_ACCESS_KEY
+                  value: =wJalrXUtnFEMI/KNG/bPxRfiCYEXAMPLEKEY
+                - name: AWS_DEFAULT_REGION
+                  value: us-west-2
+            toolsets:
+                aws/rds:
+                    enabled: true
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+    First, add the following environment vairables:
+
+    .. code-block:: yaml
+
+      export AWS_ACCESS_KEY_ID="<your AWS access key ID>"
+      export AWS_SECRET_ACCESS_KEY="<your AWS secret access key>"
+      export AWS_DEFAULT_REGION="us-west-2"
+
+    Then, add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
+      toolsets:
+          aws/rds:
+              enabled: true
+
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "Why is my signup application slow, also look into the database"
+
 
 Capabilities
-************
+*************
+
 .. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::

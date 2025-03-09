@@ -39,7 +39,7 @@ HolmesGPT needs permission to establish a port-forward to ArgoCD. The configurat
         toolsets:
             argocd/core:
                 enabled: true
-
+                
 .. note::
 
     Change the namespace ``--port-forward-namespace <your_argocd_namespace>`` to the namespace in which your argocd service
@@ -48,25 +48,55 @@ HolmesGPT needs permission to establish a port-forward to ArgoCD. The configurat
     The option ``--grpc-web`` in ``ARGOCD_OPTS`` prevents some connection errors from leaking into the tool responses and
     provides a cleaner output for HolmesGPT.
 
+.. include:: ./_toolset_configuration.inc.rst
+
 
 2. Server URL
 ^^^^^^^^^^^^^
 
 This is the recommended approach if your argocd is reachable through a public DNS.
 
-.. code-block:: yaml
 
-    holmes:
-        additionalEnvVars:
-            - name: ARGOCD_AUTH_TOKEN
-              value: <your argocd auth token>
-            - name: ARGOCD_SERVER
-              value: argocd.example.com
-        toolsets:
-            argocd/core:
-                enabled: true
+.. md-tab-set::
 
-.. include:: ./_toolset_configuration.inc.rst
+  .. md-tab-item:: Robusta Helm Chart
+
+    .. code-block:: yaml
+
+        holmes:
+            additionalEnvVars:
+                - name: ARGOCD_AUTH_TOKEN
+                  value: <your argocd auth token>
+                - name: ARGOCD_SERVER
+                  value: argocd.example.com
+            toolsets:
+                argocd/core:
+                    enabled: true
+
+    .. include:: ./_toolset_configuration.inc.rst
+
+  .. md-tab-item:: Holmes CLI
+
+    First create the `ARGOCD_AUTH_TOKEN` environment variable:
+
+    .. code-block:: shell
+
+      export ARGOCD_AUTH_TOKEN="<your argocd auth token>"
+      export ARGOCD_SERVER="argocd.example.com"
+
+    Then add the following to **~/.holmes/config.yaml**, creating the file if it doesn't exist:
+
+    .. code-block:: yaml
+
+          toolsets:
+              argocd/core:
+                  enabled: true
+
+    To test, run: 
+
+    .. code-block:: yaml
+      
+        holmes ask "Which argocd applications are failing and why?"
 
 Capabilities
 ------------
