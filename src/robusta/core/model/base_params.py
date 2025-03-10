@@ -111,6 +111,7 @@ class AIInvestigateParams(HolmesParams):
     ask: Optional[str]
     context: Optional[Dict[str, Any]]
     sections: Optional[Dict[str, str]] = None
+    stream: bool = False
 
 
 class HolmesToolsResult(BaseModel):

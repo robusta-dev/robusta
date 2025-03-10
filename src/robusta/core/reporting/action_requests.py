@@ -27,6 +27,7 @@ class ExternalActionRequest(BaseModel):
     partial_auth_b: str = ""  # Auth for public key auth protocol option - should be added by the relay
     request_id: str = ""  # If specified, should return a sync response using the specified request_id
     no_sinks: bool = False  # Indicates not to send to sinks at all. The request body has a sink list,
+    stream: bool = False
     # however an empty sink list means using the server default sinks
 
 

@@ -136,6 +136,12 @@ class ActionRequestReceiver:
     def __sync_response(cls, status_code: int, request_id: str, data) -> Dict:
         return {"action": "response", "request_id": request_id, "status_code": status_code, "data": data}
 
+    def __stream_response(self, request_id: str, data: str):
+        self.ws.send(data=json.dumps({"action": "stream", "request_id": request_id, "data": data}))
+
+    def __close_stream_response(self, request_id: str, data: str):
+        self.ws.send(data=json.dumps({"action": "stream", "request_id": request_id, "data": data, "close": True}))
+
     def __exec_external_request(self, action_request: ExternalActionRequest, validate_timestamp: bool):
         logging.debug(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
@@ -175,6 +181,23 @@ class ActionRequestReceiver:
             http_code = 200 if response.get("success") else 500
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
 
+    def __exec_external_stream_request(self, action_request: ExternalActionRequest, validate_timestamp: bool):
+        logging.debug(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+
+        validation_response = self.__validate_request(action_request, validate_timestamp)
+        if validation_response.http_code != 200:
+            req_json = action_request.json(exclude={"body"})
+            body_json = action_request.body.json(exclude={"action_params"})  # action params already printed above
+            logging.error(f"Failed to validate action request {req_json} {body_json}")
+            self.__close_stream_response(action_request.request_id, validation_response.dict(exclude={"http_code"}))
+            return
+
+        res = self.event_handler.run_external_stream_action(action_request.body.action_name,
+                                                            action_request.body.action_params,
+                                                            lambda data: self.__stream_response(request_id=action_request.request_id, data=data))
+        res = "" if res.get("success") else json.dumps(res)
+        self.__close_stream_response(action_request.request_id, res)
+
     def _process_action(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
         self._executor.submit(self._process_action_sync, action, validate_timestamp)
 
@@ -189,7 +212,10 @@ class ActionRequestReceiver:
             else:
                 ctx = nullcontext()
             with ctx:
-                self.__exec_external_request(action, validate_timestamp)
+                if action.stream:
+                    self.__exec_external_stream_request(action, validate_timestamp)
+                else:
+                    self.__exec_external_request(action, validate_timestamp)
         except Exception:
             logging.error(
                 f"Failed to run incoming event {self._stringify_incoming_event(action.dict())}",
