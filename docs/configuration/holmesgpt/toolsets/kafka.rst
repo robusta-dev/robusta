@@ -68,6 +68,8 @@ Capabilities
 
    * - Tool Name
      - Description
+   * - list_kafka_clusters
+     - Lists all configured Kafka clusters
    * - list_kafka_consumers
      - Lists all Kafka consumer groups in the cluster
    * - describe_consumer_group
