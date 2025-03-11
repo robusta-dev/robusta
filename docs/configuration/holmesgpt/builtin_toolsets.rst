@@ -14,6 +14,7 @@ Builtin Toolsets
    toolsets/grafanatempo
    toolsets/helm
    toolsets/internet
+   toolsets/kafka
    toolsets/kubernetes
    toolsets/opensearch
    toolsets/robusta
@@ -67,6 +68,11 @@ by the user by providing credentials or API keys to external systems.
     .. grid-item-card:: :octicon:`cpu;1em;` Internet
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/internet
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Kafka
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/kafka
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Kubernetes
