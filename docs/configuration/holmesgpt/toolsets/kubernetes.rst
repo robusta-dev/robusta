@@ -143,6 +143,13 @@ Configuration
 .. code-block:: yaml
 
     holmes:
+        customClusterRoleRules:
+            - apiGroups:
+                - ""
+              resources:
+                - services/proxy
+              verbs:
+                - get
         toolsets:
             kubernetes/kube-prometheus-stack:
                 enabled: true
