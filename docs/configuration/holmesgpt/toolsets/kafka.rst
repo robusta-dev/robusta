@@ -19,14 +19,21 @@ Configuration
             kafka/admin:
                 enabled: true
                 config:
-                    kafka_broker: "localhost:9092" # Comma separated values
-                    kafka_client_id: holmes-kafka-core-toolset
-                    kafka_security_protocol: <Valid values are: PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL>
-                    kafka_sasl_mechanism: ...
-                    kafka_username: ...
-                    kafka_password: ...
+                    kafka_clusters:
+                        - name: aks-prod-kafka
+                          kafka_broker: kafka-1.aks-prod-kafka-brokers.kafka.svc:9095
+                          kafka_username: kafka-plaintext-user
+                          kafka_password: ******
+                          kafka_sasl_mechanism: SCRAM-SHA-512
+                          kafka_security_protocol: SASL_PLAINTEXT
+                        - name: gke-stg-kafka
+                          kafka_broker: gke-kafka.gke-stg-kafka-brokers.kafka.svc:9095
+                          kafka_username: kafka-plaintext-user
+                          kafka_password: ****
+                          kafka_sasl_mechanism: SCRAM-SHA-512
+                          kafka_security_protocol: SASL_PLAINTEXT
 
-Below is a description of each configuration field:
+Below is a description of the configuration field for each cluster:
 
 .. list-table::
   :header-rows: 1
@@ -34,6 +41,8 @@ Below is a description of each configuration field:
 
   * - Config key
     - Description
+  * - name
+    - Give a meaningful name to your cluster. Holmes will use it to decide what cluster to look into. Names must be unique across all clusters.
   * - kafka_broker
     - List of host/port pairs to use for establishing the initial connection to the Kafka cluster. Comma separated values.
   * - kafka_client_id
