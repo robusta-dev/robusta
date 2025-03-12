@@ -1,11 +1,7 @@
 
 
-.. details:: Enable this integration
+Update your Helm values (generated_values.yaml) with the above configuration and run a Helm upgrade:
 
-    To enable this integration, copy the above example into your Helm values for Robusta (``generated_values.yaml``).
+.. code-block:: bash
 
-    After making changes, apply them using Helm:
-
-    .. code-block:: bash
-
-        helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
