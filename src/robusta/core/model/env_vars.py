@@ -130,6 +130,7 @@ POD_WAIT_RETRIES = int(os.environ.get("POD_WAIT_RETRIES", 10))
 POD_WAIT_RETRIES_SECONDS = int(os.environ.get("POD_WAIT_RETRIES_SECONDS", 5))
 
 HOLMES_ENABLED = load_bool("HOLMES_ENABLED", False)
+HOLMES_ASK_SLACK_BUTTON_ENABLED = load_bool("HOLMES_ASK_SLACK_BUTTON_ENABLED", True)
 
 # simple calculated values (not direct environment vars)
 SENTRY_ENABLED = SEND_ADDITIONAL_TELEMETRY and SENTRY_DSN
