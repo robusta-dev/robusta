@@ -10,7 +10,8 @@ Builtin Toolsets
    toolsets/aws
    toolsets/confluence
    toolsets/docker
-   toolsets/grafana
+   toolsets/grafanaloki
+   toolsets/grafanatempo
    toolsets/helm
    toolsets/internet
    toolsets/kafka
