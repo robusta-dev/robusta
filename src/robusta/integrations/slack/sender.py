@@ -18,7 +18,7 @@ from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
     HOLMES_ENABLED,
     SLACK_REQUEST_TIMEOUT,
-    SLACK_TABLE_COLUMNS_LIMIT,
+    SLACK_TABLE_COLUMNS_LIMIT, HOLMES_ASK_SLACK_BUTTON_ENABLED,
 )
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
@@ -541,7 +541,7 @@ class SlackSender:
         )
         blocks.append(links_block)
 
-        if HOLMES_ENABLED:
+        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
