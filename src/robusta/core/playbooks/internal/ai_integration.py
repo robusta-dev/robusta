@@ -62,35 +62,43 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             include_tool_call_results=True,
             sections=params.sections
         )
-        result = requests.post(f"{holmes_url}/api/investigate", data=holmes_req.json())
-        result.raise_for_status()
 
-        holmes_result = HolmesResult(**json.loads(result.text))
-        title_suffix = (
-            f" on {params.resource.name}"
-            if params.resource and params.resource.name and params.resource.name.lower() != "unresolved"
-            else ""
-        )
+        if params.stream:
+            with requests.post(f"{holmes_url}/api/stream/investigate", data=holmes_req.json(), stream=True) as resp:
+                for line in resp.iter_content(chunk_size=None, decode_unicode=True): # Avoid streaming chunks from holmes. send them as they arrive.
+                    event.ws(data=line)
+            return
 
-        kind = params.resource.kind if params.resource else None
-        finding = Finding(
-            title=f"AI Analysis of {investigation__title}{title_suffix}",
-            aggregation_key="HolmesInvestigationResult",
-            subject=FindingSubject(
-                name=params.resource.name if params.resource else "",
-                namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(kind) if kind else FindingSubjectType.TYPE_NONE,
-                node=params.resource.node if params.resource else "",
-                container=params.resource.container if params.resource else "",
-            ),
-            finding_type=FindingType.AI_ANALYSIS,
-            failure=False,
-        )
-        finding.add_enrichment(
-            [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
-        )
+        else:
+            result = requests.post(f"{holmes_url}/api/investigate", data=holmes_req.json())
+            result.raise_for_status()
 
-        event.add_finding(finding)
+            holmes_result = HolmesResult(**json.loads(result.text))
+            title_suffix = (
+                f" on {params.resource.name}"
+                if params.resource and params.resource.name and params.resource.name.lower() != "unresolved"
+                else ""
+            )
+
+            kind = params.resource.kind if params.resource else None
+            finding = Finding(
+                title=f"AI Analysis of {investigation__title}{title_suffix}",
+                aggregation_key="HolmesInvestigationResult",
+                subject=FindingSubject(
+                    name=params.resource.name if params.resource else "",
+                    namespace=params.resource.namespace if params.resource else "",
+                    subject_type=FindingSubjectType.from_kind(kind) if kind else FindingSubjectType.TYPE_NONE,
+                    node=params.resource.node if params.resource else "",
+                    container=params.resource.container if params.resource else "",
+                ),
+                finding_type=FindingType.AI_ANALYSIS,
+                failure=False,
+            )
+            finding.add_enrichment(
+                [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
+            )
+
+            event.add_finding(finding)
 
     except Exception as e:
         logging.exception(

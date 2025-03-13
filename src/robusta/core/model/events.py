@@ -4,7 +4,7 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable
 
 from pydantic import BaseModel
 
@@ -59,6 +59,7 @@ class ExecutionBaseEvent:
     _scheduler: Optional[PlaybooksScheduler] = None
     _context: Optional[ExecutionContext] = None
     _event_emitter: Optional[EventEmitter] = None
+    _ws: Optional[Callable[[str], None]] = None
 
     def set_context(self, context: ExecutionContext):
         self._context = context
