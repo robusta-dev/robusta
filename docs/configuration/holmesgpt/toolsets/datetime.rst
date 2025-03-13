@@ -3,7 +3,8 @@ Datetime :checkmark:`_`
 .. include:: ./_toolset_enabled_by_default.inc.rst
 
 By enabling this toolset, HolmesGPT will be able to get the current UTC date and time.
-This feature works well with other toolsets.
+This feature should be kept enabled as it can be necessary for other toolsets that rely
+on dates and time.
 
 The following built-in toolsets depend on ``datetime``:
 
