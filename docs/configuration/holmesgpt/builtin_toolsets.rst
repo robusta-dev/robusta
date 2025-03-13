@@ -62,9 +62,14 @@ by the user by providing credentials or API keys to external systems.
         :link: toolsets/docker
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Grafana
+    .. grid-item-card:: :octicon:`cpu;1em;` Grafana Loki
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolsets/grafana
+        :link: toolsets/grafanaloki
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Grafana Tempo
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/grafanatempo
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Helm
