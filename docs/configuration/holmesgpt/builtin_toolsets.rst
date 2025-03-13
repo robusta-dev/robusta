@@ -18,6 +18,7 @@ Builtin Toolsets
    toolsets/kafka
    toolsets/kubernetes
    toolsets/opensearch
+   toolsets/prometheus
    toolsets/robusta
    toolsets/slab
 
@@ -90,9 +91,15 @@ by the user by providing credentials or API keys to external systems.
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/kubernetes
         :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/opensearch
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/prometheus
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Robusta

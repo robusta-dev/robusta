@@ -8,6 +8,7 @@ This feature works well with other toolsets.
 The following built-in toolsets depend on ``datetime``:
 
 * :ref:`grafana/loki <toolset_grafana_loki>`
+* :ref:`prometheus/metrics <toolset_prometheus>`
 
 Configuration
 -------------

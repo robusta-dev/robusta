@@ -1,3 +1,5 @@
+.. _toolset_grafana_loki:
+
 Loki (Grafana)
 ===============
 
