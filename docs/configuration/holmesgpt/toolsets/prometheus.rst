@@ -21,15 +21,15 @@ Configuration
             toolsets:
                 prometheus/metrics:
                     enabled: true
-                config:
-                    prometheus_url: ...
-                    metrics_labels_time_window_hrs: 48 # default value
-                    metrics_labels_cache_duration_hrs: 12 # default value
-                    fetch_labels_with_labels_api: false # default value
-                    fetch_metadata_with_series_api: false # default value
-                    tool_calls_return_data: false # default value
-                    headers:
-                        Authorization: "Basic <base_64_encoded_string>"
+                    config:
+                        prometheus_url: ...
+                        metrics_labels_time_window_hrs: 48 # default value
+                        metrics_labels_cache_duration_hrs: 12 # default value
+                        fetch_labels_with_labels_api: false # default value
+                        fetch_metadata_with_series_api: false # default value
+                        tool_calls_return_data: false # default value
+                        headers:
+                            Authorization: "Basic <base_64_encoded_string>"
 
 
     .. include:: ./_toolset_configuration.inc.rst
@@ -43,15 +43,15 @@ Configuration
         toolsets:
             prometheus/metrics:
                 enabled: true
-            config:
-                prometheus_url: ...
-                metrics_labels_time_window_hrs: 48 # default value
-                metrics_labels_cache_duration_hrs: 12 # default value
-                fetch_labels_with_labels_api: false # default value
-                fetch_metadata_with_series_api: false # default value
-                tool_calls_return_data: false # default value
-                headers:
-                    Authorization: "Basic <base_64_encoded_string>"
+                config:
+                    prometheus_url: ...
+                    metrics_labels_time_window_hrs: 48 # default value
+                    metrics_labels_cache_duration_hrs: 12 # default value
+                    fetch_labels_with_labels_api: false # default value
+                    fetch_metadata_with_series_api: false # default value
+                    tool_calls_return_data: false # default value
+                    headers:
+                        Authorization: "Basic <base_64_encoded_string>"
 
 It is also possible to set the ``PROMETHEUS_URL`` environment variable instead of the above ``prometheus_url`` config key.
 
