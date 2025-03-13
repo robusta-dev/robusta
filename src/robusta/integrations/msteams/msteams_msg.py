@@ -67,7 +67,7 @@ class MsTeamsMsg:
 
         for link in finding.links:
             link_url = link.url
-            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and self.prefer_redirect_to_platform:
+            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and self.prefer_redirect_to_platform and platform_enabled:
                 link_url = convert_prom_graph_url_to_robusta_metrics_explorer(link.url, cluster_name, account_id)
             action: str = f"[{link.link_text}]({link_url})"
             actions.append(action)

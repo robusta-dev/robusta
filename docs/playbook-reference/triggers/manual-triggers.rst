@@ -9,19 +9,10 @@ This ties into Robusta's goal of reducing MTTR (mean time to recovery).
 
 Additional use cases are discussed below.
 
-Troubleshooting examples
+Automation examples
 ----------------------------------------
 
-A few examples:
-
-1. :ref:`Debug Python pods in VSCode <Python debugger>`
-2. :ref:`Find memory leaks in applications <Python memory>`
-3. :ref:`Function-level CPU profiling <Python profiler>`
-
-Other examples
-------------------------------------
-
-Manual actions aren't just for troubleshooting. You can automate any repetitive task on Kubernetes:
+Manual actions can be used to automate any repetitive task on Kubernetes:
 
 1. `Run chaos engineering scenarios <https://github.com/robusta-dev/robusta-chaos>`_
 2. Stress test pods over HTTP

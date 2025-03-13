@@ -77,3 +77,20 @@ Example:
             name: main_ms_teams_sink
             webhook_url: teams-incoming-webhook  # see instructions below
             webhook_override: ${annotations.kubernetes.io/service-name}
+
+Redirect to Platform
+-------------------------------------------------------------------
+
+By default, MS Teams notifications include buttons to view more information in the Robusta SaaS platform.
+If you don't use Robusta SaaS you can modify these links to point at Prometheus instead.
+To do so, set prefer_redirect_to_platform: false.
+
+For example:
+
+.. code-block:: yaml
+
+     sinks_config:
+     - ms_teams_sink:
+        name: main_ms_teams_sink
+        webhook_url: teams-incoming-webhook
+        prefer_redirect_to_platform: false

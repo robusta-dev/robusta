@@ -10,6 +10,7 @@ import certifi
 import humanize
 from dateutil import tz
 from slack_sdk import WebClient
+from slack_sdk.http_retry import all_builtin_retry_handlers
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
@@ -17,7 +18,7 @@ from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
     HOLMES_ENABLED,
     SLACK_REQUEST_TIMEOUT,
-    SLACK_TABLE_COLUMNS_LIMIT,
+    SLACK_TABLE_COLUMNS_LIMIT, HOLMES_ASK_SLACK_BUTTON_ENABLED,
 )
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
@@ -68,7 +69,7 @@ class SlackSender:
             except Exception as e:
                 logging.exception(f"Failed to use custom certificate. {e}")
 
-        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT)
+        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT, retry_handlers=all_builtin_retry_handlers())
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
@@ -410,7 +411,7 @@ class SlackSender:
 
         for link in finding.links:
             link_url = link.url
-            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and prefer_redirect_to_platform:
+            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and prefer_redirect_to_platform and platform_enabled:
                 link_url = convert_prom_graph_url_to_robusta_metrics_explorer(
                     link.url, self.cluster_name, self.account_id
                 )
@@ -540,7 +541,7 @@ class SlackSender:
         )
         blocks.append(links_block)
 
-        if HOLMES_ENABLED:
+        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))

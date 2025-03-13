@@ -95,6 +95,25 @@ Example:
          slack_channel: my-fallback-channel
          channel_override: "$cluster_name-alerts-$labels.env-${annotations.kubernetes.io/service-name}"
 
+Redirect to Platform
+-------------------------------------------------------------------
+
+By default, Slack notifications include buttons to view more information in the Robusta SaaS platform.
+If you don't use Robusta SaaS you can modify these links to point at Prometheus instead.
+To do so, set prefer_redirect_to_platform: false.
+
+For example:
+
+.. code-block:: yaml
+
+     sinks_config:
+     # slack integration params
+     - slack_sink:
+         name: main_slack_sink
+         api_key: xoxb-112...
+         slack_channel: my-fallback-channel
+         prefer_redirect_to_platform: false
+
 
 Using Private Channels
 -------------------------------------------------------------------

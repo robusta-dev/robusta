@@ -83,12 +83,12 @@ On some clusters this can take a while, so don't panic if it appears stuck:
             :name: cb-helm-install-test-clusters
 
             helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-            helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true
-
+            helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true --set holmes.resources.requests.memory=512Mi
+            
 Verifying Installation
 ------------------------------
 
-Confirm that two Robusta pods are running with no errors in the logs:
+Confirm that Robusta pods are running with no errors in the logs:
 
 .. code-block:: bash
     :name: cb-get-pods-robusta-logs
