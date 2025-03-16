@@ -303,7 +303,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     name: str = resource.metadata.name
 
     if resource_kind.lower() in RESOURCE_YAML_BLOCK_LIST:
-        raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, f"{resource_kind.lower()} type is blocked for get resource yaml.")
+        raise ActionException(ErrorCodes.RESOURCE_NOT_PERMITTED, f"{resource_kind.lower()} type is blocked for get resource yaml.")
 
     try:
         resource_yaml = hikaru.get_yaml(resource)
