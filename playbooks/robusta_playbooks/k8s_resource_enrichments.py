@@ -296,25 +296,17 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     """
     resource = event.get_resource()
     if not resource:
-        logging.error("resource not found...")
-        return
+        raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, "Resource not found for get resource yaml.")
 
     resource_kind = resource.kind
     namespace: str = resource.metadata.namespace
     name: str = resource.metadata.name
 
     if resource_kind.lower() in RESOURCE_YAML_BLOCK_LIST:
-        event.add_enrichment(
-            [
-                MarkdownBlock(f"{resource_kind} is blocked."),
-                FileBlock(f"{name}.yaml", f"{resource_kind} is blocked.".encode()),
-            ],
-        )
-        return
+        raise ActionException(ErrorCodes.RESOURCE_NOT_PERMITTED, f"{resource_kind.lower()} type is blocked for get resource yaml.")
 
     try:
         resource_yaml = hikaru.get_yaml(resource)
-
         event.add_enrichment(
             [
                 MarkdownBlock(f"Your YAML file for {resource_kind} {namespace}/{name}"),
@@ -322,15 +314,9 @@ def get_resource_yaml(event: KubernetesResourceEvent):
             ],
         )
     except KeyError:
-        logging.error(f"{resource_kind} is not supported resource kind")
-    except kubernetes.client.exceptions.ApiException as exc:
-        if exc.status == 404:
-            logging.error(f"{resource_kind.title()} {namespace}/{name} was not found")
-        else:
-            logging.error(f"A following error occurred: {str(exc)}")
-    except Exception as exc:
-        logging.error("Unexpected error occurred!")
-        logging.exception(exc)
+        raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"{resource_kind} is not supported for get resource yaml.")
+    except Exception as e:
+        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, f"{e}")
 
 
 class NamedResourcesParams(ActionParams):
