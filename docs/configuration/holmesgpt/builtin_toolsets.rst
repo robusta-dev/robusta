@@ -9,6 +9,7 @@ Builtin Toolsets
    toolsets/argocd
    toolsets/aws
    toolsets/confluence
+   toolsets/datetime
    toolsets/docker
    toolsets/grafanaloki
    toolsets/grafanatempo
@@ -17,6 +18,7 @@ Builtin Toolsets
    toolsets/kafka
    toolsets/kubernetes
    toolsets/opensearch
+   toolsets/prometheus
    toolsets/robusta
    toolsets/slab
 
@@ -50,6 +52,11 @@ by the user by providing credentials or API keys to external systems.
         :link: toolsets/confluence
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Datetime
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/datetime
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Docker
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/docker
@@ -79,9 +86,15 @@ by the user by providing credentials or API keys to external systems.
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/kubernetes
         :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/opensearch
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/prometheus
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Robusta
