@@ -1,3 +1,5 @@
+.. _toolset_prometheus:
+
 Prometheus
 ==========
 
