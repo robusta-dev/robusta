@@ -333,7 +333,7 @@ Each alert in the ``alerts`` list must follow the specific schema, which include
      - The source of the alert.
      - Yes
    * - ``priority``
-     - string (one of: ``critical``, ``high``, ``error``, ``warning``, ``info``, ``low``, ``debug``)
+     - string (one of: ``critical``, ``high``, ``medium``, ``error``, ``warning``, ``info``, ``low``, ``debug``)
      - The priority level of the alert.
      - Yes
    * - ``aggregation_key``
