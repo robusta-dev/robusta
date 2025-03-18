@@ -33,6 +33,7 @@ fetch the logs and it needs to know the UID of this datasource.
 A simple way to get the datasource UID is to access the Grafana API by running the following request:
 
 .. code-block:: bash
+
     # port forward if you are using Robusta's grafana from your kubernetes cluster
     kubectl port-forward svc/robusta-grafana 3000:80
     # List the Tempo data sources
