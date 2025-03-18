@@ -3,9 +3,13 @@ Datetime :checkmark:`_`
 .. include:: ./_toolset_enabled_by_default.inc.rst
 
 By enabling this toolset, HolmesGPT will be able to get the current UTC date and time.
-This feature works well with other toolsets. For example, the :doc:`prometheus <prometheus>`
-toolset needs ``start`` and ``end`` time parameters to properly create and execute
-PromQL queries.
+This feature should be kept enabled as it can be necessary for other toolsets that rely
+on dates and time.
+
+The following built-in toolsets depend on ``datetime``:
+
+* :ref:`grafana/loki <toolset_grafana_loki>`
+* :ref:`prometheus/metrics <toolset_prometheus>`
 
 Configuration
 -------------
