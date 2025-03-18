@@ -18,7 +18,7 @@ Check out this `video <https://www.loom.com/share/f969ab3af509444693802254ab0407
 Getting Grafana URL
 -----------------------
 
-You can find the Grafana URL required for Loki and Tempo in your Grafana cloud account settings.
+You can find the Grafana URL required for Tempo in your Grafana cloud account settings.
 
 .. image:: /images/grafana-url-for-holmes.png
   :width: 600
@@ -28,7 +28,7 @@ Obtaining the datasource UID
 -----------------------
 
 You may have multiple Tempo data sources setup in Grafana. HolmesGPT uses a single Tempo datasource to
-fetch the logs and it needs to know the UID of this datasource.
+fetch the traces and it needs to know the UID of this datasource.
 
 A simple way to get the datasource UID is to access the Grafana API by running the following request:
 
@@ -83,7 +83,6 @@ Configuration
                 deployment: "k8s.deployment.name"
                 node: "k8s.node.name"
                 service: "service.name"
-
 
     .. include:: ./_toolset_configuration.inc.rst
 
