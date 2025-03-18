@@ -12,7 +12,6 @@ from robusta.core.sinks.transformer import Transformer
 PRIORITY_MAP = {
     FindingSeverity.INFO: "P5",
     FindingSeverity.LOW: "P4",
-    FindingSeverity.MEDIUM: "P3",
     FindingSeverity.HIGH: "P1",
 }
 

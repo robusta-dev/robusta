@@ -37,8 +37,7 @@ class FindingSeverity(Enum):
     DEBUG = 0
     INFO = 1
     LOW = 2
-    MEDIUM = 3
-    HIGH = 4
+    HIGH = 3
 
     @staticmethod
     def from_severity(severity: str) -> "FindingSeverity":
@@ -48,8 +47,9 @@ class FindingSeverity(Enum):
             return FindingSeverity.INFO
         elif severity == "LOW":
             return FindingSeverity.LOW
+        # left MEDIUM as HIGH for backward compatibility for create_finding action
         elif severity == "MEDIUM":
-            return FindingSeverity.MEDIUM
+            return FindingSeverity.HIGH
         elif severity == "HIGH":
             return FindingSeverity.HIGH
 
@@ -62,8 +62,6 @@ class FindingSeverity(Enum):
             return "⚪️"
         elif self == FindingSeverity.LOW:
             return "🟡"
-        elif self == FindingSeverity.MEDIUM:
-            return "🟠"
         elif self == FindingSeverity.HIGH:
             return "🔴"
 

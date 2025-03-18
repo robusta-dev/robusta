@@ -12,7 +12,6 @@ from robusta.core.reporting.utils import is_image
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.INFO: "\U0001F7E2",
     FindingSeverity.LOW: "\U0001F7E1",
-    FindingSeverity.MEDIUM: "\U0001F7E0",
     FindingSeverity.HIGH: "\U0001F534",
 }
 INVESTIGATE_ICON = "\U0001F50E"
