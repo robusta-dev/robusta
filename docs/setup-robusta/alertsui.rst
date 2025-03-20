@@ -22,6 +22,9 @@ Robusta uses the ``enabledManagedConfiguration`` Helm value to determine whether
 
    enabledManagedConfiguration: true 
 
+Important to mention that Robusta stores its managed rules in PrometheusRules custom resources that start with ``robusta-prometheus.rules--``. If left in the cluster, you might have double alerts.
+
+
 Enable Alerts UI for your cluster
 ********************************************
 
@@ -67,9 +70,7 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 Disabling the Feature
 ---------------------------------
 
-If you choose to stop using the Robusta Alerts UI, you can do so at any time and go back to using built in Kube Prometheus Stack alerts. To do this, remove the config added in the previous step from your ``generated_values.yaml``, set ``enabledManagedConfiguration: false`` and do a :ref:`Helm Upgrade <Simple Upgrade>`.
-
-Robusta stores its managed rules in PrometheusRules custom resources that start with ``robusta-prometheus.rules--``. If left in the cluster, you might have double alerts.
+If you choose to stop using the Robusta Alerts UI, set ``enabledManagedConfiguration: false`` in ``generated_values.yaml`` and do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 Modify and run the following command for all the Robusta rule custom resources present in your cluster.
 
