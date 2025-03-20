@@ -16,6 +16,11 @@ Robusta manages the list of alerts in the Robusta UI and syncs them to your clus
 
 You can disable/enable individual alerts and change thresholds via the UI.
 
+Cluster is synced with the Alerts UI using the ``enabledManagedConfiguration`` Helm value, by default in ``generated_values.yaml`` it is set to ``true``.
+
+.. code-block:: yaml
+
+   enabledManagedConfiguration: true 
 
 Disable Default Prometheus Alert Rules
 ********************************************
@@ -31,7 +36,7 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 
       .. code-block:: yaml
 
-        enabledManagedConfiguration: true # Enables managed alerts
+        enabledManagedConfiguration: true # Check that managed alerts are enabled
         kube-prometheus-stack: # those rules are now managed by Robusta
           defaultRules:
             rules:
