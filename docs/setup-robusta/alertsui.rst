@@ -46,7 +46,7 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 
          kubectl get crd | grep prometheus
 
-      To make sure Prometheus picks up Robusta's rule files and avoid duplication, add the following to the Kube Prometheus Stack configuration:
+      To make sure Prometheus picks up Robusta's rule files, add the following to the Kube Prometheus Stack configuration:
 
       .. code-block:: yaml
 
