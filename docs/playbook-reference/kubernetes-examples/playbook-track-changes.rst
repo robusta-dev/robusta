@@ -46,7 +46,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
       actions:
         - resource_babysitter: {}
         - customise_finding:
-            severity: MEDIUM
+            severity: HIGH
             title: "New changes in $kind/$namespace/$name"
       sinks:
         - some_sink_name # Optional

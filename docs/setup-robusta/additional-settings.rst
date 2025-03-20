@@ -79,10 +79,9 @@ For example:
 Mapping Custom Alert Severity
 ------------------------------------
 
-To help you prioritize alerts from different sources, Robusta maps alert severity to five standard levels:
+To help you prioritize alerts from different sources, Robusta maps alert severity to four standard levels:
 
 * HIGH - requires your immediate attention - may indicate a service outage
-* MEDIUM - likely not a current outage, but could be a warning sign beforehand - should be investigated within a reasonable timeframe (hours to days)
 * LOW - minor problems and areas for improvement (e.g. performance) - to be reviewed periodically on a weekly or bi-weekly cadence
 * INFO - you probably want to be aware of these, but do not necessarily need to take action
 * DEBUG - debug only - can be ignored unless you're actively debugging an issue
@@ -101,9 +100,9 @@ Prometheus alerts are normalized to the above levels as follows:
   * - high
     - HIGH
   * - medium
-    - MEDIUM
+    - HIGH
   * - error
-    - MEDIUM
+    - HIGH
   * - warning
     - LOW
   * - low
@@ -123,10 +122,10 @@ You can map your own Prometheus severities, using the ``custom_severity_map`` He
       custom_severity_map:
         # maps a p1 value on your own alerts to Robusta's HIGH value
         p1: high
-        # maps a p2 value on your own alerts to Robusta's HIGH value
-        p2: medium
+        # maps a p2 value on your own alerts to Robusta's LOW value
+        p2: low
 
-The mapped values must be one of: high, medium, low, info, and debug.
+The mapped values must be one of: high, low, info, and debug.
 
 Two-way Interactivity
 ------------------------
