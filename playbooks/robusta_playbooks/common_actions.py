@@ -10,7 +10,7 @@ class FindingOverrides(ActionParams):
     """
     :var title: Overriding finding title. Title can be templated with name/namespace/kind/node of the resource, if applicable
     :var description: Overriding finding description. Description can be templated with name/namespace/kind/node of the resource, if applicable
-    :var severity: Overriding finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
+    :var severity: Overriding finding severity. Allowed values: DEBUG, INFO, LOW, HIGH
     :example severity: DEBUG
     :example title: Resource $kind/$namespace/$name is in trouble
     """
@@ -54,7 +54,7 @@ class FindingFields(ActionParams):
         |
         Aggregation Keys should generally not include Pod names or other strings that change. If you include dynamic data in the Aggregation Key, each unique Aggregation Key will create it’s own grouping.
     :var description: Finding description. Description can be templated
-    :var severity: Finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
+    :var severity: Finding severity. Allowed values: DEBUG, INFO, LOW, HIGH
 
     :example title: "Job $name (importance: $labels.importance) in namespace $namespace failed"
     :example aggregation_key: "JobFailure"

@@ -35,8 +35,6 @@ class PagerdutySink(SinkBase):
         # https://support.pagerduty.com/docs/dynamic-notifications
         if severity == FindingSeverity.HIGH:
             return "critical"
-        elif severity == FindingSeverity.MEDIUM:
-            return "error"
         elif severity == FindingSeverity.LOW:
             return "warning"
         elif severity == FindingSeverity.INFO:

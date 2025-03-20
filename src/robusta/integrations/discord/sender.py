@@ -25,7 +25,6 @@ from robusta.core.reporting.base import FindingStatus
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
-    FindingSeverity.MEDIUM: ":orange_circle:",
     FindingSeverity.LOW: ":yellow_circle:",
     FindingSeverity.INFO: ":green_circle:",
 }
@@ -33,7 +32,6 @@ SEVERITY_EMOJI_MAP = {
 # use hex to decimal converter, eg: https://www.rapidtables.com/convert/number/hex-to-decimal.html
 SEVERITY_COLOR_MAP = {
     FindingSeverity.HIGH: "14495556",
-    FindingSeverity.MEDIUM: "16027661",
     FindingSeverity.LOW: "16632664",
     FindingSeverity.INFO: "7909721",
 }
