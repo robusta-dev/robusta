@@ -29,7 +29,6 @@ def robusta_severity_to_servicenow_iup(severity: FindingSeverity) -> Tuple[int, 
     # have it changed I suppose.
     return {
         FindingSeverity.HIGH: (1, 1, 1),
-        FindingSeverity.MEDIUM: (2, 2, 3),
         FindingSeverity.LOW: (3, 2, 4),
         FindingSeverity.INFO: (3, 3, 5),
         FindingSeverity.DEBUG: (3, 3, 5),

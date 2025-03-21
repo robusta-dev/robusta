@@ -28,7 +28,6 @@ Optional Settings
 
         priority_mapping:
           HIGH: "High"
-          MEDIUM: "Medium"
           LOW: "Low"
           INFO: "Lowest"
 
@@ -70,7 +69,6 @@ Configuring the Jira sink
             project_name: project_name
             priority_mapping: (OPTIONAL)
               HIGH: "High"
-              MEDIUM: "Medium"
               LOW: "Low"
               INFO: "Lowest"
             scope:

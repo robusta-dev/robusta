@@ -24,13 +24,11 @@ extension_regex = re.compile(r"\.[a-z]+$")
 MattermostBlock = Dict[str, Any]
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
-    FindingSeverity.MEDIUM: ":large_orange_circle:",
     FindingSeverity.LOW: ":large_yellow_circle:",
     FindingSeverity.INFO: ":large_green_circle:",
 }
 SEVERITY_COLOR_MAP = {
     FindingSeverity.HIGH: "#d11818",
-    FindingSeverity.MEDIUM: "#e48301",
     FindingSeverity.LOW: "#ffdc06",
     FindingSeverity.INFO: "#05aa01",
 }
