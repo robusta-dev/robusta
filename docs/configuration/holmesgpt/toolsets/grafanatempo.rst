@@ -76,7 +76,7 @@ Configuration
             config:
               api_key: <your grafana API key>
               url: <your grafana url> # e.g. https://acme-corp.grafana.net
-              grafana_datasource_uid: <the UID of the loki data source in Grafana>
+              grafana_datasource_uid: <the UID of the tempo data source in Grafana>
               labels:
                 pod: "k8s.pod.name"
                 namespace: "k8s.namespace.name"
@@ -98,7 +98,7 @@ Configuration
           config:
               api_key: <your grafana service account token>
               url: <your grafana url> # e.g. https://acme-corp.grafana.net
-              grafana_datasource_uid: <the UID of the loki data source in Grafana>
+              grafana_datasource_uid: <the UID of the tempo data source in Grafana>
               labels:
                 pod: "k8s.pod.name"
                 namespace: "k8s.namespace.name"
