@@ -13,6 +13,12 @@ jobs:
   has-secrets:
     name: Check Secrets
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
     steps:
     - id: docs
       env:
@@ -33,18 +39,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - uses: google-github-actions/setup-gcloud@v0.2.0
-      if: needs.has-secrets.outputs.docs
-      with:
-        service_account_key: ${{ secrets.GKE_PROD_SA_KEY }}
-        project_id: ${{ secrets.GKE_PROD_PROJECT }}
-        export_default_credentials: true
+      - uses: google-github-actions/auth@v2
+        if: needs.has-secrets.outputs.docs
+        with:
+          project_id: ${{ secrets.GKE_PROD_PROJECT }}
+          workload_identity_provider: 'projects/429189597230/locations/global/workloadIdentityPools/github/providers/robusta-repos' # prod
 
-    # Configure Docker to use the gcloud command-line tool as a credential helper for authentication
-    - name: Configure Docker
-      if: needs.has-secrets.outputs.docs
-      run: |-
-        gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        if: needs.has-secrets.outputs.docs
+        with:
+          project_id: ${{ secrets.GKE_PROD_PROJECT }
 
     - name: Set up Python
       uses: actions/setup-python@v2

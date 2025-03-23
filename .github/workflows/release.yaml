@@ -8,30 +8,37 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
   # ` ``  GKE_ZONE: us-central1-c   # TODO: update to cluster zone
   RELEASE_VER: ${{ github.event.release.tag_name }}
+
 jobs:
   setup-build-publish-deploy:
     name: Build images
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get release version
         run: echo "$RELEASE_VER"
 
-      - uses: google-github-actions/setup-gcloud@v0.2.0
+      - uses: google-github-actions/auth@v2
         with:
-          service_account_key: ${{ secrets.GKE_PROD_SA_KEY }}
           project_id: ${{ secrets.GKE_PROD_PROJECT }}
-          export_default_credentials: true
+          workload_identity_provider: 'projects/429189597230/locations/global/workloadIdentityPools/github/providers/robusta-repos' # prod
 
-      # Configure Docker to use the gcloud command-line tool as a credential helper for authentication
-      - run: |-
-          gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GKE_PROD_PROJECT }}
 
-      - run: |-
-          gcloud config get-value project
+      - name: Configure Docker Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
 
       - run: |-
           curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
