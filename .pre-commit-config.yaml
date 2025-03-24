@@ -1,5 +1,12 @@
 repos:
 
+  # - repo: https://github.com/pre-commit/pre-commit-hooks
+  #   rev: v2.3.0
+  #   hooks:
+  #     - id: check-yaml
+  #     - id: end-of-file-fixer
+  #     - id: trailing-whitespace
+
   - repo: https://github.com/python-poetry/poetry
     rev: 1.8.5
     hooks:
@@ -8,7 +15,7 @@ repos:
         pass_filenames: false
         args:
           - --no-update
-          
+
   # - repo: https://github.com/ambv/black
   #   rev: 22.3.0
   #   hooks:

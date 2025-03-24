@@ -14,11 +14,6 @@ jobs:
     name: Check Secrets
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
     steps:
     - id: docs
       env:
@@ -31,25 +26,28 @@ jobs:
   setup-build-publish-deploy:
     name: Deploy docs
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     needs: [has-secrets]
     env:
       PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
-
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
-      - uses: google-github-actions/auth@v2
-        if: needs.has-secrets.outputs.docs
-        with:
-          project_id: ${{ secrets.GKE_PROD_PROJECT }}
-          workload_identity_provider: 'projects/429189597230/locations/global/workloadIdentityPools/github/providers/robusta-repos' # prod
+    - uses: google-github-actions/auth@v2
+      if: needs.has-secrets.outputs.docs
+      with:
+        project_id: ${{ secrets.GKE_PROD_PROJECT }}
+        workload_identity_provider: 'projects/429189597230/locations/global/workloadIdentityPools/github/providers/robusta-repos' # prod
 
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-        if: needs.has-secrets.outputs.docs
-        with:
-          project_id: ${{ secrets.GKE_PROD_PROJECT }
+    - name: Set up gcloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      if: needs.has-secrets.outputs.docs
+      with:
+        project_id: ${{ secrets.GKE_PROD_PROJECT }}
 
     - name: Set up Python
       uses: actions/setup-python@v2
