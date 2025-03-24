@@ -24,7 +24,7 @@ Configuration
                 prometheus/metrics:
                     enabled: true
                     config:
-                        prometheus_url: http://robusta-kube-prometheus-st-prometheus:9090
+                        prometheus_url: http://<prometheus host>:9090
                         metrics_labels_time_window_hrs: 48 # default value
                         metrics_labels_cache_duration_hrs: 12 # default value
                         fetch_labels_with_labels_api: false # default value
@@ -46,7 +46,7 @@ Configuration
             prometheus/metrics:
                 enabled: true
                 config:
-                    prometheus_url: http://robusta-kube-prometheus-st-prometheus:9090
+                    prometheus_url: http://<prometheus host>:9090
                     metrics_labels_time_window_hrs: 48 # default value
                     metrics_labels_cache_duration_hrs: 12 # default value
                     fetch_labels_with_labels_api: false # default value
@@ -69,6 +69,18 @@ Below is the full list of options for this toolset:
 - **fetch_metadata_with_series_api** Uses the `series API <https://prometheus.io/docs/prometheus/latest/querying/api/#finding-series-by-label-matchers>`_ instead of the `metadata API <https://prometheus.io/docs/prometheus/latest/querying/api/#querying-metric-metadata>`_. You should only set this value to `true` if the metadata API is disabled or not working. HolmesGPT's ability to select the right metric will be negatively impacted because the series API does not return key metadata like the metrics/series description or their type (gauge, histogram, etc.).
 - **tool_calls_return_data** Experimental. If true, the prometheus data will be available to HolmesGPT. In some cases, HolmesGPT will be able to detect memory leaks or other anomalies. This is disabled by default to reduce the likelyhood of reaching the input token limit.
 - **headers** Extra headers to pass to all prometheus http requests. Use this to pass authentication. Prometheus `supports basic authentication <https://prometheus.io/docs/guides/basic-auth/>`_.
+
+**Finding the prometheus URL**
+
+The best way to find the prometheus URL is to use "ask holmes". This only works if your cluster is live and already connected to Robusta.
+
+If not, follow these steps:
+
+1. Run ``kubectl get services -n <monitoring-namespace>`` to list all services. Replace ``<monitoring-namespace>`` with the namespace where Prometheus is deployed. This is often ``monitoring`` or ``prometheus``. You can also run ``kubectl get services -A`` which will list all services in all namespaces.
+2. Identify which are the namespace and name of your Prometheus service. You can set up port forwarding to test if the service is correct and if Prometheus is reachable.
+3. Run ``kubectl describe service <service-name> -n <namespace>`` to get details about the service, including the cluster IP and port.
+4. Set the DNS or the cluster IP as well as the port to the configuration field ``prometheus_url`` as mentioned above.
+
 
 Capabilities
 ------------
