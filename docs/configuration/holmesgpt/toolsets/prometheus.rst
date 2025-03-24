@@ -24,7 +24,7 @@ Configuration
                 prometheus/metrics:
                     enabled: true
                     config:
-                        prometheus_url: ...
+                        prometheus_url: http://robusta-kube-prometheus-st-prometheus:9090
                         metrics_labels_time_window_hrs: 48 # default value
                         metrics_labels_cache_duration_hrs: 12 # default value
                         fetch_labels_with_labels_api: false # default value
@@ -46,7 +46,7 @@ Configuration
             prometheus/metrics:
                 enabled: true
                 config:
-                    prometheus_url: ...
+                    prometheus_url: http://robusta-kube-prometheus-st-prometheus:9090
                     metrics_labels_time_window_hrs: 48 # default value
                     metrics_labels_cache_duration_hrs: 12 # default value
                     fetch_labels_with_labels_api: false # default value
@@ -62,6 +62,7 @@ in PromQL are actually available.
 
 Below is the full list of options for this toolset:
 
+- **prometheus_url** A base URL for prometheus. This should include the protocol (e.g. `https`) and the port.
 - **metrics_labels_time_window_hrs** Represents the time window, in hours, over which labels are fetched. This avoids fetching obsolete labels. Set it to ``null`` to let HolmesGPT fetch labels regardless of when they were generated.
 - **metrics_labels_cache_duration_hrs** How long are labels cached, in hours. Set it to ``null`` to disable caching.
 - **fetch_labels_with_labels_api** Uses prometheus `labels API <https://prometheus.io/docs/prometheus/latest/querying/api/#getting-label-names>`_ to fetch labels instead of the `series API <https://prometheus.io/docs/prometheus/latest/querying/api/#finding-series-by-label-matchers>`_. In some cases setting to True can improve the performance of the toolset, however there will be an increased number of HTTP calls to prometheus. You can experiment with both as they are functionally identical.
