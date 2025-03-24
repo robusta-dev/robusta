@@ -4,7 +4,7 @@ import ssl
 import tempfile
 from datetime import datetime, timedelta
 from itertools import chain
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
 
 import certifi
 import humanize
@@ -214,14 +214,36 @@ class SlackSender:
             return []  # no reason to crash the entire report
 
     def __upload_file_to_slack(self, block: FileBlock, max_log_file_limit_kb: int) -> str:
+        """Upload a file to slack and return a link to it"""
         truncated_content = block.truncate_content(max_file_size_bytes=max_log_file_limit_kb * 1000)
 
-        """Upload a file to slack and return a link to it"""
-        with tempfile.NamedTemporaryFile() as f:
-            f.write(truncated_content)
-            f.flush()
-            result = self.slack_client.files_upload_v2(title=block.filename, file=f.name, filename=block.filename)
-            return result["file"]["permalink"]
+        try:
+            with tempfile.NamedTemporaryFile() as f:
+                f.write(truncated_content)
+                f.flush()
+                
+                # First try files_upload_v2 method (newer API)
+                try:
+                    result = self.slack_client.files_upload_v2(
+                        title=block.filename, 
+                        file=f.name, 
+                        filename=block.filename
+                    )
+                    return result["file"]["permalink"]
+                except (AttributeError, SlackApiError) as e:
+                    # Fall back to the older files_upload method
+                    logging.info(f"Falling back to files_upload: {e}")
+                    result = self.slack_client.files_upload(
+                        title=block.filename, 
+                        file=f.name, 
+                        filename=block.filename,
+                        channels=self.slack_channel
+                    )
+                    return result["file"]["permalink"]
+        except Exception as e:
+            logging.error(f"Error uploading file {block.filename} to Slack: {e}")
+            # Return a descriptive message rather than failing
+            return f"Error uploading {block.filename} - {str(e)}"
 
     def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):
         if files:
@@ -364,25 +386,132 @@ class SlackSender:
 
     def __create_finding_header(
         self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
-    ) -> MarkdownBlock:
+    ) -> List[SlackBlock]:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
-        if finding.source == FindingSource.PROMETHEUS:
-            status_name: str = (
-                f"{status.to_emoji()} `Prometheus Alert Firing` {status.to_emoji()}"
-                if status == FindingStatus.FIRING
-                else f"{status.to_emoji()} *Prometheus resolved*"
-            )
-        elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-            status_name: str = "👀 *K8s event detected*"
-        else:
-            status_name: str = "👀 *Notification*"
+        
+        # Create the title section similar to JIRA format
         if platform_enabled and include_investigate_link:
-            title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
-        return MarkdownBlock(
-            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*
-{title}"""
-        )
+            title_text = f"*<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|{title}>*"
+        else:
+            title_text = f"*{title}*"
+            
+        title_block = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": title_text
+            }
+        }
+        
+        # Create metadata line similar to JIRA layout
+        source_text = f"Source: {self.cluster_name}"
+        
+        # Simplify status to just Firing/Resolved
+        status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
+        
+        # Get type information separately
+        if finding.source == FindingSource.PROMETHEUS:
+            alert_type = "Alert"
+        elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+            alert_type = "K8s Event"
+        else:
+            alert_type = "Notification"
+            
+        # Create a context block with metadata similar to JIRA format
+        context_elements = [
+            {
+                "type": "mrkdwn",
+                "text": f"{status.to_emoji()} Status: {status_text}"
+            },
+            {
+                "type": "mrkdwn", 
+                "text": f":bell: Type: {alert_type}"
+            },
+            {
+                "type": "mrkdwn",
+                "text": f"{sev.to_emoji()} Severity: {sev.name.capitalize()}"
+            },
+            {
+                "type": "mrkdwn",
+                "text": f":globe_with_meridians: {source_text}"
+            }
+        ]
+        
+        # Add relevant labels if available
+        if finding.subject and finding.subject.labels:
+            # Try to find important labels like app, component, etc.
+            important_labels = ["app", "component", "namespace", "pod", "container"]
+            for label in important_labels:
+                if label in finding.subject.labels:
+                    emoji = ":package:" if label == "app" else \
+                            ":gear:" if label == "component" else \
+                            ":file_folder:" if label == "namespace" else \
+                            ":ship:" if label == "pod" else \
+                            ":desktop_computer:" if label == "container" else ":label:"
+                            
+                    context_elements.append({
+                        "type": "mrkdwn",
+                        "text": f"{emoji} {label.capitalize()}: {finding.subject.labels[label]}"
+                    })
+                    # Limit to 5 elements for better display
+                    if len(context_elements) >= 5:
+                        break
+        
+        context_block = {
+            "type": "context",
+            "elements": context_elements
+        }
+        
+        return [title_block, context_block]
+
+    def __get_enrichment_title(self, enrichment_type: Optional[EnrichmentType]) -> str:
+        """Get a user-friendly title for an enrichment type"""
+        if enrichment_type is None:
+            return "Additional Information"
+            
+        titles = {
+            EnrichmentType.graph: "Performance Graphs",
+            EnrichmentType.ai_analysis: "AI Analysis",
+            EnrichmentType.node_info: "Node Information",
+            EnrichmentType.container_info: "Container Information",
+            EnrichmentType.k8s_events: "Kubernetes Events",
+            EnrichmentType.alert_labels: "Alert Labels",
+            EnrichmentType.diff: "Resource Changes",
+            EnrichmentType.text_file: "Logs",
+            EnrichmentType.crash_info: "Crash Information",
+            EnrichmentType.image_pull_backoff_info: "Image Pull Error",
+            EnrichmentType.pending_pod_info: "Pod Scheduling Information"
+        }
+        
+        return titles.get(enrichment_type, str(enrichment_type).replace("EnrichmentType.", "").replace("_", " ").title())
+        
+    def __get_enrichment_color(self, enrichment_type: Optional[EnrichmentType], status: FindingStatus) -> str:
+        """Get a color for an enrichment type"""
+        if enrichment_type is None:
+            return "#717274"  # Default gray
+            
+        # Status colors
+        if status == FindingStatus.RESOLVED:
+            status_color = "#00B302"  # Green
+        else:
+            status_color = "#EF311F"  # Red
+            
+        colors = {
+            EnrichmentType.graph: "#1E88E5",  # Blue
+            EnrichmentType.ai_analysis: "#8E24AA",  # Purple
+            EnrichmentType.node_info: "#26A69A",  # Teal
+            EnrichmentType.container_info: "#FFA000",  # Amber
+            EnrichmentType.k8s_events: "#5D4037",  # Brown
+            EnrichmentType.alert_labels: status_color,  # Use status color
+            EnrichmentType.diff: "#00897B",  # Teal dark
+            EnrichmentType.text_file: "#616161",  # Gray
+            EnrichmentType.crash_info: "#D32F2F",  # Red
+            EnrichmentType.image_pull_backoff_info: "#F57C00",  # Orange
+            EnrichmentType.pending_pod_info: "#FFB300"  # Amber light
+        }
+        
+        return colors.get(enrichment_type, "#717274")  # Default gray if not found
 
     def __create_links(
         self,
@@ -426,9 +555,28 @@ class SlackSender:
 
         text = "*AI used info from alert and the following tools:*"
         for tool in tool_calls:
-            file_response = self.slack_client.files_upload_v2(content=tool.result, title=f"{tool.description}")
-            permalink = file_response["file"]["permalink"]
-            text += f"\n• `<{permalink}|{tool.description}>`"
+            try:
+                # First try files_upload_v2 method (newer API)
+                try:
+                    file_response = self.slack_client.files_upload_v2(
+                        content=tool.result, 
+                        title=f"{tool.description}"
+                    )
+                except (AttributeError, SlackApiError) as e:
+                    # Fall back to the older files_upload method
+                    logging.info(f"Falling back to files_upload: {e}")
+                    file_response = self.slack_client.files_upload(
+                        content=tool.result, 
+                        title=f"{tool.description}",
+                        filename=f"{tool.description}.txt",
+                        channels=slack_channel
+                    )
+                
+                permalink = file_response["file"]["permalink"]
+                text += f"\n• `<{permalink}|{tool.description}>`"
+            except Exception as e:
+                logging.error(f"Error uploading tool result to Slack: {e}")
+                text += f"\n• `{tool.description}` (upload failed: {str(e)})"
 
         self.slack_client.chat_postMessage(
             channel=slack_channel,
@@ -516,6 +664,7 @@ class SlackSender:
     ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
+        direct_slack_blocks: List[SlackBlock] = []  # For JIRA-style blocks we'll add directly
 
         slack_channel = ChannelTransformer.template(
             sink_params.channel_override,
@@ -533,55 +682,233 @@ class SlackSender:
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
+        
+        # Add JIRA-style header blocks directly
         if finding.title:
-            blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
+            direct_slack_blocks.extend(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
+            
+        # Create action buttons section similar to JIRA
+        action_buttons = []
+        
+        # Add investigate button if applicable
+        if platform_enabled and sink_params.investigate_link:
+            action_buttons.append({
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Investigate 🔎",
+                    "emoji": True
+                },
+                "url": finding.get_investigate_uri(self.account_id, self.cluster_name)
+            })
+            
+        # Add silences button if applicable
+        if finding.add_silence_url and platform_enabled:
+            action_buttons.append({
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Configure Silences 🔕",
+                    "emoji": True
+                },
+                "url": finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
+            })
+            
+        # Add custom links from the finding
+        for link in finding.links:
+            link_url = link.url
+            if link.type == LinkType.PROMETHEUS_GENERATOR_URL and sink_params.prefer_redirect_to_platform and platform_enabled:
+                link_url = convert_prom_graph_url_to_robusta_metrics_explorer(link.url, self.cluster_name, self.account_id)
+                
+            action_buttons.append({
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": link.name,
+                    "emoji": True
+                },
+                "url": link_url
+            })
+        
+        # Add the action buttons if we have any
+        if action_buttons:
+            direct_slack_blocks.append({
+                "type": "actions",
+                "elements": action_buttons[:5]  # Slack has a limit of 5 buttons per action block
+            })
+            
+        # Remove this section as we're handling Holmes callback in a different location now
 
-        links_block: LinksBlock = self.__create_links(
-            finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
-        )
-        blocks.append(links_block)
-
-        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
-            blocks.append(self.__create_holmes_callback(finding))
-
-        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
-        if finding.description:
-            if finding.source == FindingSource.PROMETHEUS:
-                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
-            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-                blocks.append(
-                    MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
-                )
-            else:
-                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
-
+        # Add a divider to separate header from content
+        direct_slack_blocks.append({"type": "divider"})
+        
+        # Process enrichments and other blocks
         unfurl = True
+        
+        # Organize enrichments by type
+        enrichments_by_type = {}
+        
         for enrichment in finding.enrichments:
             if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
 
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
             unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
-            if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
-                attachment_blocks.extend(enrichment.blocks)
+            
+            # Group enrichments by type for better organization
+            enrichment_type = enrichment.enrichment_type
+            title = enrichment.title
+            
+            key = f"{enrichment_type}_{title}" if title else str(enrichment_type)
+            
+            if key not in enrichments_by_type:
+                enrichments_by_type[key] = {
+                    "title": title or self.__get_enrichment_title(enrichment_type),
+                    "blocks": [],
+                    "color": self.__get_enrichment_color(enrichment_type, status),
+                    "type": enrichment_type
+                }
+            
+            enrichments_by_type[key]["blocks"].extend(enrichment.blocks)
+                
+        # Let's use the original method for file handling to ensure it works correctly
+        # First get all file blocks including SVGs and ones from attachments
+        file_blocks = []
+        
+        # Collect file blocks from all enrichments
+        for enrichment_key, enrichment_data in enrichments_by_type.items():
+            enrichment_blocks = enrichment_data["blocks"]
+            file_blocks_in_enrichment = [b for b in enrichment_blocks if isinstance(b, FileBlock)]
+            file_blocks.extend(file_blocks_in_enrichment)
+            # Remove file blocks from the enrichment as they'll be handled separately
+            enrichment_data["blocks"] = [b for b in enrichment_blocks if not isinstance(b, FileBlock)]
+                
+        # Process SVG files
+        file_blocks = add_pngs_for_all_svgs(file_blocks)
+        if not sink_params.send_svg:
+            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
+        
+        # Convert wide tables to file blocks
+        table_file_blocks = []
+        for enrichment_key, enrichment_data in enrichments_by_type.items():
+            enrichment_blocks = enrichment_data["blocks"]
+            table_blocks = Transformer.tableblock_to_fileblocks(enrichment_blocks, SLACK_TABLE_COLUMNS_LIMIT)
+            if table_blocks:
+                file_blocks.extend(table_blocks)
+                # Remove tables that have been converted to files
+                enrichment_data["blocks"] = [b for b in enrichment_blocks if not isinstance(b, TableBlock) or 
+                                           (isinstance(b, TableBlock) and len(b.headers) <= SLACK_TABLE_COLUMNS_LIMIT)]
+        
+        # Upload files if needed
+        message = finding.title  # Default fallback message
+        if file_blocks:
+            logging.info(f"Uploading {len(file_blocks)} file blocks to Slack")
+            uploaded_files = []
+            for file_block in file_blocks:
+                # Skip empty files
+                if file_block.contents is None or len(file_block.contents) == 0:
+                    logging.warning(f"Skipping upload of empty file: {file_block.filename}")
+                    continue
+                    
+                # The __upload_file_to_slack method now handles errors internally
+                permalink = self.__upload_file_to_slack(file_block, max_log_file_limit_kb=sink_params.max_log_file_limit_kb)
+                if "Error uploading" in permalink:
+                    # Error already logged in the upload method
+                    uploaded_files.append(f"* {file_block.filename} - Upload failed")
+                else:
+                    uploaded_files.append(f"* <{permalink} | {file_block.filename}>")
+                    logging.info(f"Successfully uploaded file {file_block.filename} to Slack")
+                    
+            if uploaded_files:
+                # Add file references as their own attachment
+                if "files" not in enrichments_by_type:
+                    enrichments_by_type["files"] = {
+                        "title": "Files and Attachments",
+                        "blocks": [MarkdownBlock("\n".join(uploaded_files))],
+                        "color": "#717274",  # Neutral gray color
+                        "type": "files"
+                    }
+                else:
+                    enrichments_by_type["files"]["blocks"].append(MarkdownBlock("\n".join(uploaded_files)))
+
+        # Handle Holmes callback blocks
+        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
+            callback_block = self.__create_holmes_callback(finding)
+            direct_slack_blocks.extend(self.__get_action_block_for_choices(sink_params.name, callback_block.choices))
+            
+        # We've removed the footer "Generated by Robusta" as requested
+        
+        # Create attachments from grouped enrichments
+        slack_attachments = []
+        
+        # First add a description attachment if it exists
+        if finding.description:
+            slack_attachments.append({
+                "color": status.to_color_hex(),
+                "blocks": [{
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": finding.description
+                    }
+                }]
+            })
+            
+        # Then add all other enrichment attachments
+        for enrichment_key, enrichment_data in enrichments_by_type.items():
+            slack_blocks = []
+            for block in enrichment_data["blocks"]:
+                if isinstance(block, CallbackBlock):
+                    # Special handling for callback blocks
+                    slack_blocks.extend(self.__get_action_block_for_choices(sink_params.name, block.choices))
+                else:
+                    slack_blocks.extend(self.__to_slack(block, sink_params.name))
+                    
+            if slack_blocks:
+                # Create an attachment header
+                if enrichment_data["title"]:
+                    header_block = {
+                        "type": "header",
+                        "text": {
+                            "type": "plain_text",
+                            "text": enrichment_data["title"],
+                            "emoji": True
+                        }
+                    }
+                    slack_blocks.insert(0, header_block)
+                
+                slack_attachments.append({
+                    "color": enrichment_data["color"],
+                    "blocks": slack_blocks
+                })
+            
+        try:
+            if thread_ts:
+                kwargs = {"thread_ts": thread_ts}
             else:
-                blocks.extend(enrichment.blocks)
-
-        blocks.append(DividerBlock())
-
-        if len(attachment_blocks):
-            attachment_blocks.append(DividerBlock())
-
-        return self.__send_blocks_to_slack(
-            blocks,
-            attachment_blocks,
-            finding.title,
-            sink_params,
-            unfurl,
-            status,
-            slack_channel,
-            thread_ts=thread_ts,
-        )
+                kwargs = {}
+                
+            # Send the message directly with our crafted blocks
+            resp = self.slack_client.chat_postMessage(
+                channel=slack_channel,
+                text=finding.title,  # Fallback text
+                blocks=direct_slack_blocks,
+                display_as_bot=True,
+                attachments=slack_attachments if slack_attachments else None,
+                unfurl_links=unfurl,
+                unfurl_media=unfurl,
+                **kwargs,
+            )
+            
+            # We will need channel ids for future message updates
+            self.channel_name_to_id[slack_channel] = resp["channel"]
+            return resp["ts"]
+            
+        except Exception as e:
+            logging.error(
+                f"error sending message to slack\ne={e}\ntext={finding.title}\nchannel={slack_channel}\nblocks={direct_slack_blocks}"
+            )
+            return ""
 
     def send_or_update_summary_message(
         self,
