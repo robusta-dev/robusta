@@ -47,7 +47,7 @@ jobs:
       uses: google-github-actions/setup-gcloud@v2
       if: needs.has-secrets.outputs.docs
       with:
-        project_id: ${{ secrets.GKE_PROD_PROJECT }
+        project_id: ${{ secrets.GKE_PROD_PROJECT }}
 
     - name: Set up Python
       uses: actions/setup-python@v2
