@@ -9,8 +9,9 @@ from flask import Flask, abort, jsonify, request
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
+from robusta.clients.robusta_client import fetch_runner_info
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
-    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -41,6 +42,29 @@ class Web:
         Web.alerts_queue = TaskQueue(name="alerts_queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
         Web.event_handler = event_handler
         Web.loader = loader
+        Web._check_version()
+
+    @staticmethod
+    def _check_version():
+        runner_info = fetch_runner_info()
+        if not runner_info or not runner_info.latest_version:
+            # we couldn't fetch the latest version.
+            return None
+        
+        if RUNNER_VERSION == "unknown":
+            # Runner version is not set.
+            return None
+        
+        if runner_info.latest_version == RUNNER_VERSION:
+            return True
+        
+        logging.warning(
+            "You are running version %s of robusta, but the latest version is %s. Please update to the latest version.",
+            RUNNER_VERSION,
+            runner_info.latest_version
+        ) 
+        return False
+
 
     @staticmethod
     def run():
