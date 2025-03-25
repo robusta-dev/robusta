@@ -15,21 +15,7 @@ Configuration
 
   .. md-tab-item:: Robusta Helm Chart
 
-    .. code-block:: yaml
-
-        holmes:
-            additionalEnvVars:
-                - name: AWS_ACCESS_KEY_ID
-                  value: AKIAIOSFODNN7EXAMPLE
-                - name: AWS_SECRET_ACCESS_KEY
-                  value: =wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-                - name: AWS_DEFAULT_REGION
-                  value: us-west-2
-            toolsets:
-                aws/security:
-                    enabled: true
-
-    .. include:: ./_toolset_configuration.inc.rst
+    This builtin toolset is currently only available in HolmesGPT CLI.
 
   .. md-tab-item:: Holmes CLI
 
@@ -52,10 +38,10 @@ Configuration
               enabled: true
 
 
-    To test, run: 
+    To test, run:
 
     .. code-block:: yaml
-      
+
         holmes ask "Are there any security misconfigurations my signup application, particularly in the database?"
 
 Capabilities
@@ -122,10 +108,10 @@ Configuration
           aws/rds:
               enabled: true
 
-    To test, run: 
+    To test, run:
 
     .. code-block:: yaml
-      
+
         holmes ask "Why is my signup application slow, also look into the database"
 
 
