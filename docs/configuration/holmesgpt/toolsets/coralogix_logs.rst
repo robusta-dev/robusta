@@ -33,7 +33,7 @@ Configuration
             enabled: true
             config:
               api_key: <your coralogix API key>
-              base_url: https://xxx.coralogix.xxx # Your Coralogix domain, without any path
+              base_url: https://xxx.coralogix.xxx # Your Coralogix domain URL, without any path
               labels:
                 pod: "kubernetes.pod_name"
                 namespace: "kubernetes.namespace_name"
@@ -56,7 +56,7 @@ Configuration
           enabled: true
           config:
             api_key: <your coralogix API key>
-            base_url: https://xxx.coralogix.xxx # Your Coralogix domain, without any path
+            base_url: https://xxx.coralogix.xxx # Your Coralogix domain URL, without any path
             labels:
               pod: "kubernetes.pod_name"
               namespace: "kubernetes.namespace_name"
@@ -69,7 +69,7 @@ Configuration
 **Search labels**
 
 You can tweak the labels used by the toolset to identify kubernetes resources. This is only needed if your
-logs settings for ``pod``, and ``namespace`` differ from the defaults in the example above.
+logs settings for ``pod``, ``namespace``, and ``app`` differ from the defaults in the example above.
 
 You can verify what labels to use by attempting to run a query in the coralogix ui:
 
