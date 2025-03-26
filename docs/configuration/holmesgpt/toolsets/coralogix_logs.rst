@@ -78,6 +78,8 @@ You can verify what labels to use by attempting to run a query in the coralogix 
   :align: center
 
 
+**Disabling the default toolset**
+
 If Coralogix is your primary datasource for logs, it is **advised** to disable the default HolmesGPT logging
 tool by disabling the ``kubernetes/logs`` toolset. Without this. HolmesGPT may still use kubectl to
 fetch logs instead of Coralogix.
@@ -98,6 +100,7 @@ Capabilities
 .. list-table::
    :header-rows: 1
    :widths: 30 70
+
    * - Tool Name
      - Description
    * - coralogix_fetch_logs
