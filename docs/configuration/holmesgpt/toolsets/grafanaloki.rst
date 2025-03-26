@@ -10,6 +10,9 @@ You **should** enable this toolset to replace the default :ref:`kubernetes/logs 
 toolset if all your kubernetes/pod logs are consolidated inside Loki. It will make it easier for HolmesGPT
 to fetch incident logs, including the ability to precisely consult past logs.
 
+
+.. include:: ./_toolsets_that_provide_logging.inc.rst
+
 Prerequisites
 ^^^^^^^^^^^^^
 
