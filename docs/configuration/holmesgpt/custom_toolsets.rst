@@ -211,23 +211,23 @@ First `create a GitHub Personal Access Token with fine-grained permissions <http
                   description: "Fetches the most recent commits for a repository"
                   command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}/commits?per_page={{ limit }} "
 
-              - name: "get_repo_details"
-                description: "Fetches details of a specific repository"
-                command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
+                - name: "get_repo_details"
+                  description: "Fetches details of a specific repository"
+                  command: "curl -H 'Authorization: token ${GITHUB_TOKEN}' https://api.github.com/repos/{{ owner }}/{{ repo }}"
 
-                # In the above examples, LLM-provided parameters like {{ owner }} are inferred automatically from the command
-                # you can also define them explicitly - this is useful if:
-                # - You want to enforce parameter requirements (e.g., `owner` and `repo` are required).
-                # - You want to define provide a default value for optional parameters.
-                parameters:
-                  owner:
-                    type: "string"
-                    description: "Owner of the repository."
-                    required: true
-                  repo:
-                    type: "string"
-                    description: "Name of the repository."
-                    required: true
+                  # In the above examples, LLM-provided parameters like {{ owner }} are inferred automatically from the command
+                  # you can also define them explicitly - this is useful if:
+                  # - You want to enforce parameter requirements (e.g., `owner` and `repo` are required).
+                  # - You want to define provide a default value for optional parameters.
+                  parameters:
+                    owner:
+                      type: "string"
+                      description: "Owner of the repository."
+                      required: true
+                    repo:
+                      type: "string"
+                      description: "Name of the repository."
+                      required: true
 
     Update your Helm values with the provided YAML configuration, then apply the changes with Helm upgrade:
 
@@ -283,7 +283,7 @@ First `create a GitHub Personal Access Token with fine-grained permissions <http
                     required: true
     To test, run: 
 
-      .. code-block:: yaml
+      .. code-block:: bash
         
         holmes ask -t github_toolset.yaml "who made the last commit to the robusta-dev/holmesgpt repo on github?"
 
