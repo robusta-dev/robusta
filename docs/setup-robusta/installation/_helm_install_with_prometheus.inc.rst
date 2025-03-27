@@ -93,6 +93,8 @@ On some clusters this can take a while, so don't panic if it appears stuck:
             If you are using docker desktop you will need to disable prometheus-node-exporter monting host root, by adding the following to the above command:
             
             .. code-block:: bash
+                :name: disable host mount
+                
                 --set kube-prometheus-stack.prometheus-node-exporter.hostRootFsMount.enabled=false
 
 Verifying Installation
