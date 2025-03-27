@@ -747,8 +747,8 @@ class SlackSender:
             
         # Remove this section as we're handling Holmes callback in a different location now
 
-        # Add a divider to separate header from content
-        direct_slack_blocks.append({"type": "divider"})
+        # No divider between header and content
+        pass
         
         # Process enrichments and other blocks
         unfurl = True
@@ -889,8 +889,8 @@ class SlackSender:
                 }
             })
             
-            # Add a divider after the description
-            all_attachment_blocks.append({"type": "divider"})
+            # No divider after description
+            pass
             
         # Then add all other enrichment blocks
         for enrichment_key, enrichment_data in enrichments_by_type.items():
@@ -918,13 +918,14 @@ class SlackSender:
                 # Add the blocks to the main attachment
                 all_attachment_blocks.extend(slack_blocks)
                 
-                # Add a divider between different enrichment types (except after the last one)
-                if enrichment_key != list(enrichments_by_type.keys())[-1]:
-                    all_attachment_blocks.append({"type": "divider"})
+                # No divider between enrichment sections
+                pass
                 
         # Create a single attachment with all blocks
         slack_attachments = []
         if all_attachment_blocks:
+            # No bottom padding needed
+            
             slack_attachments = [{
                 "color": status.to_color_hex(),
                 "blocks": all_attachment_blocks
