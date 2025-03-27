@@ -369,11 +369,15 @@ class SlackSender:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
         
-        # Create the title section similar to JIRA format
+        # Create the title with status and name prominently displayed as per user feedback
+        status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
+        status_emoji = "⚠️" if status == FindingStatus.FIRING else "✅"
+        
+        # Format: Status emoji [Status] AlertName
         if platform_enabled and include_investigate_link:
-            title_text = f"*<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|{title}>*"
+            title_text = f"{status_emoji} *[{status_text}] <{finding.get_investigate_uri(self.account_id, self.cluster_name)}|{title}>*"
         else:
-            title_text = f"*{title}*"
+            title_text = f"{status_emoji} *[{status_text}] {title}*"
             
         title_block = {
             "type": "section",
@@ -397,12 +401,8 @@ class SlackSender:
         else:
             alert_type = "Notification"
             
-        # Create a context block with metadata similar to JIRA format
+        # Create a context block with metadata but without duplicating status info
         context_elements = [
-            {
-                "type": "mrkdwn",
-                "text": f"{status.to_emoji()} Status: {status_text}"
-            },
             {
                 "type": "mrkdwn", 
                 "text": f":bell: Type: {alert_type}"
@@ -639,6 +639,12 @@ class SlackSender:
         if finding.title:
             header_blocks = self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link)
 
+        # Description handling - moved above the buttons
+        if finding.description:
+            # Always show description immediately after title
+            description_text = finding.description
+            blocks.append(MarkdownBlock(description_text))
+
         links_block: LinksBlock = self.__create_links(
             finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
         )
@@ -646,14 +652,6 @@ class SlackSender:
 
         if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
-
-        # Description handling
-        if finding.description:
-            # We'll put the description in the attachment rather than the main message
-            description_text = finding.description
-            # No prefixes, just the description itself
-            
-            attachment_blocks.append(MarkdownBlock(description_text))
 
         unfurl = True
         all_file_blocks = []  # Collect all file blocks to be handled specially
