@@ -671,12 +671,7 @@ class SlackSender:
         if finding.description:
             # We'll put the description in the attachment rather than the main message
             description_text = finding.description
-            if finding.source == FindingSource.PROMETHEUS:
-                description_text = f"{Emojis.Alert.value} *Alert:* {description_text}"
-            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-                description_text = f"{Emojis.K8Notification.value} *K8s event detected:* {description_text}"
-            else:
-                description_text = f"{Emojis.K8Notification.value} *Notification:* {description_text}"
+            # No prefixes, just the description itself
             
             attachment_blocks.append(MarkdownBlock(description_text))
 
@@ -702,9 +697,8 @@ class SlackSender:
         
         # Add file blocks to the main blocks for proper handling
         blocks.extend(all_file_blocks)
-
-        if len(attachment_blocks):
-            attachment_blocks.append(DividerBlock())
+        
+        # No divider in the main blocks
 
         # We need to create a minimal version of __send_blocks_to_slack 
         # that can handle both our header blocks and regular blocks
@@ -740,15 +734,28 @@ class SlackSender:
             else:
                 kwargs = {}
                 
-            # Send the message with our JIRA-style headers and single color attachment
+            # Create a single attachment with all blocks and a divider at the end
+            attachments = []
+            
+            # Add divider to the end of attachment blocks if there are any
+            all_attachment_blocks = attachment_slack_blocks.copy() if attachment_slack_blocks else []
+            
+            # Always add a divider at the end
+            all_attachment_blocks.append({"type": "divider"})
+            
+            # Create a single attachment with the status color
+            attachments = [{
+                "color": status.to_color_hex(),
+                "blocks": all_attachment_blocks
+            }]
+                
+            # Send the message with our JIRA-style headers and attachments
             resp = self.slack_client.chat_postMessage(
                 channel=slack_channel,
                 text=message,
                 blocks=all_blocks,
                 display_as_bot=True,
-                attachments=(
-                    [{"color": status.to_color_hex(), "blocks": attachment_slack_blocks}] if attachment_slack_blocks else None
-                ),
+                attachments=attachments,
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
                 **kwargs,
