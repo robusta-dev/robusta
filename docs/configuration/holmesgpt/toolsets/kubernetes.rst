@@ -63,11 +63,10 @@ it.
 By enabling this toolset, HolmesGPT will be able to read kubernetes pod logs.
 
 You may disable this toolset if you provide Holmes with an alternative toolset to
-fetch logs from your kubernetes cluster and applications. The available built-in
-toolsets that provide logging are:
+fetch logs from your kubernetes cluster and applications.
 
-* :ref:`grafana/loki <toolset_grafana_loki>`: Access Loki logs by proxying through a Grafana instance
 
+.. include:: ./_toolsets_that_provide_logging.inc.rst
 
 Configuration
 ^^^^^^^^^^^^^
