@@ -404,8 +404,8 @@ class SlackSender:
             }
         }
         
-        # Create metadata line similar to JIRA layout
-        source_text = f"Source: {self.cluster_name}"
+        # Create metadata line with "cluster" instead of "source"
+        cluster_text = f"Cluster: {self.cluster_name}"
         
         # Simplify status to just Firing/Resolved
         status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
@@ -434,20 +434,50 @@ class SlackSender:
             },
             {
                 "type": "mrkdwn",
-                "text": f":globe_with_meridians: {source_text}"
+                "text": f":globe_with_meridians: {cluster_text}"
             }
         ]
         
-        # Add relevant labels if available
-        if finding.subject and finding.subject.labels:
-            # Try to find important labels like app, component, etc.
-            important_labels = ["app", "component", "namespace", "pod", "container"]
+        # Always show resource kind, namespace and name if available
+        if finding.subject:
+            # Add subject kind, namespace and name as a single piece of information
+            kind_emoji = ":package:"
+            subject_kind = finding.subject.subject_type.value
+            subject_namespace = finding.subject.namespace
+            subject_name = finding.subject.name
+            
+            if subject_kind and subject_name:
+                # Choose emoji based on kind
+                if subject_kind.lower() == "pod":
+                    kind_emoji = ":ship:"
+                elif subject_kind.lower() == "deployment":
+                    kind_emoji = ":package:"
+                elif subject_kind.lower() == "node":
+                    kind_emoji = ":computer:"
+                elif subject_kind.lower() == "service":
+                    kind_emoji = ":link:"
+                elif subject_kind.lower() == "job":
+                    kind_emoji = ":clock1:"
+                elif subject_kind.lower() == "statefulset":
+                    kind_emoji = ":chains:"
+                    
+                # Format as Kind/Namespace/Name
+                if subject_namespace:
+                    subject_text = f"{kind_emoji} Resource: {subject_kind}/{subject_namespace}/{subject_name}"
+                else:
+                    subject_text = f"{kind_emoji} Resource: {subject_kind}/{subject_name}"
+                    
+                context_elements.append({
+                    "type": "mrkdwn",
+                    "text": subject_text
+                })
+            
+            # Add additional useful labels
+            important_labels = ["app", "component", "container"]
             for label in important_labels:
                 if label in finding.subject.labels:
                     emoji = ":package:" if label == "app" else \
                             ":gear:" if label == "component" else \
-                            ":file_folder:" if label == "namespace" else \
-                            ":ship:" if label == "pod" else \
                             ":desktop_computer:" if label == "container" else ":label:"
                             
                     context_elements.append({
@@ -820,16 +850,47 @@ class SlackSender:
                     logging.info(f"Successfully uploaded file {file_block.filename} to Slack")
                     
             if uploaded_files:
-                # Add file references as their own attachment
-                if "files" not in enrichments_by_type:
-                    enrichments_by_type["files"] = {
-                        "title": "Files and Attachments",
-                        "blocks": [MarkdownBlock("\n".join(uploaded_files))],
-                        "color": "#717274",  # Neutral gray color
-                        "type": "files"
-                    }
-                else:
-                    enrichments_by_type["files"]["blocks"].append(MarkdownBlock("\n".join(uploaded_files)))
+                # Create a more visually clear display for files
+                if uploaded_files:
+                    file_section_blocks = []
+                    
+                    # Add a header for the files section
+                    file_section_blocks.append({
+                        "type": "header",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "📁 Log Files & Attachments",
+                            "emoji": True
+                        }
+                    })
+                    
+                    # Create separate section blocks for each file with better formatting
+                    for file_link in uploaded_files:
+                        # Extract filename and link from the markdown format "* <link|filename>"
+                        parts = file_link.split("|")
+                        if len(parts) == 2:
+                            link = parts[0].replace("* <", "")
+                            filename = parts[1].replace(">", "")
+                            
+                            file_section_blocks.append({
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": f"*{filename}*\nClick to view file contents"
+                                },
+                                "accessory": {
+                                    "type": "button",
+                                    "text": {
+                                        "type": "plain_text",
+                                        "text": "View File",
+                                        "emoji": True
+                                    },
+                                    "url": link,
+                                }
+                            })
+                    
+                    # Add file blocks directly to the main message
+                    direct_slack_blocks.extend(file_section_blocks)
 
         # Handle Holmes callback blocks
         if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
@@ -948,7 +1009,7 @@ class SlackSender:
             MarkdownBlock(f"*Alerts Summary - {n_total_alerts} Notifications*"),
         ]
 
-        source_txt = f"*Source:* `{self.cluster_name}`"
+        cluster_txt = f"*Cluster:* `{self.cluster_name}`"
         if platform_enabled:
             blocks.extend(
                 [
@@ -956,7 +1017,7 @@ class SlackSender:
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": source_txt,
+                            "text": cluster_txt,
                         },
                     }
                 ]
@@ -971,7 +1032,7 @@ class SlackSender:
                     "url": investigate_uri,
                 }
         else:
-            blocks.append(MarkdownBlock(text=source_txt))
+            blocks.append(MarkdownBlock(text=cluster_txt))
 
         blocks.extend(
             [
