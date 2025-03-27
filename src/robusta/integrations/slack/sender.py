@@ -827,47 +827,21 @@ class SlackSender:
                     logging.info(f"Successfully uploaded file {file_block.filename} to Slack")
                     
             if uploaded_files:
-                # Create a more visually clear display for files
+                # Add files to the enrichments to be rendered in the attachment
                 if uploaded_files:
-                    file_section_blocks = []
+                    # Create a key for files
+                    file_key = "log_files"
                     
-                    # Add a header for the files section
-                    file_section_blocks.append({
-                        "type": "header",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "📁 Log Files & Attachments",
-                            "emoji": True
-                        }
-                    })
-                    
-                    # Create separate section blocks for each file with better formatting
+                    # Create simple markdown links for files, allowing slack to unfurl
+                    file_links_markdown = []
                     for file_link in uploaded_files:
-                        # Extract filename and link from the markdown format "* <link|filename>"
-                        parts = file_link.split("|")
-                        if len(parts) == 2:
-                            link = parts[0].replace("* <", "")
-                            filename = parts[1].replace(">", "")
-                            
-                            file_section_blocks.append({
-                                "type": "section",
-                                "text": {
-                                    "type": "mrkdwn",
-                                    "text": f"*{filename}*\nClick to view file contents"
-                                },
-                                "accessory": {
-                                    "type": "button",
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "View File",
-                                        "emoji": True
-                                    },
-                                    "url": link,
-                                }
-                            })
+                        file_links_markdown.append(file_link)  # Already in format "* <link|filename>"
                     
-                    # Add file blocks directly to the main message
-                    direct_slack_blocks.extend(file_section_blocks)
+                    enrichments_by_type[file_key] = {
+                        "title": "Log Files & Attachments",
+                        "blocks": [MarkdownBlock("\n".join(file_links_markdown))],
+                        "type": EnrichmentType.text_file
+                    }
 
         # Handle Holmes callback blocks
         if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
