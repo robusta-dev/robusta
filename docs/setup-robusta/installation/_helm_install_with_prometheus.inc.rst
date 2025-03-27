@@ -83,12 +83,18 @@ On some clusters this can take a while, so don't panic if it appears stuck:
             :name: cb-helm-install-test-clusters
 
             helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-            helm upgrade robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true \
+            helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true \
                 --set kube-prometheus-stack.prometheus.prometheusSpec.retentionSize=9GB \
                 --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
                 --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
                 --set holmes.resources.requests.memory=512Mi
-                
+        
+        .. note::
+            If you are using docker desktop you will need to disable prometheus-node-exporter monting host root, by adding the following to the above command:
+            
+            .. code-block:: bash
+                --set kube-prometheus-stack.prometheus-node-exporter.hostRootFsMount.enabled=false
+
 Verifying Installation
 ------------------------------
 
