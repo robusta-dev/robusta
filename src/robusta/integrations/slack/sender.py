@@ -214,25 +214,14 @@ class SlackSender:
             return []  # no reason to crash the entire report
 
     def __upload_file_to_slack(self, block: FileBlock, max_log_file_limit_kb: int) -> str:
-        """Upload a file to slack and return a link to it"""
         truncated_content = block.truncate_content(max_file_size_bytes=max_log_file_limit_kb * 1000)
 
-        try:
-            with tempfile.NamedTemporaryFile() as f:
-                f.write(truncated_content)
-                f.flush()
-                
-                # Use files_upload_v2 method (newer API)
-                result = self.slack_client.files_upload_v2(
-                    title=block.filename, 
-                    file=f.name, 
-                    filename=block.filename
-                )
-                return result["file"]["permalink"]
-        except Exception as e:
-            logging.error(f"Error uploading file {block.filename} to Slack: {e}")
-            # Return a descriptive message rather than failing
-            return f"Error uploading {block.filename} - {str(e)}"
+        """Upload a file to slack and return a link to it"""
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(truncated_content)
+            f.flush()
+            result = self.slack_client.files_upload_v2(title=block.filename, file=f.name, filename=block.filename)
+            return result["file"]["permalink"]
 
     def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):
         if files:
@@ -537,18 +526,9 @@ class SlackSender:
 
         text = "*AI used info from alert and the following tools:*"
         for tool in tool_calls:
-            try:
-                # Use files_upload_v2 method
-                file_response = self.slack_client.files_upload_v2(
-                    content=tool.result, 
-                    title=f"{tool.description}"
-                )
-                
-                permalink = file_response["file"]["permalink"]
-                text += f"\n• `<{permalink}|{tool.description}>`"
-            except Exception as e:
-                logging.error(f"Error uploading tool result to Slack: {e}")
-                text += f"\n• `{tool.description}` (upload failed: {str(e)})"
+            file_response = self.slack_client.files_upload_v2(content=tool.result, title=f"{tool.description}")
+            permalink = file_response["file"]["permalink"]
+            text += f"\n• `<{permalink}|{tool.description}>`"
 
         self.slack_client.chat_postMessage(
             channel=slack_channel,
