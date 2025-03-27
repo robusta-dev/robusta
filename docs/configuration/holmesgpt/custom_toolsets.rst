@@ -115,9 +115,9 @@ This toolset lets Holmes view Grafana dashboards and suggest relevant dashboards
             command: "curl \"${GRAFANA_URL}/api/search\" -H \"Authorization: Bearer ${GRAFANA_API_KEY}\""
 
           - name: "grafana_get_url"
-            description: "Get the URL of a Grafana dashboard by UID, including the real url of grafana"
+            description: "Get the URL of a Grafana dashboard by UID, including the real URL of Grafana"
             # in this command we use a variable called `{{ dashboard_uid }}`
-            # unlike enviroment variables that were provided by the user, variables like `{{ dashboard_uid }}` are provided by the AI model
+            # unlike environment variables that were provided by the user, variables like `{{ dashboard_uid }}` are provided by the AI model
             # the AI model sees the tool description, decides to use this tool, and then provides a value for all {{ template_variables }} to invoke the tool
             command: "echo \"${GRAFANA_URL}/d/{{ dashboard_uid }}\""
 
@@ -244,7 +244,7 @@ First `create a GitHub Personal Access Token with fine-grained permissions <http
 
   .. md-tab-item:: Holmes CLI
 
-    First, add the following environment vairables:
+    First, add the following environment variables:
 
     .. code-block:: bash
       
@@ -271,7 +271,7 @@ First `create a GitHub Personal Access Token with fine-grained permissions <http
                 # In the above examples, LLM-provided parameters like {{ owner }} are inferred automatically from the command
                 # you can also define them explicitly - this is useful if:
                 # - You want to enforce parameter requirements (e.g., `owner` and `repo` are required).
-                # - You want to define provide a default value for optional parameters.
+                # - You want to provide a default value for optional parameters.
                 parameters:
                   owner:
                     type: "string"
