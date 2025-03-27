@@ -27,7 +27,7 @@ You can also generate a Slack API key by running ``robusta integrations slack`` 
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params
      - slack_sink:
          name: main_slack_sink
@@ -68,7 +68,7 @@ For example:
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params
      - slack_sink:
          name: main_slack_sink
@@ -87,7 +87,7 @@ Example:
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params, like slack_channel, api_key etc
      - slack_sink:
          name: main_slack_sink
@@ -106,7 +106,7 @@ For example:
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params
      - slack_sink:
          name: main_slack_sink
@@ -166,7 +166,7 @@ your own. This is not recommended for most companies due to the added complexity
 4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes".
 5. Click "Install into Workspace".
 6. Copy the ``Bot User OAuth Token`` from "OAuth and Permissions".
-7. Add the token to SinksConfig in your `generated_values.yaml` file.
+7. Add the token to sinksConfig in your `generated_values.yaml` file.
 
 .. code-block:: yaml
     :name: cb-custom-slack-app-config
