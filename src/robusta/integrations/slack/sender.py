@@ -222,24 +222,13 @@ class SlackSender:
                 f.write(truncated_content)
                 f.flush()
                 
-                # First try files_upload_v2 method (newer API)
-                try:
-                    result = self.slack_client.files_upload_v2(
-                        title=block.filename, 
-                        file=f.name, 
-                        filename=block.filename
-                    )
-                    return result["file"]["permalink"]
-                except (AttributeError, SlackApiError) as e:
-                    # Fall back to the older files_upload method
-                    logging.info(f"Falling back to files_upload: {e}")
-                    result = self.slack_client.files_upload(
-                        title=block.filename, 
-                        file=f.name, 
-                        filename=block.filename,
-                        channels=self.slack_channel
-                    )
-                    return result["file"]["permalink"]
+                # Use files_upload_v2 method (newer API)
+                result = self.slack_client.files_upload_v2(
+                    title=block.filename, 
+                    file=f.name, 
+                    filename=block.filename
+                )
+                return result["file"]["permalink"]
         except Exception as e:
             logging.error(f"Error uploading file {block.filename} to Slack: {e}")
             # Return a descriptive message rather than failing
@@ -549,21 +538,11 @@ class SlackSender:
         text = "*AI used info from alert and the following tools:*"
         for tool in tool_calls:
             try:
-                # First try files_upload_v2 method (newer API)
-                try:
-                    file_response = self.slack_client.files_upload_v2(
-                        content=tool.result, 
-                        title=f"{tool.description}"
-                    )
-                except (AttributeError, SlackApiError) as e:
-                    # Fall back to the older files_upload method
-                    logging.info(f"Falling back to files_upload: {e}")
-                    file_response = self.slack_client.files_upload(
-                        content=tool.result, 
-                        title=f"{tool.description}",
-                        filename=f"{tool.description}.txt",
-                        channels=slack_channel
-                    )
+                # Use files_upload_v2 method
+                file_response = self.slack_client.files_upload_v2(
+                    content=tool.result, 
+                    title=f"{tool.description}"
+                )
                 
                 permalink = file_response["file"]["permalink"]
                 text += f"\n• `<{permalink}|{tool.description}>`"
