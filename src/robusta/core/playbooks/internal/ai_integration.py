@@ -1,8 +1,8 @@
-import base64
 import json
 import logging
 
 import requests
+from prometrix import PrometheusQueryResult
 
 from robusta.core.model.base_params import (
     AIInvestigateParams,
@@ -15,6 +15,7 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import action
+from robusta.core.playbooks.prometheus_enrichment_utils import build_chart_from_prometheus_result
 from robusta.core.reporting import Finding, FindingSubject
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
@@ -68,12 +69,11 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         )
 
         if params.stream:
-            with requests.post(f"{holmes_url}/api/stream/investigate", data=holmes_req.json(), stream=True, headers={"Connection": "keep-alive"}) as resp:
-                resp.raise_for_status()
-                for line in resp.iter_content(chunk_size=None, decode_unicode=True): # Avoid streaming chunks from holmes. send them as they arrive.
-                    if line:
-                        event.ws(data=line)
-
+            with requests.post(f"{holmes_url}/api/stream/investigate", data=holmes_req.json(), stream=True) as resp:
+                for line in resp.iter_content(
+                    chunk_size=None, decode_unicode=True
+                ):  # Avoid streaming chunks from holmes. send them as they arrive.
+                    event.ws(data=line)
             return
 
         else:
@@ -349,14 +349,20 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         holmes_result = HolmesChatResult(**json.loads(result.text))
         holmes_result.files = []
         for tool in holmes_result.tool_calls:
-            if tool.tool_name != "generate_prometheus_chart":
+            if tool.tool_name != "execute_prometheus_range_query":
                 continue
-            content = base64.b64decode(tool.result)
-            contents = convert_svg_to_png(content)
-            holmes_result.files.append(FileBlock(f"test.png", contents))
+            try:
+                json_content = json.loads(tool.result)
+                query_result = PrometheusQueryResult(data=json_content.get("data", {}))
+                chart = build_chart_from_prometheus_result(query_result)
+                contents = convert_svg_to_png(chart.render())
+                name = json_content.get("description", "graph").replace(" ", "_")
+                holmes_result.files.append(FileBlock(f"{name}.png", contents))
+            except Exception as e:
+                logging.exception(f"Failed to parse JSON: {e}\nRaw content:\n{tool.result}")
 
         holmes_result.tool_calls = [
-            tool for tool in holmes_result.tool_calls if tool.tool_name != "generate_prometheus_chart"
+            tool for tool in holmes_result.tool_calls if tool.tool_name != "execute_prometheus_range_query"
         ]
         finding = Finding(
             title="AI Ask Chat",
@@ -367,6 +373,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
             finding_type=FindingType.AI_ANALYSIS,
             failure=False,
         )
+
         finding.add_enrichment(
             [HolmesChatResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
         )
