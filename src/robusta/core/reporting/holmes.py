@@ -9,6 +9,7 @@ from robusta.core.model.base_params import (
     ResourceInfo,
 )
 from robusta.core.reporting import BaseBlock
+from robusta.core.reporting.blocks import FileBlock
 
 
 class HolmesRequest(BaseModel):
@@ -68,6 +69,7 @@ class HolmesResultsBlock(BaseBlock):
 
 class HolmesChatResult(BaseModel):
     analysis: Optional[str] = None
+    files: Optional[List[FileBlock]] = None
     tool_calls: Optional[List[ToolCallResult]] = None
     conversation_history: Optional[List[dict]] = None
 
