@@ -354,7 +354,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
             try:
                 json_content = json.loads(tool.result)
                 query_result = PrometheusQueryResult(data=json_content.get("data", {}))
-                chart = build_chart_from_prometheus_result(query_result)
+                chart = build_chart_from_prometheus_result(query_result, json_content.get("description", "graph"))
                 contents = convert_svg_to_png(chart.render())
                 name = json_content.get("description", "graph").replace(" ", "_")
                 holmes_result.files.append(FileBlock(f"{name}.png", contents))
