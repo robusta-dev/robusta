@@ -70,11 +70,18 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         )
 
         if params.stream:
-            with requests.post(f"{holmes_url}/api/stream/investigate", data=holmes_req.json(), stream=True) as resp:
+            with requests.post(
+                f"{holmes_url}/api/stream/investigate",
+                data=holmes_req.json(),
+                stream=True,
+                headers={"Connection": "keep-alive"},
+            ) as resp:
+                resp.raise_for_status()
                 for line in resp.iter_content(
                     chunk_size=None, decode_unicode=True
                 ):  # Avoid streaming chunks from holmes. send them as they arrive.
-                    event.ws(data=line)
+                    if line:
+                        event.ws(data=line)
             return
 
         else:
