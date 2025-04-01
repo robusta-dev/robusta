@@ -348,22 +348,22 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
         holmes_result.files = []
-        for tool in holmes_result.tool_calls:
-            if tool.tool_name != "execute_prometheus_range_query":
-                continue
-            try:
-                json_content = json.loads(tool.result)
-                query_result = PrometheusQueryResult(data=json_content.get("data", {}))
-                chart = build_chart_from_prometheus_result(query_result, json_content.get("description", "graph"))
-                contents = convert_svg_to_png(chart.render())
-                name = json_content.get("description", "graph").replace(" ", "_")
-                holmes_result.files.append(FileBlock(f"{name}.png", contents))
-            except Exception as e:
-                logging.exception(f"Failed to parse JSON: {e}\nRaw content:\n{tool.result}")
-
-        holmes_result.tool_calls = [
-            tool for tool in holmes_result.tool_calls if tool.tool_name != "execute_prometheus_range_query"
-        ]
+        if params.from_chatbot:
+            for tool in holmes_result.tool_calls:
+                if tool.tool_name != "execute_prometheus_range_query":
+                    continue
+                try:
+                    json_content = json.loads(tool.result)
+                    query_result = PrometheusQueryResult(data=json_content.get("data", {}))
+                    chart = build_chart_from_prometheus_result(query_result, json_content.get("description", "graph"))
+                    contents = convert_svg_to_png(chart.render())
+                    name = json_content.get("description", "graph").replace(" ", "_")
+                    holmes_result.files.append(FileBlock(f"{name}.png", contents))
+                except Exception as e:
+                    logging.exception(f"Failed to parse JSON: {e}\nRaw content:\n{tool.result}")
+            holmes_result.tool_calls = [
+                tool for tool in holmes_result.tool_calls if tool.tool_name != "execute_prometheus_range_query"
+            ]
         finding = Finding(
             title="AI Ask Chat",
             aggregation_key="HolmesChatResult",
