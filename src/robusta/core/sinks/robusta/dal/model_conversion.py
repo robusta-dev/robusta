@@ -102,6 +102,8 @@ class ModelConversion:
 
     @staticmethod
     def append_to_structured_files(files: List[FileBlock], structured_data) -> None:
+        if not files:
+            return
         for file in files:
             file_name = file.filename  # changes after zip
             file.zip()
