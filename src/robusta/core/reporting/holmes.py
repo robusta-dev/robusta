@@ -68,6 +68,7 @@ class HolmesChatResult(BaseModel):
     analysis: Optional[str] = None
     tool_calls: Optional[List[ToolCallResult]] = None
     conversation_history: Optional[List[dict]] = None
+    follow_up_actions: Optional[List[Any]] = None
 
 
 class HolmesChatResultsBlock(BaseBlock):
