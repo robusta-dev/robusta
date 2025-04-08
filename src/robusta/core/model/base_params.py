@@ -182,6 +182,15 @@ class ConversationType(str, Enum):
     ISSUE = "issue"
 
 
+class HolmesChatSource(str, Enum):
+    """
+    Conversation types for holmes_conversation action
+    """
+
+    UI = "ui"
+    RELAY = "relay"
+
+
 class HolmesChatParams(HolmesParams):
     """
     :var ask: User's prompt for holmes
@@ -189,7 +198,7 @@ class HolmesChatParams(HolmesParams):
 
     ask: str
     conversation_history: Optional[list[dict]] = None
-    from_chatbot: bool = False
+    source: HolmesChatSource = HolmesChatSource.UI
 
 
 class HolmesIssueChatParams(HolmesChatParams):

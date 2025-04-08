@@ -8,6 +8,7 @@ from robusta.core.model.base_params import (
     AIInvestigateParams,
     ChartValuesFormat,
     HolmesChatParams,
+    HolmesChatSource,
     HolmesConversationParams,
     HolmesIssueChatParams,
     HolmesWorkloadHealthChatParams,
@@ -356,7 +357,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
         holmes_result.files = []
-        if params.from_chatbot:
+        if params.source == HolmesChatSource.RELAY:
             for tool in holmes_result.tool_calls:
                 if tool.tool_name != "execute_prometheus_range_query":
                     continue
