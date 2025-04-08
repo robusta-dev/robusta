@@ -46,6 +46,7 @@ class ToolCallResult(BaseModel):
     tool_name: str
     description: str
     result: str
+    error_message: Optional[str] = None
 
 
 class HolmesResult(BaseModel):
