@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     IMAGE_REGISTRY,
     RUNNER_SERVICE_ACCOUNT,
@@ -32,6 +31,7 @@ from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
+from robusta.utils.parsing import format_event_templated_string
 
 IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.23.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
@@ -279,8 +279,13 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     scan_id = str(uuid.uuid4())
     prom_config = generate_prometheus_config(params)
     additional_flags = get_krr_additional_flags(params)
+    args_sanitized = params.args_sanitized
 
-    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} "
+    if params.args_sanitized and hasattr(event, "obj") and event.obj is not None:
+        subject = event.get_subject()
+        args_sanitized = format_event_templated_string(subject, params.args_sanitized)
+
+    python_command = f"python krr.py {params.strategy} {args_sanitized} {additional_flags} "
     verbose_str = "-v" if params.krr_verbose else ""
     python_command += f"--max-workers {params.max_workers} {verbose_str} -f json --width 2048"
 

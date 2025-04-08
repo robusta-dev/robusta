@@ -76,7 +76,8 @@ class OpsGenieSink(SinkBase):
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
         details = self.__to_details(finding)
-        self.tags.insert(0, self.cluster_name)
+        tags = self.tags.copy()
+        tags.insert(0, self.cluster_name)
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
             message=finding.title,
@@ -84,7 +85,7 @@ class OpsGenieSink(SinkBase):
             alias=finding.fingerprint,
             responders=[{"name": team, "type": "team"} for team in self.teams],
             details=details,
-            tags=self.tags,
+            tags=tags,
             entity=finding.service_key,
             priority=PRIORITY_MAP.get(finding.severity, "P3"),
         )
