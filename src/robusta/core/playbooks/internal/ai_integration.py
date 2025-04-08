@@ -8,7 +8,6 @@ from robusta.core.model.base_params import (
     AIInvestigateParams,
     ChartValuesFormat,
     HolmesChatParams,
-    HolmesChatSource,
     HolmesConversationParams,
     HolmesIssueChatParams,
     HolmesWorkloadHealthChatParams,
@@ -357,11 +356,12 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
         holmes_result.files = []
-        if params.source == HolmesChatSource.RELAY:
-            for tool in holmes_result.tool_calls:
-                if tool.tool_name != "execute_prometheus_range_query":
-                    continue
-                try:
+        if params.render_graph_images:
+            try:
+                for tool in holmes_result.tool_calls:
+                    if tool.tool_name != "execute_prometheus_range_query":
+                        continue
+
                     json_content = json.loads(tool.result)
                     query_result = PrometheusQueryResult(data=json_content.get("data", {}))
                     try:
@@ -369,17 +369,21 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                         output_type = ChartValuesFormat[output_type_str]
                     except KeyError:
                         output_type = ChartValuesFormat.Plain  # fallback in case of an invalid string
+
                     chart = build_chart_from_prometheus_result(
                         query_result, json_content.get("description", "graph"), values_format=output_type
                     )
                     contents = convert_svg_to_png(chart.render())
                     name = json_content.get("description", "graph").replace(" ", "_")
                     holmes_result.files.append(FileBlock(f"{name}.png", contents))
-                except Exception as e:
-                    logging.exception(f"Failed to parse JSON: {e}\nRaw content:\n{tool.result}")
-            holmes_result.tool_calls = [
-                tool for tool in holmes_result.tool_calls if tool.tool_name != "execute_prometheus_range_query"
-            ]
+
+                holmes_result.tool_calls = [
+                    tool for tool in holmes_result.tool_calls if tool.tool_name != "execute_prometheus_range_query"
+                ]
+
+            except Exception:
+                logging.exception(f"Failed to convert tools to images")
+
         finding = Finding(
             title="AI Ask Chat",
             aggregation_key="HolmesChatResult",
