@@ -295,7 +295,8 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     env_var: List[EnvVar] = []
     secret: Optional[JobSecret] = None
 
-    if IS_OPENSHIFT:
+    if IS_OPENSHIFT and params.prometheus_auth is None:
+        # if openshift, and the user didn't define auth header, use openshift token
         python_command += " --openshift"
     else:
         # adding env var of auth token from Secret
