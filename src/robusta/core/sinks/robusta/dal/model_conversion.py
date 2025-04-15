@@ -72,7 +72,7 @@ class ModelConversion:
         return filename[last_dot_idx + 1 :]
 
     @staticmethod
-    def get_file_object(block: FileBlock):
+    def get_file_object(block: FileBlock) -> Dict[str, Any]:
         return {
             "type": ModelConversion.get_file_type(block.filename),
             "data": str(base64.b64encode(block.contents)),
@@ -98,14 +98,16 @@ class ModelConversion:
 
     @staticmethod
     def add_ai_chat_data(structured_data: List[Dict], block: HolmesChatResultsBlock):
+        if not block.holmes_result:
+            return
         structured_data.append(
             {
                 "type": "markdown",
                 "metadata": {"type": "ai_investigation_result", "createdAt": datetime_to_db_str(datetime.now())},
-                "data": Transformer.to_github_markdown(block.holmes_result.analysis),
+                "data": Transformer.to_github_markdown(block.holmes_result.analysis or ""),
             }
         )
-        ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls, structured_data)
+        ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls or [], structured_data)
 
         conversation_history_block = FileBlock(
             f"conversation_history-{datetime.now()}.txt",
@@ -115,6 +117,13 @@ class ModelConversion:
         conversation_history_obj = ModelConversion.get_file_object(conversation_history_block)
         conversation_history_obj["metadata"] = {"type": "conversation_history"}
         structured_data.append(conversation_history_obj)
+
+        if block.holmes_result and block.holmes_result.follow_up_actions and len(block.holmes_result.follow_up_actions) > 0:
+            structured_data.append({
+                "type": "structured_data",
+                "metadata": {"type": "follow_up_actions"},
+                "data": block.holmes_result.follow_up_actions,
+            })
 
     @staticmethod
     def add_ai_analysis_data(structured_data: List[Dict], block: HolmesResultsBlock):
