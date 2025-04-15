@@ -27,7 +27,7 @@ You can also generate a Slack API key by running ``robusta integrations slack`` 
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params
      - slack_sink:
          name: main_slack_sink
@@ -56,7 +56,7 @@ Dynamic Alert Routing
 
 You can route alerts to different Slack channels by defining several Slack sinks. See :ref:`Route By Namespace` for an example.
 
-Alternatively, if the number of channels is large, you can define a single Slack sink and use the ``channel_override`` parameter to read read the destination channel from alert metadata.
+Alternatively, if the number of channels is large, you can define a single Slack sink and use the ``channel_override`` parameter to read the destination channel from alert metadata.
 
 Allowed values for ``channel_override`` are:
 
@@ -68,7 +68,7 @@ For example:
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params
      - slack_sink:
          name: main_slack_sink
@@ -87,7 +87,7 @@ Example:
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params, like slack_channel, api_key etc
      - slack_sink:
          name: main_slack_sink
@@ -106,7 +106,7 @@ For example:
 
 .. code-block:: yaml
 
-     sinks_config:
+     sinksConfig:
      # slack integration params
      - slack_sink:
          name: main_slack_sink
@@ -160,13 +160,13 @@ Creating Custom Slack Apps
 If you can't use the `official Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_, you can create
 your own. This is not recommended for most companies due to the added complexity.
 
-1. `Create a new Slack app. <https://api.slack.com/apps?new_app=1>`_
+1. `Create a new Slack app <https://api.slack.com/apps?new_app=1>`_
 2. Enable Socket mode in your Slack App.
 3. Under "OAuth and Permissions" add the following scopes: chat:write, chat:write.public, files:write, incoming-webhook, and channels:history.
 4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes".
 5. Click "Install into Workspace".
 6. Copy the ``Bot User OAuth Token`` from "OAuth and Permissions".
-7. Add the token to SinksConfig in your `generated_values.yaml` file.
+7. Add the token to sinksConfig in your `generated_values.yaml` file.
 
 .. code-block:: yaml
     :name: cb-custom-slack-app-config
