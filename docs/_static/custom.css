@@ -298,6 +298,37 @@ h3 {
     margin-bottom: 20px !important;
 }
 
+/* Back to Top Button */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--md-primary-fg-color);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 50px;
+    font-size: 20px;
+    text-decoration: none;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 1000;
+    transition: opacity 0.3s, visibility 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+.back-to-top.visible {
+    opacity: 0.7;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    opacity: 1;
+}
+
 .sd-sphinx-override p {
     margin-bottom: 0px;
 }
