@@ -83,7 +83,7 @@ class ResourceInfo(BaseModel):
 class HolmesParams(ActionParams):
 
     holmes_url: Optional[str]
-
+    model: Optional[str]
     @validator("holmes_url", allow_reuse=True)
     def validate_protocol(cls, v):
         if v and not v.startswith("http"):  # if the user configured url without http(s)
@@ -249,6 +249,7 @@ class HolmesWorkloadHealthChatParams(HolmesParams):
     workload_health_result: HolmesInvestigationResult
     resource: ResourceInfo
     conversation_history: Optional[list[dict]] = None
+
 
 
 class NamespacedResourcesParams(ActionParams):

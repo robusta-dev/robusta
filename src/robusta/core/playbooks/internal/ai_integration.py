@@ -60,7 +60,8 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             context=params.context if params.context else {},
             include_tool_calls=True,
             include_tool_call_results=True,
-            sections=params.sections
+            sections=params.sections,
+            model=params.model
         )
 
         if params.stream:
@@ -287,6 +288,7 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
             conversation_history=params.conversation_history,
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
+            model=params.model
         )
         result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
         result.raise_for_status()
@@ -336,7 +338,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
     cluster_name = event.get_context().cluster_name
 
     try:
-        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history)
+        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history, model=params.model)
         result = requests.post(f"{holmes_url}/api/chat", data=holmes_req.json())
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
@@ -380,11 +382,12 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
             ask=params.ask,
             conversation_history=params.conversation_history,
             workload_health_result=params.workload_health_result,
-            resource=params.resource
+            resource=params.resource,
+            model=params.model
         )
         result = requests.post(f"{holmes_url}/api/workload_health_chat", data=holmes_req.json())
         result.raise_for_status()
-        
+
         holmes_result = HolmesChatResult(**json.loads(result.text))
 
         finding = Finding(

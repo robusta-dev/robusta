@@ -20,6 +20,7 @@ class HolmesRequest(BaseModel):
     include_tool_calls: bool = False
     include_tool_call_results: bool = False
     sections: Optional[Dict[str, str]] = None
+    model: Optional[str] = None
 
 
 class HolmesConversationRequest(BaseModel):
@@ -35,6 +36,7 @@ class HolmesConversationRequest(BaseModel):
 class HolmesChatRequest(BaseModel):
     ask: str
     conversation_history: Optional[List[dict]] = None
+    model: Optional[str] = None
 
 
 class HolmesIssueChatRequest(HolmesChatRequest):
