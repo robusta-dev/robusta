@@ -45,7 +45,7 @@ class HolmesIssueChatRequest(HolmesChatRequest):
 class ToolCallResult(BaseModel):
     tool_name: str
     description: str
-    result: str
+    result: dict
 
 
 class HolmesResult(BaseModel):
