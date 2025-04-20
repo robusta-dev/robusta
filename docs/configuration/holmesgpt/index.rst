@@ -228,7 +228,7 @@ Choose an AI provider below and follow the instructions:
 
         Starting from version *0.22.1*, Robusta supports an alternative way to configure AI models: using a YAML dictionary in your Helm values file.
 
-        This method allows you to configure multiple models at once, each with its own credentials.
+        This method allows you to configure multiple models at once, each with its own parameters.
 
         Update your Helm values (``generated_values.yaml`` file) with the following configuration.
 
@@ -244,20 +244,22 @@ Choose an AI provider below and follow the instructions:
           enableHolmesGPT: true
 
           holmes:
-            modelCredentials: # sample configuration.
+            modelList: # sample configuration.
               openai:
                 model: openai/gpt-4o
-                api_key: <your-api-key>
+                api_key: "{{ env.API_KEY }}"
               azure-low-budget: 
                 model : azure/team-low-budget
                 api_base : <your-api-base> # fill in the base endpoint url of your azure deployment - e.g. https://my-org.openai.azure.com/
                 api_version : "2024-06-01"
                 api_key : "{{ env.AZURE_API_KEY }}" # you can load the values from an environment variable as well.
+                temperature: 0
               bedrock-devops: 
                 model: bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0 # your bedrock model.
                 aws_region_name: us-east-1
-                aws_access_key_id: <your-aws-access-key-id>
+                aws_access_key_id: "{{ env.AWS_ACCESS_KEY_ID }}" # you can load the values from an environment variable as well.
                 aws_secret_access_key: <your-aws-secret-access-key>
+                thinking: {"type": "enabled", "budget_tokens": 1024}
 
         Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
 
