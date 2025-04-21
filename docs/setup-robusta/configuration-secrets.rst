@@ -42,11 +42,14 @@ Add the following to your Helm values (generated_values.yaml):
             name: my-robusta-secrets
             key: secret_grafana_key
 
-  # if you're configuring a secret for HolmesGPT use this instead
-  #holmes:
-  #  additionalEnvVars:
-  #  - name: ROBUSTA_AI
-  #    value: "true"
+  # if you're configuring a secret for HolmesGPT it would be:
+  holmes:
+    additionalEnvVars:
+      - name: GRAFANA_KEY
+        valueFrom:
+          secretKeyRef:
+            name: my-robusta-secrets
+            key: secret_grafana_key
 
 **3. Use the Environment Variable in Robusta Config**
 
