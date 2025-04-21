@@ -794,6 +794,18 @@ class SlackSender:
                 "color": status.to_color_hex(),
                 "blocks": all_attachment_blocks
             }]
+            
+            # Detailed logging of blocks before sending to Slack
+            logging.debug(
+                f"SENDING TO SLACK - FULL BLOCKS DETAIL:\n"
+                f"CHANNEL: {slack_channel}\n"
+                f"TITLE: {finding.title}\n"
+                f"HEADER BLOCKS: {json.dumps(header_blocks, indent=2)}\n"
+                f"MAIN BLOCKS: {json.dumps(output_blocks, indent=2)}\n"
+                f"ALL BLOCKS: {json.dumps(all_blocks, indent=2)}\n"
+                f"ATTACHMENT BLOCKS: {json.dumps(all_attachment_blocks, indent=2)}\n"
+                f"ATTACHMENTS: {json.dumps(attachments, indent=2)}\n"
+            )
                 
             # Send the message with our JIRA-style headers and attachments
             resp = self.slack_client.chat_postMessage(

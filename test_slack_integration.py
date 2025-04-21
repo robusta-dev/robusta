@@ -35,8 +35,11 @@ from robusta.core.model.base_params import ResourceInfo
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+# Configure logging - set to DEBUG to see full block details
+logging.basicConfig(
+    level=logging.DEBUG if os.environ.get("DEBUG", "").lower() == "true" else logging.INFO, 
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # You'll need to provide a Slack API token to run this script
 # You can get one from https://api.slack.com/apps
@@ -420,6 +423,11 @@ def main():
     else:
         logging.warning("Jinja2 is not available! Using fallback header format.")
         logging.warning("To use templates, install Jinja2: pip install jinja2>=3.1.5")
+        
+    # Enable detailed block logging if DEBUG=true
+    if os.environ.get("DEBUG", "").lower() == "true":
+        logging.info("DEBUG mode enabled - will print detailed block information")
+        logging.info("Run script with DEBUG=false to disable detailed logging")
     
     # Initialize the SlackSender
     sender = SlackSender(
