@@ -441,6 +441,17 @@ def main():
         max_log_file_limit_kb=1000
     )
     
+    # Create a SlackSinkParams with legacy style
+    legacy_template_params = SlackSinkParams(
+        name="legacy-template-sink",
+        slack_channel=SLACK_CHANNEL,
+        api_key=SLACK_TOKEN,
+        investigate_link=True,
+        prefer_redirect_to_platform=False,
+        max_log_file_limit_kb=1000,
+        template_style="legacy"  # Use the legacy template style
+    )
+    
     # Create a SlackSinkParams with a custom template
     custom_template_params = SlackSinkParams(
         name="custom-template-sink",
@@ -489,11 +500,12 @@ def main():
     cpu_throttling_finding = create_cpu_throttling_finding()
     
     # Send findings to Slack with standard templates
-    logging.info(f"Sending crash loop finding to Slack channel: {SLACK_CHANNEL}...")
+    logging.info(f"Sending crash loop finding to Slack channel (DEFAULT TEMPLATE): {SLACK_CHANNEL}...")
     sender.send_finding_to_slack(crash_loop_finding, sink_params, platform_enabled=True)
     
-    logging.info(f"Sending node saturation finding to Slack channel: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(node_saturation_finding, sink_params, platform_enabled=True)
+    # Send findings to Slack with legacy template style 
+    logging.info(f"Sending node saturation finding to Slack channel with LEGACY TEMPLATE: {SLACK_CHANNEL}...")
+    sender.send_finding_to_slack(node_saturation_finding, legacy_template_params, platform_enabled=True)
     
     # Send findings to Slack with custom templates
     logging.info(f"Sending datadog agent crash finding to Slack channel with CUSTOM TEMPLATE: {SLACK_CHANNEL}...")

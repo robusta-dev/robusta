@@ -376,10 +376,15 @@ class SlackSender:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
         
+        # Select appropriate template based on user preference
+        template_name = "header.j2"  # default template
+        if sink_params and hasattr(sink_params, "template_style") and sink_params.template_style == "legacy":
+            template_name = "legacy.j2"
+        
         # Check if the user has provided a custom template
         custom_template = None
-        if sink_params and sink_params.custom_templates and "header.j2" in sink_params.custom_templates:
-            custom_template = sink_params.custom_templates["header.j2"]
+        if sink_params and sink_params.custom_templates and template_name in sink_params.custom_templates:
+            custom_template = sink_params.custom_templates[template_name]
             
         # Prepare data for template
         status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
@@ -438,7 +443,7 @@ class SlackSender:
             "investigate_uri": investigate_uri,
             "resource_text": resource_text,
             "resource_emoji": resource_emoji,
-            "finding": finding.to_json() if hasattr(finding, "to_json") else {}
+            "finding": finding
         }
         
         # If custom template provided, use it directly with Jinja
@@ -456,7 +461,7 @@ class SlackSender:
                 # Fall back to file-based template
         
         # Use file-based template
-        return template_loader.render_to_blocks("header.j2", template_context)
+        return template_loader.render_to_blocks(template_name, template_context)
 
     def __create_links(
         self,
