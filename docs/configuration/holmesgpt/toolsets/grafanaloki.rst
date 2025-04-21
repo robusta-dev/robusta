@@ -10,6 +10,9 @@ You **should** enable this toolset to replace the default :ref:`kubernetes/logs 
 toolset if all your kubernetes/pod logs are consolidated inside Loki. It will make it easier for HolmesGPT
 to fetch incident logs, including the ability to precisely consult past logs.
 
+
+.. include:: ./_toolsets_that_provide_logging.inc.rst
+
 Prerequisites
 ^^^^^^^^^^^^^
 
@@ -136,6 +139,7 @@ Use the following commands to list Loki's labels and determine which ones to use
     curl http://localhost:3100/loki/api/v1/labels
 
 
+**Disabling the default toolset**
 
 If Loki is your primary datasource for logs, it is **advised** to disable the default HolmesGPT logging
 tool by disabling the ``kubernetes/logs`` toolset. Without this. HolmesGPT may still use kubectl to
