@@ -181,3 +181,78 @@ your own. This is not recommended for most companies due to the added complexity
 
     When using a custom Slack app, callback buttons are not supported due to complexities in how Slack handles incoming
     messages. :ref:`Contact us if you need assistance. <Getting Support>`
+Message Templating
+-------------------------------------------------------------------
+
+Slack messages can be customized using Jinja2 templates. Robusta includes default templates that match the standard format, but you can override them for custom formatting.
+
+To use custom templates, add them to the ``custom_templates`` parameter:
+
+.. code-block:: yaml
+
+   sinksConfig:
+   - slack_sink:
+       name: main_slack_sink
+       slack_channel: "#alerts"
+       api_key: xoxb-112...
+       custom_templates:
+         header.j2: |
+           {
+             "type": "section",
+             "text": {
+               "type": "mrkdwn",
+               "text": "{{ status_emoji }} *CUSTOM ALERT: {{ title }}*"
+             }
+           }
+
+           {
+             "type": "context",
+             "elements": [
+               {
+                 "type": "mrkdwn", 
+                 "text": ":bell: {{ alert_type }} on cluster {{ cluster_name }}"
+               },
+               {
+                 "type": "mrkdwn",
+                 "text": "{{ severity_emoji }} {{ severity }}"
+               }
+             ]
+           }
+
+Templates use Slack's Block Kit format and must generate valid JSON. Each template block is separated by double newlines (``\n\n``).
+
+Available template variables:
+
++-----------------------------+-------------------------------------------------------------+
+| Variable                    | Description                                                 |
++=============================+=============================================================+
+| ``title``                   | The alert title                                             |
++-----------------------------+-------------------------------------------------------------+
+| ``status_text``             | "Firing" or "Resolved"                                      |
++-----------------------------+-------------------------------------------------------------+
+| ``status_emoji``            | "⚠️" (for firing) or "✅" (for resolved)                    |
++-----------------------------+-------------------------------------------------------------+
+| ``severity``                | Alert severity (e.g., "Warning", "Critical")                |
++-----------------------------+-------------------------------------------------------------+
+| ``severity_emoji``          | Emoji for the severity level                                |
++-----------------------------+-------------------------------------------------------------+
+| ``alert_type``              | "Alert", "K8s Event", or "Notification"                     |
++-----------------------------+-------------------------------------------------------------+
+| ``cluster_name``            | The name of the cluster                                     |
++-----------------------------+-------------------------------------------------------------+
+| ``platform_enabled``        | Boolean indicating if Robusta platform is enabled           |
++-----------------------------+-------------------------------------------------------------+
+| ``include_investigate_link``| Boolean for including investigate link                      |
++-----------------------------+-------------------------------------------------------------+
+| ``investigate_uri``         | URI for investigation                                       |
++-----------------------------+-------------------------------------------------------------+
+| ``resource_text``           | Resource identifier (e.g., "Pod/namespace/name")            |
++-----------------------------+-------------------------------------------------------------+
+| ``resource_emoji``          | Emoji for the resource type                                 |
++-----------------------------+-------------------------------------------------------------+
+| ``finding``                 | The complete finding object as JSON                         |
++-----------------------------+-------------------------------------------------------------+
+
+Currently available templates:
+
+* ``header.j2`` - The header section of alert notifications
