@@ -552,32 +552,6 @@ class SlackSender:
         
         return [title_block, context_block]
 
-    def __get_enrichment_title(self, enrichment_type: Optional[EnrichmentType]) -> str:
-        """Get a user-friendly title for an enrichment type"""
-        if enrichment_type is None:
-            return "Additional Information"
-            
-        titles = {
-            EnrichmentType.graph: "Performance Graphs",
-            EnrichmentType.ai_analysis: "AI Analysis",
-            EnrichmentType.node_info: "Node Information",
-            EnrichmentType.container_info: "Container Information",
-            EnrichmentType.k8s_events: "Kubernetes Events",
-            EnrichmentType.alert_labels: "Alert Labels",
-            EnrichmentType.diff: "Resource Changes",
-            EnrichmentType.text_file: "Logs",
-            EnrichmentType.crash_info: "Crash Information",
-            EnrichmentType.image_pull_backoff_info: "Image Pull Error",
-            EnrichmentType.pending_pod_info: "Pod Scheduling Information"
-        }
-        
-        return titles.get(enrichment_type, str(enrichment_type).replace("EnrichmentType.", "").replace("_", " ").title())
-        
-    def __get_enrichment_color(self, enrichment_type: Optional[EnrichmentType], status: FindingStatus) -> str:
-        """Get a color based on status"""
-        # We're now using a single color for all attachments based on status
-        return status.to_color_hex()
-
     def __create_links(
         self,
         finding: Finding,
