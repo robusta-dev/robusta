@@ -42,37 +42,57 @@ fetch the logs and it needs to know the UID of this datasource.
 
 A simple way to get the datasource UID is to access the Grafana API by running the following request:
 
-.. code-block:: bash
 
-    # port forward if you are using Robusta's grafana from your kubernetes cluster
-    kubectl port-forward svc/robusta-grafana 3000:80
+.. md-tab-set::
 
-    # List the loki data sources
-    curl -s -u <username>:<password> http://localhost:3000/api/datasources | jq '.[] | select(.type == "loki")'
-    {
-        "id": 2,
-        "uid": "klja8hsa-8a9c-4b35-1230-7baab22b02ee",
-        "orgId": 1,
-        "name": "Loki-kubernetes",
-        "type": "loki",
-        "typeName": "Loki",
-        "typeLogoUrl": "/public/app/plugins/datasource/loki/img/loki_icon.svg",
-        "access": "proxy",
-        "url": "http://loki.loki:3100",
-        "user": "",
-        "database": "",
-        "basicAuth": false,
-        "isDefault": false,
-        "jsonData": {
-            "httpHeaderName1": "admin",
-            "httpHeaderName2": "X-Scope-OrgID",
-            "tlsSkipVerify": true
-        },
-        "readOnly": false
-    }
-    # In this case, there is a single Loki datasourceUID
-    # with UID "klja8hsa-8a9c-4b35-1230-7baab22b02ee"
+  .. md-tab-item:: Self Hosted
 
+    .. code-block:: bash
+
+      # port forward if you are using Robusta's grafana from your kubernetes cluster
+      kubectl port-forward svc/robusta-grafana 3000:80
+
+      # List the loki data sources
+      curl -s -u <username>:<password> http://localhost:3000/api/datasources | jq '.[] | select(.type == "loki")'
+      {
+          "id": 2,
+          "uid": "klja8hsa-8a9c-4b35-1230-7baab22b02ee",
+          "orgId": 1,
+          "name": "Loki-kubernetes",
+          "type": "loki",
+          "typeName": "Loki",
+          "typeLogoUrl": "/public/app/plugins/datasource/loki/img/loki_icon.svg",
+          "access": "proxy",
+          "url": "http://loki.loki:3100",
+          "user": "",
+          "database": "",
+          "basicAuth": false,
+          "isDefault": false,
+          "jsonData": {
+              "httpHeaderName1": "admin",
+              "httpHeaderName2": "X-Scope-OrgID",
+              "tlsSkipVerify": true
+          },
+          "readOnly": false
+      }
+      # In this case, there is a single Loki datasourceUID
+      # with UID "klja8hsa-8a9c-4b35-1230-7baab22b02ee"
+
+
+
+  .. md-tab-item:: Grafana Cloud
+    
+    Choose the datasource you want to use for logs and click on it.
+
+    .. image:: /images/grafana-loki-holmes-uid1.png
+      :width: 600
+      :align: center
+
+    The part of the URL after ``edit/`` is the UID.
+
+    .. image:: /images/grafana-loki-holmes-uid2.png
+      :width: 600
+      :align: center
 
 Configuration
 ^^^^^^^^^^^^^
