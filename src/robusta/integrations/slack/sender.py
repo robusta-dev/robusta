@@ -15,13 +15,9 @@ from slack_sdk import WebClient
 from slack_sdk.http_retry import all_builtin_retry_handlers
 from slack_sdk.errors import SlackApiError
 
-try:
-    # Import is optional since jinja2 is an optional dependency
-    from jinja2 import Template
-    from robusta.core.sinks.slack.templates.template_loader import template_loader
-    JINJA2_AVAILABLE = True
-except ImportError:
-    JINJA2_AVAILABLE = False
+# Since we're assuming Jinja2 is always present, we can import directly
+from jinja2 import Template
+from robusta.core.sinks.slack.templates.template_loader import template_loader
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
 from robusta.core.model.env_vars import (
@@ -380,114 +376,17 @@ class SlackSender:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
         
-        # Determine if we should use Jinja2 templates
-        use_jinja = JINJA2_AVAILABLE
         # Check if the user has provided a custom template
         custom_template = None
         if sink_params and sink_params.custom_templates and "header.j2" in sink_params.custom_templates:
             custom_template = sink_params.custom_templates["header.j2"]
             
-        if use_jinja:
-            # Prepare data for template
-            status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
-            status_emoji = "⚠️" if status == FindingStatus.FIRING else "✅"
-            investigate_uri = finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""
-            
-            # Get alert type information
-            if finding.source == FindingSource.PROMETHEUS:
-                alert_type = "Alert"
-            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-                alert_type = "K8s Event"
-            else:
-                alert_type = "Notification"
-                
-            # Prepare resource text and emoji if available
-            resource_text = ""
-            resource_emoji = ":package:"
-            
-            if finding.subject:
-                subject_kind = finding.subject.subject_type.value
-                subject_namespace = finding.subject.namespace
-                subject_name = finding.subject.name
-                
-                if subject_kind and subject_name:
-                    # Choose emoji based on kind
-                    if subject_kind.lower() == "pod":
-                        resource_emoji = ":ship:"
-                    elif subject_kind.lower() == "deployment":
-                        resource_emoji = ":package:"
-                    elif subject_kind.lower() == "node":
-                        resource_emoji = ":computer:"
-                    elif subject_kind.lower() == "service":
-                        resource_emoji = ":link:"
-                    elif subject_kind.lower() == "job":
-                        resource_emoji = ":clock1:"
-                    elif subject_kind.lower() == "statefulset":
-                        resource_emoji = ":chains:"
-                        
-                    # Format as Kind/Namespace/Name
-                    if subject_namespace:
-                        resource_text = f"{subject_kind}/{subject_namespace}/{subject_name}"
-                    else:
-                        resource_text = f"{subject_kind}/{subject_name}"
-            
-            # Prepare template context
-            template_context = {
-                "title": title,
-                "status_text": status_text,
-                "status_emoji": status_emoji,
-                "severity": sev.name.capitalize(),
-                "severity_emoji": sev.to_emoji(),
-                "alert_type": alert_type,
-                "cluster_name": self.cluster_name,
-                "platform_enabled": platform_enabled,
-                "include_investigate_link": include_investigate_link,
-                "investigate_uri": investigate_uri,
-                "resource_text": resource_text,
-                "resource_emoji": resource_emoji,
-                "finding": finding.to_json() if hasattr(finding, "to_json") else {}
-            }
-            
-            # If custom template provided, use it directly with Jinja
-            if custom_template:
-                try:
-                    template = Template(custom_template)
-                    rendered_blocks = []
-                    for block_str in template.render(**template_context).strip().split("\n\n"):
-                        if block_str.strip():
-                            block = json.loads(block_str)
-                            rendered_blocks.append(block)
-                    return rendered_blocks
-                except Exception as e:
-                    logging.error(f"Error rendering custom template: {e}")
-                    # Fall back to file-based template
-            
-            # Use file-based template
-            return template_loader.render_to_blocks("header.j2", template_context)
-                
-        # Fallback to hard-coded blocks if Jinja2 is not available
-        # Create the title with status and name prominently displayed as per user feedback
+        # Prepare data for template
         status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
         status_emoji = "⚠️" if status == FindingStatus.FIRING else "✅"
+        investigate_uri = finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""
         
-        # Format: Status emoji [Status] AlertName
-        if platform_enabled and include_investigate_link:
-            title_text = f"{status_emoji} *[{status_text}] <{finding.get_investigate_uri(self.account_id, self.cluster_name)}|{title}>*"
-        else:
-            title_text = f"{status_emoji} *[{status_text}] {title}*"
-            
-        title_block = {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": title_text
-            }
-        }
-        
-        # Create metadata line with "cluster" instead of "source"
-        cluster_text = f"Cluster: {self.cluster_name}"
-        
-        # Get type information separately
+        # Get alert type information
         if finding.source == FindingSource.PROMETHEUS:
             alert_type = "Alert"
         elif finding.source == FindingSource.KUBERNETES_API_SERVER:
@@ -495,26 +394,11 @@ class SlackSender:
         else:
             alert_type = "Notification"
             
-        # Create a context block with metadata but without duplicating status info
-        context_elements = [
-            {
-                "type": "mrkdwn", 
-                "text": f":bell: Type: {alert_type}"
-            },
-            {
-                "type": "mrkdwn",
-                "text": f"{sev.to_emoji()} Severity: {sev.name.capitalize()}"
-            },
-            {
-                "type": "mrkdwn",
-                "text": f":globe_with_meridians: {cluster_text}"
-            }
-        ]
+        # Prepare resource text and emoji if available
+        resource_text = ""
+        resource_emoji = ":package:"
         
-        # Always show resource kind, namespace and name if available
         if finding.subject:
-            # Add subject kind, namespace and name as a single piece of information
-            kind_emoji = ":package:"
             subject_kind = finding.subject.subject_type.value
             subject_namespace = finding.subject.namespace
             subject_name = finding.subject.name
@@ -522,35 +406,57 @@ class SlackSender:
             if subject_kind and subject_name:
                 # Choose emoji based on kind
                 if subject_kind.lower() == "pod":
-                    kind_emoji = ":ship:"
+                    resource_emoji = ":ship:"
                 elif subject_kind.lower() == "deployment":
-                    kind_emoji = ":package:"
+                    resource_emoji = ":package:"
                 elif subject_kind.lower() == "node":
-                    kind_emoji = ":computer:"
+                    resource_emoji = ":computer:"
                 elif subject_kind.lower() == "service":
-                    kind_emoji = ":link:"
+                    resource_emoji = ":link:"
                 elif subject_kind.lower() == "job":
-                    kind_emoji = ":clock1:"
+                    resource_emoji = ":clock1:"
                 elif subject_kind.lower() == "statefulset":
-                    kind_emoji = ":chains:"
+                    resource_emoji = ":chains:"
                     
                 # Format as Kind/Namespace/Name
                 if subject_namespace:
-                    subject_text = f"{kind_emoji} Resource: {subject_kind}/{subject_namespace}/{subject_name}"
+                    resource_text = f"{subject_kind}/{subject_namespace}/{subject_name}"
                 else:
-                    subject_text = f"{kind_emoji} Resource: {subject_kind}/{subject_name}"
-                    
-                context_elements.append({
-                    "type": "mrkdwn",
-                    "text": subject_text
-                })
-                
-        context_block = {
-            "type": "context",
-            "elements": context_elements
+                    resource_text = f"{subject_kind}/{subject_name}"
+        
+        # Prepare template context
+        template_context = {
+            "title": title,
+            "status_text": status_text,
+            "status_emoji": status_emoji,
+            "severity": sev.name.capitalize(),
+            "severity_emoji": sev.to_emoji(),
+            "alert_type": alert_type,
+            "cluster_name": self.cluster_name,
+            "platform_enabled": platform_enabled,
+            "include_investigate_link": include_investigate_link,
+            "investigate_uri": investigate_uri,
+            "resource_text": resource_text,
+            "resource_emoji": resource_emoji,
+            "finding": finding.to_json() if hasattr(finding, "to_json") else {}
         }
         
-        return [title_block, context_block]
+        # If custom template provided, use it directly with Jinja
+        if custom_template:
+            try:
+                template = Template(custom_template)
+                rendered_blocks = []
+                for block_str in template.render(**template_context).strip().split("\n\n"):
+                    if block_str.strip():
+                        block = json.loads(block_str)
+                        rendered_blocks.append(block)
+                return rendered_blocks
+            except Exception as e:
+                logging.error(f"Error rendering custom template: {e}")
+                # Fall back to file-based template
+        
+        # Use file-based template
+        return template_loader.render_to_blocks("header.j2", template_context)
 
     def __create_links(
         self,

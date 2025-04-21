@@ -15,7 +15,7 @@ from datetime import datetime
 # Add the src directory to the Python path so we can import the modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from robusta.integrations.slack.sender import SlackSender, JINJA2_AVAILABLE
+from robusta.integrations.slack.sender import SlackSender
 from robusta.core.reporting.base import Finding, FindingSource, FindingSeverity, FindingStatus, FindingSubject, Link, EnrichmentType
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
 from robusta.core.reporting.base import LinkType
@@ -416,13 +416,6 @@ def main():
     if not SLACK_TOKEN:
         logging.error("SLACK_TOKEN environment variable not set. Please set it to proceed.")
         sys.exit(1)
-    
-    # Check if Jinja2 is available
-    if JINJA2_AVAILABLE:
-        logging.info("Jinja2 is available, using templated headers")
-    else:
-        logging.warning("Jinja2 is not available! Using fallback header format.")
-        logging.warning("To use templates, install Jinja2: pip install jinja2>=3.1.5")
         
     # Enable detailed block logging if DEBUG=true
     if os.environ.get("DEBUG", "").lower() == "true":
