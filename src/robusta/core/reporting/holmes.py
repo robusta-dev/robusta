@@ -45,7 +45,7 @@ class HolmesIssueChatRequest(HolmesChatRequest):
 class ToolCallResult(BaseModel):
     tool_name: str
     description: str
-    result: dict
+    result: Union[str, dict] # dict is for new structured output results and string to support old versions of holmes
 
 
 class HolmesResult(BaseModel):
