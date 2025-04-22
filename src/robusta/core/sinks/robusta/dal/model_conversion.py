@@ -26,7 +26,7 @@ from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.holmes import HolmesChatResultsBlock, HolmesResultsBlock, ToolCallResult
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
-
+from robusta.core.model.env_vars import HOLMES_STRUCTURED_OUTPUT_CONVERSION_FEATURE_FLAG
 
 class ModelConversion:
     @staticmethod
@@ -89,13 +89,16 @@ class ModelConversion:
     @staticmethod
     def append_to_structured_data_tool_calls(tool_calls: List[ToolCallResult], structured_data) -> None:
         for tool_call in tool_calls:
-            
             if isinstance(tool_call.result, str):
-                result_content = tool_call.result.encode()
-            elif isinstance(tool_call.result, (dict, list)):
-                result_content = json.dumps(tool_call.result, indent=2).encode()
-               
-            file_block = FileBlock(f"{tool_call.description}.txt", result_content)
+                result = tool_call.result.encode()
+            elif isinstance(tool_call.result, dict):
+                if HOLMES_STRUCTURED_OUTPUT_CONVERSION_FEATURE_FLAG:
+                    tool_call_status = tool_call.result.get("status")
+                if tool_call_status == "error":
+                    result = tool_call.result.get("error", "").encode()
+                else:
+                    result = tool_call.result.get("data", "").encode()
+            file_block = FileBlock(f"{tool_call.description}.txt", result)
             file_block.zip()
             data_obj = ModelConversion.get_file_object(file_block)
             data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
