@@ -94,10 +94,12 @@ class ModelConversion:
             elif isinstance(tool_call.result, dict):
                 if HOLMES_STRUCTURED_OUTPUT_CONVERSION_FEATURE_FLAG:
                     tool_call_status = tool_call.result.get("status")
-                if tool_call_status == "error":
-                    result = tool_call.result.get("error", "").encode()
+                    if tool_call_status == "error":
+                        result = tool_call.result.get("error", "").encode()
+                    else:
+                        result = tool_call.result.get("data", "").encode()
                 else:
-                    result = tool_call.result.get("data", "").encode()
+                    result = json.dumps(tool_call.result).encode()
             file_block = FileBlock(f"{tool_call.description}.txt", result)
             file_block.zip()
             data_obj = ModelConversion.get_file_object(file_block)
