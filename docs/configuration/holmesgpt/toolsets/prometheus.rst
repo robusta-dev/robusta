@@ -24,7 +24,7 @@ Configuration
                 prometheus/metrics:
                     enabled: true
                     config:
-                        prometheus_url: http://<prometheus host>:9090
+                        prometheus_url: http://<prometheus host>:9090 # e.g. http://robusta-kube-prometheus-st-prometheus.default.svc.cluster.local:9090
                         headers:
                             Authorization: "Basic <base_64_encoded_string>"
 
@@ -41,7 +41,7 @@ Configuration
             prometheus/metrics:
                 enabled: true
                 config:
-                    prometheus_url: http://<prometheus host>:9090
+                    prometheus_url: http://<prometheus host>:9090 # e.g. http://robusta-kube-prometheus-st-prometheus.default.svc.cluster.local:9090
                     headers:
                         Authorization: "Basic <base_64_encoded_string>"
 
@@ -78,13 +78,11 @@ Below is the full list of options for this toolset:
 
 The best way to find the prometheus URL is to use "ask holmes". This only works if your cluster is live and already connected to Robusta.
 
-If not, follow these steps:
+If not, you can often find the prometheus URL by running the following command (several results may be shown - pick the best match):
 
-1. Run ``kubectl get services -n <monitoring-namespace>`` to list all services. Replace ``<monitoring-namespace>`` with the namespace where Prometheus is deployed. This is often ``monitoring`` or ``prometheus``. You can also run ``kubectl get services -A`` which will list all services in all namespaces.
-2. Identify which are the namespace and name of your Prometheus service. You can set up port forwarding to test if the service is correct and if Prometheus is reachable.
-3. Run ``kubectl describe service <service-name> -n <namespace>`` to get details about the service, including the cluster IP and port.
-4. Set the DNS or the cluster IP as well as the port to the configuration field ``prometheus_url`` as mentioned above.
+.. code-block:: bash
 
+    kubectl get svc --all-namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"."}{.metadata.namespace}{".svc.cluster.local:"}{.spec.ports[0].port}{"\n"}{end}' | grep prometheus | grep -Ev 'operat|alertmanager|node|coredns|kubelet|kube-scheduler|etcd|controller' | awk '{print "http://"$1}'
 
 Capabilities
 ------------
