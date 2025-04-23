@@ -4,6 +4,7 @@ from typing import List
 import opsgenie_sdk
 
 from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity
+from robusta.core.sinks.common.channel_transformer import ChannelTransformer
 from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.transformer import Transformer
@@ -22,8 +23,17 @@ class OpsGenieSink(SinkBase):
 
         self.api_key = sink_config.opsgenie_sink.api_key
         self.teams = sink_config.opsgenie_sink.teams
+        self.default_team = sink_config.opsgenie_sink.default_team
         self.tags = sink_config.opsgenie_sink.tags
         self.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
+
+        # Check for dangerous configuration
+        has_templates = any("$" in team for team in self.teams)
+        if has_templates and not self.default_team:
+            logging.warning(
+                "OpsGenie sink is configured with templated team names but no default_team specified. "
+                "Alerts may fail to route if the required label or annotation is missing."
+            )
 
         opsgenie_sdk.configuration.Configuration.set_default(None)
         self.conf = opsgenie_sdk.configuration.Configuration()
@@ -73,17 +83,48 @@ class OpsGenieSink(SinkBase):
         except opsgenie_sdk.ApiException as err:
             logging.error(f"Error acking opsGenie alert {fingerprint} {err}", exc_info=True)
 
+    def __get_teams(self, finding: Finding) -> List[str]:
+        teams = []
+        for team_template in self.teams:
+            try:
+                if "$" in team_template:
+                    # Only process templates that contain variables
+                    team = ChannelTransformer.template(
+                        team_template,
+                        self.default_team,  # Use default_team as fallback
+                        self.cluster_name,
+                        finding.subject.labels,
+                        finding.subject.annotations,
+                    )
+                    if team:  # Only add non-null teams
+                        teams.append(team)
+                else:
+                    # Use static team name directly
+                    teams.append(team_template)
+            except Exception as e:
+                logging.warning(
+                    f"Failed to process team template {team_template} for alert subject {finding.service_key}: {e}"
+                )
+                continue
+        return teams
+
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
         details = self.__to_details(finding)
         tags = self.tags.copy()
         tags.insert(0, self.cluster_name)
+
+        # Get teams based on templates
+        teams = self.__get_teams(finding)
+        if not teams and self.teams:  # dynamic routing failed and no default team configured
+            logging.warning(f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
+
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
             message=finding.title,
             description=description,
             alias=finding.fingerprint,
-            responders=[{"name": team, "type": "team"} for team in self.teams],
+            responders=[{"name": team, "type": "team"} for team in teams],
             details=details,
             tags=tags,
             entity=finding.service_key,
