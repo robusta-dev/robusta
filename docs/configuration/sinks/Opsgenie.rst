@@ -42,8 +42,11 @@ In this example:
 
 .. note::
 
-   Dynamic team routing using label-based templates (e.g., ``$labels.team``) is only supported on **OpsGenie Standard** or **Enterprise** plans.
-   If you are on a Free or Essentials plan, these templates will not function as expected.
+   - Dynamic team routing using label-based templates (e.g., ``$labels.team``) is only supported on **OpsGenie Standard** or **Enterprise** plans.
+     If you are on a Free or Essentials plan, these templates will not function as expected.
+
+   - The API key must be from a **Global API Integration** for dynamic routing to work.
+     If you use a **team-specific API key**, alerts will be routed **only to that team**.
 
 Save the file and apply the configuration:
 
