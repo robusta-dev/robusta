@@ -40,6 +40,11 @@ In this example:
 - The tag **"prod a"** will be included with every alert.
 - Kubernetes labels **will not be added** to alert details, as `extra_details_labels` is set to `false`.
 
+.. note::
+
+   Dynamic team routing using label-based templates (e.g., ``$labels.team``) is only supported on **OpsGenie Standard** or **Enterprise** plans.
+   If you are on a Free or Essentials plan, these templates will not function as expected.
+
 Save the file and apply the configuration:
 
 .. code-block:: bash
