@@ -125,8 +125,6 @@ class OpsGenieSink(SinkBase):
 
         # Get teams based on templates
         teams = self.__get_teams(finding)
-        if not teams and self.teams:  # dynamic routing failed and no default team configured
-            logging.warning(f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
 
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
