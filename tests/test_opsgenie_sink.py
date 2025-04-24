@@ -16,6 +16,7 @@ def create_finding(labels=None, annotations=None):
         title="Test Finding",
         description="Test Description",
         severity=FindingSeverity.HIGH,
+        aggregation_key="test",
         subject=FindingSubject(
             name="test-pod",
             namespace="test-namespace",
@@ -37,7 +38,7 @@ def create_sink(teams=None, default_team=None, tags=None):
     )
     return OpsGenieSink(
         OpsGenieSinkConfigWrapper(opsgenie_sink=config),
-        None,
+        MagicMock(),
     )
 
 
