@@ -26,7 +26,9 @@ The OpsGenie sink supports static and dynamic team routing, optional fallback te
             api_key: OpsGenie integration API key  # configured from OpsGenie team integration
             teams:
             - "noc"                  # Static team
-            - "$labels.team"         # Dynamic team routing based on alert label
+            - "$labels.team"  # Dynamic routing based on alert labels or annotations.
+                              # For example, if an alert subject has `team=infra`, it routes to the "infra" team.
+                              # Use $labels.<label_name> or $annotations.<label_name> as placeholders.
             default_team: "oncall"   # Optional fallback team for Dynamic team routing
             tags:
             - "prod a"

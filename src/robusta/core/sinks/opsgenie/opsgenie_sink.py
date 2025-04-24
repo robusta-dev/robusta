@@ -97,11 +97,12 @@ class OpsGenieSink(SinkBase):
                         finding.subject.labels,
                         finding.subject.annotations,
                     )
-                    if team:  # Only add non-null teams
+                    if team and team not in teams:  # Only add non-null, de-duped teams
                         teams.append(team)
                 else:
                     # Use static team name directly
-                    teams.append(team_template)
+                    if team_template not in teams:  # Only add de-duped teams
+                        teams.append(team_template)
             except Exception as e:
                 logging.warning(
                     f"Failed to process team template {team_template} for alert subject {finding.service_key}: {e}"
@@ -109,13 +110,12 @@ class OpsGenieSink(SinkBase):
                 continue
 
         # If no teams were resolved and we have a default team, use it
-        if not teams and self.default_team:
+        if not teams and self.default_team and self.default_team not in teams:
             teams.append(self.default_team)
         elif not teams and self.teams:  # dynamic routing failed and no default team configured
             logging.warning(f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
 
-        # Remove duplicates
-        return list(set(teams))
+        return teams
 
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)

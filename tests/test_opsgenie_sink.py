@@ -60,7 +60,7 @@ def test_get_teams_with_missing_label():
     sink = create_sink(teams=["$labels.team", "$annotations.owner"], default_team="default-team")
     finding = create_finding(labels={"environment": "prod"}, annotations={"owner": "ops-team"})  # missing team label
     teams = sink._OpsGenieSink__get_teams(finding)
-    assert teams == ["ops-team", "default-team"]
+    assert teams == ["default-team", "ops-team"]
 
 
 def test_get_teams_with_missing_annotation():
