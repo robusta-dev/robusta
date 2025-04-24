@@ -195,7 +195,7 @@ class ActionRequestReceiver:
         res = self.event_handler.run_external_stream_action(action_request.body.action_name,
                                                             action_request.body.action_params,
                                                             lambda data: self.__stream_response(request_id=action_request.request_id, data=data))
-        res = "" if res.get("success") else json.dumps(res)
+        res = "" if res.get("success") else f"event: error\ndata: {json.dumps(res)}\n\n"
         self.__close_stream_response(action_request.request_id, res)
 
     def _process_action(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:

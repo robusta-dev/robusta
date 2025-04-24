@@ -20,6 +20,7 @@ Builtin Toolsets
    toolsets/kubernetes
    toolsets/opensearch
    toolsets/prometheus
+   toolsets/rabbitmq
    toolsets/robusta
    toolsets/slab
 
@@ -106,6 +107,11 @@ by the user by providing credentials or API keys to external systems.
     .. grid-item-card:: :octicon:`cpu;1em;` Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/prometheus
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` RabbitMQ
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/rabbitmq
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Robusta

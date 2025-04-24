@@ -15,8 +15,14 @@ to fetch incident logs, including the ability to precisely consult past logs.
 Prerequisites
 ^^^^^^^^^^^^^
 
-1. A `Coralogix API key <https://coralogix.com/docs/developer-portal/apis/data-query/direct-archive-query-http-api/#api-key>`_ which is assigned the ``DataQuerying`` permission preset.
-2. A base url corresponding to your `Coralogix domain <https://coralogix.com/docs/user-guides/account-management/account-settings/coralogix-domain/>`_.
+1. A `Coralogix API key <https://coralogix.com/docs/developer-portal/apis/data-query/direct-archive-query-http-api/#api-key>`_ which is assigned the ``DataQuerying`` permission preset
+2. A `Coralogix domain <https://coralogix.com/docs/user-guides/account-management/account-settings/coralogix-domain/>`_. For example ``eu2.coralogix.com``
+3. Your team's `name or hostname <https://coralogix.com/docs/user-guides/account-management/organization-management/create-an-organization/#teams-in-coralogix>`_. For example ``your-company-name``
+
+
+You can deduct the ``domain`` and ``team_hostname`` configuration fields by looking at the URL you use to access the Coralogix UI.
+
+For example if you access coralogix at ``https://my-team.app.eu2.coralogix.com/``` then the ``team_hostname`` is ``my-team``and the coralogix ``domain`` is ``eu2.coralogix.com``.
 
 Configuration
 ^^^^^^^^^^^^^
@@ -33,7 +39,8 @@ Configuration
             enabled: true
             config:
               api_key: <your coralogix API key>
-              base_url: https://xxx.coralogix.xxx # Your Coralogix domain URL, without any path
+              domain: eu2.coralogix.com # Your Coralogix domain
+              team_hostname: my-team # Your team's hostname in coralogix, without the domain part
               labels:
                 pod: "kubernetes.pod_name"
                 namespace: "kubernetes.namespace_name"
@@ -56,7 +63,8 @@ Configuration
           enabled: true
           config:
             api_key: <your coralogix API key>
-            base_url: https://xxx.coralogix.xxx # Your Coralogix domain URL, without any path
+            domain: eu2.coralogix.com # Your Coralogix domain
+            team_hostname: my-team # Your team's hostname in coralogix
             labels:
               pod: "kubernetes.pod_name"
               namespace: "kubernetes.namespace_name"
