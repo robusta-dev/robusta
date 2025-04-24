@@ -84,6 +84,7 @@ class OpsGenieSink(SinkBase):
             logging.error(f"Error acking opsGenie alert {fingerprint} {err}", exc_info=True)
 
     def __get_teams(self, finding: Finding) -> List[str]:
+        """Get the list of teams for the alert, resolving any templates in the team names."""
         teams = []
         for team_template in self.teams:
             try:
@@ -106,7 +107,15 @@ class OpsGenieSink(SinkBase):
                     f"Failed to process team template {team_template} for alert subject {finding.service_key}: {e}"
                 )
                 continue
-        return teams
+
+        # If no teams were resolved and we have a default team, use it
+        if not teams and self.default_team:
+            teams.append(self.default_team)
+        elif not teams and self.teams:  # dynamic routing failed and no default team configured
+            logging.warning(f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
+
+        # Remove duplicates
+        return list(set(teams))
 
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
