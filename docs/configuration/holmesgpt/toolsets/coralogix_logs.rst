@@ -41,10 +41,6 @@ Configuration
               api_key: <your coralogix API key>
               domain: eu2.coralogix.com # Your Coralogix domain
               team_hostname: my-team # Your team's hostname in coralogix, without the domain part
-              labels:
-                pod: "kubernetes.pod_name"
-                namespace: "kubernetes.namespace_name"
-                app: "kubernetes.labels.app"
 
           kubernetes/logs:
             enabled: false # Disable HolmesGPT's default logging mechanism
@@ -65,19 +61,61 @@ Configuration
             api_key: <your coralogix API key>
             domain: eu2.coralogix.com # Your Coralogix domain
             team_hostname: my-team # Your team's hostname in coralogix
-            labels:
-              pod: "kubernetes.pod_name"
-              namespace: "kubernetes.namespace_name"
-              app: "kubernetes.labels.app"
 
         kubernetes/logs:
           enabled: false # Disable HolmesGPT's default logging mechanism
 
+Advanced Configuration
+^^^^^^^^^^^^^^^^^^^^^^
+
+**Frequent logs and archive**
+
+By default, holmes fetched the logs from the `Frequent search <https://coralogix.com/docs/user-guides/account-management/tco-optimizer/logs/#frequent-search-data-high-priority>`_ 
+tier and only fetch logs from the `Archive` tier if the frequent search returned no result.
+
+This behaviour can be customised using the ``logs_retrieval_methodology`` configuration field:
+
+.. code-block:: yaml
+
+  toolsets:
+    coralogix/logs:
+      enabled: true
+      config:
+        # Possible values are:
+        #  - FREQUENT_SEARCH_ONLY
+        #  - ARCHIVE_ONLY
+        #  - ARCHIVE_FALLBACK  <- default value
+        #  - FREQUENT_SEARCH_FALLBACK
+        #  - BOTH_FREQUENT_SEARCH_AND_ARCHIVE
+        logs_retrieval_methodology: ARCHIVE_FALLBACK # default value
+        ...
+
+Here is a description of each possible log retrieval methodology:
+
+- **FREQUENT_SEARCH_ONLY** Always fetch logs using a frequent search.
+- **ARCHIVE_ONLY** Always fetch logs using the archive.
+- **ARCHIVE_FALLBACK** Use a frequent search first. If there are no results, fallback to searching archived logs. **This is the default behaviour.**
+- **FREQUENT_SEARCH_FALLBACK** Search logs in the archive first. If there are no results, fallback to searching the frequent logs.
+- **BOTH_FREQUENT_SEARCH_AND_ARCHIVE** Always use both the frequent search and the archive to fetch logs. The result contains merged data which is deduplicated and sorted by timestamp.
 
 **Search labels**
 
-You can tweak the labels used by the toolset to identify kubernetes resources. This is only needed if your
-logs settings for ``pod``, ``namespace``, and ``app`` differ from the defaults in the example above.
+You can tweak the labels used by the toolset to identify kubernetes resources. This is **optional** and only needed if your
+logs settings for ``pod``, ``namespace``, ``application`` and ``subsystem`` differ from the defaults in the example below.
+
+.. code-block:: yaml
+
+  toolsets:
+    coralogix/logs:
+      enabled: true
+      config:
+        labels: # OPTIONAL: tweak the filters used by HolmesGPT if your coralogix configuration is non standard
+          namespace: "kubernetes.namespace_name"
+          pod: "kubernetes.pod_name"
+          application: "coralogix.metadata.applicationName"
+          subsystem: "coralogix.metadata.subsystemName"
+        ...
+
 
 You can verify what labels to use by attempting to run a query in the coralogix ui:
 
@@ -111,5 +149,5 @@ Capabilities
 
    * - Tool Name
      - Description
-   * - coralogix_fetch_logs
-     - Retrieve logs from Coralogix
+   * - fetch_coralogix_logs_for_resource
+     - Retrieve logs using coralogix
