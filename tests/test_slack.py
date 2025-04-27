@@ -56,7 +56,7 @@ def test_long_table_columns(slack_channel: SlackChannel):
     slack_sender.send_finding_to_slack(finding, slack_params, False)
 
 
-def test_send_file(slack_channel: SlackChannel):
+def test_send_file_spooled_tempfile_fails(slack_channel: SlackChannel):
     slack_sender = SlackSender(
         CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
     )
@@ -69,13 +69,27 @@ def test_send_file(slack_channel: SlackChannel):
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
 
     # verify NamedTemporaryFile sending works
-    with patch("tempfile.SpooledTemporaryFile", side_effect=FileNotFoundError("Cant create spooled file")):
+    # verify SpooledTemporaryFile sending works
+    with patch("tempfile.NamedTemporaryFile", side_effect=FileNotFoundError("No usable temporary directory found")):
         slack_sender.send_finding_to_slack(finding, slack_params, False)
 
     # Verify that the message contains the finding title but not the file content
     latest_message = slack_channel.get_latest_message()
     assert "Test Text File Upload" in latest_message
     assert "test.txt" in latest_message  # File should not be included
+
+
+def test_send_file_named_tempfile_fails(slack_channel: SlackChannel):
+    slack_sender = SlackSender(
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+    )
+
+    # Test with a text file
+    test_content = "test file content"
+    finding = Finding(title="Test Text File Upload", aggregation_key="TestTextFileUpload")
+    finding.add_enrichment([FileBlock("test.txt", test_content), FileBlock("test2.txt", test_content)])
+
+    slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
 
     # verify SpooledTemporaryFile sending works
     with patch("tempfile.NamedTemporaryFile", side_effect=FileNotFoundError("No usable temporary directory found")):
