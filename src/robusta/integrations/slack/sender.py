@@ -241,7 +241,7 @@ class SlackSender:
                 logging.debug("Trying NamedTemporaryFile for Slack upload")
                 return _upload_temp_file(f.name)
         except Exception as e:
-            logging.exception(f"NamedTemporaryFile failed: {e}")
+            logging.debug(f"NamedTemporaryFile failed: {e}")
         try:
             with tempfile.SpooledTemporaryFile(max_size=max_log_file_limit_kb * 1000) as f:
                 logging.debug("Trying SpooledTemporaryFile for Slack upload")
