@@ -1,3 +1,5 @@
+import logging
+
 from slack_sdk import WebClient
 
 
@@ -26,6 +28,12 @@ class SlackChannel:
         for channel in client.conversations_list()["channels"]:
             if channel["name"] == channel_name:
                 # TODO: join the channel if necessary
+                try:
+                    # Attempt to join the channel if not already joined
+                    client.conversations_join(channel=channel["id"])
+                except Exception as e:
+                    # It's ok if already in channel or can't join (e.g., private and no permission)
+                    logging.warning(f"Could not join channel {channel_name}: {e}")
                 return channel["id"]
 
         # TODO: make this a private channel not a public channel. it shouldn't be visible to anyone who joins the public
