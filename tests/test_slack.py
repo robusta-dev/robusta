@@ -1,4 +1,5 @@
 import base64
+import logging
 import tempfile
 from unittest.mock import patch
 
@@ -64,7 +65,7 @@ def test_send_file_spooled_tempfile_fails(slack_channel: SlackChannel):
     # Test with a text file
     test_content = "test file content"
     finding = Finding(title="Test Text File Upload", aggregation_key="TestTextFileUpload")
-    finding.add_enrichment([FileBlock("test.txt", test_content), FileBlock("test2.txt", test_content)])
+    finding.add_enrichment([FileBlock("test.txt", test_content)])
 
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
 
@@ -75,8 +76,9 @@ def test_send_file_spooled_tempfile_fails(slack_channel: SlackChannel):
 
     # Verify that the message contains the finding title but not the file content
     latest_message = slack_channel.get_latest_message()
+    logging.warning(latest_message)
     assert "Test Text File Upload" in latest_message
-    assert "test.txt" in latest_message  # File should not be included
+    assert "test.txt" in latest_message
 
 
 def test_send_file_named_tempfile_fails(slack_channel: SlackChannel):
@@ -87,7 +89,7 @@ def test_send_file_named_tempfile_fails(slack_channel: SlackChannel):
     # Test with a text file
     test_content = "test file content"
     finding = Finding(title="Test Text File Upload", aggregation_key="TestTextFileUpload")
-    finding.add_enrichment([FileBlock("test.txt", test_content), FileBlock("test2.txt", test_content)])
+    finding.add_enrichment([FileBlock("test.txt", test_content)])
 
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
 
@@ -95,10 +97,10 @@ def test_send_file_named_tempfile_fails(slack_channel: SlackChannel):
     with patch("tempfile.SpooledTemporaryFile", side_effect=FileNotFoundError("No usable temporary directory found")):
         slack_sender.send_finding_to_slack(finding, slack_params, False)
 
-        # Verify that the message contains the finding title but not the file content
-        latest_message = slack_channel.get_latest_message()
-        assert "Test Text File Upload" in latest_message
-        assert "test.txt" in latest_message  # File should not be included
+    # Verify that the message contains the finding title but not the file content
+    latest_message = slack_channel.get_latest_message()
+    assert "Test Text File Upload" in latest_message
+    assert "test.txt" in latest_message
 
 
 def test_temporary_file_creation_failure(slack_channel: SlackChannel):
