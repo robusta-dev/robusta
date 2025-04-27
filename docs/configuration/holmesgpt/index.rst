@@ -18,7 +18,7 @@ Robusta can integrate with `Holmes GPT <https://github.com/robusta-dev/holmesgpt
 
 When available, AI based investigations can be launched in one of two ways:
 
-1. Click the ``Ask Holmes`` button in Slack. The AI investigation will be sent back as a new message.
+1. Click the ``Ask HolmesGPT`` button in Slack. The AI investigation will be sent back as a new message.
 
 .. image:: /images/robusta-holmes-investigation.png
     :width: 600px
