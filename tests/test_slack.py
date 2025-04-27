@@ -68,14 +68,16 @@ def test_send_file(slack_channel: SlackChannel):
 
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
 
-    slack_sender.send_finding_to_slack(finding, slack_params, False)
+    # verify NamedTemporaryFile sending works
+    with patch("tempfile.SpooledTemporaryFile", side_effect=FileNotFoundError("Cant create spooled file")):
+        slack_sender.send_finding_to_slack(finding, slack_params, False)
 
     # Verify that the message contains the finding title but not the file content
     latest_message = slack_channel.get_latest_message()
     assert "Test Text File Upload" in latest_message
     assert "test.txt" in latest_message  # File should not be included
 
-    # Mock NamedTemporaryFile to raise an exception
+    # verify SpooledTemporaryFile sending works
     with patch("tempfile.NamedTemporaryFile", side_effect=FileNotFoundError("No usable temporary directory found")):
         slack_sender.send_finding_to_slack(finding, slack_params, False)
 

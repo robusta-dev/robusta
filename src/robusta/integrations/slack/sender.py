@@ -4,21 +4,22 @@ import ssl
 import tempfile
 from datetime import datetime, timedelta
 from itertools import chain
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
 
 import certifi
 import humanize
 from dateutil import tz
 from slack_sdk import WebClient
-from slack_sdk.http_retry import all_builtin_retry_handlers
 from slack_sdk.errors import SlackApiError
+from slack_sdk.http_retry import all_builtin_retry_handlers
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
+    HOLMES_ASK_SLACK_BUTTON_ENABLED,
     HOLMES_ENABLED,
     SLACK_REQUEST_TIMEOUT,
-    SLACK_TABLE_COLUMNS_LIMIT, HOLMES_ASK_SLACK_BUTTON_ENABLED,
+    SLACK_TABLE_COLUMNS_LIMIT,
 )
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
@@ -69,7 +70,12 @@ class SlackSender:
             except Exception as e:
                 logging.exception(f"Failed to use custom certificate. {e}")
 
-        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT, retry_handlers=all_builtin_retry_handlers())
+        self.slack_client = WebClient(
+            token=slack_token,
+            ssl=ssl_context,
+            timeout=SLACK_REQUEST_TIMEOUT,
+            retry_handlers=all_builtin_retry_handlers(),
+        )
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
@@ -213,15 +219,36 @@ class SlackSender:
             logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
 
-    def __upload_file_to_slack(self, block: FileBlock, max_log_file_limit_kb: int) -> str:
+    def __upload_file_to_slack(self, block: FileBlock, max_log_file_limit_kb: int) -> Optional[str]:
+        """Upload a file to Slack and return a permalink to it."""
         truncated_content = block.truncate_content(max_file_size_bytes=max_log_file_limit_kb * 1000)
+        filename = block.filename
 
-        """Upload a file to slack and return a link to it"""
-        with tempfile.NamedTemporaryFile() as f:
+        def _upload_temp_file(file_reference) -> Optional[str]:
+            """Helper to upload a file-like or file path to Slack."""
             f.write(truncated_content)
             f.flush()
-            result = self.slack_client.files_upload_v2(title=block.filename, file=f.name, filename=block.filename)
+            f.seek(0)
+
+            result = self.slack_client.files_upload_v2(
+                title=filename,
+                file_uploads=[{"file": file_reference, "filename": filename, "title": filename}],
+            )
             return result["file"]["permalink"]
+
+        try:
+            with tempfile.NamedTemporaryFile() as f:
+                logging.debug("Trying NamedTemporaryFile for Slack upload")
+                return _upload_temp_file(f.name)
+        except Exception as e:
+            logging.exception(f"NamedTemporaryFile failed: {e}")
+        try:
+            with tempfile.SpooledTemporaryFile(max_size=max_log_file_limit_kb * 1000) as f:
+                logging.debug("Trying SpooledTemporaryFile for Slack upload")
+                return _upload_temp_file(f)
+        except Exception as e2:
+            logging.exception(f"SpooledTemporaryFile also failed: {e2}")
+            return None
 
     def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):
         if files:
@@ -235,7 +262,8 @@ class SlackSender:
                 if len(file_block.contents) == 0:
                     continue
                 permalink = self.__upload_file_to_slack(file_block, max_log_file_limit_kb=max_log_file_limit_kb)
-                uploaded_files.append(f"* <{permalink} | {file_block.filename}>")
+                if permalink:
+                    uploaded_files.append(f"* <{permalink} | {file_block.filename}>")
 
             file_references = "\n".join(uploaded_files)
             message = f"{message}\n{file_references}"
@@ -310,7 +338,6 @@ class SlackSender:
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
-
     def __limit_labels_size(self, labels: dict, max_size: int = 1000) -> dict:
         # slack can only send 2k tokens in a callback so the labels are limited in size
 
@@ -318,7 +345,7 @@ class SlackSender:
         current_length = len(str(labels))
         if current_length <= max_size:
             return labels
-        
+
         limited_labels = copy.deepcopy(labels)
 
         # first remove the low priority labels if needed
@@ -348,7 +375,7 @@ class SlackSender:
             "robusta_issue_id": str(finding.id),
             "issue_type": finding.aggregation_key,
             "source": finding.source.name,
-            "labels": self.__limit_labels_size(labels=finding.subject.labels)
+            "labels": self.__limit_labels_size(labels=finding.subject.labels),
         }
 
         return CallbackBlock(
@@ -714,12 +741,7 @@ class SlackSender:
                 return
 
             # Call Slack's chat_update method
-            resp = self.slack_client.chat_update(
-                channel=channel,
-                ts=ts,
-                text=text,
-                blocks=blocks
-            )
+            resp = self.slack_client.chat_update(channel=channel, ts=ts, text=text, blocks=blocks)
             logging.debug(f"Message updated successfully: {resp['ts']}")
             return resp["ts"]
 
