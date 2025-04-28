@@ -89,7 +89,12 @@ class ModelConversion:
     @staticmethod
     def append_to_structured_data_tool_calls(tool_calls: List[ToolCallResult], structured_data) -> None:
         for tool_call in tool_calls:
-            file_block = FileBlock(f"{tool_call.description}.txt", tool_call.result.encode())
+            if isinstance(tool_call.result, str):
+                result = tool_call.result.encode()
+            elif isinstance(tool_call.result, dict):
+                result = json.dumps(tool_call.result).encode()
+                
+            file_block = FileBlock(f"{tool_call.description}.txt", result)
             file_block.zip()
             data_obj = ModelConversion.get_file_object(file_block)
             data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
