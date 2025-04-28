@@ -219,33 +219,33 @@ class SlackSender:
             logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
 
+    def _upload_temp_file(self, f, file_reference, truncated_content: bytes, filename: str) -> Optional[str]:
+        """Helper to upload a file-like or file path to Slack."""
+        f.write(truncated_content)
+        f.flush()
+        f.seek(0)
+
+        result = self.slack_client.files_upload_v2(
+            title=filename,
+            file_uploads=[{"file": file_reference, "filename": filename, "title": filename}],
+        )
+        return result["file"]["permalink"]
+
     def __upload_file_to_slack(self, block: FileBlock, max_log_file_limit_kb: int) -> Optional[str]:
         """Upload a file to Slack and return a permalink to it."""
         truncated_content = block.truncate_content(max_file_size_bytes=max_log_file_limit_kb * 1000)
         filename = block.filename
 
-        def _upload_temp_file(file_reference) -> Optional[str]:
-            """Helper to upload a file-like or file path to Slack."""
-            f.write(truncated_content)
-            f.flush()
-            f.seek(0)
-
-            result = self.slack_client.files_upload_v2(
-                title=filename,
-                file_uploads=[{"file": file_reference, "filename": filename, "title": filename}],
-            )
-            return result["file"]["permalink"]
-
         try:
             with tempfile.NamedTemporaryFile() as f:
                 logging.debug("Trying NamedTemporaryFile for Slack upload")
-                return _upload_temp_file(f.name)
+                return self._upload_temp_file(f, f.name, truncated_content, filename)
         except Exception as e:
             logging.debug(f"NamedTemporaryFile failed: {e}")
         try:
             with tempfile.SpooledTemporaryFile(max_size=max_log_file_limit_kb * 1000) as f:
                 logging.debug("Trying SpooledTemporaryFile for Slack upload")
-                return _upload_temp_file(f)
+                return self._upload_temp_file(f, f, truncated_content, filename)
         except Exception as e2:
             logging.exception(f"SpooledTemporaryFile also failed: {e2}")
             return None
