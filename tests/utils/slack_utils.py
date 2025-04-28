@@ -27,7 +27,6 @@ class SlackChannel:
         """Creates or joins the specified slack channel and returns its channel_id"""
         for channel in client.conversations_list()["channels"]:
             if channel["name"] == channel_name:
-                # TODO: join the channel if necessary
                 try:
                     # Attempt to join the channel if not already joined
                     client.conversations_join(channel=channel["id"])
