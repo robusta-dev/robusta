@@ -169,7 +169,8 @@ redirects = {
     "developer-guide/platform/dev-setup.html": "/master/contributing.html",
     "developer-guide/platform/coding-conventions.html": "/master/contributing.html",
     "developer-guide/platform/docs-contributions.html": "/master/docs-contributions.html#improving-these-docs",
-    "developer-guide/platform/sinks-guide.html": "/master/configuration/sinks/sinks-development.html"
+    "developer-guide/platform/sinks-guide.html": "/master/configuration/sinks/sinks-development.html",
+    "user-guide/robusta-cli.html": "master/setup-robusta/installation/index.html"
 } 
 
 
