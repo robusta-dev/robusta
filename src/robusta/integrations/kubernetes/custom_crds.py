@@ -30,7 +30,7 @@ class CRDBase:
         return type("", (object,), {"obj": obj})()
 
     @classmethod
-    def rollout_restart_patch():
+    def rollout_restart_patch(cls):
         return {
             "metadata": {
                 "annotations": {
@@ -88,7 +88,7 @@ class StrimziPodSet(CRDBase, HikaruDocumentBase, HikaruCRDDocumentMixin):
         self.spec["selector"] = LabelSelector(**self.spec["selector"])
 
     @classmethod
-    def rollout_restart_patch():
+    def rollout_restart_patch(cls):
         return {
             "metadata": {"annotations": {"strimzi.io/manual-rolling-update": "true"}}
         }
