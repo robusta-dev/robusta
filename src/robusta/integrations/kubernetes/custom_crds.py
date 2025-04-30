@@ -97,7 +97,7 @@ class StrimziPodSet(CRDBase, HikaruDocumentBase, HikaruCRDDocumentMixin):
 # https://github.com/search?q=repo%3Acloudnative-pg/cloudnative-pg%20ClusterRestartAnnotationName&type=code // restart
 # https://cloudnative-pg.io/documentation/1.20/cloudnative-pg.v1/#postgresql-cnpg-io-v1-Cluster crd.
 @dataclass
-class CNPGCluster(CRDBase, HikaruDocumentBase, HikaruCRDDocumentMixin):
+class Cluster(CRDBase, HikaruDocumentBase, HikaruCRDDocumentMixin):
     plural: ClassVar[str] = "clusters"
     group: ClassVar[str] = "postgresql.cnpg.io"
     version: ClassVar[str] = "v1"
@@ -125,6 +125,6 @@ class ExecutionContext(CRDBase, HikaruDocumentBase, HikaruCRDDocumentMixin):
 # this map is registered into trigger events(LOADERS_MAPPINGS) and Listers( for comparisons)
 CRDS_map = {
     "StrimziPodSet": StrimziPodSet,
-    "CNPGCluster": CNPGCluster,
+    "Cluster": Cluster,
     "ExecutionContext": ExecutionContext,
 }
