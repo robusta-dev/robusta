@@ -16,7 +16,9 @@ from robusta.api import (
     DaemonSet,
 )
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, Rollout
-from kubernetes.client import AppsV1Api
+from robusta.integrations.kubernetes.custom_crds import CRDBase
+
+from kubernetes.client import AppsV1Api, CustomObjectsApi
 
 
 @action
@@ -44,12 +46,7 @@ def rollout_restart(event: KubernetesResourceEvent):
     """
     resource = event.get_resource()
     if not resource:
-        raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, f"Couldn't found resource")
-
-    if resource.kind not in ["Deployment", "DaemonSet", "StatefulSet", "DeploymentConfig", "Rollout"]:
-        raise ActionException(
-            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Rollout restart is not supported for resource {resource.kind}"
-        )
+        raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, "Couldn't found resource")
 
     name = resource.metadata.name
     namespace = resource.metadata.namespace
@@ -70,6 +67,17 @@ def rollout_restart(event: KubernetesResourceEvent):
         if isinstance(resource, DeploymentConfig):
             resource.spec.template.metadata.annotations["robusta.kubernetes.io/restartedAt"] = now
             resource.update()
+            return
+
+        if isinstance(resource, (CRDBase)):
+            CustomObjectsApi().patch_namespaced_custom_object(
+                group=resource.group,
+                version=resource.version,
+                namespace=namespace,
+                plural=resource.plural,
+                name=name,
+                body=resource.rollout_restart_patch()
+            )
             return
 
         if isinstance(resource, Deployment):
