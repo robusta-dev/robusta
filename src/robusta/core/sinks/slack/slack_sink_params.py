@@ -2,7 +2,7 @@ from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.common import ChannelTransformer
 
-from typing import Optional
+from typing import Optional, Dict, Literal
 from pydantic import validator
 
 
@@ -12,6 +12,12 @@ class SlackSinkParams(SinkBaseParams):
     channel_override: Optional[str] = None
     max_log_file_limit_kb: int = 1000
     investigate_link: bool = True
+    send_svg: bool = True
+    prefer_redirect_to_platform: bool = True
+    
+    # Template selection and customization options
+    template_style: Literal["default", "legacy"] = "default"  # Use "legacy" for old-style formatting
+    custom_templates: Optional[Dict[str, str]] = None  # Template name -> custom template content
 
     @classmethod
     def _supports_grouping(cls):

@@ -149,6 +149,14 @@ class Enrichment:
 
     def __str__(self):
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
+    
+    def to_dict(self):
+        return {
+            "blocks": [block.dict() for block in self.blocks],
+            "annotations": self.annotations,
+            "enrichment_type": self.enrichment_type,
+            "title": self.title,
+        }
 
 
 class FilterableScopeMatcher(BaseScopeMatcher):
@@ -404,3 +412,31 @@ class Finding(Filterable):
         # if not, generate with logic similar to alertmanager
         s = f"{subject.subject_type},{subject.name},{subject.namespace},{subject.node},{source.value}{aggregation_key}"
         return hashlib.sha256(s.encode()).hexdigest()
+    
+    def to_json(self):
+        return {
+            "title": self.title,
+            "aggregation_key": self.aggregation_key,
+            "severity": self.severity.name,
+            "source": self.source.name,
+            "description": self.description,
+            "subject": {
+                "name": self.subject.name,
+                "subject_type": self.subject.subject_type.value,
+                "namespace": self.subject.namespace,
+                "node": self.subject.node,
+                "container": self.subject.container,
+                "labels": self.subject.labels,
+                "annotations": self.subject.annotations,
+            },
+            "finding_type": self.finding_type.name,
+            "failure": self.failure,
+            "creation_date": self.creation_date,
+            "fingerprint": self.fingerprint,
+            "starts_at": self.starts_at,
+            "ends_at": self.ends_at,
+            "add_silence_url": self.add_silence_url,
+            "silence_labels": self.silence_labels,
+            "enrichments": [enrichment.to_dict() for enrichment in self.enrichments],
+            "links": [link.dict() for link in self.links],
+        }

@@ -1,10 +1,12 @@
 import copy
+import json
 import logging
+import os
 import ssl
 import tempfile
 from datetime import datetime, timedelta
 from itertools import chain
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
 
 import certifi
 import humanize
@@ -12,6 +14,10 @@ from dateutil import tz
 from slack_sdk import WebClient
 from slack_sdk.http_retry import all_builtin_retry_handlers
 from slack_sdk.errors import SlackApiError
+
+# Since we're assuming Jinja2 is always present, we can import directly
+from jinja2 import Template
+from robusta.core.sinks.slack.templates.template_loader import template_loader
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
 from robusta.core.model.env_vars import (
@@ -290,6 +296,7 @@ class SlackSender:
                 kwargs = {"thread_ts": thread_ts}
             else:
                 kwargs = {}
+            # Create a single attachment with a consistent color, containing all enrichment blocks
             resp = self.slack_client.chat_postMessage(
                 channel=channel,
                 text=message,
@@ -363,26 +370,98 @@ class SlackSender:
         )
 
     def __create_finding_header(
-        self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
-    ) -> MarkdownBlock:
+        self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool, 
+        sink_params = None
+    ) -> List[SlackBlock]:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
+        
+        # Select appropriate template based on user preference
+        template_name = "header.j2"  # default template
+        if sink_params and hasattr(sink_params, "template_style") and sink_params.template_style == "legacy":
+            template_name = "legacy.j2"
+        
+        # Check if the user has provided a custom template
+        custom_template = None
+        if sink_params and sink_params.custom_templates and template_name in sink_params.custom_templates:
+            custom_template = sink_params.custom_templates[template_name]
+            
+        # Prepare data for template
+        status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
+        status_emoji = "⚠️" if status == FindingStatus.FIRING else "✅"
+        investigate_uri = finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""
+        
+        # Get alert type information
         if finding.source == FindingSource.PROMETHEUS:
-            status_name: str = (
-                f"{status.to_emoji()} `Prometheus Alert Firing` {status.to_emoji()}"
-                if status == FindingStatus.FIRING
-                else f"{status.to_emoji()} *Prometheus resolved*"
-            )
+            alert_type = "Alert"
         elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-            status_name: str = "👀 *K8s event detected*"
+            alert_type = "K8s Event"
         else:
-            status_name: str = "👀 *Notification*"
-        if platform_enabled and include_investigate_link:
-            title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
-        return MarkdownBlock(
-            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*
-{title}"""
-        )
+            alert_type = "Notification"
+            
+        # Prepare resource text and emoji if available
+        resource_text = ""
+        resource_emoji = ":package:"
+        
+        if finding.subject:
+            subject_kind = finding.subject.subject_type.value
+            subject_namespace = finding.subject.namespace
+            subject_name = finding.subject.name
+            
+            if subject_kind and subject_name:
+                # Choose emoji based on kind
+                if subject_kind.lower() == "pod":
+                    resource_emoji = ":ship:"
+                elif subject_kind.lower() == "deployment":
+                    resource_emoji = ":package:"
+                elif subject_kind.lower() == "node":
+                    resource_emoji = ":computer:"
+                elif subject_kind.lower() == "service":
+                    resource_emoji = ":link:"
+                elif subject_kind.lower() == "job":
+                    resource_emoji = ":clock1:"
+                elif subject_kind.lower() == "statefulset":
+                    resource_emoji = ":chains:"
+                    
+                # Format as Kind/Namespace/Name
+                if subject_namespace:
+                    resource_text = f"{subject_kind}/{subject_namespace}/{subject_name}"
+                else:
+                    resource_text = f"{subject_kind}/{subject_name}"
+        
+        # Prepare template context
+        template_context = {
+            "title": title,
+            "status_text": status_text,
+            "status_emoji": status_emoji,
+            "severity": sev.name.capitalize(),
+            "severity_emoji": sev.to_emoji(),
+            "alert_type": alert_type,
+            "cluster_name": self.cluster_name,
+            "platform_enabled": platform_enabled,
+            "include_investigate_link": include_investigate_link,
+            "investigate_uri": investigate_uri,
+            "resource_text": resource_text,
+            "resource_emoji": resource_emoji,
+            "finding": finding
+        }
+        
+        # If custom template provided, use it directly with Jinja
+        if custom_template:
+            try:
+                template = Template(custom_template)
+                rendered_blocks = []
+                for block_str in template.render(**template_context).strip().split("\n\n"):
+                    if block_str.strip():
+                        block = json.loads(block_str)
+                        rendered_blocks.append(block)
+                return rendered_blocks
+            except Exception as e:
+                logging.error(f"Error rendering custom template: {e}")
+                # Fall back to file-based template
+        
+        # Use file-based template
+        return template_loader.render_to_blocks(template_name, template_context)
 
     def __create_links(
         self,
@@ -516,6 +595,7 @@ class SlackSender:
     ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
+        header_blocks: List[SlackBlock] = []  # JIRA-style header blocks
 
         slack_channel = ChannelTransformer.template(
             sink_params.channel_override,
@@ -533,8 +613,16 @@ class SlackSender:
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
+        
+        # Get JIRA-style header blocks
         if finding.title:
-            blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
+            header_blocks = self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link, sink_params)
+
+        # Description handling - moved above the buttons
+        if finding.description:
+            # Always show description immediately after title
+            description_text = finding.description
+            blocks.append(MarkdownBlock(description_text))
 
         links_block: LinksBlock = self.__create_links(
             finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
@@ -544,44 +632,113 @@ class SlackSender:
         if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
 
-        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
-        if finding.description:
-            if finding.source == FindingSource.PROMETHEUS:
-                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
-            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-                blocks.append(
-                    MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
-                )
-            else:
-                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
-
         unfurl = True
+        all_file_blocks = []  # Collect all file blocks to be handled specially
+
         for enrichment in finding.enrichments:
             if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
 
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
             unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
-            if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
-                attachment_blocks.extend(enrichment.blocks)
-            else:
-                blocks.extend(enrichment.blocks)
+            
+            # Separate file blocks from normal blocks
+            file_blocks_in_enrichment = [b for b in enrichment.blocks if isinstance(b, FileBlock)]
+            non_file_blocks = [b for b in enrichment.blocks if not isinstance(b, FileBlock)]
+            
+            # Collect file blocks
+            all_file_blocks.extend(file_blocks_in_enrichment)
+            
+            # Put non-file blocks in the attachment
+            attachment_blocks.extend(non_file_blocks)
+        
+        # Add file blocks to the main blocks for proper handling
+        blocks.extend(all_file_blocks)
+        
+        # No divider in the main blocks
 
-        blocks.append(DividerBlock())
+        # We need to create a minimal version of __send_blocks_to_slack 
+        # that can handle both our header blocks and regular blocks
+        file_blocks = add_pngs_for_all_svgs([b for b in blocks if isinstance(b, FileBlock)])
+        if not sink_params.send_svg:
+            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
 
-        if len(attachment_blocks):
-            attachment_blocks.append(DividerBlock())
+        other_blocks = [b for b in blocks if not isinstance(b, FileBlock)]
 
-        return self.__send_blocks_to_slack(
-            blocks,
-            attachment_blocks,
-            finding.title,
-            sink_params,
-            unfurl,
-            status,
-            slack_channel,
-            thread_ts=thread_ts,
+        # wide tables aren't displayed properly on slack. looks better in a text file
+        file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
+        file_blocks.extend(Transformer.tableblock_to_fileblocks(attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
+
+        message = self.prepare_slack_text(
+            finding.title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
         )
+        
+        # Convert BaseBlocks to Slack blocks
+        output_blocks = []
+        for block in other_blocks:
+            output_blocks.extend(self.__to_slack(block, sink_params.name))
+            
+        attachment_slack_blocks = []
+        for block in attachment_blocks:
+            attachment_slack_blocks.extend(self.__to_slack(block, sink_params.name))
+
+        # Combine with header blocks
+        all_blocks = header_blocks + output_blocks
+        
+        try:
+            if thread_ts:
+                kwargs = {"thread_ts": thread_ts}
+            else:
+                kwargs = {}
+                
+            # Create a single attachment with all blocks and a divider at the end
+            attachments = []
+            
+            # Add divider to the end of attachment blocks if there are any
+            all_attachment_blocks = attachment_slack_blocks.copy() if attachment_slack_blocks else []
+            
+            # Always add a divider at the end
+            all_attachment_blocks.append({"type": "divider"})
+            
+            # Create a single attachment with the status color
+            attachments = [{
+                "color": status.to_color_hex(),
+                "blocks": all_attachment_blocks
+            }]
+            
+            # Detailed logging of blocks before sending to Slack
+            logging.debug(
+                f"SENDING TO SLACK - FULL BLOCKS DETAIL:\n"
+                f"CHANNEL: {slack_channel}\n"
+                f"TITLE: {finding.title}\n"
+                f"HEADER BLOCKS: {json.dumps(header_blocks, indent=2)}\n"
+                f"MAIN BLOCKS: {json.dumps(output_blocks, indent=2)}\n"
+                f"ALL BLOCKS: {json.dumps(all_blocks, indent=2)}\n"
+                f"ATTACHMENT BLOCKS: {json.dumps(all_attachment_blocks, indent=2)}\n"
+                f"ATTACHMENTS: {json.dumps(attachments, indent=2)}\n"
+            )
+                
+            # Send the message with our JIRA-style headers and attachments
+            resp = self.slack_client.chat_postMessage(
+                channel=slack_channel,
+                text=message,
+                blocks=all_blocks,
+                display_as_bot=True,
+                attachments=attachments,
+                unfurl_links=unfurl,
+                unfurl_media=unfurl,
+                **kwargs,
+            )
+            
+            # Store channel id for future use
+            self.channel_name_to_id[slack_channel] = resp["channel"]
+            return resp["ts"]
+            
+        except Exception as e:
+            logging.error(
+                f"error sending message to slack\ne={e}\ntext={message}\nchannel={slack_channel}"
+            )
+            return ""
 
     def send_or_update_summary_message(
         self,
@@ -621,7 +778,7 @@ class SlackSender:
             MarkdownBlock(f"*Alerts Summary - {n_total_alerts} Notifications*"),
         ]
 
-        source_txt = f"*Source:* `{self.cluster_name}`"
+        cluster_txt = f"*Cluster:* `{self.cluster_name}`"
         if platform_enabled:
             blocks.extend(
                 [
@@ -629,7 +786,7 @@ class SlackSender:
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": source_txt,
+                            "text": cluster_txt,
                         },
                     }
                 ]
@@ -644,7 +801,7 @@ class SlackSender:
                     "url": investigate_uri,
                 }
         else:
-            blocks.append(MarkdownBlock(text=source_txt))
+            blocks.append(MarkdownBlock(text=cluster_txt))
 
         blocks.extend(
             [
