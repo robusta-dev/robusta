@@ -398,7 +398,7 @@ class SlackSender:
 
         return CallbackBlock(
             {
-                "Ask Holmes": CallbackChoice(
+                "Ask HolmesGPT": CallbackChoice(
                     action=ask_holmes,
                     action_params=AIInvestigateParams(
                         resource=resource, investigation_type="issue", ask="Why is this alert firing?", context=context
