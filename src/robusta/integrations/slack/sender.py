@@ -243,7 +243,8 @@ class SlackSender:
         except Exception as e:
             logging.debug(f"NamedTemporaryFile failed: {e}")
         try:
-            with tempfile.SpooledTemporaryFile(max_size=max_log_file_limit_kb * 1000) as f:
+            SPOOLED_FILE_SIZE = 20 * 1000 * 1000  # 20MB we dont want to have it limitless incase of OOM
+            with tempfile.SpooledTemporaryFile(max_size=SPOOLED_FILE_SIZE) as f:
                 logging.debug("Trying SpooledTemporaryFile for Slack upload")
                 return self._upload_temp_file(f, f, truncated_content, filename)
         except Exception as e2:
@@ -251,12 +252,15 @@ class SlackSender:
             return None
 
     def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):
+        error_files = []
+
         if files:
             # it's a little annoying but it seems like files need to be referenced in `title` and not just `blocks`
             # in order to be actually shared. well, I'm actually not sure about that, but when I tried adding the files
             # to a separate block and not including them in `title` or the first block then the link was present but
             # the file wasn't actually shared and the link was broken
             uploaded_files = []
+
             for file_block in files:
                 # slack throws an error if you write empty files, so skip it
                 if len(file_block.contents) == 0:
@@ -264,14 +268,25 @@ class SlackSender:
                 permalink = self.__upload_file_to_slack(file_block, max_log_file_limit_kb=max_log_file_limit_kb)
                 if permalink:
                     uploaded_files.append(f"* <{permalink} | {file_block.filename}>")
+                else:
+                    error_files.append(file_block.filename)
 
             file_references = "\n".join(uploaded_files)
             message = f"{message}\n{file_references}"
 
         if len(message) == 0:
             return "empty-message"  # blank messages aren't allowed
+        message = Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
 
-        return Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
+        if error_files:
+            error_msg = (
+                "_Failed to send file(s) "
+                + ", ".join(error_files)
+                + " to slack._\n _See robusta-runner logs for details._"
+            )
+            return message, error_msg
+
+        return message, None
 
     def __send_blocks_to_slack(
         self,
@@ -294,9 +309,12 @@ class SlackSender:
         file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
         file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
 
-        message = self.prepare_slack_text(
+        message, error_msg = self.prepare_slack_text(
             title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
         )
+        if error_msg:
+            other_blocks.append(MarkdownBlock(error_msg))
+
         output_blocks = []
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))

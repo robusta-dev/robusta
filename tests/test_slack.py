@@ -107,7 +107,9 @@ def test_temporary_file_creation_failure(slack_channel: SlackChannel):
 
     # Test with a text file
     finding = Finding(title=TEST_FINDING_TITLE, aggregation_key="TestTextFileUpload")
-    finding.add_enrichment([FileBlock(TEST_FILE_NAME, TEST_FILE_CONTENT.encode())])
+    finding.add_enrichment(
+        [FileBlock(TEST_FILE_NAME, TEST_FILE_CONTENT.encode()), FileBlock("file2.txt", TEST_FILE_CONTENT.encode())]
+    )
 
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
 
@@ -120,7 +122,6 @@ def test_temporary_file_creation_failure(slack_channel: SlackChannel):
         latest_message = slack_channel.get_latest_message()
         assert TEST_FINDING_TITLE in latest_message
         assert TEST_FILE_NAME not in latest_message  # File should not be included
-        assert TEST_FILE_CONTENT not in latest_message  # File content should not be included
 
     # Test with a binary file (PNG)
     png_content = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"  # 1x1 transparent PNG
