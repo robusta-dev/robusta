@@ -243,7 +243,7 @@ class SlackSender:
         except Exception as e:
             logging.debug(f"NamedTemporaryFile failed: {e}")
         try:
-            SPOOLED_FILE_SIZE = 20 * 1000 * 1000  # 20MB we dont want to have it limitless incase of OOM
+            SPOOLED_FILE_SIZE = 10 * 1000 * 1000  # 10MB to protect against OOM
             with tempfile.SpooledTemporaryFile(max_size=SPOOLED_FILE_SIZE) as f:
                 logging.debug("Trying SpooledTemporaryFile for Slack upload")
                 return self._upload_temp_file(f, f, truncated_content, filename)
