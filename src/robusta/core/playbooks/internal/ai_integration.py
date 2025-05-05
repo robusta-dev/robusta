@@ -44,6 +44,7 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
 
 @action
 def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
+    logging.info(f"DIMA Received request to ask holmes with params: {params}")
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
         raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
@@ -101,7 +102,16 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             finding.add_enrichment(
                 [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
             )
-
+            runner_context = getattr(params, "robusta_context", None) # Safely get the context dict
+            if runner_context and "thread_ts" in runner_context:
+                original_thread_ts = runner_context.get("thread_ts")
+                if original_thread_ts:                    
+                    finding.robusta_context["thread_ts"] = original_thread_ts
+                    logging.info(f"Added message_ts={original_thread_ts} to finding {finding.id} annotations.")
+                else:
+                    logging.warning(f"message_ts found in robusta_context for finding {finding.id} but it is empty.")
+            else:
+                 logging.debug(f"No message_ts found in robusta_context for finding {finding.id}. Context: {runner_context}")
             event.add_finding(finding)
 
     except Exception as e:

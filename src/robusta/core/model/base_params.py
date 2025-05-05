@@ -84,6 +84,10 @@ class HolmesParams(ActionParams):
 
     holmes_url: Optional[str]
     model: Optional[str]
+    # Additional internal context that helps runner to send investigation to appropriate sinks
+    # for now it is used only for passing thread_ts to slack sink internally;
+    robusta_context: Optional[Dict[str, Any]] = None 
+
     @validator("holmes_url", allow_reuse=True)
     def validate_protocol(cls, v):
         if v and not v.startswith("http"):  # if the user configured url without http(s)
@@ -112,6 +116,7 @@ class AIInvestigateParams(HolmesParams):
     context: Optional[Dict[str, Any]]
     sections: Optional[Dict[str, str]] = None
     stream: bool = False
+
 
 
 class HolmesToolsResult(BaseModel):

@@ -9,6 +9,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
+from pydantic import Field
 from pydantic.main import BaseModel
 from strenum import StrEnum
 
@@ -292,6 +293,7 @@ class Finding(Filterable):
         self.starts_at = starts_at if starts_at else datetime.now()
         self.ends_at = ends_at
         self.dirty = False
+        self.robusta_context: Dict[str, Any] = {}
 
     @property
     def attribute_map(self) -> Dict[str, Union[str, Dict[str, str]]]:

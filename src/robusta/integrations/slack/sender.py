@@ -107,7 +107,8 @@ class SlackSender:
                     ).json(),
                 }
             )
-
+            logging.info(f"Created action block: {buttons}")
+            
         return [{"type": "actions", "elements": buttons}]
 
     def __to_slack_links(self, links: List[LinkProp]) -> List[SlackBlock]:
@@ -524,10 +525,18 @@ class SlackSender:
             finding.subject.labels,
             finding.subject.annotations,
         )
-
+        robusta_context = getattr(finding, "robusta_context", None)
+        effective_thread_ts = thread_ts # Default to the one passed in (e.g., from grouping)
+        if robusta_context:
+            annotation_ts = robusta_context.get("thread_ts")
+            if annotation_ts: # Make sure it's not None or empty
+                effective_thread_ts = annotation_ts # Prioritize the annotation!
+                logging.info(f"Using thread_ts from annotation for AI analysis finding {finding.id}: {effective_thread_ts}")
+            else:
+                logging.warning(f"Found empty message_ts annotation for AI analysis finding {finding.id}, using original thread_ts: {thread_ts}")
         if finding.finding_type == FindingType.AI_ANALYSIS:
             # holmes analysis message needs special handling
-            self.send_holmes_analysis(finding, slack_channel, platform_enabled, thread_ts)
+            self.send_holmes_analysis(finding, slack_channel, platform_enabled, effective_thread_ts)
             return ""  # [arik] Looks like the return value here is not used, needs to be removed
 
         status: FindingStatus = (

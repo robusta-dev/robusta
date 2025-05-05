@@ -23,7 +23,7 @@ automountServiceAccountToken: true
 
 enableHolmesGPT: false
 
-# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
+# see https://docs.robusta.dev/master/setup-robusta/additional-settings.html#global-config
 globalConfig:
   check_prometheus_flags: true
   grafana_url: ""
@@ -35,7 +35,7 @@ globalConfig:
   custom_annotations: []
   custom_severity_map: {}
 
-# see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
+# see https://docs.robusta.dev/master/setup-robusta/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []
 
 # safe actions to enable authenticated users to run
