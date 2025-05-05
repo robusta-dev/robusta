@@ -178,11 +178,14 @@ class KRRSecret(BaseModel):
     secret_value: str
     command_flag: str
 
-    def __init__(self, env_var_name: str, secret_key: str, secret_value: str, command_flag: str):
-        secret_b64_str = base64.b64encode(bytes(secret_value, "utf-8")).decode("utf-8")
-        super().__init__(
-            env_var_name=env_var_name, secret_key=secret_key, secret_value=secret_b64_str, command_flag=command_flag
-        )
+    @validator('secret_value', pre=True, always=True, allow_reuse=True)
+    def encode_secret_value(cls, v: str) -> str:
+        if isinstance(v, str):
+            return base64.b64encode(bytes(v, "utf-8")).decode("utf-8")
+        raise ValueError("secret_value must be a string")
+
+class KRRSecretKeyValuePair(KRRSecret):
+    arg_key: str
 
 
 def _generate_krr_job_secret(scan_id: str, krr_secrets: Optional[List[KRRSecret]]) -> Optional[JobSecret]:
@@ -210,7 +213,14 @@ def _generate_krr_env_vars(
 def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> str:
     if not krr_secrets:
         return ""
-    return " ".join(f"{secret.command_flag} '$({secret.env_var_name})'" for secret in krr_secrets)
+    additional_args = []
+    for secret in krr_secrets:
+        if isinstance(secret, KRRSecretKeyValuePair):
+            additional_args.append(f"{secret.command_flag} '{secret.arg_key}:$({secret.env_var_name})'")
+        else:
+            additional_args.append(f"{secret.command_flag} '$({secret.env_var_name})'")
+
+    return " ".join(additional_args)
 
 
 def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
@@ -230,7 +240,6 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
     # needed for custom bearer token or Azure
     headers = PrometheusAuthorization.get_authorization_headers(prom_config)
     auth_header = headers["Authorization"] if "Authorization" in headers else ""
-    additional_headers = prom_config["headers"] if "headers" in prom_config else None
 
     if auth_header:
         krr_secrets.append(
@@ -242,18 +251,19 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
             )
         )
     
-    if additional_headers:
+    if prom_config.headers:
         for header_name, header_value in prom_config.headers.items():
                 
             env_var_name = f"PROMETHEUS_HEADER_{header_name.upper().replace('-', '_')}"
             secret_key = f"prometheus-header-{header_name.lower()}"
             
             krr_secrets.append(
-                KRRSecret(
+                KRRSecretKeyValuePair(
                     env_var_name=env_var_name,
+                    arg_key=header_name,
                     secret_key=secret_key,
                     secret_value=header_value,
-                    command_flag=f"--prometheus-header {header_name}:",
+                    command_flag="--prometheus-headers",
                 )
             )
 
