@@ -3,7 +3,7 @@ Robusta :checkmark:`_`
 .. include:: ./_toolset_enabled_by_default.inc.rst
 
 By enabling this toolset, HolmesGPT will be able to fetch alerts metadata. It allows HolmesGPT to fetch information
-about specific issues when chatting using "Ask Holmes". This toolset is not necessary for Root Cause Analysis.
+about specific issues when chatting using "Ask HolmesGPT". This toolset is not necessary for Root Cause Analysis.
 
 Configuration
 -------------
