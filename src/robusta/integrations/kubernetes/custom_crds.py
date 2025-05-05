@@ -119,10 +119,10 @@ class ExecutionContext(CRDBase, HikaruDocumentBase, HikaruCRDDocumentMixin):
     ready_pods_path: ClassVar[str] = "status/readyReplicas"
 
     def __post_init__(self):
-        self.spec["selector"] = {"cnpg.io/cluster": self.metadata.get("name")}
+        self.spec["selector"] = {"app.kubernetes.io/instance": self.metadata.get("name")}
 
 
-# this map is registered into trigger events(LOADERS_MAPPINGS) and Listers( for comparisons)
+# this map is registered into trigger events(LOADERS_MAPPINGS) and Listers(for comparisons)
 CRDS_map = {
     "StrimziPodSet": StrimziPodSet,
     "Cluster": Cluster,
