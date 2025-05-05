@@ -230,6 +230,7 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
     # needed for custom bearer token or Azure
     headers = PrometheusAuthorization.get_authorization_headers(prom_config)
     auth_header = headers["Authorization"] if "Authorization" in headers else ""
+    additional_headers = prom_config["headers"] if "headers" in prom_config else None
 
     if auth_header:
         krr_secrets.append(
@@ -240,6 +241,21 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
                 command_flag="--prometheus-auth-header",
             )
         )
+    
+    if additional_headers:
+        for header_name, header_value in prom_config.headers.items():
+                
+            env_var_name = f"PROMETHEUS_HEADER_{header_name.upper().replace('-', '_')}"
+            secret_key = f"prometheus-header-{header_name.lower()}"
+            
+            krr_secrets.append(
+                KRRSecret(
+                    env_var_name=env_var_name,
+                    secret_key=secret_key,
+                    secret_value=header_value,
+                    command_flag=f"--prometheus-header {header_name}:",
+                )
+            )
 
     if isinstance(prom_config, AWSPrometheusConfig):
         krr_secrets.extend(

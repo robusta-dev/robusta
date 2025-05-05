@@ -56,11 +56,13 @@ class Silence(BaseModel):
 class AlertManagerParams(ActionParams):
     """
     :var alertmanager_url: Alternative Alert Manager url to send requests.
+    :var alertmanager_additional_headers: additional HTTP headers (if defined) to add to every alertmanager request
     """
 
     alertmanager_flavor: str = None  # type: ignore
     alertmanager_url: Optional[str]
     alertmanager_auth: Optional[SecretStr] = None
+    alertmanager_additional_headers: Optional[Dict[str, str]] = None
     grafana_api_key: str = None  # type: ignore
 
     @validator("alertmanager_url", allow_reuse=True)
@@ -143,6 +145,9 @@ def gen_alertmanager_headers(params: AlertManagerParams) -> Dict:
 
     elif params.alertmanager_auth:
         headers.update({"Authorization": params.alertmanager_auth.get_secret_value()})
+        
+    if params.alertmanager_additional_headers:
+        headers.update(params.alertmanager_additional_headers)
 
     return headers
 
