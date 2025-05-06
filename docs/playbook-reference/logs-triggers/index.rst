@@ -1,6 +1,6 @@
 :hide-toc:
 
-Automate Responses to Kubernetes Log Patterns
+Automate Responses to Application Logs
 ==========================================
 
 This tutorial walks you through building an automation that detects specific patterns in Kubernetes pod logs and responds automatically.
