@@ -227,8 +227,8 @@ This is the alerting rule that will be used to trigger an alert when a `MySqlCon
 
     .. note::
 
-        The label ``release: robusta`` is required for Robusta's Prometheus to read this alerting rule.
-        Make sure the release name matches the name of your Robusta release.
+        -  This alert will fire starting from the 2nd time the log line appears - catching the first time is not possible due to how fluentbit works (it only creates the metric after the log appears at least once)
+        -  The label ``release: robusta`` is required for Robusta's Prometheus to read this alerting rule. Make sure the release name matches the name of your Robusta release
 
 To apply it run:
 
