@@ -56,8 +56,6 @@ class DataDogSink(SinkBase):
         # must be one of ["error", "warning", "info", "success", "user_update", "recommendation", "snapshot", ]
         if severity == FindingSeverity.HIGH:
             return EventAlertType("error")
-        elif severity == FindingSeverity.MEDIUM:
-            return EventAlertType("warning")
         else:
             return EventAlertType("info")
 

@@ -50,7 +50,7 @@ Configuring the Rocket.Chat sink
 
     .. code-block:: yaml
 
-         sinks_config:
+         sinksConfig:
          # Rocket.Chat integration params
         - rocketchat_sink:
               name: main_rocketchat_sink

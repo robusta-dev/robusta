@@ -60,37 +60,49 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             context=params.context if params.context else {},
             include_tool_calls=True,
             include_tool_call_results=True,
-            sections=params.sections
-        )
-        result = requests.post(f"{holmes_url}/api/investigate", data=holmes_req.json())
-        result.raise_for_status()
-
-        holmes_result = HolmesResult(**json.loads(result.text))
-        title_suffix = (
-            f" on {params.resource.name}"
-            if params.resource and params.resource.name and params.resource.name.lower() != "unresolved"
-            else ""
+            sections=params.sections,
+            model=params.model
         )
 
-        kind = params.resource.kind if params.resource else None
-        finding = Finding(
-            title=f"AI Analysis of {investigation__title}{title_suffix}",
-            aggregation_key="HolmesInvestigationResult",
-            subject=FindingSubject(
-                name=params.resource.name if params.resource else "",
-                namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(kind) if kind else FindingSubjectType.TYPE_NONE,
-                node=params.resource.node if params.resource else "",
-                container=params.resource.container if params.resource else "",
-            ),
-            finding_type=FindingType.AI_ANALYSIS,
-            failure=False,
-        )
-        finding.add_enrichment(
-            [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
-        )
+        if params.stream:
+            with requests.post(f"{holmes_url}/api/stream/investigate", data=holmes_req.json(), stream=True, headers={"Connection": "keep-alive"}) as resp:
+                resp.raise_for_status()
+                for line in resp.iter_content(chunk_size=None, decode_unicode=True): # Avoid streaming chunks from holmes. send them as they arrive.
+                    if line:
+                        event.ws(data=line)
 
-        event.add_finding(finding)
+            return
+
+        else:
+            result = requests.post(f"{holmes_url}/api/investigate", data=holmes_req.json())
+            result.raise_for_status()
+
+            holmes_result = HolmesResult(**json.loads(result.text))
+            title_suffix = (
+                f" on {params.resource.name}"
+                if params.resource and params.resource.name and params.resource.name.lower() != "unresolved"
+                else ""
+            )
+
+            kind = params.resource.kind if params.resource else None
+            finding = Finding(
+                title=f"AI Analysis of {investigation__title}{title_suffix}",
+                aggregation_key="HolmesInvestigationResult",
+                subject=FindingSubject(
+                    name=params.resource.name if params.resource else "",
+                    namespace=params.resource.namespace if params.resource else "",
+                    subject_type=FindingSubjectType.from_kind(kind) if kind else FindingSubjectType.TYPE_NONE,
+                    node=params.resource.node if params.resource else "",
+                    container=params.resource.container if params.resource else "",
+                ),
+                finding_type=FindingType.AI_ANALYSIS,
+                failure=False,
+            )
+            finding.add_enrichment(
+                [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
+            )
+
+            event.add_finding(finding)
 
     except Exception as e:
         logging.exception(
@@ -276,6 +288,7 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
             conversation_history=params.conversation_history,
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
+            model=params.model
         )
         result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
         result.raise_for_status()
@@ -325,7 +338,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
     cluster_name = event.get_context().cluster_name
 
     try:
-        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history)
+        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history, model=params.model)
         result = requests.post(f"{holmes_url}/api/chat", data=holmes_req.json())
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
@@ -369,11 +382,12 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
             ask=params.ask,
             conversation_history=params.conversation_history,
             workload_health_result=params.workload_health_result,
-            resource=params.resource
+            resource=params.resource,
+            model=params.model
         )
         result = requests.post(f"{holmes_url}/api/workload_health_chat", data=holmes_req.json())
         result.raise_for_status()
-        
+
         holmes_result = HolmesChatResult(**json.loads(result.text))
 
         finding = Finding(

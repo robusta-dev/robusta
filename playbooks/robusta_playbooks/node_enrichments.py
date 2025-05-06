@@ -156,7 +156,7 @@ def node_health_watcher(event: NodeChangeEvent):
         title=f"Unhealthy node {event.obj.metadata.name}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="NodeNotReady",
-        severity=FindingSeverity.MEDIUM,
+        severity=FindingSeverity.HIGH,
         subject=KubeObjFindingSubject(event.obj),
     )
     event.add_finding(finding)

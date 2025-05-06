@@ -52,13 +52,21 @@ Capabilities
    * - kubernetes_jq_query
      - Query Kubernetes resources using jq filters
 
+.. _toolset_kubernetes_logs:
 
 Logs :checkmark:`_`
 -------------------
 
-.. include:: ./_toolset_enabled_by_default.inc.rst
+:checkmark:`_`: **This toolset is enabled by default**. You do not need to configure
+it.
 
-Read kubernetes pod logs.
+By enabling this toolset, HolmesGPT will be able to read kubernetes pod logs.
+
+You may disable this toolset if you provide Holmes with an alternative toolset to
+fetch logs from your kubernetes cluster and applications.
+
+
+.. include:: ./_toolsets_that_provide_logging.inc.rst
 
 Configuration
 ^^^^^^^^^^^^^

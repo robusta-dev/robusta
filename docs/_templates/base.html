@@ -1,6 +1,10 @@
 {% extends '!base.html' %}
 {% block site_meta %}
 {{ super() }}
+<!-- Back to Top Button -->
+<a href="#" class="back-to-top" aria-label="Back to top">
+  <span>↑</span>
+</a>
 <!-- PostHog and Segment -->
 <script>
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
@@ -10,6 +14,11 @@
   analytics.load("PDdonwWFGjQXxGgwHGWLhC6UlOma3fRL");
   }}();
 </script>
+<!-- Start of Reo Javascript -->
+<script type="text/javascript">
+  !function(){var e,t,n;e="76a5c9d6b935829",t=function(){Reo.init({clientID:"76a5c9d6b935829"})},(n=document.createElement("script")).src="https://static.reo.dev/"+e+"/reo.js",n.defer=!0,n.onload=t,document.head.appendChild(n)}();
+</script>
+<!-- End of Reo Javascript -->
 <script>
     window.addEventListener("DOMContentLoaded", function() {
         trackPageViewEvent();
@@ -22,6 +31,26 @@
     document.getElementById('__palette_1').onclick = () => refreshRobustaLogo(true);
     document.getElementById('__palette_2').onclick = () => refreshRobustaLogo(false);
 
+    // Back to top button functionality
+    const backToTopButton = document.querySelector('.back-to-top');
+    
+    // Show button when page is scrolled down
+    window.addEventListener('scroll', function() {
+      if (window.pageYOffset > 300) {
+        backToTopButton.classList.add('visible');
+      } else {
+        backToTopButton.classList.remove('visible');
+      }
+    });
+    
+    // Smooth scroll to top when button is clicked
+    backToTopButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
   }, false);
 </script>
 {% endblock %}

@@ -20,20 +20,17 @@ from robusta.integrations.jira.client import JiraClient
 
 SEVERITY_JIRA_ID = {
     FindingSeverity.HIGH: "Critical",
-    FindingSeverity.MEDIUM: "Major",
     FindingSeverity.LOW: "Minor",
     FindingSeverity.INFO: "Minor",
 }
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
-    FindingSeverity.MEDIUM: ":large_orange_circle:",
     FindingSeverity.LOW: ":large_yellow_circle:",
     FindingSeverity.INFO: ":large_green_circle:",
 }
 SEVERITY_COLOR_MAP = {
     FindingSeverity.HIGH: "#d11818",
-    FindingSeverity.MEDIUM: "#e48301",
     FindingSeverity.LOW: "#ffdc06",
     FindingSeverity.INFO: "#05aa01",
 }

@@ -24,8 +24,8 @@ from robusta.integrations.kubernetes.custom_models import RobustaDeployment, Rob
 SEVERITY_MAP = {
     "critical": FindingSeverity.HIGH,
     "high": FindingSeverity.HIGH,
-    "medium": FindingSeverity.MEDIUM,
-    "error": FindingSeverity.MEDIUM,
+    "medium": FindingSeverity.HIGH,
+    "error": FindingSeverity.HIGH,
     "warning": FindingSeverity.LOW,
     "low": FindingSeverity.LOW,
     "info": FindingSeverity.INFO,

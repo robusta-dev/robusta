@@ -9,12 +9,18 @@ Builtin Toolsets
    toolsets/argocd
    toolsets/aws
    toolsets/confluence
+   toolsets/coralogix_logs
+   toolsets/datetime
    toolsets/docker
-   toolsets/grafana
+   toolsets/grafanaloki
+   toolsets/grafanatempo
    toolsets/helm
    toolsets/internet
+   toolsets/kafka
    toolsets/kubernetes
    toolsets/opensearch
+   toolsets/prometheus
+   toolsets/rabbitmq
    toolsets/robusta
    toolsets/slab
 
@@ -48,14 +54,29 @@ by the user by providing credentials or API keys to external systems.
         :link: toolsets/confluence
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Coralogix logs
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/coralogix_logs
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Datetime
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/datetime
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Docker
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/docker
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Grafana
+    .. grid-item-card:: :octicon:`cpu;1em;` Grafana Loki
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolsets/grafana
+        :link: toolsets/grafanaloki
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Grafana Tempo
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/grafanatempo
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Helm
@@ -68,13 +89,29 @@ by the user by providing credentials or API keys to external systems.
         :link: toolsets/internet
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Kafka
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/kafka
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Kubernetes
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/kubernetes
         :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/opensearch
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/prometheus
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` RabbitMQ
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/rabbitmq
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Robusta
