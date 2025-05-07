@@ -15,7 +15,7 @@ To achieve this, we’ll use:
 
     .. image:: /images/logs-to-metrics.png
 
-Let's get started! Here's a video explainer of the process:
+Let's get started! Here's a video explainer of how it works:
 
 .. raw:: html
   
