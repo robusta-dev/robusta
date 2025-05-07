@@ -106,6 +106,10 @@ spec:
           - name: ARGO_ROLLOUTS
             value: "True"
           {{- end }}
+          {{- if .Values.runner.customCRD }}
+          - name: CUSTOM_CRD
+            value: {{ .Values.runner.customCRD | toJson }}
+          {{- end -}}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}

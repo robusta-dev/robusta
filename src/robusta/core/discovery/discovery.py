@@ -5,7 +5,7 @@ import time
 from collections import defaultdict
 from concurrent.futures.process import BrokenProcessPool, ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
-
+import dpath.util
 import prometheus_client
 from hikaru.model.rel_1_26 import (
     Container,
@@ -50,6 +50,7 @@ from robusta.core.model.env_vars import (
     DISCOVERY_PROCESS_TIMEOUT_SEC,
     IS_OPENSHIFT,
     OPENSHIFT_GROUPS,
+    CUSTOM_CRD
 )
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
@@ -58,6 +59,7 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.openshift_group import OpenshiftGroup
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj, Rollout
+from robusta.integrations.kubernetes.custom_crds import CRDS_map
 from robusta.patch.patch import create_monkey_patches
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.stack_tracer import StackTracer
@@ -191,11 +193,53 @@ class Discovery:
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
         openshift_groups: List[OpenshiftGroup] = []
-
+        continue_ref: Optional[str] = None
         # discover micro services
-        try:
 
-            continue_ref: Optional[str] = None
+        try:
+            for cls_name in CUSTOM_CRD:
+                if (cls := CRDS_map.get(cls_name)) is None:
+                    continue
+
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    try:
+                        crd_res = client.CustomObjectsApi().list_cluster_custom_object(
+                            group=cls.group,
+                            version=cls.version,
+                            plural=cls.plural,
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                    except Exception:
+                        logging.exception(msg=f"Failed to list {cls.name} from api.")
+                        break
+
+                    for crd in crd_res.get("items", []):
+                        try:
+                            meta = DictToK8sObj(crd.get("metadata"), V1ObjectMeta)
+                            active_services.extend(
+                                [
+                                    Discovery.__create_service_info(
+                                        meta=meta,
+                                        kind=cls.name,
+                                        containers=[],
+                                        volumes=[],
+                                        total_pods=dpath.util.get(crd, cls.total_pods_path, default=0),
+                                        ready_pods=dpath.util.get(crd, cls.ready_pods_path, default=0),
+                                        is_helm_release=is_release_managed_by_helm(
+                                            annotations=meta.annotations, labels=meta.labels
+                                        ),
+                                    )
+                                ]
+                            )
+                        except Exception:
+                            logging.exception(msg=f"Failed to parse {cls.name} {crd}")
+                            continue
+
+                    continue_ref = crd_res.get("metadata", {}).get("continue")
+                    if not continue_ref:
+                        break
+
             if IS_OPENSHIFT:
                 for _ in range(DISCOVERY_MAX_BATCHES):
                     try:
