@@ -81,6 +81,7 @@ def autogenerate_events(f: TextIO):
         from ....core.reporting.consts import FindingSubjectType, FindingSource
         from ....core.reporting.finding_subjects import KubeObjFindingSubject
         from  robusta.integrations.kubernetes.custom_models import {CUSTOM_MODELS_IMPORTS}
+        from  robusta.integrations.kubernetes.custom_crds import CRDS_map
         """
         )
     )
@@ -136,6 +137,16 @@ def autogenerate_events(f: TextIO):
         )
 
     f.write(f"{'}'}\n\n\n")
+
+    f.write(
+        textwrap.dedent(
+            """\
+        for cls in CRDS_map.values():
+            LOADERS_MAPPINGS[cls.name.lower()] = (True, cls.readNamespaced)
+
+        """
+        )
+    )
 
     f.write(
         textwrap.dedent(

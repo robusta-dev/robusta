@@ -2,40 +2,56 @@
 
 import logging
 import traceback
-from abc import abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Union
-
+from abc import abstractmethod
 from hikaru import DiffDetail
 from hikaru.model.rel_1_26 import (
-    ClusterRole,
-    ClusterRoleBinding,
-    ConfigMap,
-    DaemonSet,
-    Deployment,
-    Event,
-    HorizontalPodAutoscaler,
-    Ingress,
-    Job,
-    Namespace,
-    NetworkPolicy,
-    Node,
-    PersistentVolume,
-    PersistentVolumeClaim,
     Pod,
     ReplicaSet,
-    Secret,
-    Service,
-    ServiceAccount,
+    DaemonSet,
+    Deployment,
     StatefulSet,
+    Service,
+    Event,
+    HorizontalPodAutoscaler,
+    Node,
+    ClusterRole,
+    ClusterRoleBinding,
+    Job,
+    Namespace,
+    ServiceAccount,
+    PersistentVolume,
+    PersistentVolumeClaim,
+    NetworkPolicy,
+    ConfigMap,
+    Ingress,
+    Secret,
 )
+from hikaru.utils import Response
+from pydantic import BaseModel
+from typing import Union, Optional, List
+from ..base_event import K8sBaseChangeEvent
+from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
+from ....core.reporting.base import FindingSubject
+from ....core.reporting.consts import FindingSubjectType, FindingSource
+from ....core.reporting.finding_subjects import KubeObjFindingSubject
+from robusta.integrations.kubernetes.custom_models import (
+    DeploymentConfig,
+    RobustaDeployment,
+    RobustaJob,
+    RobustaPod,
+    Rollout,
+)
+from robusta.integrations.kubernetes.custom_crds import CRDS_map
 from hikaru.model.rel_1_26.v1 import ClusterRole as v1ClusterRole
 from hikaru.model.rel_1_26.v1 import ClusterRoleBinding as v1ClusterRoleBinding
 from hikaru.model.rel_1_26.v1 import ConfigMap as v1ConfigMap
 from hikaru.model.rel_1_26.v1 import DaemonSet as v1DaemonSet
 from hikaru.model.rel_1_26.v1 import Deployment as v1Deployment
 from hikaru.model.rel_1_26.v1 import Event as v1Event
-from hikaru.model.rel_1_26.v1 import HorizontalPodAutoscaler as v1HorizontalPodAutoscaler
+from hikaru.model.rel_1_26.v1 import (
+    HorizontalPodAutoscaler as v1HorizontalPodAutoscaler,
+)
 from hikaru.model.rel_1_26.v1 import Ingress as v1Ingress
 from hikaru.model.rel_1_26.v1 import Job as v1Job
 from hikaru.model.rel_1_26.v1 import Namespace as v1Namespace
@@ -49,21 +65,7 @@ from hikaru.model.rel_1_26.v1 import Secret as v1Secret
 from hikaru.model.rel_1_26.v1 import Service as v1Service
 from hikaru.model.rel_1_26.v1 import ServiceAccount as v1ServiceAccount
 from hikaru.model.rel_1_26.v1 import StatefulSet as v1StatefulSet
-from hikaru.utils import Response
-from pydantic import BaseModel
 
-from robusta.core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
-from robusta.core.reporting.base import FindingSubject
-from robusta.core.reporting.consts import FindingSource, FindingSubjectType
-from robusta.core.reporting.finding_subjects import KubeObjFindingSubject
-from robusta.integrations.kubernetes.base_event import K8sBaseChangeEvent
-from robusta.integrations.kubernetes.custom_models import (
-    DeploymentConfig,
-    RobustaDeployment,
-    RobustaJob,
-    RobustaPod,
-    Rollout,
-)
 
 LOADERS_MAPPINGS = {
     "pod": (True, RobustaPod.readNamespacedPod),
@@ -73,7 +75,10 @@ LOADERS_MAPPINGS = {
     "statefulset": (True, StatefulSet.readNamespacedStatefulSet),
     "service": (True, Service.readNamespacedService),
     "event": (True, Event.readNamespacedEvent),
-    "horizontalpodautoscaler": (True, HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler),
+    "horizontalpodautoscaler": (
+        True,
+        HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler,
+    ),
     "node": (False, Node.readNode),
     "clusterrole": (False, ClusterRole.readClusterRole),
     "clusterrolebinding": (False, ClusterRoleBinding.readClusterRoleBinding),
@@ -81,7 +86,10 @@ LOADERS_MAPPINGS = {
     "namespace": (False, Namespace.readNamespace),
     "serviceaccount": (True, ServiceAccount.readNamespacedServiceAccount),
     "persistentvolume": (False, PersistentVolume.readPersistentVolume),
-    "persistentvolumeclaim": (True, PersistentVolumeClaim.readNamespacedPersistentVolumeClaim),
+    "persistentvolumeclaim": (
+        True,
+        PersistentVolumeClaim.readNamespacedPersistentVolumeClaim,
+    ),
     "networkpolicy": (True, NetworkPolicy.readNamespacedNetworkPolicy),
     "configmap": (True, ConfigMap.readNamespacedConfigMap),
     "ingress": (True, Ingress.readNamespacedIngress),
@@ -89,6 +97,10 @@ LOADERS_MAPPINGS = {
     "deploymentconfig": (True, DeploymentConfig.readNamespaced),
     "rollout": (True, Rollout.readNamespaced),
 }
+
+
+for cls in CRDS_map.values():
+    LOADERS_MAPPINGS[cls.name.lower()] = (True, cls.readNamespaced)
 
 
 class ResourceLoader:
@@ -217,7 +229,9 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
     @staticmethod
     def from_params(params: ResourceAttributes) -> Optional["KubernetesResourceEvent"]:
         try:
-            obj = ResourceLoader.read_resource(kind=params.kind, name=params.name, namespace=params.namespace).obj
+            obj = ResourceLoader.read_resource(
+                kind=params.kind, name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load resource {params}", exc_info=True)
             return None
@@ -369,7 +383,9 @@ class PodEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: PodAttributes) -> Optional["PodEvent"]:
         try:
-            obj = RobustaPod.readNamespacedPod(name=params.name, namespace=params.namespace).obj
+            obj = RobustaPod.readNamespacedPod(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load Pod {params}", exc_info=True)
             return None
@@ -424,7 +440,9 @@ class ReplicaSetEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: ReplicaSetAttributes) -> Optional["ReplicaSetEvent"]:
         try:
-            obj = ReplicaSet.readNamespacedReplicaSet(name=params.name, namespace=params.namespace).obj
+            obj = ReplicaSet.readNamespacedReplicaSet(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load ReplicaSet {params}", exc_info=True)
             return None
@@ -479,7 +497,9 @@ class DaemonSetEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: DaemonSetAttributes) -> Optional["DaemonSetEvent"]:
         try:
-            obj = DaemonSet.readNamespacedDaemonSet(name=params.name, namespace=params.namespace).obj
+            obj = DaemonSet.readNamespacedDaemonSet(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load DaemonSet {params}", exc_info=True)
             return None
@@ -534,7 +554,9 @@ class DeploymentEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: DeploymentAttributes) -> Optional["DeploymentEvent"]:
         try:
-            obj = RobustaDeployment.readNamespacedDeployment(name=params.name, namespace=params.namespace).obj
+            obj = RobustaDeployment.readNamespacedDeployment(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load Deployment {params}", exc_info=True)
             return None
@@ -589,7 +611,9 @@ class StatefulSetEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: StatefulSetAttributes) -> Optional["StatefulSetEvent"]:
         try:
-            obj = StatefulSet.readNamespacedStatefulSet(name=params.name, namespace=params.namespace).obj
+            obj = StatefulSet.readNamespacedStatefulSet(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load StatefulSet {params}", exc_info=True)
             return None
@@ -644,7 +668,9 @@ class ServiceEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: ServiceAttributes) -> Optional["ServiceEvent"]:
         try:
-            obj = Service.readNamespacedService(name=params.name, namespace=params.namespace).obj
+            obj = Service.readNamespacedService(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load Service {params}", exc_info=True)
             return None
@@ -699,7 +725,9 @@ class EventEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: EventAttributes) -> Optional["EventEvent"]:
         try:
-            obj = Event.readNamespacedEvent(name=params.name, namespace=params.namespace).obj
+            obj = Event.readNamespacedEvent(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load Event {params}", exc_info=True)
             return None
@@ -752,13 +780,17 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
         return self.obj
 
     @staticmethod
-    def from_params(params: HorizontalPodAutoscalerAttributes) -> Optional["HorizontalPodAutoscalerEvent"]:
+    def from_params(
+        params: HorizontalPodAutoscalerAttributes,
+    ) -> Optional["HorizontalPodAutoscalerEvent"]:
         try:
             obj = HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler(
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load HorizontalPodAutoscaler {params}", exc_info=True)
+            logging.error(
+                f"Could not load HorizontalPodAutoscaler {params}", exc_info=True
+            )
             return None
         return HorizontalPodAutoscalerEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -774,7 +806,9 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
 
 
 @dataclass
-class HorizontalPodAutoscalerChangeEvent(HorizontalPodAutoscalerEvent, KubernetesAnyChangeEvent):
+class HorizontalPodAutoscalerChangeEvent(
+    HorizontalPodAutoscalerEvent, KubernetesAnyChangeEvent
+):
     obj: Optional[Union[v1HorizontalPodAutoscaler]] = None
     obj_filtered: Optional[Union[v1HorizontalPodAutoscaler]] = None
     old_obj: Optional[Union[v1HorizontalPodAutoscaler]] = None
@@ -916,7 +950,9 @@ class ClusterRoleBindingEvent(KubernetesResourceEvent):
         return self.obj
 
     @staticmethod
-    def from_params(params: ClusterRoleBindingAttributes) -> Optional["ClusterRoleBindingEvent"]:
+    def from_params(
+        params: ClusterRoleBindingAttributes,
+    ) -> Optional["ClusterRoleBindingEvent"]:
         try:
             obj = ClusterRoleBinding.readClusterRoleBinding(name=params.name).obj
         except Exception:
@@ -973,7 +1009,9 @@ class JobEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: JobAttributes) -> Optional["JobEvent"]:
         try:
-            obj = RobustaJob.readNamespacedJob(name=params.name, namespace=params.namespace).obj
+            obj = RobustaJob.readNamespacedJob(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load Job {params}", exc_info=True)
             return None
@@ -1080,9 +1118,13 @@ class ServiceAccountEvent(KubernetesResourceEvent):
         return self.obj
 
     @staticmethod
-    def from_params(params: ServiceAccountAttributes) -> Optional["ServiceAccountEvent"]:
+    def from_params(
+        params: ServiceAccountAttributes,
+    ) -> Optional["ServiceAccountEvent"]:
         try:
-            obj = ServiceAccount.readNamespacedServiceAccount(name=params.name, namespace=params.namespace).obj
+            obj = ServiceAccount.readNamespacedServiceAccount(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load ServiceAccount {params}", exc_info=True)
             return None
@@ -1134,7 +1176,9 @@ class PersistentVolumeEvent(KubernetesResourceEvent):
         return self.obj
 
     @staticmethod
-    def from_params(params: PersistentVolumeAttributes) -> Optional["PersistentVolumeEvent"]:
+    def from_params(
+        params: PersistentVolumeAttributes,
+    ) -> Optional["PersistentVolumeEvent"]:
         try:
             obj = PersistentVolume.readPersistentVolume(name=params.name).obj
         except Exception:
@@ -1189,13 +1233,17 @@ class PersistentVolumeClaimEvent(KubernetesResourceEvent):
         return self.obj
 
     @staticmethod
-    def from_params(params: PersistentVolumeClaimAttributes) -> Optional["PersistentVolumeClaimEvent"]:
+    def from_params(
+        params: PersistentVolumeClaimAttributes,
+    ) -> Optional["PersistentVolumeClaimEvent"]:
         try:
             obj = PersistentVolumeClaim.readNamespacedPersistentVolumeClaim(
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load PersistentVolumeClaim {params}", exc_info=True)
+            logging.error(
+                f"Could not load PersistentVolumeClaim {params}", exc_info=True
+            )
             return None
         return PersistentVolumeClaimEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -1211,7 +1259,9 @@ class PersistentVolumeClaimEvent(KubernetesResourceEvent):
 
 
 @dataclass
-class PersistentVolumeClaimChangeEvent(PersistentVolumeClaimEvent, KubernetesAnyChangeEvent):
+class PersistentVolumeClaimChangeEvent(
+    PersistentVolumeClaimEvent, KubernetesAnyChangeEvent
+):
     obj: Optional[Union[v1PersistentVolumeClaim]] = None
     obj_filtered: Optional[Union[v1PersistentVolumeClaim]] = None
     old_obj: Optional[Union[v1PersistentVolumeClaim]] = None
@@ -1248,7 +1298,9 @@ class NetworkPolicyEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: NetworkPolicyAttributes) -> Optional["NetworkPolicyEvent"]:
         try:
-            obj = NetworkPolicy.readNamespacedNetworkPolicy(name=params.name, namespace=params.namespace).obj
+            obj = NetworkPolicy.readNamespacedNetworkPolicy(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load NetworkPolicy {params}", exc_info=True)
             return None
@@ -1303,7 +1355,9 @@ class ConfigMapEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: ConfigMapAttributes) -> Optional["ConfigMapEvent"]:
         try:
-            obj = ConfigMap.readNamespacedConfigMap(name=params.name, namespace=params.namespace).obj
+            obj = ConfigMap.readNamespacedConfigMap(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load ConfigMap {params}", exc_info=True)
             return None
@@ -1358,7 +1412,9 @@ class IngressEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: IngressAttributes) -> Optional["IngressEvent"]:
         try:
-            obj = Ingress.readNamespacedIngress(name=params.name, namespace=params.namespace).obj
+            obj = Ingress.readNamespacedIngress(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load Ingress {params}", exc_info=True)
             return None
@@ -1413,7 +1469,9 @@ class SecretEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: SecretAttributes) -> Optional["SecretEvent"]:
         try:
-            obj = Secret.readNamespacedSecret(name=params.name, namespace=params.namespace).obj
+            obj = Secret.readNamespacedSecret(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load Secret {params}", exc_info=True)
             return None
