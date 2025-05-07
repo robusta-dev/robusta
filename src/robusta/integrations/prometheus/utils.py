@@ -48,10 +48,13 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
         "url": url,
         "disable_ssl": not PROMETHEUS_SSL_ENABLED,
         "additional_labels": prometheus_params.prometheus_additional_labels,
-        "prometheus_url_query_string": prometheus_params.prometheus_url_query_string,
+        "prometheus_url_query_string": prometheus_params.prometheus_url_query_string
     }
     if prometheus_params.prometheus_auth:
         baseconfig["prometheus_auth"] = prometheus_params.prometheus_auth.get_secret_value()
+        
+    if prometheus_params.prometheus_additional_headers:
+        baseconfig["headers"] = prometheus_params.prometheus_additional_headers
 
     # aws config
     if AWS_ACCESS_KEY:

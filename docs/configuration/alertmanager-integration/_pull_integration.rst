@@ -24,6 +24,12 @@ If Robusta fails to auto-detect the Prometheus and Alertmanager urls - and you s
         # prometheus_auth: ...
         # alertmanager_auth: ...
 
+        # If using a multi-tenant prometheus or alertmanager, pass the org id to all queries
+        # prometheus_additional_headers:
+        #   X-Scope-OrgID: <org id>
+        # alertmanager_additional_headers:
+        #   X-Scope-OrgID: <org id>
+
 .. code-annotations::
     1. Example: http://alertmanager-Helm_release_name-kube-prometheus-alertmanager.default.svc.cluster.local:9093.
     2. Example: http://Helm_Release_Name-kube-prometheus-prometheus.default.svc.cluster.local:9090

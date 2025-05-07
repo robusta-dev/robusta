@@ -21,3 +21,5 @@ skaffold.dev.yaml
 tests/last_used_tag.txt
 pytest.ini
 gen-config-test
+
+**/.claude/settings.local.json
