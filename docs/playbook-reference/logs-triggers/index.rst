@@ -15,7 +15,12 @@ To achieve this, we’ll use:
 
     .. image:: /images/logs-to-metrics.png
 
-Let's get started!
+Let's get started! Here's a video explainer of the process:
+
+.. raw:: html
+  
+  <div style="position: relative; height: 0; padding-bottom: 56.25%;"> <iframe src="https://youtu.be/14Z4hVhlkWE" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
 
 **Step 1: Create a namespace for the demo**
 ----------------------------------------------------
