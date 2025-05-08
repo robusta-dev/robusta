@@ -21,7 +21,7 @@ Bundled Prometheus (Optional)
 
 Install Robusta with :ref:`Prometheus included <embedded Prometheus stack>`. This is powered by ``kube-prometheus-stack``.
 
-Alternatively, you can :ref:`integrate an existing Prometheus with Robusta <Integrating AlertManager and Prometheus>`.
+Alternatively, you can :ref:`integrate an existing Prometheus with Robusta <Integrating with Prometheus>`.
 
 Web UI (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^
