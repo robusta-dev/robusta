@@ -35,7 +35,7 @@ You can find the Grafana URL required for Loki in your Grafana cloud account set
 
 
 Obtaining the datasource UID
------------------------
+-----------------------------------
 
 You may have multiple Loki data sources setup in Grafana. HolmesGPT uses a single Loki datasource to
 fetch the logs and it needs to know the UID of this datasource.

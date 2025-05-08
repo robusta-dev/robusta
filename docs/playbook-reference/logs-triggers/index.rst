@@ -1,4 +1,4 @@
-:hide-toc:
+.. :hide-toc:
 
 Automate Responses to Application Logs
 ==========================================
@@ -13,7 +13,7 @@ To achieve this, we’ll use:
 - **Prometheus**: Stores the metrics and triggers alerts based on them. (We're going to use Robusta's bundled Prometheus here, but it can work with any other Prometheus distribution)
 - **Robusta**: Executes an automated playbook when an alert is fired, such as restarting the affected pod.
 
-    .. image:: /images/logs-to-metrics.png
+  .. image:: /images/logs-to-metrics.png
 
 Let's get started! Here's a video explainer of how it works:
 
@@ -24,10 +24,10 @@ Let's get started! Here's a video explainer of how it works:
 **Step 1: Create a namespace for the demo**
 ----------------------------------------------------
 
-    .. code-block:: yaml
+.. code-block:: yaml
 
-        kubectl create namespace log-triggers
-        kubectl config set-context --current --namespace log-triggers
+    kubectl create namespace log-triggers
+    kubectl config set-context --current --namespace log-triggers
 
 **Step 2: Parse Logs into Metrics with Fluent Bit**
 ----------------------------------------------------
@@ -40,136 +40,136 @@ First, lets configure Fluent Bit to monitor your pod logs and generate Prometheu
 
 This is our Fluent Bit configuration (``fluentbit-values.yaml``):
 
-    .. code-block:: yaml
+  .. code-block:: yaml
 
-        config:
-          service: |
-            [SERVICE]
-                Flush         1
-                Daemon        Off
-                Log_Level     info
-                HTTP_Server   On
-                HTTP_Listen   0.0.0.0
-                HTTP_Port     2020
+      config:
+        service: |
+          [SERVICE]
+              Flush         1
+              Daemon        Off
+              Log_Level     info
+              HTTP_Server   On
+              HTTP_Listen   0.0.0.0
+              HTTP_Port     2020
 
-          inputs: |
-            [INPUT]
-                Name              tail
-                Tag               kube.*
-                Path              /var/log/containers/*.log
-                Parser            json_message
-                DB                /var/log/flb_kube.db
-                Mem_Buf_Limit     5MB
-                Skip_Long_Lines   On
-                Refresh_Interval  10
+        inputs: |
+          [INPUT]
+              Name              tail
+              Tag               kube.*
+              Path              /var/log/containers/*.log
+              Parser            json_message
+              DB                /var/log/flb_kube.db
+              Mem_Buf_Limit     5MB
+              Skip_Long_Lines   On
+              Refresh_Interval  10
 
-            [INPUT]
-                Name    dummy
-                Tag     dummy.alive
-                Dummy   {"log":"keepalive"}
+          [INPUT]
+              Name    dummy
+              Tag     dummy.alive
+              Dummy   {"log":"keepalive"}
 
-          parsers: |
-            [PARSER]
-                Name        wrap_raw_line
-                Format      regex
-                Regex       ^(?<log>.*)$
+        parsers: |
+          [PARSER]
+              Name        wrap_raw_line
+              Format      regex
+              Regex       ^(?<log>.*)$
 
-          filters: |
-            [FILTER]
-                Name              kubernetes
-                Match             kube.*
-                K8S-Logging.Parser On
-                K8S-Logging.Exclude On
+        filters: |
+          [FILTER]
+              Name              kubernetes
+              Match             kube.*
+              K8S-Logging.Parser On
+              K8S-Logging.Exclude On
 
-            [FILTER]
-                name               log_to_metrics
-                match              *
-                tag                log_metrics
-                metric_mode        counter
-                metric_name        mysql_connection_error
-                metric_description MySql connection errors
-                regex              log .*mysql connection error.*
-                add_label          pod $kubernetes['pod_name']
-                add_label          namespace $kubernetes['namespace_name']
-                add_label          container $kubernetes['container_name']
+          [FILTER]
+              name               log_to_metrics
+              match              *
+              tag                log_metrics
+              metric_mode        counter
+              metric_name        mysql_connection_error
+              metric_description MySql connection errors
+              regex              log .*mysql connection error.*
+              add_label          pod $kubernetes['pod_name']
+              add_label          namespace $kubernetes['namespace_name']
+              add_label          container $kubernetes['container_name']
 
-            [FILTER]
-                name               log_to_metrics
-                match              *
-                tag                log_metrics
-                metric_mode        counter
-                metric_name        dns_error
-                metric_description DNS Resolution errors
-                regex              log .*dns error.*
-                add_label          pod $kubernetes['pod_name']
-                add_label          namespace $kubernetes['namespace_name']
-                add_label          container $kubernetes['container_name']
+          [FILTER]
+              name               log_to_metrics
+              match              *
+              tag                log_metrics
+              metric_mode        counter
+              metric_name        dns_error
+              metric_description DNS Resolution errors
+              regex              log .*dns error.*
+              add_label          pod $kubernetes['pod_name']
+              add_label          namespace $kubernetes['namespace_name']
+              add_label          container $kubernetes['container_name']
 
-            [FILTER]
-                Name               log_to_metrics
-                Match              dummy.alive
-                Metric_Name        fluentbit_keepalive
-                Metric_Description Dummy metric to keep /metrics available
-                Metric_Mode        counter
-                Tag                log_metrics
-                Regex              log .*keepalive.*
-                Flush_Interval_Sec 10  # Process and flush metrics every 60 seconds
+          [FILTER]
+              Name               log_to_metrics
+              Match              dummy.alive
+              Metric_Name        fluentbit_keepalive
+              Metric_Description Dummy metric to keep /metrics available
+              Metric_Mode        counter
+              Tag                log_metrics
+              Regex              log .*keepalive.*
+              Flush_Interval_Sec 10  # Process and flush metrics every 60 seconds
 
-          outputs: |
-            [OUTPUT]
-                Name           prometheus_exporter
-                Match          log_metrics
+        outputs: |
+          [OUTPUT]
+              Name           prometheus_exporter
+              Match          log_metrics
 
-            [OUTPUT]
-                Name           stdout
-                Match          log_metrics
+          [OUTPUT]
+              Name           stdout
+              Match          log_metrics
 
-        # export metrics
-        metrics:
-          enabled: true
+      # export metrics
+      metrics:
+        enabled: true
 
-        extraPorts:
-          - name: metrics
-            targetPort: metrics
-            protocol: TCP
-            port: 2021
-            containerPort: 2021
+      extraPorts:
+        - name: metrics
+          targetPort: metrics
+          protocol: TCP
+          port: 2021
+          containerPort: 2021
 
-        serviceMonitor:
-          enabled: true
-          additionalEndpoints:
-            - port: metrics
-              path: /metrics
-              honorLabels: true  # important - keep the original label on the metrics (pod, namespace, container)
+      serviceMonitor:
+        enabled: true
+        additionalEndpoints:
+          - port: metrics
+            path: /metrics
+            honorLabels: true  # important - keep the original label on the metrics (pod, namespace, container)
 
 
-    .. note::
-        By default, the ``log_to_metrics`` FILTER, adds the ``log_metric_counter_`` prefix to every metric
+  .. note::
+      By default, the ``log_to_metrics`` FILTER, adds the ``log_metric_counter_`` prefix to every metric
 
-    .. raw:: html
+  .. raw:: html
 
-       <details>
-       <summary><strong>Understanding the Configuration</strong></summary>
-       <ul>
-         <li>The <code>tail</code> INPUT section defines all Kubernetes container logs as input</li>
-         <li>The <code>dummy</code> INPUT section defines a keepalive input - it's required to create at least 1 active metric</li>
-         <li>The <code>kubernetes</code> FILTER section is for adding the Kubernetes labels to the log lines/li>
-         <li>The 1st <code>log-to-metrics</code> FILTER - match any log line containing "mysql connection error", and increase the ``mysql_connection_error`` counter. Add the pod labels to the metric</li>
-         <li>The 2nd <code>log-to-metrics</code> FILTER - match any log line containing "dns error", and increase the ``dns_error`` counter. Add the pod labels to the metric</li>
-         <li>The 3rd <code>log-to-metrics</code> FILTER - for the keepalive metric</li>
-         <li>The <code>prometheus_exporter</code> OUTPUT is for exporting the Prometheus metrics</li>
-         <li>The <code>stdout</code> OUTPUT is used for debugging. It prints the metrics to the fluentbit pod logs. Not required for production deployment</li>
-       </ul>
-       </details>
+      <details>
+      <summary><strong>Understanding the Configuration</strong></summary>
+      <ul>
+        <li>The <code>tail</code> INPUT section defines all Kubernetes container logs as input</li>
+        <li>The <code>dummy</code> INPUT section defines a keepalive input - it's required to create at least 1 active metric</li>
+        <li>The <code>kubernetes</code> FILTER section is for adding the Kubernetes labels to the log lines/li>
+        <li>The 1st <code>log-to-metrics</code> FILTER - match any log line containing "mysql connection error", and increase the ``mysql_connection_error`` counter. Add the pod labels to the metric</li>
+        <li>The 2nd <code>log-to-metrics</code> FILTER - match any log line containing "dns error", and increase the ``dns_error`` counter. Add the pod labels to the metric</li>
+        <li>The 3rd <code>log-to-metrics</code> FILTER - for the keepalive metric</li>
+        <li>The <code>prometheus_exporter</code> OUTPUT is for exporting the Prometheus metrics</li>
+        <li>The <code>stdout</code> OUTPUT is used for debugging. It prints the metrics to the fluentbit pod logs. Not required for production deployment</li>
+      </ul>
+      </details>
 
 
 
 Let's deploy the Fluent Bit DaemonSet:
 
-        .. code-block:: bash
+  .. code-block:: bash
 
-            helm repo add fluent https://fluent.github.io/helm-charts && helm repo update
-            helm install metrics-fluent-bit fluent/fluent-bit -f ./fluentbit-values.yaml
+      helm repo add fluent https://fluent.github.io/helm-charts && helm repo update
+      helm install metrics-fluent-bit fluent/fluent-bit -f ./fluentbit-values.yaml
 
 
 
