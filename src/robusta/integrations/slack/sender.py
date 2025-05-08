@@ -410,7 +410,8 @@ class SlackSender:
     def __create_finding_header(
         self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
     ) -> MarkdownBlock:
-        title = finding.title.removeprefix("[RESOLVED] ")
+        title = (finding.title.removeprefix("[RESOLVED] ")
+                 .replace("<", "&lt;").replace(">", "&gt;"))
         sev = finding.severity
         if finding.source == FindingSource.PROMETHEUS:
             status_name: str = (

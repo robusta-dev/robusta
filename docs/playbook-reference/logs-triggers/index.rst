@@ -1,7 +1,7 @@
 :hide-toc:
 
-Automate Responses to Application Logs
-==========================================
+Log-based alerting and auto-remediation with fluentbit, prometheus, and robusta
+==================================================================================
 
 This tutorial walks you through building an automation that detects specific patterns in Kubernetes pod logs and responds automatically.
 
