@@ -1,5 +1,3 @@
-.. :hide-toc:
-
 Automate Responses to Application Logs
 ==========================================
 
@@ -21,7 +19,7 @@ Let's get started! Here's a video explainer of how it works:
   
   <div style="position: relative; height: 0; padding-bottom: 56.25%;"> <iframe src="https://www.youtube.com/embed/14Z4hVhlkWE" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
 
-**Step 1: Create a namespace for the demo**
+Step 1: Create a namespace for the demo
 ----------------------------------------------------
 
 .. code-block:: yaml
@@ -29,7 +27,7 @@ Let's get started! Here's a video explainer of how it works:
     kubectl create namespace log-triggers
     kubectl config set-context --current --namespace log-triggers
 
-**Step 2: Parse Logs into Metrics with Fluent Bit**
+Step 2: Parse Logs into Metrics with Fluent Bit
 ----------------------------------------------------
 
 First, lets configure Fluent Bit to monitor your pod logs and generate Prometheus metrics for specific log patterns.
@@ -173,7 +171,7 @@ Let's deploy the Fluent Bit DaemonSet:
 
 
 
-**Step 3: Configure Prometheus**
+Step 3: Configure Prometheus
 ----------------------------------------------------
 
 In this step, we will configure Prometheus to:
@@ -181,7 +179,7 @@ In this step, we will configure Prometheus to:
 1. **Collect metrics from Fluent Bit** via a `ServiceMonitor`
 2. **Configure an alert** based on the metrics extracted from the logs
 
-1. **Configure Prometheus to read the new ServiceMonitor**
+1. Configure Prometheus to read the new ServiceMonitor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Assuming you're using Robusta's bundled Prometheus, add this to your ``generated_values.yaml``:
@@ -202,7 +200,7 @@ To apply it, upgrade with helm:
         helm upgrade robusta robusta/robusta -f generated_values.yaml -set clusterName=YOUR_CLUSTER
 
 
-2. **Configure an Alert**
+2. Configure an Alert
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is the alerting rule that will be used to trigger an alert when a `MySqlConnectionErrors` is detected in the logs (``mysql-alert.yaml``):
@@ -241,7 +239,7 @@ To apply it run:
         kubectl apply -f mysql-alert.yaml
 
 
-**Step 4: Adding a Robusta playbook**
+Step 4: Adding a Robusta playbook
 ----------------------------------------------------
 
 Now, we'd like to configure an automated action that will run each time this alert is fired.
@@ -269,12 +267,13 @@ To apply it, upgrade with helm:
         helm upgrade robusta robusta/robusta -f generated_values.yaml -set clusterName=YOUR_CLUSTER
 
 
-**Step 5: See It in Action**
+Step 5: See It in Action
 ----------------------------------------------------
 
 Let’s test the full automation pipeline by generating a log line that simulates a MySQL connection error.
 
-1. **Deploy a demo pod**
+1. Deploy a demo pod
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use this manifest to deploy a demo pod that prints to the logs whatever is sent to its API (``postlog.yaml``):
 
@@ -326,7 +325,8 @@ Apply it to your cluster:
 
         kubectl apply -f postlog.yaml
 
-2. **Generate MySQL errors in the logs**
+2. Generate MySQL errors in the logs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Call the pod’s API to print some simulated MySQL errors.
 
@@ -351,7 +351,8 @@ Then, after 60 seconds, with 10 log lines:
 
 This will produce 10 log lines containing the error. Fluent Bit will match the log lines and emit metrics, which Prometheus will collect.
 
-3. **Trigger the alert and observe the automation**
+3. Trigger the alert and observe the automation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Wait a few minutes (typically up to 5) for the alert to fire. This delay is due to the ``for`` condition in the alert and Prometheus' ``group_interval``.
 
