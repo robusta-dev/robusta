@@ -93,3 +93,119 @@ Robusta is distributed under the MIT License. See [LICENSE.md](https://github.co
 We add new features regularly. Stay up to date by watching us on GitHub.
 
 ![](./docs/images/star-repo.gif)
+
+
+## 🔗 Integrations
+
+Robusta integrates with a variety of tools and platforms. Click on any logo to learn more about the integration.
+
+### 📤 Sinks (Destinations)
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/slack.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg" alt="Slack" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Slack</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/teams.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="MS Teams" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>MS Teams</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/pagerduty.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/PagerDuty_logo.svg" alt="PagerDuty" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>PagerDuty</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/jira.html">
+        <img src="https://upload.wikimedia.org/wikipedia/en/8/8e/Jira_%28Software%29_logo.svg" alt="Jira" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Jira</strong>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/zulip.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Zulip_logo.svg" alt="Zulip" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Zulip</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/email.html">
+        ✉️
+      </a>
+      <br><strong>Email</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/robusta-ui.html">
+        <img src="https://docs.robusta.dev/master/_static/faviconNew.svg" alt="Robusta UI" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Robusta UI</strong>
+    </td>
+  </tr>
+</table>
+
+### 📥 Data Sources
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/data-sources/prometheus.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Prometheus_Logo.svg" alt="Prometheus" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Prometheus</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/data-sources/grafana.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Grafana_icon.svg" alt="Grafana" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Grafana</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/data-sources/victoria-metrics.html">
+        <img src="https://victoriametrics.com/assets/img/logo.svg" alt="Victoria Metrics" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Victoria Metrics</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/data-sources/google-managed-prometheus.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg" alt="Google Managed Prometheus" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Google Managed Prometheus</strong>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/data-sources/aws-managed-prometheus.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg" alt="AWS Managed Prometheus" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>AWS Managed Prometheus</strong>
+    </td>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/data-sources/coralogix.html">
+        <img src="https://coralogix.com/wp-content/uploads/2020/01/coralogix-logo.svg" alt="Coralogix" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>Coralogix</strong>
+    </td>
+  </tr>
+</table>
+
+### 🧠 AI Analysis
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/index.html">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Robot_icon.svg" alt="HolmesGPT" style="background:white; padding:10px; border-radius:10px;" width="80">
+      </a>
+      <br><strong>HolmesGPT</strong>
+    </td>
+  </tr>
+</table>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
