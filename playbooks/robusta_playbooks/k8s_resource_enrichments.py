@@ -44,7 +44,7 @@ from robusta.api import (
     pod_restarts,
 )
 from robusta.core.discovery import utils
-from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
+from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST, CUSTOM_CRD
 from robusta.core.model.pods import ResourceAttributes
 
 
@@ -96,7 +96,7 @@ class RelatedPod(BaseModel):
 
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node", "DeploymentConfig", "Rollout"]
-
+supported_resources.extend(CUSTOM_CRD)
 
 def to_pod_row(pod: V1Pod, cluster_name: str) -> List:
     resource_requests = k8s_pod_requests(pod)
@@ -153,7 +153,8 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
             _continue=_continue,
         )
     else:
-        selector = build_selector_query(resource.spec.selector)
+        selector = resource.spec.get("selector", {}) if isinstance(resource.spec, dict) else resource.spec.selector
+        selector = build_selector_query(selector)
         result = client.CoreV1Api().list_namespaced_pod(
             namespace=resource.metadata.namespace,
             label_selector=selector,
