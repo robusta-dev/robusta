@@ -35,7 +35,7 @@ Trigger the newly added playbook by simulating a Prometheus alert.
 
 
 Reference Alert Metadata in Remediation Jobs
--------------------------------------------
+--------------------------------------------------
 
 When remediating based on alerts, you can access all the alert metadata like name, namespace, cluster name, pod, node and more as environment variables.
 

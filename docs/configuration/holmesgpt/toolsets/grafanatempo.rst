@@ -25,7 +25,7 @@ You can find the Grafana URL required for Tempo in your Grafana cloud account se
   :align: center
 
 Obtaining the datasource UID
------------------------
+--------------------------------
 
 You may have multiple Tempo data sources setup in Grafana. HolmesGPT uses a single Tempo datasource to
 fetch the traces and it needs to know the UID of this datasource.
