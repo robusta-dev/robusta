@@ -8,9 +8,32 @@ You will need to configure two integrations: one to send alerts to Robusta and a
 Send Alerts to Robusta
 ============================
 
-To configure, edit AlertManager's configuration:
+Add the following to your Victoria Metrics Alertmanager configuration (e.g., Helm values file or VMAlertmanagerConfig CRD):
 
-.. include:: ./_alertmanager-config.rst
+.. code-block:: yaml
+
+    receivers:
+        - name: 'robusta'
+        webhook_configs:
+            - url: 'http://<ROBUSTA-HELM-RELEASE-NAME>-runner.<NAMESPACE>.svc.cluster.local/api/alerts'
+            send_resolved: true # (3)
+
+    route: # (1)
+        routes:
+        - receiver: 'robusta'
+            group_by: [ '...' ]
+            group_wait: 1s
+            group_interval: 1s
+            matchers:
+            - severity =~ ".*"
+            repeat_interval: 4h
+            continue: true # (2)
+
+.. code-annotations::
+    1. Put Robusta's route as the first route, to guarantee it receives alerts. If you can't do so, you must guarantee all previous routes set ``continue: true`` set.
+    2. Keep sending alerts to receivers defined after Robusta.
+    3. Important, so Robusta knows when alerts are resolved.
+
 
 .. include:: ./_testing_integration.rst
 
@@ -25,9 +48,9 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
 
     globalConfig: # this line should already exist
         # add the lines below
-        alertmanager_url: "http://ALERT_MANAGER_SERVICE_NAME.NAMESPACE.svc.cluster.local:9093"
+        alertmanager_url: "http://<VM_ALERT_MANAGER_SERVICE_NAME>.<NAMESPACE>.svc.cluster.local:9093" # Example:"http://vmalertmanager-victoria-metrics-vm.default.svc.cluster.local:9093/"        
         grafana_url: ""
-        prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.NAMESPACE.svc.cluster.local:8429"
+        prometheus_url: "http://VM_Metrics_SERVICE_NAME.NAMESPACE.svc.cluster.local:8429" # Example:"http://vmsingle-vmks-victoria-metrics-k8s-stack.default.svc.cluster.local:8429"
         # Add any labels that are relevant to the specific cluster (optional)
         # prometheus_additional_labels:
         #   cluster: 'CLUSTER_NAME_HERE'
