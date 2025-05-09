@@ -49,10 +49,16 @@ class ValidationResponse(BaseModel):
     error_msg: Optional[str] = None
 
 
+class SlackContainer(BaseModel):
+    channel_id: str
+    message_ts: str
+
+
 class SlackExternalActionRequest(ExternalActionRequest):
     # Optional Slack Params
     slack_username: Optional[str] = None
     slack_message: Optional[Any] = None
+    slack_container: Optional[SlackContainer] = None
 
 
 class SlackActionRequest(BaseModel):
@@ -73,6 +79,7 @@ class SlackUserID(BaseModel):
 class SlackActionsMessage(BaseModel):
     actions: List[SlackActionRequest]
     user: Optional[SlackUserID]
+    container: Optional[SlackContainer]
 
 
 class ActionRequestReceiver:
@@ -168,15 +175,18 @@ class ActionRequestReceiver:
 
         if hasattr(action_request, 'slack_message'):
             action_request.body.action_params["slack_message"] = action_request.slack_message
+        
+        if action_request.slack_container and action_request.slack_container.message_ts:
+            thread_ts = action_request.slack_container.message_ts
+            action_request.body.action_params["robusta_context"] = {"thread_ts": thread_ts}
 
         response = self.event_handler.run_external_action(
             action_request.body.action_name,
             action_request.body.action_params,
-            action_request.body.sinks,
+             action_request.body.sinks,
             sync_response,
             action_request.no_sinks,
         )
-
         if sync_response:
             http_code = 200 if response.get("success") else 500
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
@@ -238,6 +248,7 @@ class ActionRequestReceiver:
         for action in slack_actions_message.actions:
             action.value.slack_username = slack_actions_message.user.username
             action.value.slack_message = json_slack_message
+            action.value.slack_container = slack_actions_message.container
         return slack_actions_message
 
     def on_message(self, ws: websocket.WebSocketApp, message: str) -> None:

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from robusta.core.playbooks.actions_registry import Action
 from robusta.core.reporting import CallbackChoice
 from robusta.core.reporting.action_requests import ActionRequestBody, ExternalActionRequest, sign_action_request
-
+import logging
 
 class ExternalActionRequestBuilder(BaseModel):
     @classmethod
@@ -43,6 +43,7 @@ class ExternalActionRequestBuilder(BaseModel):
             sinks=[sink],
             origin="callback",
         )
+        logging.info(f"Created action request body: {body}")
         return ExternalActionRequest(
             body=body,
             signature=sign_action_request(body, signing_key),
