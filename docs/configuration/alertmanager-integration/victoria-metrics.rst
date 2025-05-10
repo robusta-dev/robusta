@@ -40,9 +40,9 @@ Add the following to your Victoria Metrics Alertmanager configuration (e.g., Hel
 Configure Metric Querying
 ====================================
 
-Metrics querying lets Robusta pull metrics and create silences.
+Robusta can query metrics and create silences using Victoria Metrics. If both are in the same Kubernetes cluster, Robusta can auto-detect the Victoria Metrics service. To verify, go to the "Apps" tab in Robusta, select an application, and check for usage graphs.
 
-Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+If auto-detection fails or if Robusta and Victoria Metrics are in different clusters, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 
