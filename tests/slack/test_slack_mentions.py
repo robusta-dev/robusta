@@ -1,4 +1,4 @@
-from integrations.slack import SlackSender
+from robusta.integrations.slack import SlackSender
 
 
 def test_title_without_mentions():
