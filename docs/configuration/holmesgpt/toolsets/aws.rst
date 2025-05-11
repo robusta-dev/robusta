@@ -74,21 +74,7 @@ Configuration
 
   .. md-tab-item:: Robusta Helm Chart
 
-    .. code-block:: yaml
-
-        holmes:
-            additionalEnvVars:
-                - name: AWS_ACCESS_KEY_ID
-                  value: AKIXDDDSDSdSA
-                - name: AWS_SECRET_ACCESS_KEY
-                  value: =wJalrXUtnFEMI/KNG/bPxRfiCYEXAMPLEKEY
-                - name: AWS_DEFAULT_REGION
-                  value: us-west-2
-            toolsets:
-                aws/rds:
-                    enabled: true
-
-    .. include:: ./_toolset_configuration.inc.rst
+    This builtin toolset is currently only available in HolmesGPT CLI.
 
   .. md-tab-item:: Holmes CLI
 
