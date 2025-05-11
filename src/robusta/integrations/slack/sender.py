@@ -409,14 +409,24 @@ class SlackSender:
             }
         )
 
+    @staticmethod
+    def extract_mentions(title) -> (str, str):
+        mentions = MENTION_PATTERN.findall(title)
+
+        mention = ""
+        if mentions:
+            mention = " " + " ".join(mentions)
+            title = MENTION_PATTERN.sub("", title).strip()
+
+        return title, mention
+
+
     def __create_finding_header(
         self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
     ) -> MarkdownBlock:
         title = finding.title.removeprefix("[RESOLVED] ")
 
-        match = MENTION_PATTERN.search(title)
-        mention = f" {match.group(0)}" if match else ""
-        title = MENTION_PATTERN.sub("", title).strip()
+        title, mention = self.extract_mentions(title)
 
         sev = finding.severity
         if finding.source == FindingSource.PROMETHEUS:
