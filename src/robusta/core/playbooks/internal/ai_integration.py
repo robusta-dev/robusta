@@ -49,7 +49,6 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
 
 @action
 def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
-    logging.info(f"DIMA Received request to ask holmes with params: {params}")
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
         raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
