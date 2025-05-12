@@ -38,7 +38,7 @@ If everything is setup properly, this alert will reach Robusta. It will show up 
 
 .. note::
 
-    It might take a few minutes for the alert to arrive due to AlertManager's `group_wait` and `group_interval` settings. For more details, more info `here <https://prometheus.io/docs/alerting/latest/configuration/#:~:text=How%20long%20to%20wait%20before%20sending%20a%20notification%20about%20new%20alerts%20that%0A%23%20are%20added%20to%20a%20group%20of%20alerts%20for%20which%20an%20initial%20notification%20has%0A%23%20already%20been%20sent>`_.
+    It might take a few minutes for the alert to arrive due to AlertManager's `group_wait` and `group_interval` settings. More info `here <https://prometheus.io/docs/alerting/latest/configuration/#:~:text=How%20long%20to%20wait%20before%20sending%20a%20notification%20about%20new%20alerts%20that%0A%23%20are%20added%20to%20a%20group%20of%20alerts%20for%20which%20an%20initial%20notification%20has%0A%23%20already%20been%20sent>`_.
 
 .. details:: I configured AlertManager, but I'm not receiving alerts?
     :class: warning
