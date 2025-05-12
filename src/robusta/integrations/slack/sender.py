@@ -2,6 +2,7 @@ import copy
 import logging
 import ssl
 import tempfile
+import re
 from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set
@@ -52,6 +53,7 @@ ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"
 SlackBlock = Dict[str, Any]
 MAX_BLOCK_CHARS = 3000
+MENTION_PATTERN = re.compile(r"<[^>]+>")
 
 
 class SlackSender:
@@ -407,10 +409,25 @@ class SlackSender:
             }
         )
 
+    @staticmethod
+    def extract_mentions(title) -> (str, str):
+        mentions = MENTION_PATTERN.findall(title)
+
+        mention = ""
+        if mentions:
+            mention = " " + " ".join(mentions)
+            title = MENTION_PATTERN.sub("", title).strip()
+
+        return title, mention
+
+
     def __create_finding_header(
         self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
     ) -> MarkdownBlock:
         title = finding.title.removeprefix("[RESOLVED] ")
+
+        title, mention = self.extract_mentions(title)
+
         sev = finding.severity
         if finding.source == FindingSource.PROMETHEUS:
             status_name: str = (
@@ -426,7 +443,7 @@ class SlackSender:
             title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
         return MarkdownBlock(
             f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*
-{title}"""
+{title}{mention}"""
         )
 
     def __create_links(
