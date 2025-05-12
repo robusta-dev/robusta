@@ -115,8 +115,10 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             runner_context = getattr(params, "robusta_context", None) # Safely get the context dict
             if runner_context and "thread_ts" in runner_context:
                 original_thread_ts = runner_context.get("thread_ts")
+                original_channel_id = runner_context.get("channel_id")
                 if original_thread_ts:                    
                     finding.robusta_context["thread_ts"] = original_thread_ts
+                    finding.robusta_context["channel_id"] = original_channel_id
                     logging.info(f"Added message_ts={original_thread_ts} to finding {finding.id} annotations.")
                 else:
                     logging.warning(f"message_ts found in robusta_context for finding {finding.id} but it is empty.")
