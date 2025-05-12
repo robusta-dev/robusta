@@ -19,7 +19,7 @@ Send a dummy alert to AlertManager:
         
         .. image:: /images/robusta-ui-simulate-alert-1.png
            :alt: Choose the cluster
-           :width: 600
+           :width: 900
            :align: center
 
         Then 
@@ -35,6 +35,10 @@ Send a dummy alert to AlertManager:
            :align: center
 
 If everything is setup properly, this alert will reach Robusta. It will show up in the Robusta UI, Slack, and other configured sinks.
+
+.. note::
+
+    It might take a few minutes for the alert to arrive due to AlertManager's `group_wait` and `group_interval` settings. For more details, more info `here <https://prometheus.io/docs/alerting/latest/configuration/#:~:text=How%20long%20to%20wait%20before%20sending%20a%20notification%20about%20new%20alerts%20that%0A%23%20are%20added%20to%20a%20group%20of%20alerts%20for%20which%20an%20initial%20notification%20has%0A%23%20already%20been%20sent>`_.
 
 .. details:: I configured AlertManager, but I'm not receiving alerts?
     :class: warning

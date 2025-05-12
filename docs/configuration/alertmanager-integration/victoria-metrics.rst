@@ -13,43 +13,42 @@ Add the following to your Victoria Metrics Alertmanager configuration (e.g., Hel
 .. code-block:: yaml
 
     receivers:
-        - name: 'robusta'
-        webhook_configs:
-            - url: 'http://<ROBUSTA-HELM-RELEASE-NAME>-runner.<NAMESPACE>.svc.cluster.local/api/alerts'
-            send_resolved: true # (3)
+      - name: 'robusta'
+      webhook_configs:
+          - url: 'http://<ROBUSTA-HELM-RELEASE-NAME>-runner.<NAMESPACE>.svc.cluster.local/api/alerts'
+          send_resolved: true # (3)
 
     route: # (1)
-        routes:
-        - receiver: 'robusta'
-            group_by: [ '...' ]
-            group_wait: 1s
-            group_interval: 1s
-            matchers:
-            - severity =~ ".*"
-            repeat_interval: 4h
-            continue: true # (2)
+      routes:
+      - receiver: 'robusta'
+          group_by: [ '...' ]
+          group_wait: 1s
+          group_interval: 1s
+          matchers:
+          - severity =~ ".*"
+          repeat_interval: 4h
+          continue: true # (2)
 
 .. code-annotations::
-    1. Put Robusta's route as the first route, to guarantee it receives alerts. If you can't do so, you must guarantee all previous routes set ``continue: true`` set.
+    1. Put Robusta's route as the first route, to guarantee it receives alerts. If you can't do so, you must guarantee all previous routes has ``continue: true`` set.
     2. Keep sending alerts to receivers defined after Robusta.
     3. Important, so Robusta knows when alerts are resolved.
 
 
 .. include:: ./_testing_integration.rst
 
-Configure Metric Querying
+Configure Metrics Querying
 ====================================
 
 Robusta can query metrics and create silences using Victoria Metrics. If both are in the same Kubernetes cluster, Robusta can auto-detect the Victoria Metrics service. To verify, go to the "Apps" tab in Robusta, select an application, and check for usage graphs.
 
-If auto-detection fails or if Robusta and Victoria Metrics are in different clusters, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+If auto-detection fails you must add the ``prometheus_url`` parameter and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 
     globalConfig: # this line should already exist
         # add the lines below
         alertmanager_url: "http://<VM_ALERT_MANAGER_SERVICE_NAME>.<NAMESPACE>.svc.cluster.local:9093" # Example:"http://vmalertmanager-victoria-metrics-vm.default.svc.cluster.local:9093/"        
-        grafana_url: ""
         prometheus_url: "http://VM_Metrics_SERVICE_NAME.NAMESPACE.svc.cluster.local:8429" # Example:"http://vmsingle-vmks-victoria-metrics-k8s-stack.default.svc.cluster.local:8429"
         # Add any labels that are relevant to the specific cluster (optional)
         # prometheus_additional_labels:
