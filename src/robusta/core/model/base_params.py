@@ -81,7 +81,6 @@ class ResourceInfo(BaseModel):
 
 
 class HolmesParams(ActionParams):
-
     holmes_url: Optional[str]
     model: Optional[str]
     # Additional internal context that helps runner to send investigation to appropriate sinks
@@ -195,6 +194,7 @@ class HolmesChatParams(HolmesParams):
 
     ask: str
     conversation_history: Optional[list[dict]] = None
+    render_graph_images: bool = False
 
 
 class HolmesIssueChatParams(HolmesChatParams):

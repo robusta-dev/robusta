@@ -12,3 +12,4 @@
    automatic-remediation-examples/index
    prometheus-examples/index
    kubernetes-examples/index
+   Log Based Alerting <logs-triggers/index>
