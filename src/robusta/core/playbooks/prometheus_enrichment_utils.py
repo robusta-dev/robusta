@@ -401,6 +401,141 @@ def create_chart_from_prometheus_query(
     )
 
 
+def build_chart_from_prometheus_result(
+    prometheus_query_result: PrometheusQueryResult,
+    chart_title: Optional[str] = "Prometheus Chart",
+    values_format: Optional[ChartValuesFormat] = None,
+) -> pygal.Graph:
+    if prometheus_query_result.result_type != "matrix":
+        raise ValueError(f"Expected 'matrix' result_type, got '{prometheus_query_result.result_type}'")
+
+    HIGHEST_END = 32536799999
+    LOWEST_START = 0
+
+    min_time = HIGHEST_END
+    max_time = LOWEST_START
+    max_y_value = 0
+
+    plot_data_list: List[PlotData] = []
+    series_list_result = prometheus_query_result.series_list_result
+    COLOR_PALETTE = [
+        "#1f77b4",
+        "#ff7f0e",
+        "#2ca02c",
+        "#d62728",
+        "#9467bd",
+        "#8c564b",
+        "#e377c2",
+        "#7f7f7f",
+        "#bcbd22",
+        "#17becf",
+        "#393b79",
+        "#637939",
+        "#8c6d31",
+        "#843c39",
+        "#7b4173",
+        "#5254a3",
+        "#9c9ede",
+        "#6b6ecf",
+        "#b5cf6b",
+        "#e7ba52",
+        "#e7969c",
+        "#de9ed6",
+        "#9edae5",
+        "#c7c7c7",
+        "#c49c94",
+        "#f7b6d2",
+        "#dbdb8d",
+        "#aec7e8",
+        "#ffbb78",
+        "#98df8a",
+    ]
+    for i, series in enumerate(series_list_result):
+        label = get_target_name(series)
+        if not label:
+            label = "\n".join([v for (key, v) in series["metric"].items() if key != "job"])
+
+        values = []
+        for idx, timestamp in enumerate(series["timestamps"]):
+            val = round(float(series["values"][idx]), FLOAT_PRECISION_LIMIT)
+            values.append((timestamp, val))
+            max_y_value = max(max_y_value, val)
+
+        min_time = min(min_time, min(series["timestamps"]))
+        max_time = max(max_time, max(series["timestamps"]))
+
+        plot_data = PlotData(
+            plot=(label, values),
+            color=COLOR_PALETTE[i % len(COLOR_PALETTE)],
+            show_dots=False,
+            stroke_style={"width": 8, "dasharray": "8", "linecap": "round", "linejoin": "round"},
+        )
+        plot_data_list.append(plot_data)
+
+    if min_time == HIGHEST_END:
+        raise ValueError("No valid data points found in time series.")
+
+    config = pygal.Config()
+    custom_css = PlotCustomCSS().get_css_file_path()
+    config.css.append(f"file://{custom_css}")
+
+    graph_colors = [plot_data.color for plot_data in plot_data_list]
+    graph_colors.extend(["#1e0047", "#2a0065"])
+
+    chart = pygal.XY(
+        config,
+        show_dots=True,
+        style=charts_style(graph_colors=tuple(graph_colors)),
+        truncate_legend=15,
+        include_x_axis=True,
+        width=1280,
+        height=500,
+        show_legend=True,
+    )
+
+    chart.range = (0, max_y_value + (max_y_value * 0.2))
+    interval = chart.range[1] / 4
+    if values_format == ChartValuesFormat.Percentage:
+        chart.y_labels = [round(i * interval * 100) / 100 for i in range(5)]
+    else:
+        chart.y_labels = [round(i * interval) for i in range(5)]
+    chart.y_labels_major = chart.y_labels
+
+    chart.show_x_guides = True
+    chart.show_y_guides = True
+    chart.spacing = 20
+    chart.margin_top = 10
+    chart.margin_bottom = 50
+    chart.x_label_rotation = 35
+    chart.truncate_label = -1
+    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
+    chart.legend_at_bottom = True
+    chart.legend_at_bottom_columns = 5
+    chart.legend_box_size = 8
+
+    value_formatters = {
+        ChartValuesFormat.Plain: lambda val: str(val),
+        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
+        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
+    }
+    chart.value_formatter = value_formatters.get(values_format, lambda val: str(val))
+
+    chart.title = chart_title
+
+    for plot_data in plot_data_list:
+        chart.add(
+            plot_data.plot[0],
+            plot_data.plot[1],
+            stroke_style=plot_data.stroke_style,
+            show_dots=plot_data.show_dots,
+            dots_size=plot_data.dots_size,
+            stroke=plot_data.stroke,
+        )
+
+    return chart
+
+
 def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> PrometheusQueryResult:
     """
     This function runs prometheus query and returns the result (usually a vector),

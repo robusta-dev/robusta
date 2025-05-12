@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, Rollout
 from robusta.utils.error_codes import ActionException, ErrorCodes
-
+from robusta.integrations.kubernetes.custom_crds import CRDS_map
 
 class ResourceLister(BaseModel):
     list_all: Callable
@@ -64,6 +64,13 @@ LISTERS = {  # TODO add ingress and cronjobs once upgrading the k8s client versi
         list_namespaced=Rollout.list_namespaced,
     ),
 }
+
+
+for cls in CRDS_map.values():
+    LISTERS[cls.name.lower()] = ResourceLister(
+        list_all=cls.list_for_all_namespaces,
+        list_namespaced=cls.list_namespaced,
+    )
 
 
 class ResourceNameLister:
