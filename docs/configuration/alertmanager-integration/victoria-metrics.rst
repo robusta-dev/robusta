@@ -39,6 +39,12 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
         # grafana_api_key: <YOUR GRAFANA EDITOR API KEY> # (1)
         # alertmanager_flavor: grafana
 
+        # If using a multi-tenant prometheus or alertmanager, pass the org id to all queries
+        # prometheus_additional_headers:
+        #   X-Scope-OrgID: <org id>
+        # alertmanager_additional_headers:
+        #   X-Scope-OrgID: <org id>
+
 .. code-annotations::
     1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
 
