@@ -187,19 +187,19 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/VictorOps.html">
-        <img alt="VictorOps">
+        <img src="https://www.splunk.com/content/dam/splunk-blogs/images/2018/10/splunk-victorops-logo.png" alt="VictorOps" width="40">
         <br><strong>VictorOps</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/rocketchat.html">
-        <img alt="Rocket.Chat">
+        <img src="https://rocket.chat/images/logos/logo.svg" alt="Rocket.Chat" width="40">
         <br><strong>Rocket.Chat</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/webex.html">
-        <img alt="Webex">
+        <img src="https://www.webex.com/content/dam/wbx/global/images/webex-logo.svg" alt="Webex" width="40">
         <br><strong>Webex</strong>
       </a>
     </td>
@@ -211,7 +211,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/zulip.html">
-        <img alt="Zulip">
+        <img src="https://zulip.com/static/images/logo/zulip-icon-128x128.png" alt="Zulip" width="40">
         <br><strong>Zulip</strong>
       </a>
     </td>
@@ -219,7 +219,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/RobustaUI.html">
-        <img alt="Robusta UI">
+        <img src="./docs/images/robusta-ui.gif" alt="Robusta UI" width="40">
         <br><strong>Robusta UI</strong>
       </a>
     </td>
@@ -237,7 +237,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/YandexMessenger.html">
-        <img alt="Yandex Messenger">
+        <img src="https://yandex.com/images/touch/touch-icon-192x192.png" alt="Yandex Messenger" width="40">
         <br><strong>Yandex Messenger</strong>
       </a>
     </td>
@@ -263,7 +263,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/grafana-alert-manager.html">
         <img src="./docs/images/integration_logos/grafana-icon.png" alt="Grafana" width="40">
-        <br><strong>Grafana</strong>
+        <br><strong>Grafana Alertmanager</strong>
       </a>
     </td>
     <td align="center" width="100">
@@ -274,8 +274,34 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/outofcluster-prometheus.rst">
-        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="Centralized Prometheus" width="40">
-        <br><strong>Centralized Prometheus</strong>
+        <img src="https://thanos.io/img/favicon.ico" alt="Thanos" width="40">
+        <br><strong>Thanos</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/aws-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/cloudwatch-icon.png" alt="AWS Managed Prometheus" width="40">
+        <br><strong>AWS Managed Prometheus</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/gcpmonitoring-icon.png" alt="Google Managed Prometheus" width="40">
+        <br><strong>Google Managed Prometheus</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/azure-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/azuremonitoring-icon.png" alt="Azure Managed Prometheus" width="40">
+        <br><strong>Azure Managed Prometheus</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/coralogix_managed_prometheus.html">
+        <img src="./docs/images/integration_logos/coralogix-icon.png" alt="Coralogix" width="40">
+        <br><strong>Coralogix</strong>
       </a>
     </td>
   </tr>
@@ -309,10 +335,30 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
         <br><strong>OpenShift</strong>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/coralogix_managed_prometheus.rst">
-        <img src="./docs/images/integration_logos/coralogix-icon.png" alt="Coralogix" width="40">
-        <br><strong>Coralogix</strong>
+      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/argocd.html">
+        <img src="./docs/images/integration_logos/argocd-icon.png" alt="ArgoCD" width="40">
+        <br><strong>ArgoCD</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/flux.html">
+        <img src="https://fluxcd.io/img/flux-icon-color.png" alt="Flux" width="40">
+        <br><strong>Flux</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/installation/all-in-one-installation.html">
+        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="All-in-One" width="40">
+        <br><strong>All-in-One Package</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/installation/standalone-installation.html">
+        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="Standalone" width="40">
+        <br><strong>Standalone</strong>
       </a>
     </td>
   </tr>
