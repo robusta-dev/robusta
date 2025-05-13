@@ -15,7 +15,7 @@ Configuration
 
 .. md-tab-set::
 
-  .. md-tab-item:: Robusta Helm Chat
+  .. md-tab-item:: Robusta Helm Chart
 
     .. code-block:: yaml
 
@@ -24,9 +24,12 @@ Configuration
                 prometheus/metrics:
                     enabled: true
                     config:
+                        # see below how to find prometheus_url
                         prometheus_url: http://<prometheus host>:9090 # e.g. http://robusta-kube-prometheus-st-prometheus.default.svc.cluster.local:9090
-                        headers:
-                            Authorization: "Basic <base_64_encoded_string>"
+                        
+                        # optional
+                        #headers:
+                        #    Authorization: "Basic <base_64_encoded_string>"
 
 
     .. include:: ./_toolset_configuration.inc.rst
@@ -41,9 +44,12 @@ Configuration
             prometheus/metrics:
                 enabled: true
                 config:
+                    # see below how to find prometheus_url
                     prometheus_url: http://<prometheus host>:9090 # e.g. http://robusta-kube-prometheus-st-prometheus.default.svc.cluster.local:9090
-                    headers:
-                        Authorization: "Basic <base_64_encoded_string>"
+                    
+                    # optional
+                    #headers:
+                    #    Authorization: "Basic <base_64_encoded_string>"
 
 It is also possible to set the ``PROMETHEUS_URL`` environment variable instead of the above ``prometheus_url`` config key.
 
