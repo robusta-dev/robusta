@@ -43,7 +43,7 @@ class ExternalActionRequestBuilder(BaseModel):
             sinks=[sink],
             origin="callback",
         )
-        logging.info(f"Created action request body: {body}")
+
         return ExternalActionRequest(
             body=body,
             signature=sign_action_request(body, signing_key),

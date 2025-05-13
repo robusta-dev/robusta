@@ -115,7 +115,6 @@ class SlackSender:
                     ).json(),
                 }
             )
-            logging.info(f"Created action block: {buttons}")
             
         return [{"type": "actions", "elements": buttons}]
 
@@ -569,36 +568,48 @@ class SlackSender:
 
         except Exception:
             logging.exception(f"error sending message to slack. {title}")
-
-    def send_finding_to_slack(
+    
+    def _resolve_slack_thread(
         self,
         finding: Finding,
         sink_params: SlackSinkParams,
-        platform_enabled: bool,
-        thread_ts: str = None,
-    ) -> str:
-        blocks: List[BaseBlock] = []
-        attachment_blocks: List[BaseBlock] = []
-
-        slack_channel = ChannelTransformer.template(
+        thread_ts: Optional[str] = None,
+    ) -> tuple[str, Optional[str]]:
+        
+        channel = ChannelTransformer.template(
             sink_params.channel_override,
             sink_params.slack_channel,
             self.cluster_name,
             finding.subject.labels,
             finding.subject.annotations,
         )
-        robusta_context = getattr(finding, "robusta_context", None)
-        effective_thread_ts = thread_ts # Default to the one passed in (e.g., from grouping)
-        effective_channel_id = slack_channel
-        if robusta_context:
-            annotation_ts = robusta_context.get("thread_ts")
-            channel_id = robusta_context.get("channel_id")
-            if annotation_ts: # Make sure it's not None or empty
-                effective_thread_ts = annotation_ts # Prioritize the annotation!
-                effective_channel_id = channel_id
+
+        ctx = getattr(finding, "robusta_context", {}) or {}
+        thread_override = ctx.get("thread_ts")
+        channel_override = ctx.get("channel_id")
+
+        return (
+            channel_override or channel,
+            thread_override or thread_ts,
+        )
+
+    def send_finding_to_slack(
+        self,
+        finding: Finding,
+        sink_params: SlackSinkParams,
+        platform_enabled: bool,
+        thread_ts: Optional[str] = None,
+    ) -> str:
+        blocks: List[BaseBlock] = []
+        attachment_blocks: List[BaseBlock] = []
+
+        channel_id, thread_ts = self._resolve_slack_thread(
+            finding, sink_params, thread_ts
+        )
+        
         if finding.finding_type == FindingType.AI_ANALYSIS:
             # holmes analysis message needs special handling
-            self.send_holmes_analysis(finding, effective_channel_id, platform_enabled, effective_thread_ts)
+            self.send_holmes_analysis(finding, channel_id, platform_enabled, thread_ts)
             return ""  # [arik] Looks like the return value here is not used, needs to be removed
 
         status: FindingStatus = (
