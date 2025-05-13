@@ -58,6 +58,64 @@ To get *even more* out of Robusta, we recommend creating [a free Robusta UI acco
 
 [Installation instructions »](https://docs.robusta.dev/master/setup-robusta/installation/index.html)
 
+
+### 🌩️ Installation Options
+
+<table>
+  <tr>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/eks-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/eks-icon.png" alt="AWS EKS" width="40">
+        <br><strong>AWS EKS</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/gke-icon.png" alt="Google GKE" width="40">
+        <br><strong>Google GKE</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/azure-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/aks-icon.png" alt="Azure AKS" width="40">
+        <br><strong>Azure AKS</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/openshift.html">
+        <img src="./docs/images/integration_logos/openshift-icon.png" alt="OpenShift" width="40">
+        <br><strong>OpenShift</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/argocd.html">
+        <img src="./docs/images/integration_logos/argocd-icon.png" alt="ArgoCD" width="40">
+        <br><strong>ArgoCD</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/flux.html">
+        <img src="https://fluxcd.io/img/flux-icon-color.png" alt="Flux" width="40">
+        <br><strong>Flux</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/installation/all-in-one-installation.html">
+        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="All-in-One" width="40">
+        <br><strong>All-in-One Package</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/installation/standalone-installation.html">
+        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="Standalone" width="40">
+        <br><strong>Standalone</strong>
+      </a>
+    </td>
+  </tr>
+</table>
+
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
 
 ## 🖥 Free Robusta UI
@@ -70,30 +128,6 @@ Take your Kubernetes monitoring to the next level with the [Robusta SaaS platfor
   <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0">
       <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
   </a>
-
-## 📝 Documentation
-Interested? Learn more about Robusta.
-
-[Full documentation »](https://docs.robusta.dev/master/index.html)
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-## ✉️ Contact
-
-* Slack - [robustacommunity.slack.com](https://bit.ly/robusta-slack)
-* Twitter - [@RobustaDev](https://twitter.com/RobustaDev)
-* LinkedIn - [robusta-dev](https://www.linkedin.com/company/robusta-dev/)
-* Email Support - [support@robusta.dev ](mailto:support@robusta.dev )
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-## 📑 License
-Robusta is distributed under the MIT License. See [LICENSE.md](https://github.com/robusta-dev/robusta/blob/master/LICENSE) for more information.
-
-## 🕐 Stay up to date
-We add new features regularly. Stay up to date by watching us on GitHub.
-
-![](./docs/images/star-repo.gif)
-
 
 ## 🔗 Integrations
 
@@ -199,7 +233,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/webex.html">
-        <img src="https://www.webex.com/content/dam/wbx/global/images/webex-logo.svg" alt="Webex" width="40">
+        <img src="./docs/images/integration_logos/webex-logo.png" alt="Webex" width="40">
         <br><strong>Webex</strong>
       </a>
     </td>
@@ -307,70 +341,13 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
   </tr>
 </table>
 
-### 🌩️ Installation Options
-
-<table>
-  <tr>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/eks-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/eks-icon.png" alt="AWS EKS" width="40">
-        <br><strong>AWS EKS</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/gke-icon.png" alt="Google GKE" width="40">
-        <br><strong>Google GKE</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/azure-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/aks-icon.png" alt="Azure AKS" width="40">
-        <br><strong>Azure AKS</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/openshift.html">
-        <img src="./docs/images/integration_logos/openshift-icon.png" alt="OpenShift" width="40">
-        <br><strong>OpenShift</strong>
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/argocd.html">
-        <img src="./docs/images/integration_logos/argocd-icon.png" alt="ArgoCD" width="40">
-        <br><strong>ArgoCD</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/flux.html">
-        <img src="https://fluxcd.io/img/flux-icon-color.png" alt="Flux" width="40">
-        <br><strong>Flux</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/installation/all-in-one-installation.html">
-        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="All-in-One" width="40">
-        <br><strong>All-in-One Package</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/installation/standalone-installation.html">
-        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="Standalone" width="40">
-        <br><strong>Standalone</strong>
-      </a>
-    </td>
-  </tr>
-</table>
-
 ### 🧠 AI & Cost Management
 
 <table>
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/holmesgpt/index.html">
-        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="HolmesGPT" width="40">
+        <img src="https://raw.githubusercontent.com/robusta-dev/holmesgpt/refs/heads/master/images/logo.png" alt="HolmesGPT" width="40">
         <br><strong>HolmesGPT</strong>
       </a>
     </td>
@@ -384,3 +361,28 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
 </table>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
+## 📝 Documentation
+Interested? Learn more about Robusta.
+
+[Full documentation »](https://docs.robusta.dev/master/index.html)
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+## ✉️ Contact
+
+* Slack - [robustacommunity.slack.com](https://bit.ly/robusta-slack)
+* Twitter - [@RobustaDev](https://twitter.com/RobustaDev)
+* LinkedIn - [robusta-dev](https://www.linkedin.com/company/robusta-dev/)
+* Email Support - [support@robusta.dev ](mailto:support@robusta.dev )
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+## 📑 License
+Robusta is distributed under the MIT License. See [LICENSE.md](https://github.com/robusta-dev/robusta/blob/master/LICENSE) for more information.
+
+## 🕐 Stay up to date
+We add new features regularly. Stay up to date by watching us on GitHub.
+
+![](./docs/images/star-repo.gif)
+
+
