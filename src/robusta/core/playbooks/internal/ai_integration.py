@@ -113,12 +113,11 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
                 [HolmesResultsBlock(holmes_result=holmes_result)], enrichment_type=EnrichmentType.ai_analysis
             )
             runner_context = getattr(params, "robusta_context", None)
-            if runner_context and "thread_ts" in runner_context:
-                original_thread_ts = runner_context.get("thread_ts")
-                original_channel_id = runner_context.get("channel_id")
-                if original_thread_ts:                    
-                    finding.robusta_context["thread_ts"] = original_thread_ts
-                    finding.robusta_context["channel_id"] = original_channel_id
+            if runner_context:
+                if "thread_ts" in runner_context:
+                    finding.robusta_context["thread_ts"] = runner_context.get("thread_ts")
+                if "channel_id" in runner_context:
+                    finding.robusta_context["channel_id"] = runner_context.get("channel_id")
             
             event.add_finding(finding)
 

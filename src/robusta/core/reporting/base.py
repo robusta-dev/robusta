@@ -9,7 +9,6 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
-from pydantic import Field
 from pydantic.main import BaseModel
 from strenum import StrEnum
 

@@ -603,13 +603,13 @@ class SlackSender:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
 
-        channel_id, thread_ts = self._resolve_slack_thread(
+        slack_channel, thread_ts = self._resolve_slack_thread(
             finding, sink_params, thread_ts
         )
         
         if finding.finding_type == FindingType.AI_ANALYSIS:
             # holmes analysis message needs special handling
-            self.send_holmes_analysis(finding, channel_id, platform_enabled, thread_ts)
+            self.send_holmes_analysis(finding, slack_channel, platform_enabled, thread_ts)
             return ""  # [arik] Looks like the return value here is not used, needs to be removed
 
         status: FindingStatus = (
