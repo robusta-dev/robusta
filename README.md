@@ -65,7 +65,7 @@ Take your Kubernetes monitoring to the next level with the [Robusta SaaS platfor
 
 - **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
 - **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
-- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta’s automatic change tracking for Kubernetes
+- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta's automatic change tracking for Kubernetes
 
   <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0">
       <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
@@ -99,43 +99,43 @@ We add new features regularly. Stay up to date by watching us on GitHub.
 
 Robusta integrates with a variety of tools and platforms. Click on any logo to learn more about the integration.
 
-### 📤 Notification Sinks
+### 📤 Notification Destinations
 
 <table>
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/slack.html">
-        <img src="./docs/images/integration_logos/slack-icon.png" alt="Slack" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/slack-icon.png" alt="Slack" width="40">
         <br><strong>Slack</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/ms-teams.html">
-        <img src="./docs/images/integration_logos/teams-icon.png" alt="MS Teams" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/teams-icon.png" alt="MS Teams" width="40">
         <br><strong>MS Teams</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/discord.html">
-        <img src="./docs/images/integration_logos/discord-icon.png" alt="Discord" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/discord-icon.png" alt="Discord" width="40">
         <br><strong>Discord</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/telegram.html">
-        <img src="./docs/images/integration_logos/telegram-icon.png" alt="Telegram" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/telegram-icon.png" alt="Telegram" width="40">
         <br><strong>Telegram</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/google_chat.html">
-        <img src="./docs/images/integration_logos/google_chat-icon.png" alt="Google Chat" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/google_chat-icon.png" alt="Google Chat" width="40">
         <br><strong>Google Chat</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/mattermost.html">
-        <img src="./docs/images/integration_logos/mattermost-icon.png" alt="Mattermost" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/mattermost-icon.png" alt="Mattermost" width="40">
         <br><strong>Mattermost</strong>
       </a>
     </td>
@@ -143,149 +143,195 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/PagerDuty.html">
-        <img src="./docs/images/integration_logos/pagerduty-icon.png" alt="PagerDuty" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/pagerduty-icon.png" alt="PagerDuty" width="40">
         <br><strong>PagerDuty</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/Opsgenie.html">
-        <img src="./docs/images/integration_logos/opsgenie-icon.png" alt="Opsgenie" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/opsgenie-icon.png" alt="Opsgenie" width="40">
         <br><strong>Opsgenie</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/jira.html">
-        <img src="./docs/images/integration_logos/jira-icon.png" alt="Jira" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/jira-icon.png" alt="Jira" width="40">
         <br><strong>Jira</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/ServiceNow.html">
-        <img src="./docs/images/integration_logos/servicenow-icon.png" alt="ServiceNow" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/servicenow-icon.png" alt="ServiceNow" width="40">
         <br><strong>ServiceNow</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/mail.html">
-        <img src="./docs/images/integration_logos/smtp-icon.png" alt="Email" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/smtp-icon.png" alt="Email" width="40">
         <br><strong>Email</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/webhook.html">
-        <img src="./docs/images/integration_logos/webhook-icon.png" alt="Webhook" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/webhook-icon.png" alt="Webhook" width="40">
         <br><strong>Webhook</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/DataDog.html">
+        <img src="./docs/images/integration_logos/datadog-icon.png" alt="DataDog" width="40">
+        <br><strong>DataDog</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/VictorOps.html">
+        <img alt="VictorOps">
+        <br><strong>VictorOps</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/rocketchat.html">
+        <img alt="Rocket.Chat">
+        <br><strong>Rocket.Chat</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/webex.html">
+        <img alt="Webex">
+        <br><strong>Webex</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/pushover.html">
+        <img src="./docs/images/integration_logos/pushover-icon.png" alt="Pushover" width="40">
+        <br><strong>Pushover</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/zulip.html">
+        <img alt="Zulip">
+        <br><strong>Zulip</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/RobustaUI.html">
+        <img alt="Robusta UI">
+        <br><strong>Robusta UI</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/kafka.html">
+        <img src="./docs/images/integration_logos/kafka-icon.png" alt="Kafka" width="40">
+        <br><strong>Kafka</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/file.html">
+        <img src="./docs/images/integration_logos/logfile-icon.png" alt="File" width="40">
+        <br><strong>File</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/sinks/YandexMessenger.html">
+        <img alt="Yandex Messenger">
+        <br><strong>Yandex Messenger</strong>
       </a>
     </td>
   </tr>
 </table>
 
-### 📥 Metrics & Logs
+### 📊 Metrics and Alerts
 
 <table>
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/alert-manager.html">
-        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="Prometheus" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="Prometheus" width="40">
         <br><strong>Prometheus</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/victoria-metrics.html">
-        <img src="./docs/images/integration_logos/victoriametrics-icon.png" alt="Victoria Metrics" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/victoriametrics-icon.png" alt="Victoria Metrics" width="40">
         <br><strong>Victoria Metrics</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/grafana-alert-manager.html">
-        <img src="./docs/images/integration_logos/grafana-icon.png" alt="Grafana" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/grafana-icon.png" alt="Grafana" width="40">
         <br><strong>Grafana</strong>
       </a>
     </td>
     <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/toolsets/grafanaloki.html">
-        <img src="./docs/images/integration_logos/grafana_loki-icon.png" alt="Grafana Loki" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>Grafana Loki</strong>
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/embedded-prometheus.rst">
+        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="kube-prometheus-stack" width="40">
+        <br><strong>kube-prometheus-stack</strong>
       </a>
     </td>
     <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/toolsets/coralogix_logs.html">
-        <img src="./docs/images/integration_logos/coralogix-icon.png" alt="Coralogix" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>Coralogix</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/toolsets/opensearch.html">
-        <img src="./docs/images/integration_logos/opensearchserverless-icon.png" alt="OpenSearch" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>OpenSearch</strong>
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/outofcluster-prometheus.rst">
+        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="Centralized Prometheus" width="40">
+        <br><strong>Centralized Prometheus</strong>
       </a>
     </td>
   </tr>
 </table>
 
-### ☁️ Cloud Providers
+### 🌩️ Installation Options
 
 <table>
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/eks-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/eks-icon.png" alt="AWS EKS" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/eks-icon.png" alt="AWS EKS" width="40">
         <br><strong>AWS EKS</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/gke-icon.png" alt="Google GKE" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/gke-icon.png" alt="Google GKE" width="40">
         <br><strong>Google GKE</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/azure-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/aks-icon.png" alt="Azure AKS" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/aks-icon.png" alt="Azure AKS" width="40">
         <br><strong>Azure AKS</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/setup-robusta/openshift.html">
-        <img src="./docs/images/integration_logos/openshift-icon.png" alt="OpenShift" style="background:white; padding:10px; border-radius:10px;" width="40">
+        <img src="./docs/images/integration_logos/openshift-icon.png" alt="OpenShift" width="40">
         <br><strong>OpenShift</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/coralogix_managed_prometheus.rst">
+        <img src="./docs/images/integration_logos/coralogix-icon.png" alt="Coralogix" width="40">
+        <br><strong>Coralogix</strong>
       </a>
     </td>
   </tr>
 </table>
 
-### 🧠 AI & Integrations
+### 🧠 AI & Cost Management
 
 <table>
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/holmesgpt/index.html">
-        <img src="./docs/images/integration_logos/anthropic-icon.png" alt="Anthropic Claude" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>Anthropic Claude</strong>
+        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="HolmesGPT" width="40">
+        <br><strong>HolmesGPT</strong>
       </a>
     </td>
     <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/index.html">
-        <img src="./docs/images/integration_logos/openai-icon.png" alt="OpenAI" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>OpenAI</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/toolsets/kubernetes.html">
-        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="Kubernetes" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>Kubernetes</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/toolsets/argocd.html">
-        <img src="./docs/images/integration_logos/argocd-icon.png" alt="ArgoCD" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>ArgoCD</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/holmesgpt/toolsets/kafka.html">
-        <img src="./docs/images/integration_logos/kafka-icon.png" alt="Kafka" style="background:white; padding:10px; border-radius:10px;" width="40">
-        <br><strong>Kafka</strong>
+      <a href="https://docs.robusta.dev/master/configuration/resource-recommender.html">
+        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="KRR" width="40">
+        <br><strong>Kubernetes Resource Recommender</strong>
       </a>
     </td>
   </tr>
