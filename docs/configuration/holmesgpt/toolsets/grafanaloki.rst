@@ -84,7 +84,7 @@ Configuration (grafana proxy)
 
 .. md-tab-set::
 
-  .. md-tab-item:: Robusta Helm Chat
+  .. md-tab-item:: Robusta Helm Chart
 
     .. code-block:: yaml
 
@@ -132,7 +132,7 @@ Configuration (direct connection)
 
 .. md-tab-set::
 
-  .. md-tab-item:: Robusta Helm Chat
+  .. md-tab-item:: Robusta Helm Chart
 
     .. code-block:: yaml
 
@@ -180,7 +180,7 @@ Loki logs settings for ``pod``, and ``namespace`` differ from the defaults in th
 
 .. md-tab-set::
 
-  .. md-tab-item:: Robusta Helm Chat
+  .. md-tab-item:: Robusta Helm Chart
 
     .. code-block:: yaml
 
