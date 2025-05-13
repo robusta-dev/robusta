@@ -29,7 +29,7 @@ Configuration
 
 .. md-tab-set::
 
-  .. md-tab-item:: Robusta Helm Chat
+  .. md-tab-item:: Robusta Helm Chart
 
     .. code-block:: yaml
 
