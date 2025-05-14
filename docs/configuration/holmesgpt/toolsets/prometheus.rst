@@ -1,13 +1,13 @@
 .. _toolset_prometheus:
 
 Prometheus
-==========
+=============
 
 By enabling this toolset, HolmesGPT will be able to generate graphs from prometheus metrics as well as help you write and
 validate prometheus queries. HolmesGPT can also detect memory leak patterns, CPU throttling, lagging queues, and high
 latency issues.
 
-Prior to generating a PromQL query, HolmesQPT tends to list the available metrics. This is done to ensure the metrics used
+Prior to generating a PromQL query, HolmesGPT tends to list the available metrics. This is done to ensure the metrics used
 in PromQL are actually available.
 
 Configuration
@@ -15,7 +15,7 @@ Configuration
 
 .. md-tab-set::
 
-  .. md-tab-item:: Robusta Helm Chat
+  .. md-tab-item:: Robusta Helm Chart
 
     .. code-block:: yaml
 
@@ -24,9 +24,12 @@ Configuration
                 prometheus/metrics:
                     enabled: true
                     config:
+                        # see below how to find prometheus_url
                         prometheus_url: http://<prometheus host>:9090 # e.g. http://robusta-kube-prometheus-st-prometheus.default.svc.cluster.local:9090
-                        headers:
-                            Authorization: "Basic <base_64_encoded_string>"
+                        
+                        # optional
+                        #headers:
+                        #    Authorization: "Basic <base_64_encoded_string>"
 
 
     .. include:: ./_toolset_configuration.inc.rst
@@ -41,13 +44,17 @@ Configuration
             prometheus/metrics:
                 enabled: true
                 config:
+                    # see below how to find prometheus_url
                     prometheus_url: http://<prometheus host>:9090 # e.g. http://robusta-kube-prometheus-st-prometheus.default.svc.cluster.local:9090
-                    headers:
-                        Authorization: "Basic <base_64_encoded_string>"
+                    
+                    # optional
+                    #headers:
+                    #    Authorization: "Basic <base_64_encoded_string>"
 
 It is also possible to set the ``PROMETHEUS_URL`` environment variable instead of the above ``prometheus_url`` config key.
 
-**Advanced configuration**
+Advanced configuration
+******************************************
 
 Below is the full list of options for this toolset:
 
@@ -74,7 +81,8 @@ Below is the full list of options for this toolset:
 - **fetch_metadata_with_series_api** Uses the `series API <https://prometheus.io/docs/prometheus/latest/querying/api/#finding-series-by-label-matchers>`_ instead of the `metadata API <https://prometheus.io/docs/prometheus/latest/querying/api/#querying-metric-metadata>`_. You should only set this value to `true` if the metadata API is disabled or not working. HolmesGPT's ability to select the right metric will be negatively impacted because the series API does not return key metadata like the metrics/series description or their type (gauge, histogram, etc.).
 - **tool_calls_return_data** Defaults to ``true``. If ``false``, no prometheus data will be returned to HolmesGPT. Set it to ``false`` if you frequently reach the token limit when using this toolset. Setting this setting to ``false`` will also disable HolmesGPT's ability to analyze prometheus data.
 
-**Finding the prometheus URL**
+Finding the prometheus URL
+******************************************
 
 The best way to find the prometheus URL is to use "ask holmes". This only works if your cluster is live and already connected to Robusta.
 
@@ -85,7 +93,7 @@ If not, you can often find the prometheus URL by running the following command (
     kubectl get svc --all-namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"."}{.metadata.namespace}{".svc.cluster.local:"}{.spec.ports[0].port}{"\n"}{end}' | grep prometheus | grep -Ev 'operat|alertmanager|node|coredns|kubelet|kube-scheduler|etcd|controller' | awk '{print "http://"$1}'
 
 Capabilities
-------------
+-----------------
 .. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::

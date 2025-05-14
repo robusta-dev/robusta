@@ -29,7 +29,7 @@ Configuration
 
 .. md-tab-set::
 
-  .. md-tab-item:: Robusta Helm Chat
+  .. md-tab-item:: Robusta Helm Chart
 
     .. code-block:: yaml
 
@@ -68,7 +68,8 @@ Configuration
 Advanced Configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 
-**Frequent logs and archive**
+Frequent logs and archive
+****************************
 
 By default, holmes fetched the logs from the `Frequent search <https://coralogix.com/docs/user-guides/account-management/tco-optimizer/logs/#frequent-search-data-high-priority>`_ 
 tier and only fetch logs from the `Archive` tier if the frequent search returned no result.
@@ -98,7 +99,8 @@ Here is a description of each possible log retrieval methodology:
 - **FREQUENT_SEARCH_FALLBACK** Search logs in the archive first. If there are no results, fallback to searching the frequent logs.
 - **BOTH_FREQUENT_SEARCH_AND_ARCHIVE** Always use both the frequent search and the archive to fetch logs. The result contains merged data which is deduplicated and sorted by timestamp.
 
-**Search labels**
+Search labels
+***************
 
 You can tweak the labels used by the toolset to identify kubernetes resources. This is **optional** and only needed if your
 logs settings for ``pod``, ``namespace``, ``application`` and ``subsystem`` differ from the defaults in the example below.
@@ -124,7 +126,8 @@ You can verify what labels to use by attempting to run a query in the coralogix 
   :align: center
 
 
-**Disabling the default toolset**
+Disabling the default toolset
+*********************************
 
 If Coralogix is your primary datasource for logs, it is **advised** to disable the default HolmesGPT logging
 tool by disabling the ``kubernetes/logs`` toolset. Without this. HolmesGPT may still use kubectl to
