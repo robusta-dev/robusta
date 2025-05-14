@@ -437,17 +437,8 @@ class SlackSender:
         title, mention = self.extract_mentions(title)
 
         sev = finding.severity
+
         
-        # Select appropriate template based on user preference
-        template_name = "header.j2"  # default template
-        if sink_params and hasattr(sink_params, "template_style") and sink_params.template_style == "legacy":
-            template_name = "legacy.j2"
-        
-        # Check if the user has provided a custom template
-        custom_template = None
-        if sink_params and sink_params.custom_templates and template_name in sink_params.custom_templates:
-            custom_template = sink_params.custom_templates[template_name]
-            
         # Prepare data for template
         status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
         status_emoji = "⚠️" if status == FindingStatus.FIRING else "✅"
@@ -508,10 +499,17 @@ class SlackSender:
             "finding": finding
         }
 
-        # Use the new template loader method for both custom and file-based templates
-        return template_loader.render_custom_or_file_template_to_blocks(
-            template_name, template_context, custom_template
-        )
+        # Determine the template name to use
+        template_name = sink_params.get_effective_template_name() if sink_params else "header.j2"
+
+        # Get the custom template for this template name, if any
+        custom_template = sink_params.get_custom_template() if sink_params else None
+
+        # Use the new template loader methods for custom or file-based templates
+        if custom_template:
+            return template_loader.render_custom_template_to_blocks(custom_template, template_context)
+        else:
+            return template_loader.render_file_template_to_blocks(template_name, template_context)
 
     def __create_links(
         self,
