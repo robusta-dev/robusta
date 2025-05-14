@@ -30,105 +30,6 @@ Robusta integrates with Prometheus by webhook and adds features like:
 
 Don't have Prometheus? You can use Robusta without Prometheus, or install our all-in-one Kubernetes observability stack with Robusta and Prometheus included.
 
-## 🛠️ How it works
-
-Robusta uses rules and AI to take Prometheus alerts and add extra information to them, such as pod logs, relevant graphs, possible remediations, and more.
-
-Here is an example alert in Slack:
-
-![](./docs/images/crash-report.png)
-
-Here is an example remediation action:
-
-![](./docs/images/alert_on_hpa_reached_limit1.png)
-
-[Learn more »](https://docs.robusta.dev/master/how-it-works/index.html)
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-## 📒 Installing Robusta
-
-Robusta is installed with Helm. For convenience, we provide a CLI wizard to generate Helm values.
-
-You can install Robusta alongside your existing Prometheus, or as an all-in-one bundle with Robusta and a preconfigured `kube-prometheus-stack`.
-
-To get *even more* out of Robusta, we recommend creating [a free Robusta UI account](#-free-robusta-ui). Learn more below.
-
-[Create a free Robusta UI account »](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=installing_robusta_section)
-
-[Installation instructions »](https://docs.robusta.dev/master/setup-robusta/installation/index.html)
-
-
-<!-- ### 🌩️ Installation Options -->
-
-<!-- <table>
-  <tr>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/eks-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/eks-icon.png" alt="AWS EKS" width="40">
-        <br><strong>AWS EKS</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/gke-icon.png" alt="Google GKE" width="40">
-        <br><strong>Google GKE</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/azure-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/aks-icon.png" alt="Azure AKS" width="40">
-        <br><strong>Azure AKS</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/openshift.html">
-        <img src="./docs/images/integration_logos/openshift-icon.png" alt="OpenShift" width="40">
-        <br><strong>OpenShift</strong>
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/argocd.html">
-        <img src="./docs/images/integration_logos/argocd-icon.png" alt="ArgoCD" width="40">
-        <br><strong>ArgoCD</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/flux.html">
-        <img src="https://fluxcd.io/img/flux-icon-color.png" alt="Flux" width="40">
-        <br><strong>Flux</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/installation/all-in-one-installation.html">
-        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="All-in-One" width="40">
-        <br><strong>All-in-One Package</strong>
-      </a>
-    </td>
-    <td align="center" width="100">
-      <a href="https://docs.robusta.dev/master/setup-robusta/installation/standalone-installation.html">
-        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="Standalone" width="40">
-        <br><strong>Standalone</strong>
-      </a>
-    </td>
-  </tr>
-</table> -->
-
-<!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
-
-## 🖥 Free Robusta UI
-Take your Kubernetes monitoring to the next level with the [Robusta SaaS platform](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=free_robusta_ui_section). Creating an account is free, and includes:
-
-- **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
-- **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
-- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta's automatic change tracking for Kubernetes
-
-  <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0">
-      <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
-  </a>
-
 ## 🔗 Integrations
 
 Robusta integrates with a variety of tools and platforms. Click on any logo to learn more about the integration.
@@ -361,6 +262,108 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
 </table>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
+## 🛠️ How it works
+
+Robusta uses rules and AI to take Prometheus alerts and add extra information to them, such as pod logs, relevant graphs, possible remediations, and more.
+
+Here is an example alert in Slack:
+
+![](./docs/images/crash-report.png)
+
+Here is an example remediation action:
+
+![](./docs/images/alert_on_hpa_reached_limit1.png)
+
+[Learn more »](https://docs.robusta.dev/master/how-it-works/index.html)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+## 📒 Installing Robusta
+
+Robusta is installed with Helm. For convenience, we provide a CLI wizard to generate Helm values.
+
+You can install Robusta alongside your existing Prometheus, or as an all-in-one bundle with Robusta and a preconfigured `kube-prometheus-stack`.
+
+To get *even more* out of Robusta, we recommend creating [a free Robusta UI account](#-free-robusta-ui). Learn more below.
+
+[Create a free Robusta UI account »](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=installing_robusta_section)
+
+[Installation instructions »](https://docs.robusta.dev/master/setup-robusta/installation/index.html)
+
+
+<!-- ### 🌩️ Installation Options -->
+
+<!-- <table>
+  <tr>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/eks-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/eks-icon.png" alt="AWS EKS" width="40">
+        <br><strong>AWS EKS</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/gke-icon.png" alt="Google GKE" width="40">
+        <br><strong>Google GKE</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/azure-managed-prometheus.html">
+        <img src="./docs/images/integration_logos/aks-icon.png" alt="Azure AKS" width="40">
+        <br><strong>Azure AKS</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/openshift.html">
+        <img src="./docs/images/integration_logos/openshift-icon.png" alt="OpenShift" width="40">
+        <br><strong>OpenShift</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/argocd.html">
+        <img src="./docs/images/integration_logos/argocd-icon.png" alt="ArgoCD" width="40">
+        <br><strong>ArgoCD</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/gitops/flux.html">
+        <img src="https://fluxcd.io/img/flux-icon-color.png" alt="Flux" width="40">
+        <br><strong>Flux</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/installation/all-in-one-installation.html">
+        <img src="./docs/images/integration_logos/prometheus-icon.png" alt="All-in-One" width="40">
+        <br><strong>All-in-One Package</strong>
+      </a>
+    </td>
+    <td align="center" width="100">
+      <a href="https://docs.robusta.dev/master/setup-robusta/installation/standalone-installation.html">
+        <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="Standalone" width="40">
+        <br><strong>Standalone</strong>
+      </a>
+    </td>
+  </tr>
+</table> -->
+
+<!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
+
+## 🖥 Free Robusta UI
+Take your Kubernetes monitoring to the next level with the [Robusta SaaS platform](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=free_robusta_ui_section). Creating an account is free, and includes:
+
+- **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
+- **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
+- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta's automatic change tracking for Kubernetes
+
+  <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0">
+      <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
+  </a>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 
 ## 📝 Documentation
 Interested? Learn more about Robusta.
