@@ -507,23 +507,11 @@ class SlackSender:
             "resource_emoji": resource_emoji,
             "finding": finding
         }
-        
-        # If custom template provided, use it directly with Jinja
-        if custom_template:
-            try:
-                template = Template(custom_template)
-                rendered_blocks = []
-                for block_str in template.render(**template_context).strip().split("\n\n"):
-                    if block_str.strip():
-                        block = json.loads(block_str)
-                        rendered_blocks.append(block)
-                return rendered_blocks
-            except Exception as e:
-                logging.error(f"Error rendering custom template: {e}")
-                # Fall back to file-based template
-        
-        # Use file-based template
-        return template_loader.render_to_blocks(template_name, template_context)
+
+        # Use the new template loader method for both custom and file-based templates
+        return template_loader.render_custom_or_file_template_to_blocks(
+            template_name, template_context, custom_template
+        )
 
     def __create_links(
         self,
