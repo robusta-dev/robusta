@@ -12,27 +12,35 @@ Choose a configuration method below:
 
         Create the configuration by signing up `for a free Robusta UI account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=install-page>`_
 
-        .. note::
+        .. details:: Why configure an Open Source project from a SaaS platform?
 
-            With the UI, you can easily configure integrations like Slack and Teams, while also unlocking exclusive features such as timeline of changes and alerts, built-in AI root cause analysis, and more.
+            You can use Robusta OSS without any SaaS components, however you'll need integrations like Slack or MS Teams if you want to see Robusta doing anything.
 
+            The configuration for Slack can be difficult to generate on your own, so we provide a free UI to assist.
+            
+            You can use the UI to generate Helm values and then disable the UI, or you can use the free tier forever! We also have a paid tier with our most powerful AI agent included.
 
-    .. tab-item:: pip
+    .. tab-item:: pipx
         :name: pip-cli-tab
 
-        Use the ``robusta`` cli tool to generate the Helm values.
+        First install `pipx <https://github.com/pypa/pipx>`_.
 
-        .. details:: Requirements and Troubleshooting
-
-            * Python 3.7 or higher is required.
-            * Use ``pip3`` on systems with both Python 2 and Python 3.
-            * A ``command not found: robusta`` error means :ref:`Python's script directory is not your PATH.<Common Errors>`.
+        Then use pipx to install and run the robusta cli: 
 
         .. code-block:: bash
             :name: cb-pip-install
 
-            pip install -U robusta-cli --no-cache
-            robusta gen-config {{ gen_config_flags }}
+            pipx run robusta-cli gen-config {{ gen_config_flags }}
+
+        .. details:: pipx vs pip
+
+            The ``robusta`` cli can also be installed with pip, but due to Python limitations, this can lead to dependency issues, as pip doesn't install packages in isolated environments.
+
+            But if you prefer pip instead of pipx - install with ``pip install -U robusta-cli --no-cache`` and run with ``robusta gen-config {{ gen_config_flags }}``
+            
+            * Python 3.7 or higher is required.
+            * Use ``pip3`` on systems with both Python 2 and Python 3.
+            * A ``command not found: robusta`` error means :ref:`Python's script directory is not your PATH.<Common Errors>`.
 
     .. tab-item:: docker
         :name: docker-cli-tab

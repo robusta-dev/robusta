@@ -672,6 +672,7 @@ runner:
       cpu: ~
   additional_env_vars: []
   additional_env_froms: []
+  customCRD: []
   priorityClassName: ""
   tolerations: []
   annotations: {}

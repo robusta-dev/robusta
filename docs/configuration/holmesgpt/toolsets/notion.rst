@@ -2,12 +2,12 @@ Notion
 =======================
 
 Notion Integration for HolmesGPT
--------------
+---------------------------------------
 
 Enabling this toolset allows HolmesGPT to fetch pages from Notion, making it useful when providing Notion-based runbooks.
 
 Setup Instructions
--------------
+-----------------------
 
 1. **Create a Webhook Integration**
    - Go to the Notion Developer Portal.
@@ -25,7 +25,7 @@ Setup Instructions
 
 
 Configuration
--------------
+------------------
 
 .. code-block:: yaml
 
@@ -46,7 +46,7 @@ Configuration
 .. include:: ./_toolset_configuration.inc.rst
 
 Capabilities
-------------
+----------------
 .. include:: ./_toolset_capabilities.inc.rst
 
 .. list-table::

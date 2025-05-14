@@ -135,3 +135,6 @@ HOLMES_ASK_SLACK_BUTTON_ENABLED = load_bool("HOLMES_ASK_SLACK_BUTTON_ENABLED", T
 
 # simple calculated values (not direct environment vars)
 SENTRY_ENABLED = SEND_ADDITIONAL_TELEMETRY and SENTRY_DSN
+
+# enable custom CRDs supported by robusta "["StrimziPodSet", "Cluster"]"
+CUSTOM_CRD = json.loads(os.environ.get("CUSTOM_CRD", "[]"))

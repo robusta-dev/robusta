@@ -45,7 +45,21 @@ from robusta.core.reporting import EventRow, EventsBlock
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.custom_rendering import render_value
 from robusta.utils.parsing import format_event_templated_string
+from robusta.core.model.env_vars import CUSTOM_CRD
 
+events_supported_types = [
+        "Pod",
+        "Deployment",
+        "DaemonSet",
+        "ReplicaSet",
+        "StatefulSet",
+        "Job",
+        "Node",
+        "DeploymentConfig",
+        "Rollout",
+    ]
+
+events_supported_types.extend(CUSTOM_CRD)
 
 class ExtendedEventEnricherParams(EventEnricherParams):
     """
@@ -155,17 +169,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     """
 
     resource = event.get_resource()
-    if resource.kind not in [
-        "Pod",
-        "Deployment",
-        "DaemonSet",
-        "ReplicaSet",
-        "StatefulSet",
-        "Job",
-        "Node",
-        "DeploymentConfig",
-        "Rollout",
-    ]:
+    if resource.kind not in events_supported_types:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Resource events enricher is not supported for resource {resource.kind}"
         )
@@ -180,20 +184,13 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     )
 
     # append related pod data as well
-    if params.dependent_pod_mode and kind in [
-        "Deployment",
-        "DaemonSet",
-        "ReplicaSet",
-        "StatefulSet",
-        "Job",
-        "DeploymentConfig",
-        "Rollout",
-    ]:
+    if params.dependent_pod_mode and kind not in ["Pod", "Node"]:
         pods = []
         if kind == "Job":
             pods = get_job_all_pods(resource) or []
         else:
-            pods = list_pods_using_selector(resource.metadata.namespace, resource.spec.selector, "")
+            selector = resource.spec.get("selector", {}) if isinstance(resource.spec, dict) else resource.spec.selector
+            pods = list_pods_using_selector(resource.metadata.namespace, selector, "")
 
         selected_pods = pods[: min(len(pods), params.max_pods)]
         for pod in selected_pods:
