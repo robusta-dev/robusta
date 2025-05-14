@@ -731,7 +731,7 @@ class SlackSender:
         file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
         file_blocks.extend(Transformer.tableblock_to_fileblocks(attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
 
-        message = self.prepare_slack_text(
+        message, error_msg = self.prepare_slack_text(
             finding.title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
         )
         
