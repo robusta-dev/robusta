@@ -115,7 +115,7 @@ class SlackSender:
                     ).json(),
                 }
             )
-
+            
         return [{"type": "actions", "elements": buttons}]
 
     def __to_slack_links(self, links: List[LinkProp]) -> List[SlackBlock]:
@@ -568,18 +568,15 @@ class SlackSender:
 
         except Exception:
             logging.exception(f"error sending message to slack. {title}")
-
-    def send_finding_to_slack(
+    
+    def _resolve_slack_thread(
         self,
         finding: Finding,
         sink_params: SlackSinkParams,
-        platform_enabled: bool,
-        thread_ts: str = None,
-    ) -> str:
-        blocks: List[BaseBlock] = []
-        attachment_blocks: List[BaseBlock] = []
-
-        slack_channel = ChannelTransformer.template(
+        thread_ts: Optional[str] = None,
+    ) -> tuple[str, Optional[str]]:
+        
+        channel = ChannelTransformer.template(
             sink_params.channel_override,
             sink_params.slack_channel,
             self.cluster_name,
@@ -587,6 +584,29 @@ class SlackSender:
             finding.subject.annotations,
         )
 
+        ctx = getattr(finding, "robusta_context", {}) or {}
+        thread_override = ctx.get("thread_ts")
+        channel_override = ctx.get("channel_id")
+
+        return (
+            channel_override or channel,
+            thread_override or thread_ts,
+        )
+
+    def send_finding_to_slack(
+        self,
+        finding: Finding,
+        sink_params: SlackSinkParams,
+        platform_enabled: bool,
+        thread_ts: Optional[str] = None,
+    ) -> str:
+        blocks: List[BaseBlock] = []
+        attachment_blocks: List[BaseBlock] = []
+
+        slack_channel, thread_ts = self._resolve_slack_thread(
+            finding, sink_params, thread_ts
+        )
+        
         if finding.finding_type == FindingType.AI_ANALYSIS:
             # holmes analysis message needs special handling
             self.send_holmes_analysis(finding, slack_channel, platform_enabled, thread_ts)
