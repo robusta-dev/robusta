@@ -59,9 +59,9 @@ To get *even more* out of Robusta, we recommend creating [a free Robusta UI acco
 [Installation instructions »](https://docs.robusta.dev/master/setup-robusta/installation/index.html)
 
 
-### 🌩️ Installation Options
+<!-- ### 🌩️ Installation Options -->
 
-<table>
+<!-- <table>
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/eks-managed-prometheus.html">
@@ -114,7 +114,7 @@ To get *even more* out of Robusta, we recommend creating [a free Robusta UI acco
       </a>
     </td>
   </tr>
-</table>
+</table> -->
 
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
 
@@ -201,7 +201,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/mail.html">
-        <img src="./docs/images/integration_logos/smtp-icon.png" alt="Email" width="40">
+        <img src="./docs/images/integration_logos/smtp-logo.png" alt="Email" width="40">
         <br><strong>Email</strong>
       </a>
     </td>
@@ -221,13 +221,13 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/VictorOps.html">
-        <img src="https://www.splunk.com/content/dam/splunk-blogs/images/2018/10/splunk-victorops-logo.png" alt="VictorOps" width="40">
+        <img src="./docs/images/integration_logos/victorops-logo.svg" alt="VictorOps" width="40">
         <br><strong>VictorOps</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/rocketchat.html">
-        <img src="https://rocket.chat/images/logos/logo.svg" alt="Rocket.Chat" width="40">
+        <img src="./docs/images/integration_logos/rocketchat-logo.svg" alt="Rocket.Chat" width="40">
         <br><strong>Rocket.Chat</strong>
       </a>
     </td>
@@ -253,25 +253,25 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/RobustaUI.html">
-        <img src="./docs/images/robusta-ui.gif" alt="Robusta UI" width="40">
+        <img src="./logos/logo-only.png" alt="Robusta UI" width="40">
         <br><strong>Robusta UI</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/kafka.html">
-        <img src="./docs/images/integration_logos/kafka-icon.png" alt="Kafka" width="40">
+        <img src="./docs/images/integration_logos/kafka-logo.png" alt="Kafka" width="40">
         <br><strong>Kafka</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/file.html">
-        <img src="./docs/images/integration_logos/logfile-icon.png" alt="File" width="40">
+        <img src="./docs/images/integration_logos/file-icon.svg" alt="File" width="40">
         <br><strong>File</strong>
       </a>
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/sinks/YandexMessenger.html">
-        <img src="https://yandex.com/images/touch/touch-icon-192x192.png" alt="Yandex Messenger" width="40">
+        <img src="./docs/images/integration_logos/yandex-logo.svg" alt="Yandex Messenger" width="40">
         <br><strong>Yandex Messenger</strong>
       </a>
     </td>
@@ -290,7 +290,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/victoria-metrics.html">
-        <img src="./docs/images/integration_logos/victoriametrics-icon.png" alt="Victoria Metrics" width="40">
+        <img src="./docs/images/integration_logos/victoriametrics-logo.png" alt="Victoria Metrics" width="40">
         <br><strong>Victoria Metrics</strong>
       </a>
     </td>
@@ -300,15 +300,15 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
         <br><strong>Grafana Alertmanager</strong>
       </a>
     </td>
-    <td align="center" width="100">
+    <!-- <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/embedded-prometheus.rst">
         <img src="./docs/images/integration_logos/prometheus-icon.png" alt="kube-prometheus-stack" width="40">
         <br><strong>kube-prometheus-stack</strong>
       </a>
-    </td>
+    </td> -->
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/outofcluster-prometheus.rst">
-        <img src="https://thanos.io/img/favicon.ico" alt="Thanos" width="40">
+        <img src="./docs/images/integration_logos/thanos-logo.svg" alt="Thanos" width="40">
         <br><strong>Thanos</strong>
       </a>
     </td>
@@ -316,7 +316,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
   <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/aws-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/cloudwatch-icon.png" alt="AWS Managed Prometheus" width="40">
+        <img src="./docs/images/integration_logos/aws-managed-prometheus-logo.svg" alt="AWS Managed Prometheus" width="40">
         <br><strong>AWS Managed Prometheus</strong>
       </a>
     </td>
@@ -328,7 +328,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
     </td>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/alertmanager-integration/azure-managed-prometheus.html">
-        <img src="./docs/images/integration_logos/azuremonitoring-icon.png" alt="Azure Managed Prometheus" width="40">
+        <img src="./docs/images/integration_logos/azure-managed-prometheus.png" alt="Azure Managed Prometheus" width="40">
         <br><strong>Azure Managed Prometheus</strong>
       </a>
     </td>
