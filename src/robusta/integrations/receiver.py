@@ -176,7 +176,7 @@ class ActionRequestReceiver:
         if hasattr(action_request, 'slack_message'):
             action_request.body.action_params["slack_message"] = action_request.slack_message
         
-        if action_request.slack_container and action_request.slack_container.message_ts:
+        if hasattr(action_request, 'slack_container'):
             thread_ts = action_request.slack_container.message_ts
             channel_id = action_request.slack_container.channel_id
             action_request.body.action_params["robusta_context"] = {"thread_ts": thread_ts, "channel_id": channel_id}
