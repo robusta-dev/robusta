@@ -359,13 +359,14 @@ def create_cpu_throttling_finding() -> Finding:
             "severity": "info"
         }
     )
-
+    table_rows = [["Row1_Col1", "Row1_Col2"], ["Row2_Col1", "Row2_Col2"]]
+    table_block = TableBlock(table_rows, headers=["Header1", "Header2"])
     # Add explanation enrichment
     finding.add_enrichment([
         MarkdownBlock(
             '📘 *Alert Explanation:* This pod is throttled due to its CPU limit. This can occur even when CPU usage is far below the limit. <https://github.com/robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-(Prometheus-Alert)|Learn more.>'),
         MarkdownBlock(
-            "🛠 *Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://home.robusta.dev/blog/stop-using-cpu-limits/|Using CPU limits is *not* a best practice.>")
+            "🛠 *Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://home.robusta.dev/blog/stop-using-cpu-limits/|Using CPU limits is *not* a best practice.>"),table_block
     ], annotations={"unfurl": False})
 
     # Instead of adding an SVG file which can cause JSON serialization issues,
