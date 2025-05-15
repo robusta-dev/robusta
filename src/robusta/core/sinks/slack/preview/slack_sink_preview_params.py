@@ -20,16 +20,15 @@ class SlackSinkPreviewParams(SlackSinkParams):
         Otherwise, use 'legacy.j2' if template_style is legacy, else 'header.j2'.
         """
         if self.slack_custom_templates and len(self.slack_custom_templates) == 1:
-            return next(iter(self.slack_custom_templates))
+            return self.slack_custom_templates.keys()[0]
         return "header.j2"
 
     def get_custom_template(self) -> Optional[str]:
         """
         Returns the custom template string for the effective template name, if it exists.
         """
-        template_name = self.get_effective_template_name()
-        if self.slack_custom_templates and template_name in self.slack_custom_templates:
-            return self.slack_custom_templates[template_name]
+        if self.slack_custom_templates and len(self.slack_custom_templates) == 1:
+            return self.slack_custom_templates.values()[0]
         return None
 
 
