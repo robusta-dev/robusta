@@ -1,2 +1,0 @@
-from robusta.core.sinks.slack.preview.slack_sink_preview import SlackSinkPreview
-from robusta.core.sinks.slack.preview.slack_sink_params_preview import SlackSinkPreviewConfigWrapper, SlackSinkPreviewParams

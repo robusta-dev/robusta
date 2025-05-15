@@ -22,7 +22,8 @@ from robusta.core.sinks.servicenow.servicenow_sink_params import ServiceNowSinkC
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.slack import SlackSink, SlackSinkConfigWrapper
-from robusta.core.sinks.slack.preview import SlackSinkPreview, SlackSinkPreviewConfigWrapper
+from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewConfigWrapper
+from robusta.core.sinks.slack.preview.slack_sink_preview import SlackSinkPreview
 from robusta.core.sinks.telegram import TelegramSink, TelegramSinkConfigWrapper
 from robusta.core.sinks.victorops import VictoropsConfigWrapper, VictoropsSink
 from robusta.core.sinks.webex import WebexSink, WebexSinkConfigWrapper

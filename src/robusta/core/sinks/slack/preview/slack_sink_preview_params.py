@@ -1,6 +1,6 @@
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
-from robusta.core.sinks.slack import SlackSinkParams
+from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from enum import Enum
 from typing import Optional, Dict
 
