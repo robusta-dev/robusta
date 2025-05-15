@@ -1,23 +1,18 @@
 import copy
-import json
 import logging
-import os
 import ssl
 import tempfile
 import re
 from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set
-
+import json
 import certifi
 import humanize
 from dateutil import tz
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from slack_sdk.http_retry import all_builtin_retry_handlers
-
-# Since we're assuming Jinja2 is always present, we can import directly
-from jinja2 import Template
 from robusta.core.sinks.slack.templates.template_loader import template_loader
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
@@ -53,6 +48,8 @@ from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base import KeyT
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
+from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams
+
 from robusta.core.sinks.transformer import Transformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
@@ -65,7 +62,6 @@ MENTION_PATTERN = re.compile(r"<[^>]+>")
 class SlackSender:
     verified_api_tokens: Set[str] = set()
     channel_name_to_id = {}
-    is_preview = False
 
     def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, is_preview: bool = False):
         """
@@ -346,7 +342,6 @@ class SlackSender:
                 kwargs = {"thread_ts": thread_ts}
             else:
                 kwargs = {}
-            # Create a single attachment with a consistent color, containing all enrichment blocks
             resp = self.slack_client.chat_postMessage(
                 channel=channel,
                 text=message,
@@ -429,10 +424,9 @@ class SlackSender:
 
         return title, mention
 
-
-    def __create_finding_header(
-        self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool, 
-        sink_params = None
+    def __create_finding_header_preview(
+        self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool,
+        sink_params: SlackSinkPreviewParams = None
     ) -> List[SlackBlock]:
         title = finding.title.removeprefix("[RESOLVED] ")
 
@@ -440,12 +434,12 @@ class SlackSender:
 
         sev = finding.severity
 
-        
         # Prepare data for template
         status_text = "Firing" if status == FindingStatus.FIRING else "Resolved"
         status_emoji = "⚠️" if status == FindingStatus.FIRING else "✅"
-        investigate_uri = finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""
-        
+        investigate_uri = finding.get_investigate_uri(self.account_id,
+                                                      self.cluster_name) if platform_enabled else ""
+
         # Get alert type information
         if finding.source == FindingSource.PROMETHEUS:
             alert_type = "Alert"
@@ -453,16 +447,16 @@ class SlackSender:
             alert_type = "K8s Event"
         else:
             alert_type = "Notification"
-            
+
         # Prepare resource text and emoji if available
         resource_text = ""
         resource_emoji = ":package:"
-        
+
         if finding.subject:
             subject_kind = finding.subject.subject_type.value
             subject_namespace = finding.subject.namespace
             subject_name = finding.subject.name
-            
+
             if subject_kind and subject_name:
                 # Choose emoji based on kind
                 if subject_kind.lower() == "pod":
@@ -477,13 +471,13 @@ class SlackSender:
                     resource_emoji = ":clock1:"
                 elif subject_kind.lower() == "statefulset":
                     resource_emoji = ":chains:"
-                    
+
                 # Format as Kind/Namespace/Name
                 if subject_namespace:
                     resource_text = f"{subject_kind}/{subject_namespace}/{subject_name}"
                 else:
                     resource_text = f"{subject_kind}/{subject_name}"
-        
+
         # Prepare template context
         template_context = {
             "title": title,
@@ -512,6 +506,31 @@ class SlackSender:
             return template_loader.render_custom_template_to_blocks(custom_template, template_context)
         else:
             return template_loader.render_file_template_to_blocks(template_name, template_context)
+
+    def __create_finding_header(
+        self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
+    ) -> MarkdownBlock:
+        title = finding.title.removeprefix("[RESOLVED] ")
+
+        title, mention = self.extract_mentions(title)
+
+        sev = finding.severity
+        if finding.source == FindingSource.PROMETHEUS:
+            status_name: str = (
+                f"{status.to_emoji()} `Prometheus Alert Firing` {status.to_emoji()}"
+                if status == FindingStatus.FIRING
+                else f"{status.to_emoji()} *Prometheus resolved*"
+            )
+        elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+            status_name: str = "👀 *K8s event detected*"
+        else:
+            status_name: str = "👀 *Notification*"
+        if platform_enabled and include_investigate_link:
+            title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
+        return MarkdownBlock(
+            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*
+{title}{mention}"""
+        )
 
     def __create_links(
         self,
@@ -643,6 +662,90 @@ class SlackSender:
         platform_enabled: bool,
         thread_ts: str = None,
     ) -> str:
+        if self.is_preview:
+            return self.send_finding_to_slack_preview(
+                finding=finding,
+                sink_params=sink_params,
+                platform_enabled=platform_enabled,
+                thread_ts=thread_ts
+            )
+
+        blocks: List[BaseBlock] = []
+        attachment_blocks: List[BaseBlock] = []
+
+        slack_channel = ChannelTransformer.template(
+            sink_params.channel_override,
+            sink_params.slack_channel,
+            self.cluster_name,
+            finding.subject.labels,
+            finding.subject.annotations,
+        )
+
+        if finding.finding_type == FindingType.AI_ANALYSIS:
+            # holmes analysis message needs special handling
+            self.send_holmes_analysis(finding, slack_channel, platform_enabled, thread_ts)
+            return ""  # [arik] Looks like the return value here is not used, needs to be removed
+
+        status: FindingStatus = (
+            FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
+        )
+        if finding.title:
+            blocks.append(self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link))
+
+        links_block: LinksBlock = self.__create_links(
+            finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
+        )
+        blocks.append(links_block)
+
+        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
+            blocks.append(self.__create_holmes_callback(finding))
+
+        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
+        if finding.description:
+            if finding.source == FindingSource.PROMETHEUS:
+                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+                blocks.append(
+                    MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
+                )
+            else:
+                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
+
+        unfurl = True
+        for enrichment in finding.enrichments:
+            if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
+                enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
+
+            # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
+            unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
+            if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
+                attachment_blocks.extend(enrichment.blocks)
+            else:
+                blocks.extend(enrichment.blocks)
+
+        blocks.append(DividerBlock())
+
+        if len(attachment_blocks):
+            attachment_blocks.append(DividerBlock())
+
+        return self.__send_blocks_to_slack(
+            blocks,
+            attachment_blocks,
+            finding.title,
+            sink_params,
+            unfurl,
+            status,
+            slack_channel,
+            thread_ts=thread_ts,
+        )
+
+    def send_finding_to_slack_preview(
+        self,
+        finding: Finding,
+        sink_params: SlackSinkParams,
+        platform_enabled: bool,
+        thread_ts: str = None,
+    ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
         header_blocks: List[SlackBlock] = []  # JIRA-style header blocks
@@ -663,10 +766,11 @@ class SlackSender:
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
-        
+
         # Get JIRA-style header blocks
         if finding.title:
-            header_blocks = self.__create_finding_header(finding, status, platform_enabled, sink_params.investigate_link, sink_params)
+            header_blocks = self.__create_finding_header_preview(finding, status, platform_enabled,
+                                                         sink_params.investigate_link, sink_params)
 
         # Description handling - moved above the buttons
         if finding.description:
@@ -691,23 +795,23 @@ class SlackSender:
 
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
             unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
-            
+
             # Separate file blocks from normal blocks
             file_blocks_in_enrichment = [b for b in enrichment.blocks if isinstance(b, FileBlock)]
             non_file_blocks = [b for b in enrichment.blocks if not isinstance(b, FileBlock)]
-            
+
             # Collect file blocks
             all_file_blocks.extend(file_blocks_in_enrichment)
-            
+
             # Put non-file blocks in the attachment
             attachment_blocks.extend(non_file_blocks)
-        
+
         # Add file blocks to the main blocks for proper handling
         blocks.extend(all_file_blocks)
-        
+
         # No divider in the main blocks
 
-        # We need to create a minimal version of __send_blocks_to_slack 
+        # We need to create a minimal version of __send_blocks_to_slack
         # that can handle both our header blocks and regular blocks
         file_blocks = add_pngs_for_all_svgs([b for b in blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
@@ -722,40 +826,40 @@ class SlackSender:
         message, error_msg = self.prepare_slack_text(
             finding.title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
         )
-        
+
         # Convert BaseBlocks to Slack blocks
         output_blocks = []
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))
-            
+
         attachment_slack_blocks = []
         for block in attachment_blocks:
             attachment_slack_blocks.extend(self.__to_slack(block, sink_params.name))
 
         # Combine with header blocks
         all_blocks = header_blocks + output_blocks
-        
+
         try:
             if thread_ts:
                 kwargs = {"thread_ts": thread_ts}
             else:
                 kwargs = {}
-                
+
             # Create a single attachment with all blocks and a divider at the end
             attachments = []
-            
+
             # Add divider to the end of attachment blocks if there are any
             all_attachment_blocks = attachment_slack_blocks.copy() if attachment_slack_blocks else []
-            
+
             # Always add a divider at the end
             all_attachment_blocks.append({"type": "divider"})
-            
+
             # Create a single attachment with the status color
             attachments = [{
                 "color": status.to_color_hex(),
                 "blocks": all_attachment_blocks
             }]
-            
+
             # Detailed logging of blocks before sending to Slack
             logging.debug(
                 f"SENDING TO SLACK - FULL BLOCKS DETAIL:\n"
@@ -767,7 +871,7 @@ class SlackSender:
                 f"ATTACHMENT BLOCKS: {json.dumps(all_attachment_blocks, indent=2)}\n"
                 f"ATTACHMENTS: {json.dumps(attachments, indent=2)}\n"
             )
-                
+
             # Send the message with our JIRA-style headers and attachments
             resp = self.slack_client.chat_postMessage(
                 channel=slack_channel,
@@ -779,17 +883,16 @@ class SlackSender:
                 unfurl_media=unfurl,
                 **kwargs,
             )
-            
+
             # Store channel id for future use
             self.channel_name_to_id[slack_channel] = resp["channel"]
             return resp["ts"]
-            
+
         except Exception as e:
             logging.error(
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={slack_channel}"
             )
             return ""
-
     def send_or_update_summary_message(
         self,
         group_by_classification_header: List[str],
