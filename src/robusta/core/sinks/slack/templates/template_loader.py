@@ -55,41 +55,37 @@ class SlackTemplateLoader:
 
         return self._templates[template_name]
 
-    def render_to_blocks(self, template_name: str, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def render_to_blocks(self, template: Template, context: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        Render a template using the provided context and parse the result as JSON to get Slack blocks.
-
+        Render a Jinja2 Template object using the provided context and parse the result as JSON to get Slack blocks.
         Args:
-            template_name: The name of the template file
+            template: A Jinja2 Template object
             context: Dictionary of variables to pass to the template
-
         Returns:
             List of Slack block objects (dictionaries)
         """
-        template = self.get_template(template_name)
-
         try:
             rendered = template.render(**context)
-
-            # Split by newlines to get multiple blocks and parse each as JSON
-            blocks = []
             blocks = []
             for block_str in rendered.strip().split("\n\n"):
                 if not block_str.strip():
                     continue
-
                 try:
                     block_str_fixed = escape_raw_newlines_in_json_strings(block_str)
+                    # Try to parse as JSON, but if it fails, log and skip
                     block = json.loads(block_str_fixed)
                     blocks.append(block)
-
                 except json.JSONDecodeError as e:
                     logging.exception(f"Error parsing JSON from template output: {e}")
                     logging.warning(f"Problematic JSON (repr): {repr(block_str)}")
-
+                    continue  # Skip this block and continue
+                except Exception as e:
+                    logging.error(f"Unexpected error parsing block: {e}")
+                    logging.warning(f"Problematic JSON (repr): {repr(block_str)}")
+                    continue
             return blocks
         except Exception as e:
-            logging.error(f"Error rendering template {template_name}: {e}")
+            logging.error(f"Error rendering template: {e}")
             return []
 
     def render_custom_template_to_blocks(self, custom_template: str, context: Dict[str, Any]) -> List[Dict[str, Any]]:

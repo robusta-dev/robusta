@@ -65,8 +65,9 @@ MENTION_PATTERN = re.compile(r"<[^>]+>")
 class SlackSender:
     verified_api_tokens: Set[str] = set()
     channel_name_to_id = {}
+    is_preview = False
 
-    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str):
+    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, is_preview: bool = False):
         """
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
@@ -87,6 +88,7 @@ class SlackSender:
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
+        self.is_preview = is_preview
 
         if slack_token not in self.verified_api_tokens:
             try:
