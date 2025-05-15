@@ -663,13 +663,26 @@ class SlackSender:
         thread_ts: str = None,
     ) -> str:
         if self.is_preview:
-            return self.send_finding_to_slack_preview(
+            return self.__send_finding_to_slack_preview(
                 finding=finding,
                 sink_params=sink_params,
                 platform_enabled=platform_enabled,
                 thread_ts=thread_ts
             )
+        return self.__send_finding_to_slack(
+            finding=finding,
+            sink_params=sink_params,
+            platform_enabled=platform_enabled,
+            thread_ts=thread_ts
+        )
 
+    def __send_finding_to_slack(
+        self,
+        finding: Finding,
+        sink_params: SlackSinkParams,
+        platform_enabled: bool,
+        thread_ts: str = None,
+    ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
 
@@ -739,7 +752,7 @@ class SlackSender:
             thread_ts=thread_ts,
         )
 
-    def send_finding_to_slack_preview(
+    def __send_finding_to_slack_preview(
         self,
         finding: Finding,
         sink_params: SlackSinkParams,
