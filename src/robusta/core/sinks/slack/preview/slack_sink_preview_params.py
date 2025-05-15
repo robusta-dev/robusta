@@ -11,7 +11,6 @@ class SlackTemplateStyle(str, Enum):
 
 
 class SlackSinkPreviewParams(SlackSinkParams):
-    template_style: SlackTemplateStyle = SlackTemplateStyle.DEFAULT  # Use "legacy" for old-style formatting
     slack_custom_templates: Optional[Dict[str, str]] = None  # Template name -> custom template content
     template_name: Optional[str] = None
 
@@ -20,10 +19,8 @@ class SlackSinkPreviewParams(SlackSinkParams):
         Returns the template name to use for this sink. If template_name is set, use it.
         Otherwise, use 'legacy.j2' if template_style is legacy, else 'header.j2'.
         """
-        if self.template_name:
-            return self.template_name
-        if self.template_style == SlackTemplateStyle.LEGACY:
-            return "legacy.j2"
+        if self.slack_custom_templates and len(self.slack_custom_templates) == 1:
+            return next(iter(self.slack_custom_templates))
         return "header.j2"
 
     def get_custom_template(self) -> Optional[str]:

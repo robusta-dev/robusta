@@ -57,7 +57,6 @@ def test_slack_template_styles(slack_channel: SlackChannel, template_style, temp
         name="test_slack",
         slack_channel=slack_channel.channel_name,
         api_key="",
-        template_style=template_style,
         template_name=template_name,
         slack_custom_templates={
         "custom_template.j2": """
