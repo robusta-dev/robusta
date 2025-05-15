@@ -181,43 +181,62 @@ your own. This is not recommended for most companies due to the added complexity
 
     When using a custom Slack app, callback buttons are not supported due to complexities in how Slack handles incoming
     messages. :ref:`Contact us if you need assistance. <Getting Support>`
+
+
 Message Templating
 -------------------------------------------------------------------
 
 Slack messages can be customized using Jinja2 templates. Robusta includes default templates that match the standard format, but you can override them for custom formatting.
 
-To use custom templates, add them to the ``custom_templates`` parameter:
+To use custom templates change your `slack_sink` to `slack_sink_preview`, and add your templates to the ``slack_custom_templates`` parameter:
 
 .. code-block:: yaml
 
    sinksConfig:
-   - slack_sink:
-       name: main_slack_sink
-       slack_channel: "#alerts"
-       api_key: xoxb-112...
-       custom_templates:
-         header.j2: |
+   - slack_sink_preview:
+       api_key: xoxb-198...
+       name: preview_slack_sink
+       slack_channel: demo-slack-preview
+       slack_custom_templates:
+         custom_template.j2: |-
            {
-             "type": "section",
+             "type": "header",
              "text": {
-               "type": "mrkdwn",
-               "text": "{{ status_emoji }} *CUSTOM ALERT: {{ title }}*"
+               "type": "plain_text",
+               "text": "Custom Alert Format:\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
+               "emoji": true
              }
            }
 
            {
-             "type": "context",
-             "elements": [
+             "type": "divider"
+           }
+
+           {
+             "type": "section",
+             "fields": [
                {
-                 "type": "mrkdwn", 
-                 "text": ":bell: {{ alert_type }} on cluster {{ cluster_name }}"
+                 "type": "mrkdwn",
+                 "text": "*Type:* {{ alert_type }}"
                },
                {
                  "type": "mrkdwn",
-                 "text": "{{ severity_emoji }} {{ severity }}"
+                 "text": "*Severity:* {{ severity_emoji }} {{ severity }}"
+               },
+               {
+                 "type": "mrkdwn",
+                 "text": "*Cluster:* {{ cluster_name }}"
                }
+               {% if resource_text %}
+               ,
+               {
+                 "type": "mrkdwn",
+                 "text": "*Resource:*\n{{ resource_text }}"
+               }
+               {% endif %}
              ]
            }
+
 
 Templates use Slack's Block Kit format and must generate valid JSON. Each template block is separated by double newlines (``\n\n``).
 
@@ -239,106 +258,6 @@ Available template variables:
 | ``alert_type``              | "Alert", "K8s Event", or "Notification"                     |
 +-----------------------------+-------------------------------------------------------------+
 | ``cluster_name``            | The name of the cluster                                     |
-+-----------------------------+-------------------------------------------------------------+
-| ``platform_enabled``        | Boolean indicating if Robusta platform is enabled           |
-+-----------------------------+-------------------------------------------------------------+
-| ``include_investigate_link``| Boolean for including investigate link                      |
-+-----------------------------+-------------------------------------------------------------+
-| ``investigate_uri``         | URI for investigation                                       |
-+-----------------------------+-------------------------------------------------------------+
-| ``resource_text``           | Resource identifier (e.g., "Pod/namespace/name")            |
-+-----------------------------+-------------------------------------------------------------+
-| ``resource_emoji``          | Emoji for the resource type                                 |
-+-----------------------------+-------------------------------------------------------------+
-| ``finding``                 | The complete finding object as JSON                         |
-+-----------------------------+-------------------------------------------------------------+
-
-Currently available templates:
-
-* ``header.j2`` - The header section of alert notificationsTemplate Styles and Customization
--------------------------------------------------------------------
-
-Slack messages in Robusta can be customized using different template styles and Jinja2 templates.
-
-Template Styles
-~~~~~~~~~~~~~~
-
-Robusta supports two built-in template styles:
-
-1. **default** - Modern JIRA-style formatting (default)
-2. **legacy** - Classic formatting matching Robusta's original style
-
-To select a template style:
-
-.. code-block:: yaml
-
-   sinksConfig:
-   - slack_sink:
-       name: main_slack_sink
-       slack_channel: "#alerts"
-       api_key: xoxb-112...
-       template_style: "legacy"  # Use "default" or "legacy"
-
-Custom Templates
-~~~~~~~~~~~~~~~
-
-For complete control over message formatting, you can provide custom Jinja2 templates:
-
-.. code-block:: yaml
-
-   sinksConfig:
-   - slack_sink:
-       name: main_slack_sink
-       slack_channel: "#alerts"
-       api_key: xoxb-112...
-       custom_templates:
-         header.j2: |
-           {
-             "type": "section",
-             "text": {
-               "type": "mrkdwn",
-               "text": "{{ status_emoji }} *CUSTOM ALERT: {{ title }}*"
-             }
-           }
-
-           {
-             "type": "context",
-             "elements": [
-               {
-                 "type": "mrkdwn", 
-                 "text": ":bell: {{ alert_type }} on cluster {{ cluster_name }}"
-               },
-               {
-                 "type": "mrkdwn",
-                 "text": "{{ severity_emoji }} {{ severity }}"
-               }
-             ]
-           }
-
-Templates use Slack's Block Kit format and must generate valid JSON. Each template block is separated by double newlines (``\n\n``).
-
-Available template variables:
-
-+-----------------------------+-------------------------------------------------------------+
-| Variable                    | Description                                                 |
-+=============================+=============================================================+
-| ``title``                   | The alert title                                             |
-+-----------------------------+-------------------------------------------------------------+
-| ``status_text``             | "Firing" or "Resolved"                                      |
-+-----------------------------+-------------------------------------------------------------+
-| ``status_emoji``            | "⚠️" (for firing) or "✅" (for resolved)                    |
-+-----------------------------+-------------------------------------------------------------+
-| ``severity``                | Alert severity (e.g., "Warning", "Critical")                |
-+-----------------------------+-------------------------------------------------------------+
-| ``severity_emoji``          | Emoji for the severity level                                |
-+-----------------------------+-------------------------------------------------------------+
-| ``alert_type``              | "Alert", "K8s Event", or "Notification"                     |
-+-----------------------------+-------------------------------------------------------------+
-| ``cluster_name``            | The name of the cluster                                     |
-+-----------------------------+-------------------------------------------------------------+
-| ``platform_enabled``        | Boolean indicating if Robusta platform is enabled           |
-+-----------------------------+-------------------------------------------------------------+
-| ``include_investigate_link``| Boolean for including investigate link                      |
 +-----------------------------+-------------------------------------------------------------+
 | ``investigate_uri``         | URI for investigation                                       |
 +-----------------------------+-------------------------------------------------------------+
@@ -349,6 +268,3 @@ Available template variables:
 | ``finding``                 | The complete finding object with all alert data             |
 +-----------------------------+-------------------------------------------------------------+
 
-Currently available templates:
-
-* ``header.j2`` - The header section of alert notifications

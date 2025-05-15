@@ -28,7 +28,7 @@ class SlackSinkPreviewParams(SlackSinkParams):
         Returns the custom template string for the effective template name, if it exists.
         """
         if self.slack_custom_templates and len(self.slack_custom_templates) == 1:
-            return next(iter(self.slack_custom_templates))
+            return next(iter(self.slack_custom_templates.values()))
         return None
 
 

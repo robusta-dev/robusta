@@ -491,8 +491,7 @@ class SlackSender:
             "include_investigate_link": include_investigate_link,
             "investigate_uri": investigate_uri,
             "resource_text": resource_text,
-            "resource_emoji": resource_emoji,
-            "finding": finding
+            "resource_emoji": resource_emoji
         }
 
         # Determine the template name to use
