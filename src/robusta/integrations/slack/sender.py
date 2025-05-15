@@ -906,6 +906,7 @@ class SlackSender:
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={slack_channel}"
             )
             return ""
+
     def send_or_update_summary_message(
         self,
         group_by_classification_header: List[str],
