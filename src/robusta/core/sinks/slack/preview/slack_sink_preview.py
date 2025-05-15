@@ -7,8 +7,5 @@ class SlackSinkPreview(SlackSink):
     params: SlackSinkPreviewParams
 
     def __init__(self, sink_config: SlackSinkPreviewConfigWrapper, registry):
-        self.slack_sender = slack_module.SlackSender(
-            self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel, is_preview=True
-        )
-        super().__init__(sink_config.slack_sink, registry, self.slack_sender)
+        super().__init__(sink_config.slack_sink_preview, registry, is_preview=True)
 

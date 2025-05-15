@@ -37,7 +37,7 @@ class SlackSinkPreviewParams(SlackSinkParams):
 
 
 class SlackSinkPreviewConfigWrapper(SinkConfigBase):
-    slack_sink: SlackSinkPreviewParams
+    slack_sink_preview: SlackSinkPreviewParams
 
     def get_params(self) -> SinkBaseParams:
-        return self.slack_sink
+        return self.slack_sink_preview
