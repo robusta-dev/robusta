@@ -25,6 +25,7 @@ from robusta.core.reporting.blocks import (
 )
 from robusta.core.model.base_params import ResourceInfo
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
+from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams, SlackTemplateStyle
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 
 # Configure logging - set to DEBUG to see full block details
@@ -426,134 +427,169 @@ def main():
         logging.info("DEBUG mode enabled - will print detailed block information")
         logging.info("Run script with DEBUG=false to disable detailed logging")
 
-    # Initialize the SlackSender
-    sender = SlackSender(
+    # Initialize the standard SlackSender
+    standard_sender = SlackSender(
         slack_token=SLACK_TOKEN,
         account_id="test-account",
         cluster_name="test-cluster",
         signing_key="test-signing-key",
-        slack_channel=SLACK_CHANNEL
+        slack_channel=SLACK_CHANNEL,
+        is_preview=False
     )
 
-    # Create the SlackSinkParams
-    sink_params = SlackSinkParams(
-        name="test-sink",
+    # Initialize the preview SlackSender
+    preview_sender = SlackSender(
+        slack_token=SLACK_TOKEN,
+        account_id="test-account",
+        cluster_name="test-cluster",
+        signing_key="test-signing-key",
+        slack_channel=SLACK_CHANNEL,
+        is_preview=True
+    )
+
+    # Create a test finding
+    finding = create_test_finding("Test Alert", FindingSeverity.HIGH)
+
+    # Add markdown blocks with various content
+    finding.add_enrichment([
+        MarkdownBlock("## Alert Details"),
+        MarkdownBlock("This is a test alert with *bold* and _italic_ text"),
+        MarkdownBlock("`Code snippet: kubectl get pods -n default`"),
+        MarkdownBlock("> Important note: This is a test alert"),
+        MarkdownBlock("• Bullet point 1\n• Bullet point 2\n• Bullet point 3"),
+        DividerBlock(),
+        MarkdownBlock("### Resource Information"),
+        MarkdownBlock("The following resources are affected by this alert:"),
+    ])
+
+    # Add a table with labels
+    finding.add_enrichment([
+        TableBlock(
+            rows=[
+                ["app", "test-app"],
+                ["environment", "test"],
+                ["severity", "high"],
+                ["namespace", "default"],
+                ["pod", "test-pod"],
+                ["container", "test-container"],
+                ["node", "test-node"],
+                ["cluster", "test-cluster"]
+            ],
+            headers=["Label", "Value"],
+            table_name="Resource Labels",
+            metadata={"format": "vertical"}
+        )
+    ])
+
+    # Add file blocks with sample text
+    finding.add_enrichment([
+        FileBlock(
+            filename="pod-logs.txt",
+            contents=b"""2024-03-23 10:15:23 INFO Starting application
+2024-03-23 10:15:24 INFO Loading configuration
+2024-03-23 10:15:25 ERROR Failed to connect to database
+2024-03-23 10:15:26 WARN Retrying connection...
+2024-03-23 10:15:27 ERROR Connection timeout"""
+        ),
+        FileBlock(
+            filename="config.yaml",
+            contents=b"""apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  namespace: default
+spec:
+  containers:
+  - name: test-container
+    image: nginx:latest
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+"""
+        )
+    ])
+
+    # Test 1: Standard Slack Sink with default template
+    logging.info("Test 1: Standard Slack Sink with default template")
+    standard_params = SlackSinkParams(
+        name="standard-sink",
         slack_channel=SLACK_CHANNEL,
         api_key=SLACK_TOKEN,
         investigate_link=True,
         prefer_redirect_to_platform=False,
         max_log_file_limit_kb=1000
     )
+    standard_sender.send_finding_to_slack(finding, standard_params, platform_enabled=True)
 
-    # Create a SlackSinkParams with legacy style
-    legacy_template_params = SlackSinkParams(
-        name="legacy-template-sink",
+    # Test 2: Slack Preview Sink with default template
+    logging.info("Test 2: Slack Preview Sink with default template")
+    preview_params = SlackSinkPreviewParams(
+        name="preview-sink",
         slack_channel=SLACK_CHANNEL,
         api_key=SLACK_TOKEN,
         investigate_link=True,
         prefer_redirect_to_platform=False,
-        max_log_file_limit_kb=1000,
-        template_style="legacy"  # Use the legacy template style
+        max_log_file_limit_kb=1000
     )
+    preview_sender.send_finding_to_slack(finding, preview_params, platform_enabled=True)
 
-    # Create a SlackSinkParams with a custom template
-    custom_template_params = SlackSinkParams(
-        name="custom-template-sink",
-        slack_channel=SLACK_CHANNEL,
-        api_key=SLACK_TOKEN,
-        investigate_link=True,
-        prefer_redirect_to_platform=False,
-        max_log_file_limit_kb=1000,
-        template_name="custom.j2",
-        slack_custom_templates={
-            "custom.j2": """
-            {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": "{{ status_emoji }} *CUSTOM TEMPLATE: {{ title }}*"
-              }
-            }
+    # Test 3: Slack Preview Sink with custom template
+    logging.info("Test 3: Slack Preview Sink with custom template")
+    custom_template = """
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "Custom Alert Format:\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
+        "emoji": true
+      }
+    }
 
-            {
-              "type": "context",
-              "elements": [
-                {
-                  "type": "mrkdwn", 
-                  "text": ":rotating_light: {{ alert_type }} on cluster {{ cluster_name }}"
-                },
-                {
-                  "type": "mrkdwn",
-                  "text": "{{ severity_emoji }} {{ severity }} severity"
-                }
-                {% if resource_text %}
-                ,{
-                  "type": "mrkdwn",
-                  "text": "{{ resource_emoji }} {{ resource_text }}"
-                }
-                {% endif %}
-              ]
-            }
-            """
+    {
+      "type": "divider"
+    }
+
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Type:* {{ alert_type }}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Severity:* {{ severity_emoji }} {{ severity }}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Cluster:* {{ cluster_name }}"
         }
+        {% if resource_text %}
+        ,
+        {
+          "type": "mrkdwn",
+          "text": "*Resource:*\n{{ resource_text }}"
+        }
+        {% endif %}
+      ]
+    }
+    """
+    custom_params = SlackSinkPreviewParams(
+        name="custom-sink",
+        slack_channel=SLACK_CHANNEL,
+        api_key=SLACK_TOKEN,
+        investigate_link=True,
+        prefer_redirect_to_platform=False,
+        max_log_file_limit_kb=1000,
+        slack_custom_templates={"custom.j2": custom_template}
     )
+    preview_sender.send_finding_to_slack(finding, custom_params, platform_enabled=True)
 
-    # Create all findings
-    crash_loop_finding = create_crash_loop_finding()
-    node_saturation_finding = create_node_saturation_finding()
-    datadog_agent_crash_finding = create_datadog_agent_crash_finding()
-    cpu_throttling_finding = create_cpu_throttling_finding()
-
-    # Send findings to Slack with standard templates
-    logging.info(f"Sending crash loop finding to Slack channel (DEFAULT TEMPLATE): {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(crash_loop_finding, sink_params, platform_enabled=True)
-
-    # Send findings to Slack with legacy template style
-    logging.info(f"Sending node saturation finding to Slack channel with LEGACY TEMPLATE: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(node_saturation_finding, legacy_template_params, platform_enabled=True)
-
-    # Send findings to Slack with custom templates
-    logging.info(f"Sending datadog agent crash finding to Slack channel with CUSTOM TEMPLATE: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(datadog_agent_crash_finding, custom_template_params, platform_enabled=True)
-
-    logging.info(f"Sending CPU throttling finding to Slack channel with CUSTOM TEMPLATE: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(cpu_throttling_finding, custom_template_params, platform_enabled=True)
-
-    logging.info(f"Test messages sent successfully to Slack channel: {SLACK_CHANNEL}")
-
-    # Uncomment the below code to send the original test findings
-    """
-    # Create test findings with different severities
-    finding_info = create_test_finding("Test INFO Alert", FindingSeverity.INFO)
-    finding_low = create_test_finding("Test LOW Alert", FindingSeverity.LOW)
-    finding_medium = create_test_finding("Test MEDIUM Alert", FindingSeverity.MEDIUM)
-    finding_high = create_test_finding("Test HIGH Alert", FindingSeverity.HIGH)
-
-    # Add different types of content to each finding
-    add_basic_blocks(finding_info)
-    add_complex_table(finding_low)
-
-    # Combine basic and complex content for medium severity
-    add_basic_blocks(finding_medium)
-    add_complex_table(finding_medium)
-
-    # Add AI callback for high severity
-    add_basic_blocks(finding_high)
-    create_holmes_callback(finding_high)
-
-    # Send all test findings to Slack
-    logging.info(f"Sending INFO finding to Slack channel: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(finding_info, sink_params, platform_enabled=True)
-
-    logging.info(f"Sending LOW finding to Slack channel: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(finding_low, sink_params, platform_enabled=True)
-
-    logging.info(f"Sending MEDIUM finding to Slack channel: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(finding_medium, sink_params, platform_enabled=True)
-
-    logging.info(f"Sending HIGH finding with Holmes callback to Slack channel: {SLACK_CHANNEL}...")
-    sender.send_finding_to_slack(finding_high, sink_params, platform_enabled=True)
-    """
+    logging.info(f"All test messages sent successfully to Slack channel: {SLACK_CHANNEL}")
 
 
 if __name__ == "__main__":
