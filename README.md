@@ -242,7 +242,7 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
   </tr>
 </table>
 
-### 🧠 AI & Cost Management
+### 🧠 AI-Powered Alert Enrichement
 
 <table>
   <tr>
@@ -252,10 +252,17 @@ Robusta integrates with a variety of tools and platforms. Click on any logo to l
         <br><strong>HolmesGPT</strong>
       </a>
     </td>
+  </tr>
+</table>
+
+### 💰 Cost Management
+
+<table>
+  <tr>
     <td align="center" width="100">
       <a href="https://docs.robusta.dev/master/configuration/resource-recommender.html">
         <img src="./docs/images/integration_logos/kubernetes-icon.png" alt="KRR" width="40">
-        <br><strong>Kubernetes Resource Recommender</strong>
+        <br><strong>KRR (Kubernetes Resource Recommender)</strong>
       </a>
     </td>
   </tr>
