@@ -90,22 +90,8 @@ Capabilities
 
    * - Tool Name
      - Description
-   * - kubectl_previous_logs
-     - Run `kubectl logs --previous` on a single Kubernetes pod. Used to fetch logs for a pod that crashed and see logs from before the crash. Never give a deployment name or a resource that is not a pod.
-   * - kubectl_previous_logs_all_containers
-     - Run `kubectl logs --previous` on a single Kubernetes pod. Used to fetch logs for a pod that crashed and see logs from before the crash.
-   * - kubectl_container_previous_logs
-     - Run `kubectl logs --previous` on a single container of a Kubernetes pod. Used to fetch logs for a pod that crashed and see logs from before the crash.
-   * - kubectl_logs
-     - Run `kubectl logs` on a single Kubernetes pod. Never give a deployment name or a resource that is not a pod.
-   * - kubectl_logs_all_containers
-     - Run `kubectl logs` on all containers within a single Kubernetes pod.
-   * - kubectl_container_logs
-     - Run `kubectl logs` on a single container within a Kubernetes pod. This is to get the logs of a specific container in a multi-container pod.
-   * - kubectl_logs_grep
-     - Search for a specific term in the logs of a single Kubernetes pod. Only provide a pod name, not a deployment or other resource.
-   * - kubectl_logs_all_containers_grep
-     - kubectl logs {{pod_name}} -n {{ namespace }} --all-containers | grep {{ search_term }}
+   * - fetch_pod_logs
+     - Fetches logs from a kubernetes pod
 
 
 Live metrics

@@ -18,7 +18,8 @@ Builtin Toolsets
    toolsets/internet
    toolsets/kafka
    toolsets/kubernetes
-   toolsets/opensearch
+   toolsets/opensearch_logs
+   toolsets/opensearch_status
    toolsets/prometheus
    toolsets/rabbitmq
    toolsets/robusta
@@ -99,9 +100,14 @@ by the user by providing credentials or API keys to external systems.
         :link: toolsets/kubernetes
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch
+    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch logs
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolsets/opensearch
+        :link: toolsets/opensearch_logs
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch status
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/opensearch_status
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Prometheus
