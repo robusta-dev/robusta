@@ -41,6 +41,8 @@ logging.basicConfig(
 SLACK_TOKEN = os.environ.get("SLACK_TOKEN", "xoxb-your-actual-token-here")
 # The Slack channel to send messages to
 SLACK_CHANNEL = os.environ.get("SLACK_CHANNEL", "test-robusta")
+# Optional channel override for testing label-based routing
+SLACK_OVERRIDE_CHANNEL = os.environ.get("SLACK_OVERRIDE_CHANNEL", "")
 # Optional Slack user ID to mention in test messages (e.g., "U1234567890")
 SLACK_MENTION = os.environ.get("SLACK_MENTION", "")
 
@@ -600,6 +602,49 @@ spec:
         slack_custom_templates={"custom.j2": custom_template}
     )
     preview_sender.send_finding_to_slack(finding, custom_params, platform_enabled=True)
+
+    # Test 4: Channel Override Test (only if SLACK_OVERRIDE_CHANNEL is set)
+    if SLACK_OVERRIDE_CHANNEL:
+        logging.info(f"Test 4: Channel Override Test using label-based routing to {SLACK_OVERRIDE_CHANNEL}")
+        
+        # Create a new finding with a specific label for channel override
+        override_finding = create_test_finding("Channel Override Test Alert", FindingSeverity.HIGH)
+        
+        # Add the slack label to the subject's labels
+        override_finding.subject.labels["slack"] = SLACK_OVERRIDE_CHANNEL
+        
+        # Add some specific content for the override test
+        override_finding.add_enrichment([
+            MarkdownBlock("## Channel Override Test"),
+            MarkdownBlock("This alert is being routed using label-based channel override"),
+            TableBlock(
+                rows=[
+                    ["Default Channel", SLACK_CHANNEL],
+                    ["Override Channel", SLACK_OVERRIDE_CHANNEL],
+                    ["Override Method", "Label-based (labels.slack)"],
+                    ["Test Type", "Channel Override"],
+                    ["Timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+                ],
+                headers=["Property", "Value"],
+                table_name="Override Information",
+                metadata={"format": "vertical"}
+            )
+        ])
+
+        # Create override params with channel_override set to use the slack label
+        override_params = SlackSinkPreviewParams(
+            name="override-sink",
+            slack_channel=SLACK_CHANNEL,  # This will be the fallback channel
+            api_key=SLACK_TOKEN,
+            investigate_link=True,
+            prefer_redirect_to_platform=False,
+            max_log_file_limit_kb=1000,
+            channel_override="labels.slack"  # This will read from the slack label
+        )
+
+        # Send using the preview sender (it will use the override channel from the label)
+        preview_sender.send_finding_to_slack(override_finding, override_params, platform_enabled=True)
+        logging.info(f"Channel override test message sent to {SLACK_OVERRIDE_CHANNEL}")
 
     logging.info(f"All test messages sent successfully to Slack channel: {SLACK_CHANNEL}")
 
