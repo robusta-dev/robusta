@@ -25,7 +25,7 @@ from robusta.core.reporting.blocks import (
 )
 from robusta.core.model.base_params import ResourceInfo
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
-from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams, SlackTemplateStyle
+from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 
 # Configure logging - set to DEBUG to see full block details

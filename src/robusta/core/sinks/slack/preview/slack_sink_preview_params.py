@@ -1,38 +1,36 @@
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
-from enum import Enum
-from typing import Optional, Dict, Any
-
-
-class SlackTemplateStyle(str, Enum):
-    DEFAULT = "default"
-    LEGACY = "legacy"
+from typing import Optional, Dict
+from pydantic import validator
 
 
 class SlackSinkPreviewParams(SlackSinkParams):
+    #TODO: improve the SlackSinkPreviewParams so the slack_custom_templates can be defined once globally and
+    # only a template name needs to be passed to each channel in the config
     slack_custom_templates: Optional[Dict[str, str]] = None  # Template name -> custom template content
-    template_name: Optional[str] = None
 
-    def get_effective_template_name(self) -> str:
+    @validator('slack_custom_templates')
+    def check_one_item(cls, v):
+        if v is not None and len(v) != 1:
+            raise ValueError("slack_custom_templates must contain exactly one key-value pair")
+        return v
+
+    def get_template_name(self) -> str:
         """
-        Returns the template name to use for this sink. If template_name is set, use it.
-        Otherwise, use 'legacy.j2' if template_style is legacy, else 'header.j2'.
+        Returns the template name to use for this sink. If slack_custom_templates is set, use the first one.
+        Otherwise, use 'header.j2'.
         """
-        if self.slack_custom_templates and len(self.slack_custom_templates) == 1:
+        if self.slack_custom_templates:
             return next(iter(self.slack_custom_templates))
         return "header.j2"
 
     def get_custom_template(self) -> Optional[str]:
-        """Get the custom template for the current template style"""
+        """Get the custom template if defined"""
         if not self.slack_custom_templates:
             return None
 
-        template_name = self.get_effective_template_name()
-        if template_name not in self.slack_custom_templates:
-            return None
-
-        return self.slack_custom_templates[template_name]
+        return next(iter(self.slack_custom_templates.values()))
 
 
 class SlackSinkPreviewConfigWrapper(SinkConfigBase):

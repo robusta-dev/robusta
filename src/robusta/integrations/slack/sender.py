@@ -509,7 +509,7 @@ class SlackSender:
         }
 
         # Determine the template name to use
-        template_name = sink_params.get_effective_template_name() if sink_params else "header.j2"
+        template_name = sink_params.get_template_name() if sink_params else "header.j2"
 
         # Get the custom template for this template name, if any
         custom_template = sink_params.get_custom_template() if sink_params else None
@@ -518,7 +518,7 @@ class SlackSender:
         if custom_template:
             return template_loader.render_custom_template_to_blocks(custom_template, template_context)
         else:
-            return template_loader.render_file_template_to_blocks(template_name, template_context)
+            return template_loader.render_default_template_to_blocks(template_context)
 
     def __create_finding_header(
         self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool
@@ -676,12 +676,15 @@ class SlackSender:
         thread_ts: str = None,
     ) -> str:
         if self.is_preview:
-            return self.__send_finding_to_slack_preview(
-                finding=finding,
-                sink_params=sink_params,
-                platform_enabled=platform_enabled,
-                thread_ts=thread_ts
-            )
+            try:
+                return self.__send_finding_to_slack_preview(
+                    finding=finding,
+                    sink_params=sink_params,
+                    platform_enabled=platform_enabled,
+                    thread_ts=thread_ts
+                )
+            except Exception:
+                logging.exception("Failed to render slack preview template, defaulting to legacy slack output")
         return self.__send_finding_to_slack(
             finding=finding,
             sink_params=sink_params,
@@ -793,14 +796,11 @@ class SlackSender:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
 
-        # Get JIRA-style header blocks
         if finding.title:
             header_blocks = self.__create_finding_header_preview(finding, status, platform_enabled,
                                                          sink_params.investigate_link, sink_params)
 
-        # Description handling - moved above the buttons
         if finding.description:
-            # Always show description immediately after title
             description_text = finding.description
             blocks.append(MarkdownBlock(description_text))
 

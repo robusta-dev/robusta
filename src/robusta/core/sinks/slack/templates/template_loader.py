@@ -78,31 +78,16 @@ class SlackTemplateLoader:
             return []
 
     def render_custom_template_to_blocks(self, custom_template: str, context: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Render a custom Jinja template string to Slack blocks.
-        Args:
-            custom_template: Jinja template string
-            context: Dictionary of variables to pass to the template
-        Returns:
-            List of Slack block objects (dictionaries)
-        """
         try:
             template = Template(custom_template)
             return self.render_to_blocks(template, context)
         except Exception as e:
             logging.error(f"Error rendering custom template: {e}")
-            return []
+            return self.render_default_template_to_blocks(context)
 
-    def render_file_template_to_blocks(self, template_name: str, context: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Render a file-based Jinja template to Slack blocks.
-        Args:
-            template_name: The name of the file-based template (e.g., "header.j2")
-            context: Dictionary of variables to pass to the template
-        Returns:
-            List of Slack block objects (dictionaries)
-        """
-        template = self.get_template(template_name)
+    def render_default_template_to_blocks(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        DEFAULT_TEMPLATE_NAME="header.j2"
+        template = self.get_template(DEFAULT_TEMPLATE_NAME)
         return self.render_to_blocks(template, context)
 
 

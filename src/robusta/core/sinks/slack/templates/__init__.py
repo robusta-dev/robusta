@@ -1,1 +1,0 @@
-# Slack message templates package
