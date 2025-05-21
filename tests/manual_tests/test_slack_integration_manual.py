@@ -549,8 +549,16 @@ spec:
       "type": "header",
       "text": {
         "type": "plain_text",
-        "text": "Custom Alert Format:\\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
+        "text": "Custom Alert Format",
         "emoji": true
+      }
+    }
+
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "{{ status_emoji }} *[{{ status_text }}] {{ title }}*{% if mention %} {{ mention }}{% endif %}"
       }
     }
 
