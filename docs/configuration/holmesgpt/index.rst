@@ -10,6 +10,7 @@ AI Analysis
    builtin_toolsets
    permissions
    custom_toolsets
+   remote_mcp_servers
 
 Why use HolmesGPT?
 ^^^^^^^^^^^^^^^^^^^
@@ -371,3 +372,10 @@ Custom toolsets
 
 Custom toolsets are created through your Helm values file and you can find instructions
 to :doc:`write your own toolsets here <builtin_toolsets>`.
+
+Remote MCP servers
+-------------------
+
+Remote MCP server connections are configured through your Helm values file.
+For detailed instructions, refer to the :doc:`Connecting to Remote MCP Servers <remote_mcp_servers>` guide.
+
