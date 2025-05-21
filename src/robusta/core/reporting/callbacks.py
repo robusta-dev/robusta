@@ -43,6 +43,7 @@ class ExternalActionRequestBuilder(BaseModel):
             sinks=[sink],
             origin="callback",
         )
+
         return ExternalActionRequest(
             body=body,
             signature=sign_action_request(body, signing_key),
