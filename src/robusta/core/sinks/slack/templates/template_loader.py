@@ -1,22 +1,12 @@
 import json
 import logging
 import os
-import re
 from typing import Any, Dict, List
 
 from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 
 # Get the directory where our templates are stored
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-
-
-def escape_raw_newlines_in_json_strings(raw_json: str) -> str:
-    def fix_string(match):
-        s = match.group(1)
-        return s.replace("\n", "\\n")  # Escape raw newlines in strings
-
-    STRING_LITERAL_RE = re.compile(r'("(?:\\.|[^"\\])*")', flags=re.DOTALL)
-    return STRING_LITERAL_RE.sub(fix_string, raw_json)
 
 
 class SlackTemplateLoader:
@@ -71,9 +61,8 @@ class SlackTemplateLoader:
                 if not block_str.strip():
                     continue
                 try:
-                    block_str_fixed = escape_raw_newlines_in_json_strings(block_str)
                     # Try to parse as JSON, but if it fails, log and skip
-                    block = json.loads(block_str_fixed)
+                    block = json.loads(block_str)
                     blocks.append(block)
                 except json.JSONDecodeError as e:
                     logging.exception(f"Error parsing JSON from template output: {e}")

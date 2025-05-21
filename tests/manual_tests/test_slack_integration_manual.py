@@ -41,6 +41,8 @@ logging.basicConfig(
 SLACK_TOKEN = os.environ.get("SLACK_TOKEN", "xoxb-your-actual-token-here")
 # The Slack channel to send messages to
 SLACK_CHANNEL = os.environ.get("SLACK_CHANNEL", "test-robusta")
+# Optional Slack user ID to mention in test messages (e.g., "U1234567890")
+SLACK_MENTION = os.environ.get("SLACK_MENTION", "")
 
 
 # In a real scenario, we'd use @action decorator, but for testing
@@ -50,6 +52,10 @@ SLACK_CHANNEL = os.environ.get("SLACK_CHANNEL", "test-robusta")
 # Create mock data for the Finding
 def create_test_finding(title: str, severity: FindingSeverity = FindingSeverity.INFO) -> Finding:
     """Create a test finding with the given title and severity"""
+    # Add mention to title if SLACK_MENTION is set
+    if SLACK_MENTION:
+        title = f"<@{SLACK_MENTION}> {title}"
+
     # Create a subject first with the correct type
     subject = FindingSubject(
         name="test-pod",
@@ -539,12 +545,11 @@ spec:
 
     # Test 3: Slack Preview Sink with custom template
     logging.info("Test 3: Slack Preview Sink with custom template")
-    custom_template = """
-    {
+    custom_template = """{
       "type": "header",
       "text": {
         "type": "plain_text",
-        "text": "Custom Alert Format:\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
+        "text": "Custom Alert Format:\\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
         "emoji": true
       }
     }
@@ -572,12 +577,11 @@ spec:
         ,
         {
           "type": "mrkdwn",
-          "text": "*Resource:*\n{{ resource_text }}"
+          "text": "*Resource:*\\n{{ resource_text }}"
         }
         {% endif %}
       ]
-    }
-    """
+    }"""
     custom_params = SlackSinkPreviewParams(
         name="custom-sink",
         slack_channel=SLACK_CHANNEL,

@@ -2,7 +2,7 @@ from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from enum import Enum
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 
 class SlackTemplateStyle(str, Enum):
@@ -24,12 +24,15 @@ class SlackSinkPreviewParams(SlackSinkParams):
         return "header.j2"
 
     def get_custom_template(self) -> Optional[str]:
-        """
-        Returns the custom template string for the effective template name, if it exists.
-        """
-        if self.slack_custom_templates and len(self.slack_custom_templates) == 1:
-            return next(iter(self.slack_custom_templates.values()))
-        return None
+        """Get the custom template for the current template style"""
+        if not self.slack_custom_templates:
+            return None
+
+        template_name = self.get_effective_template_name()
+        if template_name not in self.slack_custom_templates:
+            return None
+
+        return self.slack_custom_templates[template_name]
 
 
 class SlackSinkPreviewConfigWrapper(SinkConfigBase):

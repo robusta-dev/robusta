@@ -94,6 +94,13 @@ class SlackSender:
                 logging.error(f"Cannot connect to Slack API: {e}")
                 raise e
 
+    def __slack_preview_sanitize_string(self, text: str) -> str:
+        """
+        Properly sanitize a string for JSON by escaping newlines.
+        First unescapes any already escaped newlines, then escapes all newlines.
+        """
+        return text.replace("\\n", "\n").replace("\n", "\\n")
+
     def __get_action_block_for_choices(self, sink: str, choices: Dict[str, CallbackChoice] = None):
         if choices is None:
             return []
@@ -449,9 +456,12 @@ class SlackSender:
             alert_type = "Notification"
 
         # Prepare resource text and emoji if available
-        resource_text = ""
         resource_emoji = ":package:"
 
+        subject_kind = ""
+        subject_namespace = ""
+        subject_name = ""
+        resource_id = ""
         if finding.subject:
             subject_kind = finding.subject.subject_type.value
             subject_namespace = finding.subject.namespace
@@ -474,13 +484,13 @@ class SlackSender:
 
                 # Format as Kind/Namespace/Name
                 if subject_namespace:
-                    resource_text = f"{subject_kind}/{subject_namespace}/{subject_name}"
+                    resource_id = f"{subject_kind}/{subject_namespace}/{subject_name}"
                 else:
-                    resource_text = f"{subject_kind}/{subject_name}"
+                    resource_id = f"{subject_kind}/{subject_name}"
 
         # Prepare template context
         template_context = {
-            "title": title,
+            "title": self.__slack_preview_sanitize_string(title),
             "status_text": status_text,
             "status_emoji": status_emoji,
             "severity": sev.name.capitalize(),
@@ -489,9 +499,13 @@ class SlackSender:
             "cluster_name": self.cluster_name,
             "platform_enabled": platform_enabled,
             "include_investigate_link": include_investigate_link,
-            "investigate_uri": investigate_uri,
-            "resource_text": resource_text,
-            "resource_emoji": resource_emoji
+            "investigate_uri": investigate_uri if investigate_uri else "",
+            "resource_text": resource_id,
+            "subject_kind": subject_kind,
+            "subject_namespace": subject_namespace,
+            "subject_name": subject_name,
+            "resource_emoji": resource_emoji,
+            "mention": mention,
         }
 
         # Determine the template name to use
