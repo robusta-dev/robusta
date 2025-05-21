@@ -1,7 +1,3 @@
-# This file is being moved to tests/test_slack_templates.py and refactored to match the style of test_slack.py.
-# The script/main logic and unused code are removed.
-
-import pytest
 from robusta.core.reporting.base import Finding, FindingSeverity, FindingSource, FindingSubject, FindingSubjectType
 from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams
 from robusta.core.reporting.blocks import MarkdownBlock
