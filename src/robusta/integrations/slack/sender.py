@@ -777,7 +777,6 @@ class SlackSender:
     ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
-        header_blocks: List[SlackBlock] = []  # JIRA-style header blocks
 
         slack_channel = ChannelTransformer.template(
             sink_params.channel_override,
@@ -797,8 +796,8 @@ class SlackSender:
         )
 
         if finding.title:
-            header_blocks = self.__create_finding_header_preview(finding, status, platform_enabled,
-                                                         sink_params.investigate_link, sink_params)
+            blocks.extend(self.__create_finding_header_preview(finding, status, platform_enabled,
+                                                         sink_params.investigate_link, sink_params))
 
         if finding.description:
             description_text = finding.description
@@ -812,113 +811,44 @@ class SlackSender:
         if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
             blocks.append(self.__create_holmes_callback(finding))
 
-        unfurl = True
-        all_file_blocks = []  # Collect all file blocks to be handled specially
+        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
+        if finding.description:
+            if finding.source == FindingSource.PROMETHEUS:
+                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+                blocks.append(
+                    MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
+                )
+            else:
+                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
 
+        unfurl = True
         for enrichment in finding.enrichments:
             if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
 
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
             unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
-
-            # Separate file blocks from normal blocks
-            file_blocks_in_enrichment = [b for b in enrichment.blocks if isinstance(b, FileBlock)]
-            non_file_blocks = [b for b in enrichment.blocks if not isinstance(b, FileBlock)]
-
-            # Collect file blocks
-            all_file_blocks.extend(file_blocks_in_enrichment)
-
-            # Put non-file blocks in the attachment
-            attachment_blocks.extend(non_file_blocks)
-
-        # Add file blocks to the main blocks for proper handling
-        blocks.extend(all_file_blocks)
-
-        # No divider in the main blocks
-
-        # We need to create a minimal version of __send_blocks_to_slack
-        # that can handle both our header blocks and regular blocks
-        file_blocks = add_pngs_for_all_svgs([b for b in blocks if isinstance(b, FileBlock)])
-        if not sink_params.send_svg:
-            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
-
-        other_blocks = [b for b in blocks if not isinstance(b, FileBlock)]
-
-        # wide tables aren't displayed properly on slack. looks better in a text file
-        file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
-        file_blocks.extend(Transformer.tableblock_to_fileblocks(attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
-
-        message, error_msg = self.prepare_slack_text(
-            finding.title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
-        )
-
-        # Convert BaseBlocks to Slack blocks
-        output_blocks = []
-        for block in other_blocks:
-            output_blocks.extend(self.__to_slack(block, sink_params.name))
-
-        attachment_slack_blocks = []
-        for block in attachment_blocks:
-            attachment_slack_blocks.extend(self.__to_slack(block, sink_params.name))
-
-        # Combine with header blocks
-        all_blocks = header_blocks + output_blocks
-
-        try:
-            if thread_ts:
-                kwargs = {"thread_ts": thread_ts}
+            if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
+                attachment_blocks.extend(enrichment.blocks)
             else:
-                kwargs = {}
+                blocks.extend(enrichment.blocks)
 
-            # Create a single attachment with all blocks and a divider at the end
-            attachments = []
+        blocks.append(DividerBlock())
 
-            # Add divider to the end of attachment blocks if there are any
-            all_attachment_blocks = attachment_slack_blocks.copy() if attachment_slack_blocks else []
+        if len(attachment_blocks):
+            attachment_blocks.append(DividerBlock())
 
-            # Always add a divider at the end
-            all_attachment_blocks.append({"type": "divider"})
-
-            # Create a single attachment with the status color
-            attachments = [{
-                "color": status.to_color_hex(),
-                "blocks": all_attachment_blocks
-            }]
-
-            # Detailed logging of blocks before sending to Slack
-            logging.debug(
-                f"SENDING TO SLACK - FULL BLOCKS DETAIL:\n"
-                f"CHANNEL: {slack_channel}\n"
-                f"TITLE: {finding.title}\n"
-                f"HEADER BLOCKS: {json.dumps(header_blocks, indent=2)}\n"
-                f"MAIN BLOCKS: {json.dumps(output_blocks, indent=2)}\n"
-                f"ALL BLOCKS: {json.dumps(all_blocks, indent=2)}\n"
-                f"ATTACHMENT BLOCKS: {json.dumps(all_attachment_blocks, indent=2)}\n"
-                f"ATTACHMENTS: {json.dumps(attachments, indent=2)}\n"
-            )
-
-            # Send the message with our JIRA-style headers and attachments
-            resp = self.slack_client.chat_postMessage(
-                channel=slack_channel,
-                text=message,
-                blocks=all_blocks,
-                display_as_bot=True,
-                attachments=attachments,
-                unfurl_links=unfurl,
-                unfurl_media=unfurl,
-                **kwargs,
-            )
-
-            # Store channel id for future use
-            self.channel_name_to_id[slack_channel] = resp["channel"]
-            return resp["ts"]
-
-        except Exception as e:
-            logging.error(
-                f"error sending message to slack\ne={e}\ntext={message}\nchannel={slack_channel}"
-            )
-            return ""
+        return self.__send_blocks_to_slack(
+            blocks,
+            attachment_blocks,
+            finding.title,
+            sink_params,
+            unfurl,
+            status,
+            slack_channel,
+            thread_ts=thread_ts,
+        )
 
     def send_or_update_summary_message(
         self,
