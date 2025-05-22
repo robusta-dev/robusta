@@ -18,6 +18,7 @@ from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrap
 from robusta.core.sinks.rocketchat.rocketchat_sink_params import RocketchatSinkConfigWrapper
 from robusta.core.sinks.servicenow.servicenow_sink_params import ServiceNowSinkConfigWrapper
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper
+from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewConfigWrapper
 from robusta.core.sinks.mail.mail_sink_params import MailSinkConfigWrapper
 from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
 from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
@@ -55,6 +56,7 @@ class RunnerConfig(BaseModel):
             Union[
                 RobustaSinkConfigWrapper,
                 SlackSinkConfigWrapper,
+                SlackSinkPreviewConfigWrapper,
                 DataDogSinkConfigWrapper,
                 KafkaSinkConfigWrapper,
                 MsTeamsSinkConfigWrapper,

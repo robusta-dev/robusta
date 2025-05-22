@@ -1,0 +1,36 @@
+{# Default template for Slack message headers #}
+{# This creates a JIRA-style header with title and context blocks #}
+
+{# First create the title block with status #}
+{
+  "type": "section",
+  "text": {
+    "type": "mrkdwn",
+    "text": "{{ status_emoji }} *[{{ status_text }}] {% if platform_enabled and include_investigate_link %}<{{ investigate_uri }}|{{ title }}>{% else %}{{ title }}{% endif %}*{% if mention %} {{ mention }}{% endif %}"
+  }
+}
+
+{# Then create the context block with metadata #}
+{
+  "type": "context",
+  "elements": [
+    {
+      "type": "mrkdwn", 
+      "text": ":bell: Type: {{ alert_type }}"
+    },
+    {
+      "type": "mrkdwn",
+      "text": "{{ severity_emoji }} Severity: {{ severity }}"
+    },
+    {
+      "type": "mrkdwn",
+      "text": ":globe_with_meridians: Cluster: {{ cluster_name }}"
+    }
+    {% if resource_text %}
+    ,{
+      "type": "mrkdwn",
+      "text": "{{ resource_emoji }} Resource: {{ resource_text }}"
+    }
+    {% endif %}
+  ]
+}

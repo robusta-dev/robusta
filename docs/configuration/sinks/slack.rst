@@ -181,3 +181,98 @@ your own. This is not recommended for most companies due to the added complexity
 
     When using a custom Slack app, callback buttons are not supported due to complexities in how Slack handles incoming
     messages. :ref:`Contact us if you need assistance. <Getting Support>`
+
+
+Message Templating
+-------------------------------------------------------------------
+
+Slack messages can be customized using Jinja2 templates. Robusta includes default templates that match the standard format, but you can override them for custom formatting.
+
+To use custom templates change your `slack_sink` to `slack_sink_preview`, and add your templates to the ``slack_custom_templates`` parameter:
+
+.. code-block:: yaml
+
+   sinksConfig:
+   - slack_sink_preview:
+       api_key: xoxb-198...
+       name: preview_slack_sink
+       slack_channel: demo-slack-preview
+       slack_custom_templates:
+         custom_template.j2: |-
+           {
+             "type": "header",
+             "text": {
+               "type": "plain_text",
+               "text": "Custom Alert Format:\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
+               "emoji": true
+             }
+           }
+
+           {
+             "type": "divider"
+           }
+
+           {
+             "type": "section",
+             "fields": [
+               {
+                 "type": "mrkdwn",
+                 "text": "*Type:* {{ alert_type }}"
+               },
+               {
+                 "type": "mrkdwn",
+                 "text": "*Severity:* {{ severity_emoji }} {{ severity }}"
+               },
+               {
+                 "type": "mrkdwn",
+                 "text": "*Cluster:* {{ cluster_name }}"
+               }
+               {% if resource_text %}
+               ,
+               {
+                 "type": "mrkdwn",
+                 "text": "*Resource:*\n{{ resource_text }}"
+               }
+               {% endif %}
+             ]
+           }
+
+
+Templates use Slack's Block Kit format and must generate valid JSON. Each template block is separated by double newlines (``\n\n``).
+
+Available template variables:
+
++-----------------------------+-------------------------------------------------------------+
+| Variable                    | Description                                                 |
++=============================+=============================================================+
+| ``title``                   | The alert title                                             |
++-----------------------------+-------------------------------------------------------------+
+| ``status_text``             | "Firing" or "Resolved"                                      |
++-----------------------------+-------------------------------------------------------------+
+| ``status_emoji``            | "⚠️" (for firing) or "✅" (for resolved)                    |
++-----------------------------+-------------------------------------------------------------+
+| ``severity``                | Alert severity (e.g., "Warning", "Critical")                |
++-----------------------------+-------------------------------------------------------------+
+| ``severity_emoji``          | Emoji for the severity level                                |
++-----------------------------+-------------------------------------------------------------+
+| ``alert_type``              | "Alert", "K8s Event", or "Notification"                     |
++-----------------------------+-------------------------------------------------------------+
+| ``cluster_name``            | The name of the cluster                                     |
++-----------------------------+-------------------------------------------------------------+
+| ``investigate_uri``         | URI for investigation                                       |
++-----------------------------+-------------------------------------------------------------+
+| ``resource_text``           | Resource identifier (e.g., "Pod/namespace/name")            |
++-----------------------------+-------------------------------------------------------------+
+| ``subject_kind``            | The Kubernetes resource kind (e.g., "Pod", "Deployment")    |
++-----------------------------+-------------------------------------------------------------+
+| ``subject_namespace``       | The Kubernetes namespace                                    |
++-----------------------------+-------------------------------------------------------------+
+| ``subject_name``            | The name of the Kubernetes resource                         |
++-----------------------------+-------------------------------------------------------------+
+| ``resource_emoji``          | Emoji for the resource type                                 |
++-----------------------------+-------------------------------------------------------------+
+| ``mention``                 | Any @mentions extracted from the title                      |
++-----------------------------+-------------------------------------------------------------+
+| ``finding``                 | The complete finding object with all alert data             |
++-----------------------------+-------------------------------------------------------------+
+
