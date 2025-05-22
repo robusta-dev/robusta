@@ -135,9 +135,6 @@ Configuration (direct connection)
               headers:
                 X-Scope-OrgID: "<tenant id>" # Set the X-Scope-OrgID if tempo multitenancy is enabled
 
-          kubernetes/logs:
-            enabled: false # Disable HolmesGPT's default logging mechanism
-
 
     .. include:: ./_toolset_configuration.inc.rst
 
@@ -154,9 +151,6 @@ Configuration (direct connection)
             url: http://tempo.monitoring
             headers:
               X-Scope-OrgID: "<tenant id>" # Set the X-Scope-OrgID if tempo multitenancy is enabled
-
-        kubernetes/logs:
-          enabled: false # Disable HolmesGPT's default logging mechanism
 
 
 Advanced configuration
