@@ -1,12 +1,12 @@
-Remote MCP Servers
-=====================
+Remote MCP Servers ⚠️ **Tech Preview**  
+=========================================
 
 HolmesGPT can integrate with remote MCP servers using SSE mode.
 This capability enables HolmesGPT to access external data sources and tools in real time.
 This guide provides step-by-step instructions for configuring HolmesGPT to connect with remote MCP servers over SSE.
 
 Example : MCP server configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. md-tab-set::
 
