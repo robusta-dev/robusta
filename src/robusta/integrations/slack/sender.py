@@ -382,33 +382,6 @@ class SlackSender:
 
         return limited_labels
 
-    def __create_holmes_callback(self, finding: Finding) -> CallbackBlock:
-        resource = ResourceInfo(
-            name=finding.subject.name if finding.subject.name else "",
-            namespace=finding.subject.namespace,
-            kind=finding.subject.subject_type.value if finding.subject.subject_type.value else "",
-            node=finding.subject.node,
-            container=finding.subject.container,
-        )
-
-        context: Dict[str, Any] = {
-            "robusta_issue_id": str(finding.id),
-            "issue_type": finding.aggregation_key,
-            "source": finding.source.name,
-            "labels": self.__limit_labels_size(labels=finding.subject.labels),
-        }
-
-        return CallbackBlock(
-            {
-                "Ask HolmesGPT": CallbackChoice(
-                    action=ask_holmes,
-                    action_params=AIInvestigateParams(
-                        resource=resource, investigation_type="issue", ask="Why is this alert firing?", context=context
-                    ),
-                )
-            }
-        )
-
     @staticmethod
     def extract_mentions(title) -> (str, str):
         mentions = MENTION_PATTERN.findall(title)
@@ -603,9 +576,6 @@ class SlackSender:
         )
         blocks.append(links_block)
 
-        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
-            blocks.append(self.__create_holmes_callback(finding))
-
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
             if finding.source == FindingSource.PROMETHEUS:
@@ -633,6 +603,15 @@ class SlackSender:
 
         if len(attachment_blocks):
             attachment_blocks.append(DividerBlock())
+
+        if not platform_enabled and not HOLMES_ENABLED:
+            blocks.append(MarkdownBlock("_Ask AI questions about this alert, by connecting Robusta SaaS and tagging @holmes._"))
+        elif platform_enabled and not HOLMES_ENABLED:
+            blocks.append(
+                MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your Slack’ and linking to the settings page to add Holmes to slack._"))
+        elif platform_enabled and HOLMES_ENABLED:
+            blocks.append(
+                MarkdownBlock("_Ask AI questions about this alert, by tagging @holmes in a threaded reply_"))
 
         return self.__send_blocks_to_slack(
             blocks,
