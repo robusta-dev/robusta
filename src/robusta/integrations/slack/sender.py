@@ -455,7 +455,6 @@ class SlackSender:
         else:
             alert_type = "Notification"
 
-        # Prepare resource text and emoji if available
         resource_emoji = ":package:"
 
         subject_kind = ""
@@ -507,6 +506,7 @@ class SlackSender:
             "subject_name": subject_name,
             "resource_emoji": resource_emoji,
             "mention": mention,
+            "aggregation_key": finding.aggregation_key,
             "labels": finding.subject.labels if finding.subject else {},
             "annotations": finding.subject.annotations if finding.subject else {},
         }
