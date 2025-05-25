@@ -16,6 +16,8 @@ Why use HolmesGPT?
 
 Robusta can integrate with `Holmes GPT <https://github.com/robusta-dev/holmesgpt>`_ to analyze health issues on your cluster, and to run AI based root cause analysis for alerts.
 
+This requires a Robusta SaaS account, and for the Robusta UI sink to be enabled. (We have plans to support HolmesGPT in a pure OSS mode in the near future. Stay tuned!)
+
 When available, AI based investigations can be launched in one of two ways:
 
 1. Click the ``Ask HolmesGPT`` button in Slack. The AI investigation will be sent back as a new message.
@@ -35,7 +37,7 @@ Add ``enableHolmesGPT: true`` to the Robusta Helm values, and then follow these 
 
 1. Choose an AI model - we highly recommend using GPT-4o to get the most accurate results! Other models may work, but are not officially supported.
 2. :ref:`Configure your AI provider with the chosen model <Choosing and configuring an AI provider>`.
-3. :ref:`Optional: Configure HolmesGPT Access to SaaS Data <Configuring HolmesGPT Access to SaaS Data>`.
+3. :ref:`Configure HolmesGPT Access to SaaS Data <Configuring HolmesGPT Access to SaaS Data>`.
 
 Choosing and configuring an AI provider
 ----------------------------------------
