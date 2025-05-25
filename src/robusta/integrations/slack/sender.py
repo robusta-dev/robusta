@@ -608,7 +608,7 @@ class SlackSender:
             blocks.append(MarkdownBlock("_Ask AI questions about this alert, by connecting Robusta SaaS and tagging @holmes._"))
         elif platform_enabled and not HOLMES_ENABLED:
             blocks.append(
-                MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your Slack’ and linking to the settings page to add Holmes to slack._"))
+                MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your Slack._"))
         elif platform_enabled and HOLMES_ENABLED:
             blocks.append(
                 MarkdownBlock("_Ask AI questions about this alert, by tagging @holmes in a threaded reply_"))
