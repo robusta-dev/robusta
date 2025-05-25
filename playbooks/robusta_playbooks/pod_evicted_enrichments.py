@@ -57,4 +57,4 @@ def pod_evicted_enricher(event: PodEvent):
     event.add_finding(finding)
 
     running_nodes_table = get_node_running_pods_table_block_or_none(node)
-    event.add_enrichment(running_nodes_table)
+    event.add_enrichment([running_nodes_table])
