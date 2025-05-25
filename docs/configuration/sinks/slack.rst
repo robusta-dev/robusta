@@ -200,43 +200,58 @@ To use custom templates change your `slack_sink` to `slack_sink_preview`, and ad
        slack_custom_templates:
          custom_template.j2: |-
            {
-             "type": "header",
-             "text": {
-               "type": "plain_text",
-               "text": "Custom Alert Format:\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
-               "emoji": true
-             }
-           }
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "Custom Alert Format:\n {{ status_emoji }} [{{ status_text }}] {{ title }}",
+                "emoji": true
+              }
+            }
 
-           {
-             "type": "divider"
-           }
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "{{ status_emoji }} *[{{ status_text }}] {{ title }}*{% if mention %} {{ mention }}{% endif %}"
+              }
+            }
 
-           {
-             "type": "section",
-             "fields": [
-               {
-                 "type": "mrkdwn",
-                 "text": "*Type:* {{ alert_type }}"
-               },
-               {
-                 "type": "mrkdwn",
-                 "text": "*Severity:* {{ severity_emoji }} {{ severity }}"
-               },
-               {
-                 "type": "mrkdwn",
-                 "text": "*Cluster:* {{ cluster_name }}"
-               }
-               {% if resource_text %}
-               ,
-               {
-                 "type": "mrkdwn",
-                 "text": "*Resource:*\n{{ resource_text }}"
-               }
-               {% endif %}
-             ]
-           }
+            {
+              "type": "divider"
+            }
 
+            {
+              "type": "section",
+              "fields": [
+                {
+                  "type": "mrkdwn",
+                  "text": "*Type:* {{ alert_type }}"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Severity:* {{ severity_emoji }} {{ severity }}"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Cluster:* {{ cluster_name }}"
+                }
+                {% if resource_text %}
+                ,
+                {
+                  "type": "mrkdwn",
+                  "text": "*Resource:*\\n{{ resource_text }}"
+                }
+                {% endif %}
+              ]
+            }
+
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "{% if labels %}*Labels:*\\n\\n{% for key, value in labels.items() %}• *{{ key }}*: {{ value }}\\n\\n{% endfor %}{% else %}*Labels:* _None_{% endif %}"
+              }
+            }
 
 Templates use Slack's Block Kit format and must generate valid JSON. Each template block is separated by double newlines (``\n\n``).
 
@@ -246,6 +261,8 @@ Available template variables:
 | Variable                    | Description                                                 |
 +=============================+=============================================================+
 | ``title``                   | The alert title                                             |
++-----------------------------+-------------------------------------------------------------+
+| ``description``             | The alert description                                       |
 +-----------------------------+-------------------------------------------------------------+
 | ``status_text``             | "Firing" or "Resolved"                                      |
 +-----------------------------+-------------------------------------------------------------+
@@ -273,6 +290,7 @@ Available template variables:
 +-----------------------------+-------------------------------------------------------------+
 | ``mention``                 | Any @mentions extracted from the title                      |
 +-----------------------------+-------------------------------------------------------------+
-| ``finding``                 | The complete finding object with all alert data             |
+| ``labels``                  | Kubernetes labels on the subject resource (dict)            |
 +-----------------------------+-------------------------------------------------------------+
-
+| ``annotations``             | Kubernetes annotations on the subject resource (dict)       |
++-----------------------------+-------------------------------------------------------------+

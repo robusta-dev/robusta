@@ -591,6 +591,14 @@ spec:
         }
         {% endif %}
       ]
+    }
+
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "{% if labels %}*Labels:*\\n\\n{% for key, value in labels.items() %}• *{{ key }}*: {{ value }}\\n\\n{% endfor %}{% else %}*Labels:* _None_{% endif %}"
+      }
     }"""
     custom_params = SlackSinkPreviewParams(
         name="custom-sink",
@@ -599,7 +607,9 @@ spec:
         investigate_link=True,
         prefer_redirect_to_platform=False,
         max_log_file_limit_kb=1000,
-        slack_custom_templates={"custom.j2": custom_template}
+        slack_custom_templates={"custom.j2": custom_template},
+        hide_enrichments=False,
+        hide_buttons=False,
     )
     preview_sender.send_finding_to_slack(finding, custom_params, platform_enabled=True)
 

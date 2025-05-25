@@ -5,7 +5,7 @@ import tempfile
 import re
 from datetime import datetime, timedelta
 from itertools import chain
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 import json
 import certifi
 import humanize
@@ -487,10 +487,11 @@ class SlackSender:
                     resource_id = f"{subject_kind}/{subject_namespace}/{subject_name}"
                 else:
                     resource_id = f"{subject_kind}/{subject_name}"
-
+        description = finding.description or ""
         # Prepare template context
         template_context = {
             "title": self.__slack_preview_sanitize_string(title),
+            "description": self.__slack_preview_sanitize_string(description),
             "status_text": status_text,
             "status_emoji": status_emoji,
             "severity": sev.name.capitalize(),
@@ -506,15 +507,11 @@ class SlackSender:
             "subject_name": subject_name,
             "resource_emoji": resource_emoji,
             "mention": mention,
+            "labels": finding.subject.labels if finding.subject else {},
+            "annotations": finding.subject.annotations if finding.subject else {},
         }
 
-        # Determine the template name to use
-        template_name = sink_params.get_template_name() if sink_params else "header.j2"
-
-        # Get the custom template for this template name, if any
         custom_template = sink_params.get_custom_template() if sink_params else None
-
-        # Use the new template loader methods for custom or file-based templates
         if custom_template:
             return template_loader.render_custom_template_to_blocks(custom_template, template_context)
         else:
@@ -671,7 +668,7 @@ class SlackSender:
     def send_finding_to_slack(
         self,
         finding: Finding,
-        sink_params: SlackSinkParams,
+        sink_params: Union[SlackSinkParams, SlackSinkPreviewParams],
         platform_enabled: bool,
         thread_ts: str = None,
     ) -> str:
@@ -771,11 +768,11 @@ class SlackSender:
     def __send_finding_to_slack_preview(
         self,
         finding: Finding,
-        sink_params: SlackSinkParams,
+        sink_params: SlackSinkPreviewParams,
         platform_enabled: bool,
         thread_ts: str = None,
     ) -> str:
-        blocks: List[BaseBlock] = []
+        blocks: List[SlackBlock] = []
         attachment_blocks: List[BaseBlock] = []
 
         slack_channel = ChannelTransformer.template(
@@ -799,20 +796,19 @@ class SlackSender:
             blocks.extend(self.__create_finding_header_preview(finding, status, platform_enabled,
                                                          sink_params.investigate_link, sink_params))
 
-        if finding.description:
-            description_text = finding.description
-            blocks.append(MarkdownBlock(description_text))
+        if not sink_params.hide_buttons:
+            links_block: LinksBlock = self.__create_links(
+                finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
+            )
+            blocks.append(links_block)
 
-        links_block: LinksBlock = self.__create_links(
-            finding, platform_enabled, sink_params.investigate_link, sink_params.prefer_redirect_to_platform
-        )
-        blocks.append(links_block)
+            if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
+                blocks.append(self.__create_holmes_callback(finding))
 
-        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
-            blocks.append(self.__create_holmes_callback(finding))
+        if not sink_params.get_custom_template():
+            blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
 
-        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
-        if finding.description:
+        if not sink_params.get_custom_template() and finding.description:
             if finding.source == FindingSource.PROMETHEUS:
                 blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
             elif finding.source == FindingSource.KUBERNETES_API_SERVER:
@@ -821,8 +817,20 @@ class SlackSender:
                 )
             else:
                 blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
-
         unfurl = True
+
+        if sink_params.hide_enrichments:
+            return self.__send_blocks_to_slack(
+                blocks,
+                attachment_blocks,
+                finding.title,
+                sink_params,
+                unfurl,
+                status,
+                slack_channel,
+                thread_ts=thread_ts,
+            )
+
         for enrichment in finding.enrichments:
             if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
