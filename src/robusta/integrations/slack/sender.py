@@ -6,7 +6,6 @@ import re
 from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Union
-import json
 import certifi
 import humanize
 from dateutil import tz
@@ -311,6 +310,7 @@ class SlackSender:
         status: FindingStatus,
         channel: str,
         thread_ts: str = None,
+        output_blocks: List[SlackBlock] = [],
     ) -> str:
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
@@ -328,7 +328,6 @@ class SlackSender:
         if error_msg:
             other_blocks.append(MarkdownBlock(error_msg))
 
-        output_blocks = []
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))
         attachment_blocks = []
@@ -435,7 +434,7 @@ class SlackSender:
         self, finding: Finding, status: FindingStatus, platform_enabled: bool, include_investigate_link: bool,
         sink_params: SlackSinkPreviewParams = None
     ) -> List[SlackBlock]:
-        title = finding.title.removeprefix("[RESOLVED] ")
+        title = finding.title.removeprefix("[RESOLVED] ") if finding.title else ""
 
         title, mention = self.extract_mentions(title)
 
@@ -772,7 +771,7 @@ class SlackSender:
         platform_enabled: bool,
         thread_ts: str = None,
     ) -> str:
-        blocks: List[SlackBlock] = []
+        blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
 
         slack_channel = ChannelTransformer.template(
@@ -792,9 +791,8 @@ class SlackSender:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
 
-        if finding.title:
-            blocks.extend(self.__create_finding_header_preview(finding, status, platform_enabled,
-                                                         sink_params.investigate_link, sink_params))
+        slack_blocks: List[SlackBlock] = self.__create_finding_header_preview(finding, status, platform_enabled,
+                                                         sink_params.investigate_link, sink_params)
 
         if not sink_params.hide_buttons:
             links_block: LinksBlock = self.__create_links(
@@ -819,33 +817,22 @@ class SlackSender:
                 blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
         unfurl = True
 
-        if sink_params.hide_enrichments:
-            return self.__send_blocks_to_slack(
-                blocks,
-                attachment_blocks,
-                finding.title,
-                sink_params,
-                unfurl,
-                status,
-                slack_channel,
-                thread_ts=thread_ts,
-            )
+        if not sink_params.hide_enrichments:
+            for enrichment in finding.enrichments:
+                if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
+                    enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
 
-        for enrichment in finding.enrichments:
-            if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
-                enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
+                # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
+                unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
+                if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
+                    attachment_blocks.extend(enrichment.blocks)
+                else:
+                    blocks.extend(enrichment.blocks)
 
-            # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
-            unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
-            if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
-                attachment_blocks.extend(enrichment.blocks)
-            else:
-                blocks.extend(enrichment.blocks)
+            blocks.append(DividerBlock())
 
-        blocks.append(DividerBlock())
-
-        if len(attachment_blocks):
-            attachment_blocks.append(DividerBlock())
+            if len(attachment_blocks):
+                attachment_blocks.append(DividerBlock())
 
         return self.__send_blocks_to_slack(
             blocks,
@@ -856,6 +843,7 @@ class SlackSender:
             status,
             slack_channel,
             thread_ts=thread_ts,
+            output_blocks=slack_blocks,
         )
 
     def send_or_update_summary_message(
