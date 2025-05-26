@@ -294,7 +294,7 @@ class ActionRequestReceiver:
             "version": RUNNER_VERSION,
             "token": self.auth_token,
         }
-        logging.info(f"connecting to server as account_id={account_id}; cluster_name={cluster_name} token={self.auth_token}")
+        logging.info(f"connecting to server as account_id={account_id}; cluster_name={cluster_name}")
         ws.send(json.dumps(open_payload))
 
     def __validate_request(self, action_request: ExternalActionRequest, validate_timestamp: bool) -> ValidationResponse:

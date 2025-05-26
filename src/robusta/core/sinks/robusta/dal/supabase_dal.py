@@ -762,7 +762,7 @@ class SupabaseDal(AccountResourceFetcher):
         except Exception as e:
             logging.error(f"Failed to set cluster status active=False error: {e}")
 
-    def get_session_token(self) -> Tuple[str, str]:
+    def get_session_token(self) -> str:
         with self.lock:
             session_token = self.token_cache.get("session_token")
             if not session_token:

@@ -37,7 +37,7 @@ class SinksRegistry:
     def get_all(self) -> Dict[str, SinkBase]:
         return self.sinks
     
-    def get_robusta_sinks(self) -> list[RobustaSink]:
+    def get_robusta_sinks(self) -> List[RobustaSink]:
         return [sink for sink in self.sinks.values() if isinstance(sink, RobustaSink)]
 
     @classmethod
