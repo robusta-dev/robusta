@@ -605,10 +605,10 @@ class SlackSender:
             attachment_blocks.append(DividerBlock())
 
         if not platform_enabled and not HOLMES_ENABLED:
-            blocks.append(MarkdownBlock("_Ask AI questions about this alert, by connecting Robusta SaaS and tagging @holmes._"))
+            blocks.append(MarkdownBlock("_Ask AI questions about this alert, by connecting <https://platform.robusta.dev/create-account|Robusta SaaS> and tagging @holmes._"))
         elif platform_enabled and not HOLMES_ENABLED:
             blocks.append(
-                MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your <https://docs.robusta.dev/holmes_button/configuration/holmesgpt/index.html#enable-holmes-in-slack-in-the-platform|Slack>._"))
+                MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your <https://docs.robusta.dev/master/configuration/holmesgpt/index.html#enable-holmes-in-slack-in-the-platform|Slack>._"))
         elif platform_enabled and HOLMES_ENABLED:
             blocks.append(
                 MarkdownBlock("_Ask AI questions about this alert, by tagging @holmes in a threaded reply_"))
