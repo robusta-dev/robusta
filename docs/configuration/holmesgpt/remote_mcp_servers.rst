@@ -1,5 +1,10 @@
-Remote MCP Servers ⚠️ **Tech Preview**  
-=========================================
+Remote MCP Servers 
+====================
+
+.. warning::
+
+    Remote MCP servers are in **Tech Preview** stage.
+
 
 HolmesGPT can integrate with remote MCP servers using SSE mode.
 This capability enables HolmesGPT to access external data sources and tools in real time.
@@ -17,7 +22,7 @@ Example : MCP server configuration
     .. code-block:: yaml
 
       holmes:
-        toolsets:
+        mcp_servers:
           mcp_server_1:
             # human-readable description of the mcp server (this is not seen by the AI model - its just for users)
             description: "Remote mcp server"
