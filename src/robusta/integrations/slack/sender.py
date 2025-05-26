@@ -542,7 +542,17 @@ class SlackSender:
         except Exception:
             logging.exception(f"error sending message to slack. {title}")
 
-    def send_finding_to_slack(
+    def get_holmes_block(self, platform_enabled: bool, slackbot_enabled) -> Optional[MarkdownBlock]:
+        if not platform_enabled and not slackbot_enabled:
+            return MarkdownBlock("_Ask AI questions about this alert, by connecting <https://platform.robusta.dev/create-account|Robusta SaaS> and tagging @holmes._")
+        elif platform_enabled and not slackbot_enabled:
+            return MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your <https://docs.robusta.dev/master/configuration/holmesgpt/index.html#enable-holmes-in-slack-in-the-platform|Slack>._")
+        elif platform_enabled and slackbot_enabled:
+            return MarkdownBlock("_Ask AI questions about this alert, by tagging @holmes in a threaded reply_")
+        return None
+
+
+def send_finding_to_slack(
         self,
         finding: Finding,
         sink_params: SlackSinkParams,
@@ -601,17 +611,13 @@ class SlackSender:
 
         blocks.append(DividerBlock())
 
+        holmes_block = self.get_holmes_block(platform_enabled, HOLMES_ENABLED)
+        if holmes_block:
+            blocks.append(holmes_block)
+
+
         if len(attachment_blocks):
             attachment_blocks.append(DividerBlock())
-
-        if not platform_enabled and not HOLMES_ENABLED:
-            blocks.append(MarkdownBlock("_Ask AI questions about this alert, by connecting <https://platform.robusta.dev/create-account|Robusta SaaS> and tagging @holmes._"))
-        elif platform_enabled and not HOLMES_ENABLED:
-            blocks.append(
-                MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your <https://docs.robusta.dev/master/configuration/holmesgpt/index.html#enable-holmes-in-slack-in-the-platform|Slack>._"))
-        elif platform_enabled and HOLMES_ENABLED:
-            blocks.append(
-                MarkdownBlock("_Ask AI questions about this alert, by tagging @holmes in a threaded reply_"))
 
         return self.__send_blocks_to_slack(
             blocks,
@@ -623,6 +629,7 @@ class SlackSender:
             slack_channel,
             thread_ts=thread_ts,
         )
+
 
     def send_or_update_summary_message(
         self,

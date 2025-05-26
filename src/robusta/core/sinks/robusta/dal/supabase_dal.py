@@ -753,3 +753,23 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to set cluster status active=False error: {e}")
+
+    def holmes_slackbot_enabled(
+        self, account_id: str
+    ) -> bool:
+        try:
+            res = self.client.rpc(
+                "holmes_slackbot_enabled",
+                {"_account_id": account_id},
+            ).execute()
+
+            logging.debug(f"Holmes Slackbot connected {bool(res.data)}")
+            return bool(res.data)
+
+        except Exception as error:
+            logging.error(
+                f"Unexpected error rpc holmes_slackbot_enabled."
+                f"account_id: {account_id}",
+                exc_info=True,
+            )
+            raise error
