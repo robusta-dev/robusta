@@ -508,6 +508,7 @@ class SlackSender:
             "aggregation_key": finding.aggregation_key,
             "labels": finding.subject.labels if finding.subject else {},
             "annotations": finding.subject.annotations if finding.subject else {},
+            "fingerprint": finding.fingerprint,
         }
 
         custom_template = sink_params.get_custom_template() if sink_params else None
