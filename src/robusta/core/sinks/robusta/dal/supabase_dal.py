@@ -2,8 +2,12 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+import os
+import threading
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import uuid4
 
+from cachetools import TTLCache
 import requests
 from postgrest._sync.request_builder import SyncQueryRequestBuilder
 from postgrest.base_request_builder import BaseFilterRequestBuilder
@@ -49,7 +53,7 @@ RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
 ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
 OPENSHIFT_GROUPS_TABLE = "OpenshiftGroups"
-
+SESSION_TOKENS_TABLE = "AuthTokens"
 
 class SupabaseDal(AccountResourceFetcher):
     def __init__(
@@ -77,11 +81,14 @@ class SupabaseDal(AccountResourceFetcher):
         self.patch_postgrest_execute()
         self.email = email
         self.password = password
-        self.sign_in()
+        self.user_id = self.sign_in()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
         self.sink_name = sink_name
         self.persist_events = persist_events
         self.signing_key = signing_key
+        ttl = int(os.environ.get("SAAS_SESSION_TOKEN_TTL_SEC", "82800"))  # 23 hours
+        self.token_cache = TTLCache(maxsize=1, ttl=ttl)
+        self.lock = threading.Lock()
 
     def patch_postgrest_execute(self):
         # This is somewhat hacky.
@@ -532,11 +539,12 @@ class SupabaseDal(AccountResourceFetcher):
             logging.error(f"Failed to persist helm_releases {helm_releases} error: {e}")
             raise
 
-    def sign_in(self):
+    def sign_in(self) -> str:
         logging.info("Supabase dal login")
         res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
         self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
         self.client.postgrest.auth(res.session.access_token)
+        return res.user.id
 
     def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
         db_cluster_status = data.dict()
@@ -753,3 +761,25 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to set cluster status active=False error: {e}")
+
+    def get_session_token(self) -> Tuple[str, str]:
+        with self.lock:
+            session_token = self.token_cache.get("session_token")
+            if not session_token:
+                session_token = self.create_session_token()
+                self.token_cache["session_token"] = session_token
+
+        return session_token
+    
+    def create_session_token(self) -> str:
+        token = str(uuid4())
+        self.client.table(SESSION_TOKENS_TABLE).insert(
+            {
+                "account_id": self.account_id,
+                "user_id": self.user_id,
+                "token": token,
+                "type": "RUNNER",
+            },
+            returning=ReturnMethod.minimal,
+        ).execute()
+        return token

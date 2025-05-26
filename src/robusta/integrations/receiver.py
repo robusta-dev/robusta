@@ -76,13 +76,14 @@ class SlackActionsMessage(BaseModel):
 
 
 class ActionRequestReceiver:
-    def __init__(self, event_handler: PlaybooksEventHandler):
+    def __init__(self, event_handler: PlaybooksEventHandler, auth_token: str):
         self.event_handler = event_handler
         self.active = True
         self.account_id = self.event_handler.get_global_config().get("account_id")
         self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
         self.auth_provider = AuthProvider()
         self.healthy = False
+        self.auth_token = auth_token
 
         self.ws = websocket.WebSocketApp(
             WEBSOCKET_RELAY_ADDRESS,
@@ -291,8 +292,9 @@ class ActionRequestReceiver:
             "account_id": account_id,
             "cluster_name": cluster_name,
             "version": RUNNER_VERSION,
+            "token": self.auth_token,
         }
-        logging.info(f"connecting to server as account_id={account_id}; cluster_name={cluster_name}")
+        logging.info(f"connecting to server as account_id={account_id}; cluster_name={cluster_name} token={self.auth_token}")
         ws.send(json.dumps(open_payload))
 
     def __validate_request(self, action_request: ExternalActionRequest, validate_timestamp: bool) -> ValidationResponse:
