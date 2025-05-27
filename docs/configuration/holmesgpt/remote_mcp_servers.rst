@@ -30,7 +30,7 @@ Example : MCP server configuration
           
           mcp_server_2:
             description: "MCP server that runs in my cluster"
-            url: "http://asdasdasd"
+            url: "http://<service-name>.<namespace>.svc.cluster.local:<service-port>"
             config:
               headers:
                 key: "{{ env.my_mcp_server_key }}" # You can use holmes environment variables as headers for the MCP server requests.
