@@ -1,5 +1,3 @@
-:hide-toc:
-
 Additional Settings
 =======================
 
@@ -216,3 +214,29 @@ Add this to Robusta's Helm values:
               memory: 2048Mi
             limits:
               memory: 2048Mi
+
+Adding a Cluster Label to Alerts
+---------------------------------------------
+When using the built-in Prometheus stack, Robusta uses the ``cluster_name`` you set during installation to identify which alerts belong to which cluster.
+
+If you forward external alerts to Robusta (e.g., from Grafana/Grafana Cloud), you will need to pass the ``cluster_name`` metadata manually. For example, if you use Grafana alerting, ensure that all your metrics and alerts have a ``cluster_name`` label.
+
+The easiest way to do this with Prometheus is by setting `metric_relabel_configs <https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs>`_. How you apply that configuration depends on how Prometheus was installed. If you use kube-prometheus-stack, there is a Helm value for it:
+
+.. code-block:: yaml
+
+    prometheus:
+      prometheusSpec:
+        additionalScrapeConfigs:
+          - job_name: "cluster-name-to-metric"
+            kubernetes_sd_configs:
+              - role: pod
+            metric_relabel_configs:
+              - target_label: cluster_name
+                replacement: "YOUR_ROBUSTA_CLUSTER_NAME" # This is the cluster name you set in the Helm values during Robusta installation
+
+.. note:: 
+  
+  1. ``cluster_name`` label will be added only to metrics after you add this config. i.e Previously scraped metrics will not have ``cluster_name`` label. **You will need to wait a few hours after adding this configuration for the label to show up on your alerts and be forwarded correctly.**
+  2. ``prometheus.prometheusSpec.externalLabels.cluster`` does not work for cases when you need ``cluster_name`` label in Grafana.
+ 
