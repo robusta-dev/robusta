@@ -3,7 +3,7 @@
 Loki
 ====
 
-By enabling this toolset, HolmesGPT will fetch node and pods logs from `Loki <https://grafana.com/oss/loki/>`_.
+By enabling this toolset, HolmesGPT will fetch pod logs from `Loki <https://grafana.com/oss/loki/>`_.
 Loki can be accessed directly or by proxying through a `Grafana <https://grafana.com/oss/grafana/>`_ instance.
 
 You **should** enable this toolset to replace the default :ref:`kubernetes/logs <toolset_kubernetes_logs>`
@@ -20,7 +20,7 @@ Proxying through Grafana
 This is the recommended approach because we intend to add more capabilities to the toolset that are only available with Grafana.
 
 Prerequisites
--------------
+*************
 
 A `Grafana service account token <https://grafana.com/docs/grafana/latest/administration/service-accounts/>`_
 with the following permissions:
@@ -79,7 +79,7 @@ A simple way to get the datasource UID is to access the Grafana API by running t
 
 
 Configuration (grafana proxy)
------------------------------
+*****************************
 
 
 .. md-tab-set::
@@ -98,7 +98,7 @@ Configuration (grafana proxy)
               grafana_datasource_uid: <the UID of the loki data source in Grafana>
 
           kubernetes/logs:
-            enabled: false # Disable HolmesGPT's default logging mechanism
+            enabled: false # HolmesGPT's default logging mechanism MUST be disabled
 
 
     .. include:: ./_toolset_configuration.inc.rst
@@ -118,7 +118,7 @@ Configuration (grafana proxy)
             grafana_datasource_uid: <the UID of the loki data source in Grafana>
 
         kubernetes/logs:
-          enabled: false # Disable HolmesGPT's default logging mechanism
+          enabled: false # HolmesGPT's default logging mechanism MUST be disabled
 
 Direct connection
 ^^^^^^^^^^^^^^^^^
@@ -128,7 +128,7 @@ This is done by not setting the ``grafana_datasource_uid`` field. Not setting th
 assume that it is directly connecting to Loki.
 
 Configuration (direct connection)
----------------------------------
+*********************************
 
 .. md-tab-set::
 
@@ -146,7 +146,7 @@ Configuration (direct connection)
                 X-Scope-OrgID: "<tenant id>" # Set the X-Scope-OrgID if loki multitenancy is enabled
 
           kubernetes/logs:
-            enabled: false # Disable HolmesGPT's default logging mechanism
+            enabled: false # HolmesGPT's default logging mechanism MUST be disabled
 
 
     .. include:: ./_toolset_configuration.inc.rst
@@ -166,13 +166,14 @@ Configuration (direct connection)
               X-Scope-OrgID: "<tenant id>" # Set the X-Scope-OrgID if loki multitenancy is enabled
 
         kubernetes/logs:
-          enabled: false # Disable HolmesGPT's default logging mechanism
+          enabled: false # HolmesGPT's default logging mechanism MUST be disabled
 
 
 Advanced configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 
-**Search labels**
+Search labels
+*************
 
 You can tweak the labels used by the toolset to identify kubernetes resources. This is only needed if your
 Loki logs settings for ``pod``, and ``namespace`` differ from the defaults in the example above.
@@ -223,19 +224,7 @@ Use the following commands to list Loki's labels and determine which ones to use
     curl http://localhost:3100/loki/api/v1/labels
 
 
-**Disabling the default toolset**
-
-If Loki is your primary datasource for logs, it is **advised** to disable the default HolmesGPT logging
-tool by disabling the ``kubernetes/logs`` toolset. Without this. HolmesGPT may still use kubectl to
-fetch logs instead of Loki.
-
-.. code-block:: yaml
-
-    holmes:
-        toolsets:
-            kubernetes/logs:
-                enabled: false
-
+.. include:: ./_disable_default_logging_toolset.inc.rst
 
 Capabilities
 ^^^^^^^^^^^^
@@ -248,7 +237,5 @@ Capabilities
 
    * - Tool Name
      - Description
-   * - fetch_loki_logs_for_resource
-     - Fetches the Loki logs for a given kubernetes resource
-   * - fetch_loki_logs
-     - Fetches Loki logs from any query
+   * - fetch_pod_logs
+     - Fetches pod logs
