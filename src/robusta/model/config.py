@@ -9,6 +9,7 @@ from robusta.core.playbooks.playbook_utils import merge_global_params
 from robusta.core.pubsub.event_emitter import EventEmitter
 from robusta.core.pubsub.event_subscriber import EventHandler
 from robusta.core.pubsub.events_pubsub import EventsPubSub
+from robusta.core.sinks.robusta.robusta_sink import RobustaSink
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_config import SinkConfigBase
@@ -35,6 +36,9 @@ class SinksRegistry:
 
     def get_all(self) -> Dict[str, SinkBase]:
         return self.sinks
+    
+    def get_robusta_sinks(self) -> List[RobustaSink]:
+        return [sink for sink in self.sinks.values() if isinstance(sink, RobustaSink)]
 
     @classmethod
     def construct_new_sinks(
@@ -159,7 +163,7 @@ class Registry:
     _playbooks: PlaybooksRegistry = PlaybooksRegistry()
     _sinks: SinksRegistry = None
     _scheduler = None
-    _receiver: ActionRequestReceiver = None
+    _receiver: Optional[ActionRequestReceiver] = None
     _global_config = dict()
     _alert_relabel_config: List[AlertRelabel] = []
     _telemetry: Telemetry = Telemetry(
@@ -201,7 +205,7 @@ class Registry:
     def set_receiver(self, receiver: ActionRequestReceiver):
         self._receiver = receiver
 
-    def get_receiver(self) -> ActionRequestReceiver:
+    def get_receiver(self) -> Optional[ActionRequestReceiver]:
         return self._receiver
 
     def get_telemetry(self) -> Telemetry:
