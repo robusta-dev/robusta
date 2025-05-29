@@ -365,7 +365,7 @@ Builtin toolsets
 
 Built-in toolsets cover essential areas like pod status inspection, node health analysis,
 application diagnostics, and resource utilization monitoring. These toolsets include access to
-Kubernetes events and logs, AWS, Grafana, Opensearch, etc. See the full list :doc:`here <builtin_toolsets>`.
+Kubernetes events and logs, AWS, Grafana, OpenSearch, etc. See the full list :doc:`here <builtin_toolsets>`.
 
 Custom toolsets
 ----------------
