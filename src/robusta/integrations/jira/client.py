@@ -150,7 +150,7 @@ class JiraClient:
 
         issue = issues.get("issues")[0]
         if issues.get("total", 0) > 1:
-            logging.warn(f"More than one issue found for query: '{query}', picking most recent one")
+            logging.warning(f"More than one issue found for query: '{query}', picking most recent one")
             logging.debug(f"Picked issue '{issue}'")
 
         return issue

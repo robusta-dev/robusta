@@ -18,6 +18,7 @@ Builtin Toolsets
    toolsets/internet
    toolsets/kafka
    toolsets/kubernetes
+   toolsets/notion
    toolsets/opensearch_logs
    toolsets/opensearch_status
    toolsets/prometheus
@@ -98,6 +99,11 @@ by the user by providing credentials or API keys to external systems.
     .. grid-item-card:: :octicon:`cpu;1em;` Kubernetes
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/kubernetes
+        :link-type: doc
+    
+    .. grid-item-card:: :octicon:`cpu;1em;` Notion
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/notion
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch logs
