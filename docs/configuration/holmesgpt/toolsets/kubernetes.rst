@@ -6,7 +6,7 @@ Core :checkmark:`_`
 --------------------
 .. include:: ./_toolset_enabled_by_default.inc.rst
 
-By enabling this toolset, HolmesGPT will be able to describe and find kubernetes resources like
+By enabling this toolset, HolmesGPT will be able to describe and find Kubernetes resources like
 nodes, deployments, pods, etc.
 
 Configuration
