@@ -68,8 +68,12 @@ class SinksRegistry:
 
         new_sinks: Dict[str, SinkBase] = dict()
 
-        # Reload sinks, order does matter and should be loaded & added to the dict by config order.
-        for sink_config in new_sinks_config:
+        # Reload sinks, order does matter. Load Robusta sink last because it send status to database.
+        # In case of multiple sinks and a sink config issue runner crashes and we don't want status to be sent until all sinks are created.
+        new_sinks_config_sorted = sorted(
+            new_sinks_config, key=lambda x: isinstance(x, RobustaSinkConfigWrapper)
+        )
+        for sink_config in new_sinks_config_sorted:
             # temporary workaround to skip the default and unconfigured robusta token
             if (
                 isinstance(sink_config, RobustaSinkConfigWrapper)
