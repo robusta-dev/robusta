@@ -3,7 +3,7 @@
 Coralogix logs
 ==============
 
-By enabling this toolset, HolmesGPT will fetch pods logs from `Coralogix <https://coralogix.com/>`_.
+By enabling this toolset, HolmesGPT will fetch pod logs from `Coralogix <https://coralogix.com/>`_.
 
 You **should** enable this toolset to replace the default :ref:`kubernetes/logs <toolset_kubernetes_logs>`
 toolset if all your kubernetes pod logs are consolidated inside Coralogix. It will make it easier for HolmesGPT

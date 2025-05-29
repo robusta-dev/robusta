@@ -1,12 +1,12 @@
 .. _toolset_opensearch_logs:
 
-Opensearch logs
+OpenSearch logs
 ==============
 
-By enabling this toolset, HolmesGPT will fetch pod logs from `Opensearch <https://opensearch.org/>`_.
+By enabling this toolset, HolmesGPT will fetch pod logs from `OpenSearch <https://opensearch.org/>`_.
 
 You **should** enable this toolset to replace the default :ref:`kubernetes/logs <toolset_kubernetes_logs>`
-toolset if all your kubernetes pod logs are consolidated inside Opensearch/Elastic. It will make it easier for HolmesGPT
+toolset if all your kubernetes pod logs are consolidated inside OpenSearch/Elastic. It will make it easier for HolmesGPT
 to fetch incident logs, including the ability to precisely consult past logs.
 
 

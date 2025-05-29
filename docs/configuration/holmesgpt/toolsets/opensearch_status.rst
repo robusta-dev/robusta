@@ -1,4 +1,4 @@
-Opensearch status
+OpenSearch status
 =================
 
 By enabling this toolset, HolmesGPT will be able to access cluster metadata information
@@ -8,11 +8,11 @@ with one or more opensearch clusters.
 Configuration
 -------------
 
-The configuration for Opensearch is passed through to the underlying
+The configuration for OpenSearch is passed through to the underlying
 `opensearch-py library <https://github.com/opensearch-project/opensearch-py>`_. Consult this
 library's `user guide <https://github.com/opensearch-project/opensearch-py/blob/main/USER_GUIDE.md>`_ or
 `reference documentation <https://opensearch-project.github.io/opensearch-py/api-ref/clients/opensearch_client.html>`_
-for configuring the connection to Opensearch, including how to authenticate this toolset to an opensearch cluster.
+for configuring the connection to OpenSearch, including how to authenticate this toolset to an opensearch cluster.
 
 .. code-block:: yaml
 
@@ -35,7 +35,7 @@ for configuring the connection to Opensearch, including how to authenticate this
                             username: <basic auth username>
                             password: <basic auth password>
 
-Here is an example of an insecure Opensearch configuration for local development using a bearer token:
+Here is an example of an insecure OpenSearch configuration for local development using a bearer token:
 
 .. code-block:: yaml
 
