@@ -22,6 +22,11 @@ class SlackChannel:
         messages = results["messages"]
         return messages[0]["text"]
 
+    def get_complete_latest_message(self):
+        results = self.client.conversations_history(channel=self.channel_id)
+        messages = results["messages"]
+        return messages[0]
+
     @staticmethod
     def _create_or_join_channel(client: WebClient, channel_name: str) -> str:
         """Creates or joins the specified slack channel and returns its channel_id"""
