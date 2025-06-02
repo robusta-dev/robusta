@@ -310,7 +310,7 @@ class Finding(Filterable):
         }
 
     def _map_service_to_uri(self):
-        if self.service.resource_type.lower() == "job":
+        if self.service and self.service.resource_type.lower() == "job":
             return "jobs"
         return "graphs"
 
