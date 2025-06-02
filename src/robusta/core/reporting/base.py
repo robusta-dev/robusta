@@ -310,11 +310,9 @@ class Finding(Filterable):
         }
 
     def _map_service_to_uri(self):
-        if not self.service:
-            return "graphs"
         if self.service.resource_type.lower() == "job":
             return "jobs"
-        return "services"
+        return "graphs"
 
     def get_investigate_uri(self, account_id: str, cluster_name: Optional[str] = None):
         uri_path = self._map_service_to_uri()
@@ -334,6 +332,7 @@ class Finding(Filterable):
                 "kind": kind,
                 "name": self.service.name if self.service else None,
                 "names": f'["{self.aggregation_key}"]' if self.aggregation_key else None,
+                "finding": self.id,
             }
 
         params = {k: v for k, v in params.items() if v is not None}
