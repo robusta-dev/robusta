@@ -70,10 +70,17 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 Disabling the Feature
 ---------------------------------
 
-If you choose to stop using the Robusta Alerts UI, set ``enabledManagedConfiguration: false`` in ``generated_values.yaml`` and do a :ref:`Helm Upgrade <Simple Upgrade>`.
+If you choose to stop using the Robusta Alerts UI
 
-Modify and run the following command for all the Robusta rule custom resources present in your cluster.
+1. Set ``enabledManagedConfiguration: false`` in ``generated_values.yaml`` and do a :ref:`Helm Upgrade <Simple Upgrade>`.
+2. Identify the PrometheusRule custom resources added by Robusta
 
 .. code-block:: bash
 
-    kubectl delete prometheusrules.monitoring.coreos.com robusta-prometheus.rules--Value -n NameSpace
+   kubectl get prometheusrules -A | grep robusta-prometheus
+
+3. Modify and run the following command for all the Robusta rule custom resources present in your cluster.
+
+.. code-block:: bash
+
+    kubectl delete prometheusrules.monitoring.coreos.com robusta-prometheus.rules<VALUE> -n <NAMESPACE>
