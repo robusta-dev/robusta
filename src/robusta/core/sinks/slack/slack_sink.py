@@ -10,12 +10,13 @@ from robusta.integrations import slack as slack_module
 class SlackSink(SinkBase):
     params: SlackSinkParams
 
-    def __init__(self, sink_config: SlackSinkConfigWrapper, registry):
-        super().__init__(sink_config.slack_sink, registry)
-        self.slack_channel = sink_config.slack_sink.slack_channel
-        self.api_key = sink_config.slack_sink.api_key
+    def __init__(self, sink_config: SlackSinkConfigWrapper, registry, is_preview=False):
+        slack_sink_params = sink_config.get_params()
+        super().__init__(slack_sink_params, registry)
+        self.slack_channel = slack_sink_params.slack_channel
+        self.api_key = slack_sink_params.api_key
         self.slack_sender = slack_module.SlackSender(
-            self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel
+            self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel, is_preview
         )
         self.registry.subscribe("replace_callback_with_string", self)
 
