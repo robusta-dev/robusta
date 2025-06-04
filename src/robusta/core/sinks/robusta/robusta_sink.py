@@ -86,9 +86,9 @@ class RobustaSink(SinkBase, EventHandler):
         )
         self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
         self.__pods_running_count: int = 0
-        self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         self.registry.subscribe("scan_updated", self)
+        self.registry.subscribe("config_init", self)
 
         # start cluster discovery
         self.__active = True
@@ -101,14 +101,14 @@ class RobustaSink(SinkBase, EventHandler):
         self.__jobs_cache_initialized: bool = False
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
-        self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__watchdog_thread = threading.Thread(target=self.__discovery_watchdog)
-        self.__thread.start()
         self.__watchdog_thread.start()
 
     def handle_event(self, event_name: str, **kwargs):
         if event_name == "scan_updated":
             self._on_scan_updated(**kwargs)
+        elif event_name == "config_init":
+            self._on_config_init(**kwargs)
         else:
             logging.warning("RobustaSink subscriber called with unknown event")
 
@@ -119,6 +119,13 @@ class RobustaSink(SinkBase, EventHandler):
             self.dal.insert_scan_meta(scan_id, start_time, type)
 
         self.dal.set_scan_state(scan_id, state, metadata)
+
+    def _on_config_init(self) -> None:
+        # make sure cluster status and periodic check start after all config has been reloaded successfuly.
+        self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
+        self.__thread = threading.Thread(target=self.__discover_cluster)
+        if not self.__thread.is_alive():
+            self.__thread.start()
 
     def set_cluster_active(self, active: bool):
         self.dal.set_cluster_active(active)
