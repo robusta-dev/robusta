@@ -10,11 +10,14 @@ AI Analysis
    builtin_toolsets
    permissions
    custom_toolsets
+   remote_mcp_servers
 
 Why use HolmesGPT?
 ^^^^^^^^^^^^^^^^^^^
 
 Robusta can integrate with `Holmes GPT <https://github.com/robusta-dev/holmesgpt>`_ to analyze health issues on your cluster, and to run AI based root cause analysis for alerts.
+
+This requires a Robusta SaaS account, and for the Robusta UI sink to be enabled. (We have plans to support HolmesGPT in a pure OSS mode in the near future. Stay tuned!)
 
 When available, AI based investigations can be launched in one of two ways:
 
@@ -35,7 +38,7 @@ Add ``enableHolmesGPT: true`` to the Robusta Helm values, and then follow these 
 
 1. Choose an AI model - we highly recommend using GPT-4o to get the most accurate results! Other models may work, but are not officially supported.
 2. :ref:`Configure your AI provider with the chosen model <Choosing and configuring an AI provider>`.
-3. :ref:`Optional: Configure HolmesGPT Access to SaaS Data <Configuring HolmesGPT Access to SaaS Data>`.
+3. :ref:`Configure HolmesGPT Access to SaaS Data <Configuring HolmesGPT Access to SaaS Data>`.
 
 Choosing and configuring an AI provider
 ----------------------------------------
@@ -394,7 +397,7 @@ Builtin toolsets
 
 Built-in toolsets cover essential areas like pod status inspection, node health analysis,
 application diagnostics, and resource utilization monitoring. These toolsets include access to
-Kubernetes events and logs, AWS, Grafana, Opensearch, etc. See the full list :doc:`here <builtin_toolsets>`.
+Kubernetes events and logs, AWS, Grafana, OpenSearch, etc. See the full list :doc:`here <builtin_toolsets>`.
 
 Custom toolsets
 ----------------
@@ -403,3 +406,14 @@ Custom toolsets
 
 Custom toolsets are created through your Helm values file and you can find instructions
 to :doc:`write your own toolsets here <builtin_toolsets>`.
+
+Remote MCP servers 
+---------------------
+
+.. warning::
+
+    Remote MCP servers are in **Tech Preview** stage.
+
+Remote MCP server connections are configured through your Helm values file.
+For detailed instructions, refer to the :doc:`Connecting to Remote MCP Servers <remote_mcp_servers>` guide.
+
