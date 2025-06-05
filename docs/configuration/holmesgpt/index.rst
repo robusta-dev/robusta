@@ -311,6 +311,38 @@ Reading the Robusta UI Token from a secret in HolmesGPT
 
 Run a :ref:`Helm Upgrade <Simple Upgrade>` to apply the configuration.
 
+Enable Holmes in Slack in the Platform
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. **Go to** https://platform.robusta.dev/
+
+2. **Navigate to:**
+   **Settings** → **AI Assistant**
+
+.. image:: /images/Enabling_AI_in_slack.png
+    :width: 1000px
+
+3. **Enable Holmes** using the toggle.
+
+4. **Click** **Connect Slack Workspace** to authorize Holmes in your Slack workspace.
+
+5. **Use Holmes in Slack**
+
+   In any Slack channel or thread, tag Holmes using `@holmes` like::
+
+     @holmes can you look into this
+
+   Or ask natural language questions about a specific cluster. Examples::
+
+.. code-block:: bash
+     @holmes what apps are crashing in my `prod-cluster`
+     @holmes show me the CPU usage for the frontend deployment in `staging-cluster`
+     @holmes why is my alert firing on `eu-prod-atc-eks`?
+     @holmes investigate high memory usage in `dev-cluster`
+
+   Holmes will respond in the thread with insights and troubleshooting steps based on the specified cluster.
+
+
 Test Holmes Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
