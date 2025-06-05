@@ -56,6 +56,16 @@ For this demo we will use
 
 Check out supergatway docs to find out other useful flags.
 
+**See it in action** 
+
+.. raw:: html
+
+  <div>
+      <a href="https://www.loom.com/share/1b290511b79942c7b1d672a2a4cde105">
+        <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/1b290511b79942c7b1d672a2a4cde105-ed4eed3f9d70b125-full-play.gif">
+      </a>
+  </div>
+
 1. Run stdio MCP as SSE
 """"""""""""""""""""""""""""""
 .. md-tab-set::
@@ -154,6 +164,25 @@ Use this config according to your use case.
 
 .. md-tab-set::
 
+  .. md-tab-item:: Holmes CLI
+
+    Use a config file, and pass it when running cli commands.
+
+    **custom_toolset.yaml:**
+
+    .. code-block:: yaml
+
+      mcp_servers:          
+        mcp_server_1:
+          description: "Dynatrace observability platform. Bring real-time observability data directly into your development workflow."
+          url: "http://localhost:8003/sse"
+
+    You can now use Holmes via the CLI with your configured MCP server. For example:
+
+    .. code-block:: bash
+
+      holmes ask -t custom_toolset.yaml  "Using dynatrace what issues do I have in my cluster?"  
+
   .. md-tab-item:: Robusta Helm Chart
 
     **Helm Values:**
@@ -174,22 +203,3 @@ Use this config according to your use case.
         helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
     After the deployment is complete, you can open the HolmesGPT chat in the Robusta SaaS UI and ask questions like *Using dynatrace what issues do I have in my cluster?*.
-    
-  .. md-tab-item:: Holmes CLI
-
-    Use a config file, and pass it when running cli commands.
-
-    **custom_toolset.yaml:**
-
-    .. code-block:: yaml
-
-      mcp_servers:          
-        mcp_server_1:
-          description: "Dynatrace observability platform. Bring real-time observability data directly into your development workflow."
-          url: "http://localhost:8003/sse"
-
-    You can now use Holmes via the CLI with your configured MCP server. For example:
-
-    .. code-block:: bash
-
-      holmes ask -t custom_toolset.yaml  "Using dynatrace what issues do I have in my cluster?"  
