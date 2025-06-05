@@ -648,7 +648,7 @@ class SlackSender:
         return None
 
 
-def send_finding_to_slack(
+    def send_finding_to_slack(
         self,
         finding: Finding,
         sink_params: Union[SlackSinkParams, SlackSinkPreviewParams],
