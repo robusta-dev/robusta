@@ -48,7 +48,7 @@ from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base import KeyT
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams
-
+from robusta.model.config import Registry
 from robusta.core.sinks.transformer import Transformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
@@ -62,7 +62,7 @@ class SlackSender:
     verified_api_tokens: Set[str] = set()
     channel_name_to_id = {}
 
-    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, is_preview: bool = False):
+    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, registry: Registry, is_preview: bool = False):
         """
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
@@ -80,6 +80,7 @@ class SlackSender:
             timeout=SLACK_REQUEST_TIMEOUT,
             retry_handlers=all_builtin_retry_handlers(),
         )
+        self.registry = registry
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
@@ -672,6 +673,15 @@ def send_finding_to_slack(
             thread_ts=thread_ts
         )
 
+    def __is_holmes_slackbot_enabled(self) -> bool:
+        robusta_sinks = self.registry.get_sinks().get_robusta_sinks()
+        if not robusta_sinks:
+            logging.debug("No robusta sinks found, holmes not connected to slackbot")
+            return False
+
+        robusta_sink = robusta_sinks[0]
+        return robusta_sink.is_holmes_slackbot_connected()
+
     def __send_finding_to_slack(
         self,
         finding: Finding,
@@ -731,7 +741,8 @@ def send_finding_to_slack(
 
         blocks.append(DividerBlock())
 
-        holmes_block = self.get_holmes_block(platform_enabled, HOLMES_ENABLED)
+        is_holmes_slackbot_enabled = self.__is_holmes_slackbot_enabled()
+        holmes_block = self.get_holmes_block(platform_enabled, is_holmes_slackbot_enabled)
         if holmes_block:
             blocks.append(holmes_block)
 

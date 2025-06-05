@@ -16,7 +16,7 @@ class SlackSink(SinkBase):
         self.slack_channel = slack_sink_params.slack_channel
         self.api_key = slack_sink_params.api_key
         self.slack_sender = slack_module.SlackSender(
-            self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel, is_preview
+            self.api_key, self.account_id, self.cluster_name, self.signing_key, self.slack_channel, registry, is_preview
         )
         self.registry.subscribe("replace_callback_with_string", self)
 

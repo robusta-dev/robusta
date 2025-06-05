@@ -42,7 +42,14 @@ from robusta.integrations.prometheus.utils import HolmesDiscovery
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
+from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT
+from cachetools import TTLCache
 
+RUNNER_GET_HOLMES_SLACKBOT_INFO = f"{ROBUSTA_API_ENDPOINT}/api/holmes/integrations/slack/runner"
+HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
+
+# Define the cache with a single slot and the configured TTL
+_holmes_slackbot_cache = TTLCache(maxsize=1, ttl=HOLMES_SLACKBOT_CACHE_TTL)
 
 class RobustaSink(SinkBase, EventHandler):
     services_publish_lock = threading.Lock()
@@ -695,3 +702,28 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__safe_delete_job(job_key)
                 self.__discovery_metrics.on_jobs_updated(1)
                 return
+
+    def is_holmes_slackbot_connected(self) -> bool:
+        if 'status' in _holmes_slackbot_cache:
+            return _holmes_slackbot_cache['status']
+
+        session_token = self.dal.get_session_token()
+        try:
+            message_json = {
+                "session_token": session_token,
+                "account_id": self.account_id,
+            }
+            response = requests.post(
+                RUNNER_GET_HOLMES_SLACKBOT_INFO,
+                data=message_json,
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+            result = response.json()
+            logging.warning(f"Holmes slackbot result {result}")
+            _holmes_slackbot_cache['status'] = True
+            return True
+        except Exception:
+            logging.info("Failed to get holmes slackbot info")
+            _holmes_slackbot_cache['status'] = False
+            return False
