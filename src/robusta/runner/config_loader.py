@@ -67,6 +67,7 @@ class ConfigLoader:
         self.watcher = FileSystemWatcher(self.root_playbook_path, self.__reload_playbook_packages)
         self.conf_watcher = FileSystemWatcher(self.config_file_path, self.__reload_playbook_packages)
         self.__reload_playbook_packages("initialization")
+        self.registry.get_event_emitter().emit_event("config_init")       
 
     def close(self):
         self.watcher.stop_watcher()
