@@ -53,9 +53,6 @@ RUN find "/app/venv/lib/python3.11/site-packages/kubernetes/client/models/" -typ
 # Final stage
 FROM python:3.11-slim
 
-# Temporary setuptools CVE fix untill python:3.12-slim image will be used.
-RUN rm -rf /usr/local/lib/python3.11/ensurepip/_bundled/setuptools-65.5.0-py3-none-any.whl
-RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
 
 ENV ENV_TYPE=DEV
 ENV PYTHONUNBUFFERED=1
@@ -78,6 +75,9 @@ RUN apt-get update \
 # Patching CVE-2024-32002
 RUN git config --global core.symlinks false
 
+# Temporary setuptools CVE fix untill python:3.12-slim image will be used.
+RUN rm -rf /usr/local/lib/python3.11/ensurepip/_bundled/setuptools-65.5.0-py3-none-any.whl
+RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
 
 COPY --from=builder /app/venv /venv
 COPY --from=builder /etc/robusta/playbooks/defaults /etc/robusta/playbooks/defaults
