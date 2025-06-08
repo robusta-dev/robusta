@@ -55,7 +55,7 @@ FROM python:3.11-slim
 
 # Temporary setuptools CVE fix untill python:3.12-slim image will be used.
 RUN rm -rf /usr/local/lib/python3.11/ensurepip/_bundled/setuptools-65.5.0-py3-none-any.whl
-RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info/METADATA
+RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
 
 ENV ENV_TYPE=DEV
 ENV PYTHONUNBUFFERED=1
