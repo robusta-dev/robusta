@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 import opsgenie_sdk
 
@@ -28,8 +28,8 @@ class OpsGenieSink(SinkBase):
         self.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
 
         # Check for dangerous configuration
-        has_templates = any("$" in team for team in self.teams)
-        if has_templates and not self.default_team:
+        team_has_templates = any("$" in team for team in self.teams)
+        if team_has_templates and not self.default_team:
             logging.warning(
                 "OpsGenie sink is configured with templated team names but no default_team specified. "
                 "Alerts may fail to route if the required label or annotation is missing."
@@ -83,48 +83,73 @@ class OpsGenieSink(SinkBase):
         except opsgenie_sdk.ApiException as err:
             logging.error(f"Error acking opsGenie alert {fingerprint} {err}", exc_info=True)
 
-    def __get_teams(self, finding: Finding) -> List[str]:
-        """Get the list of teams for the alert, resolving any templates in the team names."""
-        teams = []
-        for team_template in self.teams:
+    def __resolve_templates(
+            self,
+            raw_values: List[str],
+            finding: Finding,
+            fallback: Optional[str] = None,
+            prepend: Optional[str] = None,
+            log_context: str = "value",
+    ) -> List[str]:
+        """Resolve a list of dynamic or static values, optionally handling templated strings and prepending one fixed value."""
+        returned_values = [prepend] if prepend else []
+
+        for value_str in raw_values:
             try:
-                if "$" in team_template:
-                    # Only process templates that contain variables
-                    team = ChannelTransformer.template(
-                        team_template,
-                        self.default_team,  # Use default_team as fallback
+                if "$" in value_str:
+                    evaluated_value = ChannelTransformer.template(
+                        value_str,
+                        fallback,
                         self.cluster_name,
                         finding.subject.labels,
                         finding.subject.annotations,
                     )
-                    if team and team not in teams:  # Only add non-null, de-duped teams
-                        teams.append(team)
+                    if evaluated_value and evaluated_value not in returned_values:
+                        returned_values.append(evaluated_value)
                 else:
-                    # Use static team name directly
-                    if team_template not in teams:  # Only add de-duped teams
-                        teams.append(team_template)
+                    if value_str and value_str not in returned_values:
+                        returned_values.append(value_str)
             except Exception as e:
                 logging.warning(
-                    f"Failed to process team template {team_template} for alert subject {finding.service_key}: {e}"
+                    f"Failed to process {log_context} '{value_str}' for alert subject {finding.service_key}: {e}"
                 )
                 continue
 
-        # If no teams were resolved and we have a default team, use it
-        if not teams and self.default_team and self.default_team not in teams:
-            teams.append(self.default_team)
-        elif not teams and self.teams:  # dynamic routing failed and no default team configured
-            logging.warning(f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
+        return returned_values
+
+    def __get_tags(self, finding: Finding) -> List[str]:
+        return self.__resolve_templates(
+            raw_values=self.tags,
+            finding=finding,
+            fallback=self.default_team,
+            prepend=self.cluster_name,
+            log_context="tag"
+        )
+
+    def __get_teams(self, finding: Finding) -> List[str]:
+        teams = self.__resolve_templates(
+            raw_values=self.teams,
+            finding=finding,
+            fallback=self.default_team,
+            log_context="team"
+        )
+
+        if not teams:
+            if self.default_team and self.default_team not in teams:
+                teams.append(self.default_team)
+            elif self.teams:
+                logging.warning(
+                    f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
 
         return teams
 
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
         details = self.__to_details(finding)
-        tags = self.tags.copy()
-        tags.insert(0, self.cluster_name)
 
-        # Get teams based on templates
+        # Get teams and tags based on templates
         teams = self.__get_teams(finding)
+        tags = self.__get_tags(finding)
 
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
