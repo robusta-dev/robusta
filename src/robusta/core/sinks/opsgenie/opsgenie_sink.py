@@ -135,8 +135,8 @@ class OpsGenieSink(SinkBase):
         )
 
         if not teams:
-            if self.default_team and self.default_team not in teams:
-                teams.append(self.default_team)
+            if self.default_team:
+                teams = [self.default_team]
             elif self.teams:
                 logging.warning(
                     f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
