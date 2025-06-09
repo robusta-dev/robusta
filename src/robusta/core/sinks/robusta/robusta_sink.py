@@ -124,7 +124,7 @@ class RobustaSink(SinkBase, EventHandler):
         # make sure cluster status and periodic check start after all config has been reloaded successfuly.
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
-        if not hasattr(self, '_thread') or not self._thread.is_alive():
+        if not hasattr(self, '_thread'):
             self._thread = threading.Thread(target=self.__discover_cluster, daemon=True)
             self._thread.start()
 
