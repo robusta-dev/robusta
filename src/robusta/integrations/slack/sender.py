@@ -310,8 +310,10 @@ class SlackSender:
         status: FindingStatus,
         channel: str,
         thread_ts: str = None,
-        output_blocks: List[SlackBlock] = [],
+        output_blocks: Optional[List[SlackBlock]] = None
     ) -> str:
+        if output_blocks is None:
+            output_blocks = []
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
