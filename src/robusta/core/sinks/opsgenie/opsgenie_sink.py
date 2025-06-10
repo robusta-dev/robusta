@@ -121,7 +121,7 @@ class OpsGenieSink(SinkBase):
         return self.__resolve_templates(
             raw_values=self.tags,
             finding=finding,
-            fallback=self.default_team,
+            fallback=None,
             prepend=self.cluster_name,
             log_context="tag"
         )
