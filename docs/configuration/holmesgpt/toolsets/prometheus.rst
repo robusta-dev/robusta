@@ -64,6 +64,7 @@ Below is the full list of options for this toolset:
     enabled: true
     config:
       prometheus_url: http://<prometheus host>:9090
+      healthcheck: "-/healthy" # default value
       headers:
         Authorization: "Basic <base_64_encoded_string>"
       metrics_labels_time_window_hrs: 48 # default value
@@ -74,6 +75,7 @@ Below is the full list of options for this toolset:
 
 
 - **prometheus_url** A base URL for prometheus. This should include the protocol (e.g. `https`) and the port.
+- **healthcheck** Path used for health checking Prometheus or Mimir/Cortex endpoint. It defaults to ``-/healthy`` for Prometheus, use ``/ready`` for Grafana Mimir.
 - **headers** Extra headers to pass to all prometheus http requests. Use this to pass authentication. Prometheus `supports basic authentication <https://prometheus.io/docs/guides/basic-auth/>`_.
 - **metrics_labels_time_window_hrs** Represents the time window, in hours, over which labels are fetched. This avoids fetching obsolete labels. Set it to ``null`` to let HolmesGPT fetch labels regardless of when they were generated.
 - **metrics_labels_cache_duration_hrs** How long are labels cached, in hours. Set it to ``null`` to disable caching.

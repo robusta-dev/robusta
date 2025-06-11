@@ -34,7 +34,7 @@ If you are using Robusta SaaS, ensure that your network allows access to the fol
 
 .. code:: bash
 
-    api.robusta.dev,robusta-charts.storage.googleapis.com,us-central1-docker.pkg.dev,platform.robusta.dev,xvyhpoxfmtpuqqeyqkso.supabase.co,relay.robusta.dev
+    api.robusta.dev,robusta-charts.storage.googleapis.com,us-central1-docker.pkg.dev,platform.robusta.dev,xvyhpoxfmtpuqqeyqkso.supabase.co,relay.robusta.dev,sp.robusta.dev
 
 Running Robusta in Air-Gapped or Offline Environments
 ------------------------------------------------------------------------------
