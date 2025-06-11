@@ -362,7 +362,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                     if tool.tool_name != "execute_prometheus_range_query":
                         continue
 
-                    json_content = json.loads(tool.result)
+                    json_content = json.loads(tool.result["data"])
                     query_result = PrometheusQueryResult(data=json_content.get("data", {}))
                     try:
                         output_type_str = json_content.get("output_type", "Plain")
