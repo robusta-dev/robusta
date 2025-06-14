@@ -64,9 +64,9 @@ class ConfigLoader:
         self.event_handler = event_handler
         self.root_playbook_path = PLAYBOOKS_ROOT
         self.reload_lock = threading.RLock()
-        self.watcher = FileSystemWatcher(self.root_playbook_path, self.__reload_playbook_packages)
-        self.conf_watcher = FileSystemWatcher(self.config_file_path, self.__reload_playbook_packages)
-        self.__reload_playbook_packages("initialization")
+        self.watcher = FileSystemWatcher(self.root_playbook_path, self.reload)
+        self.conf_watcher = FileSystemWatcher(self.config_file_path, self.reload)
+        self.reload("initialization")
 
     def close(self):
         self.watcher.stop_watcher()
@@ -74,6 +74,7 @@ class ConfigLoader:
 
     def reload(self, description: str):
         self.__reload_playbook_packages(description)
+        self.registry.get_event_emitter().emit_event("config_reload")
 
     def __reload_scheduler(self, playbooks_registry: PlaybooksRegistry):
         scheduler = self.registry.get_scheduler()
