@@ -17,7 +17,7 @@ class MemoryAnalyzer(PrometheusAnalyzer):
         """
 
         max_memory_usage_in_percentage = self._get_max_value_in_first_series_of_query(
-            f'instance:node_memory_utilisation:ratio{{job="node-exporter", job="node-exporter", instance="{node_name}"}}',
+            f'instance:node_memory_utilisation:ratio{{job="node-exporter", instance="{node_name}"}}',
             duration,
         )
         return max_memory_usage_in_percentage
