@@ -105,9 +105,8 @@ class ConfigLoader:
             return
 
         robusta_sink = robusta_sinks[0]
-        token = robusta_sink.dal.get_session_token()
 
-        receiver = ActionRequestReceiver(self.event_handler, token)
+        receiver = ActionRequestReceiver(self.event_handler, robusta_sink)
         self.registry.set_receiver(receiver)
         return receiver
     

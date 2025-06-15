@@ -76,14 +76,14 @@ class SlackActionsMessage(BaseModel):
 
 
 class ActionRequestReceiver:
-    def __init__(self, event_handler: PlaybooksEventHandler, auth_token: str):
+    def __init__(self, event_handler: PlaybooksEventHandler, robusta_sink: "RobustaSink"):
         self.event_handler = event_handler
         self.active = True
         self.account_id = self.event_handler.get_global_config().get("account_id")
         self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
         self.auth_provider = AuthProvider()
         self.healthy = False
-        self.auth_token = auth_token
+        self.robusta_sink = robusta_sink
 
         self.ws = websocket.WebSocketApp(
             WEBSOCKET_RELAY_ADDRESS,
@@ -287,12 +287,13 @@ class ActionRequestReceiver:
     def on_open(self, ws):
         account_id = self.event_handler.get_global_config().get("account_id")
         cluster_name = self.event_handler.get_global_config().get("cluster_name")
+        token = self.robusta_sink.dal.get_session_token()
         open_payload = {
             "action": "auth",
             "account_id": account_id,
             "cluster_name": cluster_name,
             "version": RUNNER_VERSION,
-            "token": self.auth_token,
+            "token": token,
         }
         logging.info(f"connecting to server as account_id={account_id}; cluster_name={cluster_name}")
         ws.send(json.dumps(open_payload))
