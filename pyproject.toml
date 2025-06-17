@@ -74,6 +74,7 @@ certifi = "^2023.7.22"
 regex = "2024.5.15"
 pyjwt = "^2.4.0"
 urllib3 = "^1.26.20"
+postgrest = "1.0.1" # 1.0.2 needs pydantic 2.0.0 which required upgrade also in other libs like prometrix
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
