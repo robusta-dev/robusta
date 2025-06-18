@@ -18,8 +18,8 @@ include_trailing_comma = true
 
 
 [tool.poetry.dependencies]
-python = "^3.8, <3.12"
-setuptools = "^70.0.0"
+python = "^3.9, <3.12"
+setuptools = "^80.9.0"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
 kubernetes = "^26.1.0"
@@ -60,7 +60,7 @@ humanize = "^3.13.1"
 cryptography = "^43.0.1"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
-prometrix = "0.2.0"
+prometrix = "0.2.1"
 hikaru-model-26 = "^1.1.1"
 apprise = "1.6.0"
 rocketchat-api = "^1.30.0"
@@ -74,6 +74,7 @@ certifi = "^2023.7.22"
 regex = "2024.5.15"
 pyjwt = "^2.4.0"
 urllib3 = "^1.26.20"
+postgrest = "1.0.1" # 1.0.2 needs pydantic 2.0.0 which required upgrade also in other libs like prometrix
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -118,7 +119,7 @@ all = ["Flask", "grafana-api", "watchdog", "better-exceptions", "CairoSVG", "tab
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 sphinx-reredirects = "^0.1.1"
 freezegun = "^1.4.0"
-tornado = "^6.4.2"
+tornado = "^6.5.1"
 responses = "^0.25.7"
 
 [build-system]
