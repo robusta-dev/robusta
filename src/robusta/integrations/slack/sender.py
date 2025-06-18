@@ -675,7 +675,7 @@ class SlackSender:
         )
 
     def __is_holmes_slackbot_enabled(self) -> bool:
-        robusta_sinks = self.registry.get_sinks().get_robusta_sinks()
+        robusta_sinks = self.registry.get_sinks().get_robusta_sinks() if self.registry else None
         if not robusta_sinks:
             logging.debug("No robusta sinks found, holmes not connected to slackbot")
             return False
