@@ -76,8 +76,9 @@ class SupabaseDal(AccountResourceFetcher):
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.client = create_client(url, key, options)
+        self.options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
+        self.client = create_client(url, key, self.options)
         self.patch_postgrest_execute()
         self.email = email
         self.password = password
@@ -94,6 +95,7 @@ class SupabaseDal(AccountResourceFetcher):
         # This is somewhat hacky.
         def execute_with_retry(_self):
             try:
+                self.client = create_client(self.url, self.key, self.options)
                 return self._original_execute(_self)
             except PostgrestAPIError as exc:
                 message = exc.message or ""
@@ -108,11 +110,8 @@ class SupabaseDal(AccountResourceFetcher):
                 # A RemoteProtocolError occurs when httpx tries to reuse a stale HTTP/2 connection
                 # that the Supabase server has silently closed (e.g., after keep-alive timeout).
                 # We close the session to force a new connection, then retry the request once.
-                logging.warning(f"RemoteProtocolError: {exc} — reconnecting and retrying once.")
-                try:
-                    self.client.postgrest.session.close()  # 🧹 Clears stale connection pool
-                except Exception as close_exc:
-                    logging.warning(f"Failed to close session cleanly: {close_exc}")
+                logging.warning(f"RemoteProtocolError: {exc} — recreating client and retrying.")
+                self.client = create_client(self.url, self.key, self.options)
                 return self._original_execute(_self)
 
         self._original_execute = SyncQueryRequestBuilder.execute
