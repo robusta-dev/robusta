@@ -110,7 +110,7 @@ class SupabaseDal(AccountResourceFetcher):
                 # We close the session to force a new connection, then retry the request once.
                 logging.warning(f"RemoteProtocolError: {exc} — reconnecting and retrying once.")
                 try:
-                    self.client.auth.session.close()  # 🧹 Clears stale connection pool
+                    self.client.postgrest.session.close()  # 🧹 Clears stale connection pool
                 except Exception as close_exc:
                     logging.warning(f"Failed to close session cleanly: {close_exc}")
                 return self._original_execute(_self)
