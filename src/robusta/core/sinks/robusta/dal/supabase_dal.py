@@ -76,7 +76,6 @@ class SupabaseDal(AccountResourceFetcher):
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        self.client = create_client(url, key, options)
         self.options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.client = create_client(url, key, self.options)
         self.patch_postgrest_execute()
