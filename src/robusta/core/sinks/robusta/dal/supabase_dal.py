@@ -6,7 +6,7 @@ import os
 import threading
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
-
+from httpx import RemoteProtocolError
 from cachetools import TTLCache
 import requests
 from postgrest._sync.request_builder import SyncQueryRequestBuilder
@@ -104,6 +104,16 @@ class SupabaseDal(AccountResourceFetcher):
                     return self._original_execute(_self)
                 else:
                     raise
+            except RemoteProtocolError as exc:
+                # A RemoteProtocolError occurs when httpx tries to reuse a stale HTTP/2 connection
+                # that the Supabase server has silently closed (e.g., after keep-alive timeout).
+                # We close the session to force a new connection, then retry the request once.
+                logging.warning(f"RemoteProtocolError: {exc} — reconnecting and retrying once.")
+                try:
+                    self.client.auth.session.close()  # 🧹 Clears stale connection pool
+                except Exception as close_exc:
+                    logging.warning(f"Failed to close session cleanly: {close_exc}")
+                return self._original_execute(_self)
 
         self._original_execute = SyncQueryRequestBuilder.execute
         SyncQueryRequestBuilder.execute = execute_with_retry
