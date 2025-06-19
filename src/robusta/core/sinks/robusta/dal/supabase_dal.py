@@ -94,7 +94,6 @@ class SupabaseDal(AccountResourceFetcher):
         # This is somewhat hacky.
         def execute_with_retry(_self):
             try:
-                self.client = create_client(self.url, self.key, self.options)
                 return self._original_execute(_self)
             except PostgrestAPIError as exc:
                 message = exc.message or ""
