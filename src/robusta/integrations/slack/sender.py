@@ -48,7 +48,6 @@ from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base import KeyT
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams
-
 from robusta.core.sinks.transformer import Transformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
@@ -62,7 +61,7 @@ class SlackSender:
     verified_api_tokens: Set[str] = set()
     channel_name_to_id = {}
 
-    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, is_preview: bool = False):
+    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, registry, is_preview: bool = False):
         """
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
@@ -80,6 +79,7 @@ class SlackSender:
             timeout=SLACK_REQUEST_TIMEOUT,
             retry_handlers=all_builtin_retry_handlers(),
         )
+        self.registry = registry
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
@@ -394,33 +394,6 @@ class SlackSender:
 
         return limited_labels
 
-    def __create_holmes_callback(self, finding: Finding) -> CallbackBlock:
-        resource = ResourceInfo(
-            name=finding.subject.name if finding.subject.name else "",
-            namespace=finding.subject.namespace,
-            kind=finding.subject.subject_type.value if finding.subject.subject_type.value else "",
-            node=finding.subject.node,
-            container=finding.subject.container,
-        )
-
-        context: Dict[str, Any] = {
-            "robusta_issue_id": str(finding.id),
-            "issue_type": finding.aggregation_key,
-            "source": finding.source.name,
-            "labels": self.__limit_labels_size(labels=finding.subject.labels),
-        }
-
-        return CallbackBlock(
-            {
-                "Ask HolmesGPT": CallbackChoice(
-                    action=ask_holmes,
-                    action_params=AIInvestigateParams(
-                        resource=resource, investigation_type="issue", ask="Why is this alert firing?", context=context
-                    ),
-                )
-            }
-        )
-
     @staticmethod
     def extract_mentions(title) -> (str, str):
         mentions = MENTION_PATTERN.findall(title)
@@ -667,6 +640,16 @@ class SlackSender:
         except Exception:
             logging.exception(f"error sending message to slack. {title}")
 
+    def get_holmes_block(self, platform_enabled: bool, slackbot_enabled) -> Optional[MarkdownBlock]:
+        if not platform_enabled and not slackbot_enabled:
+            return MarkdownBlock("_Ask AI questions about this alert, by connecting <https://platform.robusta.dev/create-account|Robusta SaaS> and tagging @holmes._")
+        elif platform_enabled and not slackbot_enabled:
+            return MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your <https://docs.robusta.dev/master/configuration/holmesgpt/index.html#enable-holmes-in-slack-in-the-platform|Slack>._")
+        elif platform_enabled and slackbot_enabled:
+            return MarkdownBlock("_Ask AI questions about this alert, by tagging @holmes in a threaded reply_")
+        return None
+
+
     def send_finding_to_slack(
         self,
         finding: Finding,
@@ -690,6 +673,15 @@ class SlackSender:
             platform_enabled=platform_enabled,
             thread_ts=thread_ts
         )
+
+    def __is_holmes_slackbot_enabled(self) -> bool:
+        robusta_sinks = self.registry.get_sinks().get_robusta_sinks() if self.registry else None
+        if not robusta_sinks:
+            logging.debug("No robusta sinks found, holmes not connected to slackbot")
+            return False
+
+        robusta_sink = robusta_sinks[0]
+        return robusta_sink.is_holmes_slackbot_connected()
 
     def __send_finding_to_slack(
         self,
@@ -725,9 +717,6 @@ class SlackSender:
         )
         blocks.append(links_block)
 
-        if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
-            blocks.append(self.__create_holmes_callback(finding))
-
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
             if finding.source == FindingSource.PROMETHEUS:
@@ -752,6 +741,12 @@ class SlackSender:
                 blocks.extend(enrichment.blocks)
 
         blocks.append(DividerBlock())
+
+        is_holmes_slackbot_enabled = self.__is_holmes_slackbot_enabled()
+        holmes_block = self.get_holmes_block(platform_enabled, is_holmes_slackbot_enabled)
+        if holmes_block:
+            blocks.append(holmes_block)
+
 
         if len(attachment_blocks):
             attachment_blocks.append(DividerBlock())

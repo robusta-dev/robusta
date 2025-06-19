@@ -17,7 +17,7 @@ TEST_FINDING_TITLE = "Test Text File Upload"
 
 def test_send_to_slack(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None
     )
     msg = "Test123"
     finding = Finding(title=msg, aggregation_key=msg)
@@ -29,7 +29,7 @@ def test_send_to_slack(slack_channel: SlackChannel):
 
 def test_long_slack_messages(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None
     )
     finding = Finding(title="A" * 151, aggregation_key="A" * 151)
     finding.add_enrichment([MarkdownBlock("H" * 3001)])
@@ -39,7 +39,7 @@ def test_long_slack_messages(slack_channel: SlackChannel):
 
 def test_long_table_columns(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None
     )
     finding = Finding(title="Testing table blocks", aggregation_key="TestingTableBlocks")
     finding.add_enrichment(
@@ -59,7 +59,7 @@ def test_long_table_columns(slack_channel: SlackChannel):
 
 def test_send_file_spooled_tempfile_fails(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None
     )
 
     # Test with a text file
@@ -82,7 +82,7 @@ def test_send_file_spooled_tempfile_fails(slack_channel: SlackChannel):
 
 def test_send_file_named_tempfile_fails(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None
     )
 
     finding = Finding(title=TEST_FINDING_TITLE, aggregation_key="TestTextFileUpload")
@@ -102,7 +102,7 @@ def test_send_file_named_tempfile_fails(slack_channel: SlackChannel):
 
 def test_temporary_file_creation_failure(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None
     )
 
     # Test with a text file

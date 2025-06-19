@@ -31,7 +31,7 @@ TEST_KEY = "test key"
 
 def test_send_to_slack(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None
     )
     msg = "Test123"
     finding = Finding(title=msg, aggregation_key=msg)
@@ -127,7 +127,7 @@ def create_finding_with_all_blocks():
 
 def test_all_block_types(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name,registry=None
     )
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
     finding = create_finding_with_all_blocks()

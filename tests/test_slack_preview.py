@@ -31,7 +31,7 @@ def extract_text_from_blocks(message):
 
 def test_slack_preview_default_template(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, is_preview=True
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None, is_preview=True
     )
     
     # Create a subject for the finding
@@ -83,7 +83,7 @@ def test_slack_preview_default_template(slack_channel: SlackChannel):
 
 def test_slack_preview_custom_template(slack_channel: SlackChannel):
     slack_sender = SlackSender(
-        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, is_preview=True
+        CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY, slack_channel.channel_name, registry=None, is_preview=True
     )
     
     subject = FindingSubject(
