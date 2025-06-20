@@ -107,9 +107,9 @@ class SupabaseDal(AccountResourceFetcher):
             except RemoteProtocolError as exc:
                 # A RemoteProtocolError occurs when httpx tries to reuse a stale HTTP/2 connection
                 # that the Supabase server has silently closed (e.g., after keep-alive timeout).
-                # We close the session to force a new connection, then retry the request once.
-                logging.warning(f"RemoteProtocolError: {exc} — recreating client and retrying.")
-                self.client = create_client(self.url, self.key, self.options)
+                # We recreate the client to force a new connection, then retry the request again.
+                logging.warning(f"RemoteProtocolError: {exc} — signing in to Supabase again.")
+                self.sign_in()
                 return self._original_execute(_self)
 
         self._original_execute = SyncQueryRequestBuilder.execute
