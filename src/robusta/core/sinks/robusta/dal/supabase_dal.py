@@ -97,12 +97,6 @@ class SupabaseDal(AccountResourceFetcher):
                 return self._original_execute(_self)
             except PostgrestAPIError as exc:
                 message = exc.message or ""
-
-                if exc.code == "23505":
-                    logging.warning(
-                        f"Supabase APIError (duplicate key): {exc.message} — skipping insert."
-                    )
-                    return None
                 if exc.code == "PGRST301" or "expired" in message.lower():
                     # JWT expired. Sign in again and retry the query
                     logging.error("JWT token expired/invalid, signing in to Supabase again")
@@ -116,16 +110,7 @@ class SupabaseDal(AccountResourceFetcher):
                 # We recreate the client to force a new connection, then retry the request again.
                 logging.warning(f"RemoteProtocolError: {exc} — recreating client and retrying.")
                 self.client = create_client(self.url, self.key, self.options)
-                try:
-                    return self._original_execute(_self)
-                except PostgrestAPIError as exc:
-                    if exc.code == "23505":
-                        logging.warning(
-                            f"Supabase APIError (duplicated key): {exc.message} — skipping insert."
-                        )
-                        return None
-                    else:
-                        raise
+                return self._original_execute(_self)
 
         self._original_execute = SyncQueryRequestBuilder.execute
         SyncQueryRequestBuilder.execute = execute_with_retry
@@ -201,7 +186,6 @@ class SupabaseDal(AccountResourceFetcher):
 
         if scans and not enrichments:
             return
-
         for enrichment in enrichments:
             evidence = ModelConversion.to_evidence_json(
                 account_id=self.account_id,
@@ -217,6 +201,13 @@ class SupabaseDal(AccountResourceFetcher):
 
             try:
                 self.client.table(EVIDENCE_TABLE).insert(evidence, returning=ReturnMethod.minimal).execute()
+            except PostgrestAPIError as exc:
+                if exc.code == "23505":
+                    logging.warning(
+                        f"Supabase APIError (duplicate key): {exc.message} — for evidence {evidence} in finding {finding.id} {finding.aggregation_key} {finding.service_key} skipping insert."
+                    )
+                else:
+                    logging.exception(f"Failed to persist finding {finding.id}")
             except Exception:
                 logging.exception(f"Failed to persist finding {finding.id} enrichment {enrichment}")
 
@@ -225,6 +216,13 @@ class SupabaseDal(AccountResourceFetcher):
                 ModelConversion.to_finding_json(self.account_id, self.cluster, finding),
                 returning=ReturnMethod.minimal,
             ).execute()
+        except PostgrestAPIError as exc:
+            if exc.code == "23505":
+                logging.warning(
+                    f"Supabase APIError (duplicate key): {exc.message} — for id {finding.id} {finding.aggregation_key} {finding.service_key} skipping insert."
+                )
+            else:
+                logging.exception(f"Failed to persist finding {finding.id}")
         except Exception:
             logging.exception(f"Failed to persist finding {finding.id}")
 
