@@ -16,7 +16,7 @@ from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
 from supabase import create_client
 from supabase.lib.client_options import ClientOptions
-
+import time
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_TIMEOUT_SECONDS
 from robusta.core.model.helm_release import HelmRelease
@@ -107,9 +107,10 @@ class SupabaseDal(AccountResourceFetcher):
             except RemoteProtocolError as exc:
                 # A RemoteProtocolError occurs when httpx tries to reuse a stale HTTP/2 connection
                 # that the Supabase server has silently closed (e.g., after keep-alive timeout).
-                # We recreate the client to force a new connection, then retry the request again.
+                # Wait till a new session is automatically created and attempt the request again.
                 logging.warning(f"RemoteProtocolError: {exc} — recreating client and retrying.")
-                self.client = create_client(self.url, self.key, self.options)
+                RETRY_DELAY_SECONDS = 5
+                time.sleep(RETRY_DELAY_SECONDS)
                 return self._original_execute(_self)
 
         self._original_execute = SyncQueryRequestBuilder.execute
