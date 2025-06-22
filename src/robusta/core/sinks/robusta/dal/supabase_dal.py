@@ -97,6 +97,12 @@ class SupabaseDal(AccountResourceFetcher):
                 return self._original_execute(_self)
             except PostgrestAPIError as exc:
                 message = exc.message or ""
+
+                if exc.code == "23505":
+                    logging.warning(
+                        f"Supabase APIError (duplicate key): {exc.message} — skipping insert."
+                    )
+                    return None
                 if exc.code == "PGRST301" or "expired" in message.lower():
                     # JWT expired. Sign in again and retry the query
                     logging.error("JWT token expired/invalid, signing in to Supabase again")
@@ -108,9 +114,18 @@ class SupabaseDal(AccountResourceFetcher):
                 # A RemoteProtocolError occurs when httpx tries to reuse a stale HTTP/2 connection
                 # that the Supabase server has silently closed (e.g., after keep-alive timeout).
                 # We recreate the client to force a new connection, then retry the request again.
-                logging.warning(f"RemoteProtocolError: {exc} — signing in to Supabase again.")
-                self.sign_in()
-                return self._original_execute(_self)
+                logging.warning(f"RemoteProtocolError: {exc} — recreating client and retrying.")
+                self.client = create_client(self.url, self.key, self.options)
+                try:
+                    return self._original_execute(_self)
+                except PostgrestAPIError as exc:
+                    if exc.code == "23505":
+                        logging.warning(
+                            f"Supabase APIError (duplicated key): {exc.message} — skipping insert."
+                        )
+                        return None
+                    else:
+                        raise
 
         self._original_execute = SyncQueryRequestBuilder.execute
         SyncQueryRequestBuilder.execute = execute_with_retry
