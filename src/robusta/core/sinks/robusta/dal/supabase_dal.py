@@ -210,7 +210,7 @@ class SupabaseDal(AccountResourceFetcher):
             except PostgrestAPIError as exc:
                 if exc.code == "23505":
                     logging.warning(
-                        f"Supabase APIError (duplicate key): {exc.message} — for evidence {evidence} in finding {finding.id} {finding.aggregation_key} {finding.service_key} skipping insert."
+                        f"Supabase APIError (duplicate key): {exc.message} — for evidence {evidence} in finding {finding.id} {finding.aggregation_key} {finding.service_key} skipping insert since evidence already exists"
                     )
                 else:
                     logging.exception(f"Failed to persist finding {finding.id}")
@@ -225,7 +225,7 @@ class SupabaseDal(AccountResourceFetcher):
         except PostgrestAPIError as exc:
             if exc.code == "23505":
                 logging.warning(
-                    f"Supabase APIError (duplicate key): {exc.message} — for id {finding.id} {finding.aggregation_key} {finding.service_key} skipping insert."
+                    f"Supabase APIError (duplicate key): {exc.message} — for id {finding.id} {finding.aggregation_key} {finding.service_key} skipping insert since finding already exists."
                 )
             else:
                 logging.exception(f"Failed to persist finding {finding.id}")
