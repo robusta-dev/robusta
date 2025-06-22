@@ -14,7 +14,7 @@ After completing this tutorial, we recommend configuring a metrics integration a
 
 Prerequisite
 =================================
-* A label in the following format ``cluster_name: YourClusterName`` added to each alert, with the cluster name as it appears in Robusta ``generated_values.yaml``.
+* A label in the following format ``cluster_name: YourClusterName`` added to each alert, with the cluster name as it appears in Robusta ``generated_values.yaml``. Follow the instructions :ref:`here <Adding a Cluster Label to Alerts>`.
 
 Send Alerts to Robusta
 ============================
