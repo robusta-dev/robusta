@@ -12,6 +12,7 @@ from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, Prometheus
 from pydantic import BaseModel, ValidationError, validator
 from robusta.api import (
     IMAGE_REGISTRY,
+    ActionParams,
     RUNNER_SERVICE_ACCOUNT,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
@@ -27,7 +28,7 @@ from robusta.api import (
     ScanType,
     action,
 )
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
@@ -296,6 +297,13 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
 
     return krr_secrets
 
+class ProcessScanParams(ActionParams):
+    scan_type: str
+    result: Any
+
+@action
+def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
+    logging.warning(f"Processing scan event: {params}")
 
 @action
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
@@ -338,7 +346,10 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             python_command += " " + _generate_additional_env_args(krr_secrets)
 
     logging.info(f"krr command '{python_command}'")
-
+    env_var.append(EnvVar(
+        name="ROBUSTA_URL",
+        value=f"http://{RELEASE_NAME}.{INSTALLATION_NAMESPACE}.svc.{CLUSTER_DOMAIN}:5000/api/trigger",
+    ))
     resources = ResourceRequirements(
         limits={
             "memory": (str(KRR_MEMORY_LIMIT)),
