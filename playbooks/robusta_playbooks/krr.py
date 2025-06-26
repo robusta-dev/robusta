@@ -306,7 +306,7 @@ class ProcessScanParams(ActionParams):
     
 @action
 def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
-    if params.scan_type.lower != "krr":
+    if params.scan_type.lower() != "krr":
         logging.warning(f"Processing scans not supported for type: {params.scan_type}")
         return
     metadata: Dict[str, Any] = {
@@ -321,10 +321,9 @@ def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
         if isinstance(e, json.JSONDecodeError):
             logging.exception("*KRR scan job failed. Expecting json result.*")
         elif isinstance(e, TypeError):
-            logging.exception("*KRR scan job failed.\n Error from KRR pod:\n {e}.*")
+            logging.exception(f"*KRR scan job failed.\n Error from KRR pod:\n {params.result}.*")
         else:
-            logging.exception(f"*KRR scan job unexpected error.*\n {e}")
-        logging.error(f"Logs: {params.result}")
+            logging.exception(f"*KRR scan job unexpected error.*\n {e}\nReturned result from KRR: {params.result}")
         event.emit_event(
             "scan_updated",
             scan_id=params.scan_id,
