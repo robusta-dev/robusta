@@ -321,7 +321,7 @@ def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
         if isinstance(e, json.JSONDecodeError):
             logging.exception("*KRR scan job failed. Expecting json result.*")
         elif isinstance(e, TypeError):
-            logging.exception(f"*KRR scan job failed.\n Error from KRR pod:\n {params.result}.*")
+            logging.error(f"*KRR scan job failed.\n Error from KRR pod:\n {params.result}.*")
         else:
             logging.exception(f"*KRR scan job unexpected error.*\n {e}\nReturned result from KRR: {params.result}")
         event.emit_event(
