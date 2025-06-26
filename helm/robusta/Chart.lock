@@ -1,9 +1,9 @@
 dependencies:
 - name: kube-prometheus-stack
   repository: https://prometheus-community.github.io/helm-charts
-  version: 55.7.0
+  version: 72.0.1
 - name: holmes
   repository: https://robusta-charts.storage.googleapis.com
   version: 0.11.5
-digest: sha256:af349cab87675093f9ad81330f889c31298bc0e9f918108a83702f33ae43ea41
-generated: "2025-06-10T09:36:25.85188+03:00"
+digest: sha256:3e3d5f742ecee2e068c88557aec4abca395ef1e9e90faabceb2671f27fe8ce52
+generated: "2025-06-22T16:35:28.432498+03:00"

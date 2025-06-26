@@ -442,6 +442,7 @@ def main():
         cluster_name="test-cluster",
         signing_key="test-signing-key",
         slack_channel=SLACK_CHANNEL,
+        registry=None,
         is_preview=False
     )
 
@@ -452,6 +453,7 @@ def main():
         cluster_name="test-cluster",
         signing_key="test-signing-key",
         slack_channel=SLACK_CHANNEL,
+        registry=None,
         is_preview=True
     )
 
