@@ -12,6 +12,7 @@ from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, Prometheus
 from pydantic import BaseModel, ValidationError, validator
 from robusta.api import (
     IMAGE_REGISTRY,
+    ActionParams,
     RUNNER_SERVICE_ACCOUNT,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
@@ -27,7 +28,7 @@ from robusta.api import (
     ScanType,
     action,
 )
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
@@ -37,6 +38,7 @@ IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.23.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
+KRR_PUBLISH_URL: str = os.getenv("KRR_PUBLISH_URL", f"http://{RELEASE_NAME}-runner.{INSTALLATION_NAMESPACE}.svc.{CLUSTER_DOMAIN}/api/trigger")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -296,6 +298,105 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
 
     return krr_secrets
 
+class ProcessScanParams(ActionParams):
+    scan_type: str
+    result: Any
+    scan_id: str
+    start_time: datetime
+    
+@action
+def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
+    if params.scan_type.lower() != "krr":
+        logging.warning(f"Processing scans not supported for type: {params.scan_type}")
+        return
+    metadata: Dict[str, Any] = {
+        "job": {
+            "name": f"krr-job-{params.scan_id}",
+            "namespace": INSTALLATION_NAMESPACE,
+        },
+    }
+    try:
+        krr_scan = KRRResponse(**params.result)
+    except Exception as e:
+        if isinstance(e, json.JSONDecodeError):
+            logging.exception("*KRR scan job failed. Expecting json result.*")
+        elif isinstance(e, TypeError):
+            logging.error(f"*KRR scan job failed.\n Error from KRR pod:\n {params.result}.*")
+        else:
+            logging.exception(f"*KRR scan job unexpected error.*\n {e}\nReturned result from KRR: {params.result}")
+        event.emit_event(
+            "scan_updated",
+            scan_id=params.scan_id,
+            metadata=metadata,
+            state=ScanState.FAILED,
+            type=ScanType.KRR,
+            start_time=params.start_time,
+        )
+        return
+    else:
+        metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
+        metadata["description"] = krr_scan.description
+        metadata["errors"] = krr_scan.errors
+        metadata["config"] = krr_scan.config
+        metadata["cluster_summary"] = krr_scan.clusterSummary
+
+    scan_block = KRRScanReportBlock(
+        title="KRR scan",
+        scan_id=params.scan_id,
+        type=ScanType.KRR,
+        start_time=params.start_time,
+        end_time=datetime.now(),
+        score=krr_scan.score,
+        metadata=metadata,
+        results=[
+            ScanReportRow(
+                scan_id=params.scan_id,
+                priority=scan.priority,
+                scan_type=ScanType.KRR,
+                namespace=scan.object.namespace,
+                name=scan.object.name,
+                kind=scan.object.kind,
+                container=scan.object.container,
+                content=[
+                    {
+                        "resource": resource,
+                        "allocated": {
+                            "request": scan.object.allocations["requests"][resource],
+                            "limit": scan.object.allocations["limits"][resource],
+                        },
+                        "recommended": {
+                            "request": scan.recommended.requests[resource].value,
+                            "limit": scan.recommended.limits[resource].value,
+                        },
+                        "priority": {
+                            "request": scan.recommended.requests[resource].priority,
+                            "limit": scan.recommended.limits[resource].priority,
+                        },
+                        "info": scan.recommended.info.get(resource),
+                        "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
+                        "description": krr_scan.description,
+                        "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
+                        "warnings": scan.object.warnings,
+                        "current_pod_count": scan.object.current_pod_count,
+                    }
+                    for resource in krr_scan.resources
+                ],
+            )
+            for scan in krr_scan.scans
+        ],
+        config=params.json(indent=4),
+    )
+
+    finding = Finding(
+        title="KRR Report",
+        source=FindingSource.MANUAL,
+        aggregation_key="KrrReport",
+        finding_type=FindingType.REPORT,
+        failure=False,
+    )
+    finding.add_enrichment([scan_block], annotations={EnrichmentAnnotation.SCAN: True})
+    event.add_finding(finding)
+
 
 @action
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
@@ -311,7 +412,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         subject = event.get_subject()
         args_sanitized = format_event_templated_string(subject, params.args_sanitized)
 
-    python_command = f"python krr.py {params.strategy} {args_sanitized} {additional_flags} "
+    publish_scan_args = f"--publish_scan_url={KRR_PUBLISH_URL} --scan_id={scan_id} --start_time=\"{datetime.now()}\""
+
+    python_command = f"python krr.py {params.strategy} {publish_scan_args} {args_sanitized} {additional_flags} "
     verbose_str = "-v" if params.krr_verbose else ""
     python_command += f"--max-workers {params.max_workers} {verbose_str} -f json --width 2048"
 
@@ -364,7 +467,6 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     )
 
     start_time = datetime.now()
-    logs = None
     job_name = f"krr-job-{scan_id}"
     metadata: Dict[str, Any] = {
         "job": {
@@ -387,7 +489,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
 
     try:
         krr_pod_labels = {"app": "krr.robusta.dev"}
-        logs = RobustaJob.run_simple_job_spec(
+        RobustaJob.run_simple_job_spec(
             spec,
             job_name,
             params.timeout,
@@ -396,97 +498,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             ttl_seconds_after_finished=43200,  # 12 hours
             delete_job_post_execution=False,
             process_name=False,
-            finalizers=["robusta.dev/krr-job-output"],
             custom_pod_labels=krr_pod_labels,
         )
-
-        # NOTE: We need to remove the logs before the json result
-        end_logs_string = "Result collected, displaying..."  # This is the last line shown in the logs
-        returning_result = logs.find(end_logs_string)
-        if returning_result != -1:
-            logs = logs[returning_result + len(end_logs_string) :]
-
-        # Sometimes we get warnings from the pod before the json result, so we need to remove them
-        if "{" not in logs:
-            raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
-        logs = logs[logs.find("{") :]
-
-        krr_response = json.loads(logs)
-        krr_scan = KRRResponse(**krr_response)
-
-    except Exception as e:
-        if isinstance(e, json.JSONDecodeError):
-            logging.exception("*KRR scan job failed. Expecting json result.*")
-        elif isinstance(e, ValidationError):
-            logging.exception("*KRR scan job failed. Result format issue.*")
-        elif str(e) == "Failed to reach wait condition":
-            logging.exception(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
-        else:
-            logging.exception(f"*KRR scan job unexpected error.*\n {e}")
-
-        logging.error(f"Logs: {logs}")
+    except Exception:
+        logging.exception(f"Error while executing krr job: {job_name}")
         update_state(ScanState.FAILED)
         return
-    else:
-        metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
-        metadata["description"] = krr_scan.description
-        metadata["errors"] = krr_scan.errors
-        metadata["config"] = krr_scan.config
-        metadata["cluster_summary"] = krr_scan.clusterSummary
-
-    scan_block = KRRScanReportBlock(
-        title="KRR scan",
-        scan_id=scan_id,
-        type=ScanType.KRR,
-        start_time=start_time,
-        end_time=datetime.now(),
-        score=krr_scan.score,
-        metadata=metadata,
-        results=[
-            ScanReportRow(
-                scan_id=scan_id,
-                priority=scan.priority,
-                scan_type=ScanType.KRR,
-                namespace=scan.object.namespace,
-                name=scan.object.name,
-                kind=scan.object.kind,
-                container=scan.object.container,
-                content=[
-                    {
-                        "resource": resource,
-                        "allocated": {
-                            "request": scan.object.allocations["requests"][resource],
-                            "limit": scan.object.allocations["limits"][resource],
-                        },
-                        "recommended": {
-                            "request": scan.recommended.requests[resource].value,
-                            "limit": scan.recommended.limits[resource].value,
-                        },
-                        "priority": {
-                            "request": scan.recommended.requests[resource].priority,
-                            "limit": scan.recommended.limits[resource].priority,
-                        },
-                        "info": scan.recommended.info.get(resource),
-                        "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
-                        "description": krr_scan.description,
-                        "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
-                        "warnings": scan.object.warnings,
-                        "current_pod_count": scan.object.current_pod_count,
-                    }
-                    for resource in krr_scan.resources
-                ],
-            )
-            for scan in krr_scan.scans
-        ],
-        config=params.json(indent=4),
-    )
-
-    finding = Finding(
-        title="KRR Report",
-        source=FindingSource.MANUAL,
-        aggregation_key="KrrReport",
-        finding_type=FindingType.REPORT,
-        failure=False,
-    )
-    finding.add_enrichment([scan_block], annotations={EnrichmentAnnotation.SCAN: True})
-    event.add_finding(finding)
