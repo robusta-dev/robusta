@@ -66,7 +66,7 @@ Configure Metric Querying
 
 Metrics querying lets Robusta pull metrics from Coralogix Managed Prometheus.
 
-1. Go to `Coralogix Documentation <https://coralogix.com/docs/grafana-plugin/#block-1778265e-61c2-4362-9060-533d158857d7>`_ and choose the relevant 'PromQL Endpoint' from their table.
+1. Go to `Coralogix Documentation <https://coralogix.com/docs/integrations/coralogix-endpoints/#promql>`_ and choose the relevant 'PromQL Endpoint' from their table.
 2. In your `generated_values.yaml` file add the endpoint url:
 
 .. code-block:: yaml
