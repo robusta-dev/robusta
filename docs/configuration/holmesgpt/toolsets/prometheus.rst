@@ -110,3 +110,46 @@ Capabilities
      - Execute an instant PromQL query
    * - execute_prometheus_range_query
      - Execute a PromQL range query
+
+
+Coralogix Prometheus Configuration
+******************************************
+
+To configure Coralogix PromQL endpoint with HolmesGPT:
+
+1. Go to `Coralogix Documentation <https://coralogix.com/docs/integrations/coralogix-endpoints/#promql>`_ and choose the relevant *PromQL Endpoint* for your region.
+
+2. On the Coralogix site, go to **Data Flow → API Keys** and create an API key with permissions to query metrics.
+
+3. Create a Kubernetes secret for the API key and expose it as an environment variable in `generated_values.yaml`:
+
+.. code-block:: yaml
+
+  holmes:
+    additionalEnvVars:
+    - name: CORALOGIX_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: coralogix-api-key
+          key: CORALOGIX_API_KEY
+
+4. Add the following under your toolsets in the Helm chart:
+
+.. code-block:: yaml
+
+  holmes:
+    toolsets:
+      prometheus/metrics:
+        enabled: true
+        config:
+          healthcheck: "/api/v1/query?query=up"  # <- this is important
+          prometheus_url: "https://prom-api.eu2.coralogix.com"  # change according to your region
+          # prometheus_additional_labels: # if you have individual labels for each cluster
+          #   cluster: 'CLUSTER_NAME_HERE'
+          headers:
+            token: "{{ env.CORALOGIX_API_KEY }}"
+          metrics_labels_time_window_hrs: 72
+          metrics_labels_cache_duration_hrs: 12
+          fetch_labels_with_labels_api: true
+          tool_calls_return_data: true
+          fetch_metadata_with_series_api: true
