@@ -213,6 +213,9 @@ spec:
   resources:
     requests:
       storage: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.playbooksPersistentVolumeSize }}{{ end }}
+  {{- if .Values.playbooksPersistentVolumeStorageClass }}
+  storageClassName: {{ .Values.playbooksPersistentVolumeStorageClass }}
+  {{- end }}
 {{- end }}
 ---
 apiVersion: v1
