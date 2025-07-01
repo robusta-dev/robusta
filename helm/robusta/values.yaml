@@ -109,6 +109,7 @@ scaleAlertsProcessing: False
 # Enable loading playbooks to a persistent volume
 playbooksPersistentVolume: false
 playbooksPersistentVolumeSize: 4Gi
+playbooksPersistentVolumeStorageClass: ""
 
 # priority builtin playbooks for running before all playbooks
 priorityBuiltinPlaybooks:
