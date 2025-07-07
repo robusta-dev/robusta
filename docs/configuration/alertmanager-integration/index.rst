@@ -15,6 +15,7 @@ Integrating with Prometheus
    google-managed-prometheus
    victoria-metrics
    grafana-alert-manager
+   pagerduty-alerting
    embedded-prometheus
    troubleshooting-alertmanager
    alert-custom-prometheus
