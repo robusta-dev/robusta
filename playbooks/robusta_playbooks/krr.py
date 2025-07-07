@@ -510,7 +510,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             secret,
             custom_annotations=params.custom_annotations,
             ttl_seconds_after_finished=43200,
-            delete_job_post_execution=False if not KRR_PUSH_SCAN else True,
+            delete_job_post_execution=False,
             process_name=False,
             finalizers=["robusta.dev/krr-job-output"] if not KRR_PUSH_SCAN else None,
             custom_pod_labels=krr_pod_labels,
