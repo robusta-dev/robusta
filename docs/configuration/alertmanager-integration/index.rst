@@ -95,6 +95,13 @@ Setup Instructions
 
         Special instructions when using Grafana alerts
 
+    .. grid-item-card:: :octicon:`book;1em;` Pagerduty Incidents and Alerts
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: pagerduty-alerting
+        :link-type: doc
+
+        Special instructions for sending pagerduty incidents and alerts to Robusta
+
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: embedded-prometheus
