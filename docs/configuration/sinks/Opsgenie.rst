@@ -14,7 +14,7 @@ We can add Prometheus alert labels into Opsgenie alert extra details by setting 
 Configuring the OpsGenie sink
 ------------------------------------------------
 
-The OpsGenie sink supports static and dynamic team routing, optional fallback teams, tagging, and enrichment with Kubernetes labels.
+The OpsGenie sink supports static and dynamic team and tag routing, optional fallback teams, tagging, and enrichment with Kubernetes labels.
 
 .. admonition:: Add this to your `generated_values.yaml`
 
@@ -32,14 +32,16 @@ The OpsGenie sink supports static and dynamic team routing, optional fallback te
             default_team: "oncall"   # Optional fallback team for Dynamic team routing
             tags:
             - "prod a"
+            - "$labels.app"
             extra_details_labels: false # optional, default is false
 
 In this example:
 
 - Alerts will be routed to the **"noc"** team by default.
-- If the alert includes a **"team" label**, it will also be routed to the value of that label.
+- If the alert includes a **"team" label**, it will also be routed to team of the value of that label.
 - If the **"team" label is missing**, the alert will be routed to the **"oncall"** team as a fallback.
 - The tag **"prod a"** will be included with every alert.
+- If the alert includes a **"app" label**, the value will added as a tag for that label.
 - Kubernetes labels **will not be added** to alert details, as `extra_details_labels` is set to `false`.
 
 .. note::
