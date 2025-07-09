@@ -109,6 +109,8 @@ scaleAlertsProcessing: False
 # Enable loading playbooks to a persistent volume
 playbooksPersistentVolume: false
 playbooksPersistentVolumeSize: 4Gi
+# StorageClass(string) to use for the playbooks PVC. Leave empty to let
+# the cluster default apply.
 playbooksPersistentVolumeStorageClass: ""
 
 # priority builtin playbooks for running before all playbooks
