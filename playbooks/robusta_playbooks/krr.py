@@ -12,6 +12,7 @@ from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, Prometheus
 from pydantic import BaseModel, ValidationError, validator
 from robusta.api import (
     IMAGE_REGISTRY,
+    ActionParams,
     RUNNER_SERVICE_ACCOUNT,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
@@ -27,16 +28,18 @@ from robusta.api import (
     ScanType,
     action,
 )
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, load_bool
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 from robusta.utils.parsing import format_event_templated_string
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.23.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.24.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
+KRR_PUSH_SCAN: str = load_bool("KRR_PUSH_SCAN", True)
+KRR_PUBLISH_URL: str = os.getenv("KRR_PUBLISH_URL", f"http://{RELEASE_NAME}-runner.{INSTALLATION_NAMESPACE}.svc.{CLUSTER_DOMAIN}/api/trigger")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -296,145 +299,39 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
 
     return krr_secrets
 
-
-@action
-def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
-    """
-    Displays a KRR scan report.
-    """
-    scan_id = str(uuid.uuid4())
-    prom_config = generate_prometheus_config(params)
-    additional_flags = get_krr_additional_flags(params)
-    args_sanitized = params.args_sanitized
-
-    if params.args_sanitized and hasattr(event, "obj") and event.obj is not None:
-        subject = event.get_subject()
-        args_sanitized = format_event_templated_string(subject, params.args_sanitized)
-
-    python_command = f"python krr.py {params.strategy} {args_sanitized} {additional_flags} "
-    verbose_str = "-v" if params.krr_verbose else ""
-    python_command += f"--max-workers {params.max_workers} {verbose_str} -f json --width 2048"
-
-    if params.prometheus_url:
-        python_command += f" -p {params.prometheus_url}"
-
-    env_var: List[EnvVar] = []
-    secret: Optional[JobSecret] = None
-
-    if IS_OPENSHIFT and params.prometheus_auth is None:
-        # if openshift, and the user didn't define auth header, use openshift token
-        python_command += " --openshift"
+class ProcessScanParams(ActionParams):
+    scan_type: str
+    result: Any
+    scan_id: str
+    start_time: datetime
+    
+def _emit_failed_scan_event(event, scan_id, start_time, metadata, reason_msg, exception=None, result=None):
+    if exception:
+        logging.exception(reason_msg)
     else:
-        # adding env var of auth token from Secret
-        krr_secrets = _generate_prometheus_secrets(prom_config)
-        python_command += " " + _generate_cmd_line_args(prom_config)
-
-        # creating secrets for auth
-        secret = _generate_krr_job_secret(scan_id, krr_secrets)
-        # setting env variables of krr to have secret
-        if secret:
-            env_var = _generate_krr_env_vars(krr_secrets, secret.name)
-            # adding secret env var in krr pod command
-            python_command += " " + _generate_additional_env_args(krr_secrets)
-
-    logging.info(f"krr command '{python_command}'")
-
-    resources = ResourceRequirements(
-        limits={
-            "memory": (str(KRR_MEMORY_LIMIT)),
-        },
-        requests={
-            "memory": (str(KRR_MEMORY_REQUEST)),
-        },
-    )
-    spec = PodSpec(
-        serviceAccountName=params.serviceAccountName,
-        containers=[
-            Container(
-                name="krr",
-                image=IMAGE,
-                imagePullPolicy="Always",
-                command=["/bin/sh", "-c", python_command],
-                env=env_var,
-                resources=resources,
-            )
-        ],
-        restartPolicy="Never",
-        **params.krr_job_spec,
+        logging.error(reason_msg)
+    if result:
+        logging.error(f"KRR raw result:\n{result}")
+    event.emit_event(
+        "scan_updated",
+        scan_id=scan_id,
+        metadata=metadata,
+        state=ScanState.FAILED,
+        type=ScanType.KRR,
+        start_time=start_time,
     )
 
-    start_time = datetime.now()
-    logs = None
-    job_name = f"krr-job-{scan_id}"
-    metadata: Dict[str, Any] = {
-        "job": {
-            "name": job_name,
-            "namespace": INSTALLATION_NAMESPACE,
-        },
-    }
 
-    def update_state(state: ScanState) -> None:
-        event.emit_event(
-            "scan_updated",
-            scan_id=scan_id,
-            metadata=metadata,
-            state=state,
-            type=ScanType.KRR,
-            start_time=start_time,
-        )
+def _enrich_metadata_from_krr_response(krr_scan: KRRResponse, metadata: Dict[str, Any]):
+    metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
+    metadata["description"] = krr_scan.description
+    metadata["errors"] = krr_scan.errors
+    metadata["config"] = krr_scan.config
+    metadata["cluster_summary"] = krr_scan.clusterSummary
 
-    update_state(ScanState.PENDING)
 
-    try:
-        krr_pod_labels = {"app": "krr.robusta.dev"}
-        logs = RobustaJob.run_simple_job_spec(
-            spec,
-            job_name,
-            params.timeout,
-            secret,
-            custom_annotations=params.custom_annotations,
-            ttl_seconds_after_finished=43200,  # 12 hours
-            delete_job_post_execution=False,
-            process_name=False,
-            finalizers=["robusta.dev/krr-job-output"],
-            custom_pod_labels=krr_pod_labels,
-        )
-
-        # NOTE: We need to remove the logs before the json result
-        end_logs_string = "Result collected, displaying..."  # This is the last line shown in the logs
-        returning_result = logs.find(end_logs_string)
-        if returning_result != -1:
-            logs = logs[returning_result + len(end_logs_string) :]
-
-        # Sometimes we get warnings from the pod before the json result, so we need to remove them
-        if "{" not in logs:
-            raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
-        logs = logs[logs.find("{") :]
-
-        krr_response = json.loads(logs)
-        krr_scan = KRRResponse(**krr_response)
-
-    except Exception as e:
-        if isinstance(e, json.JSONDecodeError):
-            logging.exception("*KRR scan job failed. Expecting json result.*")
-        elif isinstance(e, ValidationError):
-            logging.exception("*KRR scan job failed. Result format issue.*")
-        elif str(e) == "Failed to reach wait condition":
-            logging.exception(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
-        else:
-            logging.exception(f"*KRR scan job unexpected error.*\n {e}")
-
-        logging.error(f"Logs: {logs}")
-        update_state(ScanState.FAILED)
-        return
-    else:
-        metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
-        metadata["description"] = krr_scan.description
-        metadata["errors"] = krr_scan.errors
-        metadata["config"] = krr_scan.config
-        metadata["cluster_summary"] = krr_scan.clusterSummary
-
-    scan_block = KRRScanReportBlock(
+def _generate_krr_report_block(scan_id: str, start_time: datetime, krr_scan: KRRResponse, metadata: Dict[str, Any], config_json: str) -> KRRScanReportBlock:
+    return KRRScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,
         type=ScanType.KRR,
@@ -478,7 +375,179 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             )
             for scan in krr_scan.scans
         ],
-        config=params.json(indent=4),
+        config=config_json,
+    )
+
+@action
+def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
+    if params.scan_type.lower() != "krr":
+        logging.warning(f"Processing scans not supported for type: {params.scan_type}")
+        return
+
+    logging.info(f"Received process_scan request")
+    logging.debug(f"process scan contents {params}")
+
+    metadata = {"job": {"name": f"krr-job-{params.scan_id}", "namespace": INSTALLATION_NAMESPACE}}
+
+    try:
+        krr_scan = KRRResponse(**params.result)
+    except Exception as e:
+        if isinstance(e, json.JSONDecodeError):
+            msg = "*KRR scan job failed. Expecting json result.*"
+        elif isinstance(e, TypeError):
+            msg = "*KRR scan job failed.\n Error from KRR pod:*"
+        else:
+            msg = f"*KRR scan job unexpected error.*\n {e}"
+        _emit_failed_scan_event(event, params.scan_id, params.start_time, metadata, msg, e, params.result)
+        return
+
+    _enrich_metadata_from_krr_response(krr_scan, metadata)
+
+    scan_block = _generate_krr_report_block(
+        params.scan_id, params.start_time, krr_scan, metadata, params.json(indent=4)
+    )
+
+    finding = Finding(
+        title="KRR Report",
+        source=FindingSource.MANUAL,
+        aggregation_key="KrrReport",
+        finding_type=FindingType.REPORT,
+        failure=False,
+    )
+    finding.add_enrichment([scan_block], annotations={EnrichmentAnnotation.SCAN: True})
+    event.add_finding(finding)
+
+@action
+def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
+    """
+    Displays a KRR scan report.
+    """
+    scan_id = str(uuid.uuid4())
+    start_time = datetime.now()
+    job_name = f"krr-job-{scan_id}"
+    metadata = {
+        "job": {
+            "name": job_name,
+            "namespace": INSTALLATION_NAMESPACE,
+        }
+    }
+
+    prom_config = generate_prometheus_config(params)
+    additional_flags = get_krr_additional_flags(params)
+    args_sanitized = params.args_sanitized
+
+    if args_sanitized and hasattr(event, "obj") and event.obj is not None:
+        subject = event.get_subject()
+        args_sanitized = format_event_templated_string(subject, args_sanitized)
+
+    publish_scan_args = ""
+    if KRR_PUSH_SCAN:
+        publish_scan_args = f"--publish_scan_url={KRR_PUBLISH_URL} --scan_id={scan_id} --start_time=\"{start_time}\""
+
+
+    python_command = (
+        f"python krr.py {params.strategy} {publish_scan_args} {args_sanitized} {additional_flags} "
+        f"--max-workers {params.max_workers} {'-v' if params.krr_verbose else ''} -f json --width 2048"
+    )
+
+    env_var: List[EnvVar] = []
+    secret: Optional[JobSecret] = None
+
+    if params.prometheus_url:
+        python_command += f" -p {params.prometheus_url}"
+
+    if IS_OPENSHIFT and params.prometheus_auth is None:
+        python_command += " --openshift"
+    else:
+        krr_secrets = _generate_prometheus_secrets(prom_config)
+        python_command += " " + _generate_cmd_line_args(prom_config)
+        secret = _generate_krr_job_secret(scan_id, krr_secrets)
+        if secret:
+            env_var = _generate_krr_env_vars(krr_secrets, secret.name)
+            python_command += " " + _generate_additional_env_args(krr_secrets)
+
+    logging.info(f"krr command '{python_command}'")
+
+    resources = ResourceRequirements(
+        limits={"memory": str(KRR_MEMORY_LIMIT)},
+        requests={"memory": str(KRR_MEMORY_REQUEST)},
+    )
+
+    spec = PodSpec(
+        serviceAccountName=params.serviceAccountName,
+        containers=[
+            Container(
+                name="krr",
+                image=IMAGE,
+                imagePullPolicy="Always",
+                command=["/bin/sh", "-c", python_command],
+                env=env_var,
+                resources=resources,
+            )
+        ],
+        restartPolicy="Never",
+        **params.krr_job_spec,
+    )
+
+    def update_state(state: ScanState) -> None:
+        event.emit_event(
+            "scan_updated",
+            scan_id=scan_id,
+            metadata=metadata,
+            state=state,
+            type=ScanType.KRR,
+            start_time=start_time,
+        )
+
+    update_state(ScanState.PENDING)
+
+    try:
+        krr_pod_labels = {"app": "krr.robusta.dev"}
+        logs = RobustaJob.run_simple_job_spec(
+            spec,
+            job_name,
+            params.timeout,
+            secret,
+            custom_annotations=params.custom_annotations,
+            ttl_seconds_after_finished=43200,
+            delete_job_post_execution=False,
+            process_name=False,
+            finalizers=["robusta.dev/krr-job-output"] if not KRR_PUSH_SCAN else None,
+            custom_pod_labels=krr_pod_labels,
+        )
+
+        if KRR_PUSH_SCAN:
+            return
+
+        # Extract the JSON result from logs
+        end_logs_string = "Result collected, displaying..."
+        index = logs.find(end_logs_string)
+        if index != -1:
+            logs = logs[index + len(end_logs_string):]
+
+        if "{" not in logs:
+            raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
+        logs = logs[logs.find("{"):]
+        krr_response = json.loads(logs)
+        krr_scan = KRRResponse(**krr_response)
+
+    except Exception as e:
+        if isinstance(e, json.JSONDecodeError):
+            msg = "*KRR scan job failed. Expecting json result.*"
+        elif isinstance(e, ValidationError):
+            msg = "*KRR scan job failed. Result format issue.*"
+        elif str(e) == "Failed to reach wait condition":
+            msg = f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*"
+        else:
+            msg = f"*KRR scan job unexpected error.*\n {e}"
+
+        _emit_failed_scan_event(event, scan_id, start_time, metadata, msg, e, logs)
+        return
+
+    _enrich_metadata_from_krr_response(krr_scan, metadata)
+
+    scan_block = _generate_krr_report_block(
+        scan_id, start_time, krr_scan, metadata, params.json(indent=4)
     )
 
     finding = Finding(
