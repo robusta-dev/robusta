@@ -32,7 +32,7 @@ To generate an API token:
 
 1. In the Robusta UI, navigate to **Settings → API Keys**.
 2. Click **New API Key**.
-3. Name the key **PagerDuty**, grant it **Read/Write** access to alerts, and click **Generate API Key**.
+3. Name the key **Nagios**, grant it **Read/Write** access to alerts, and click **Generate API Key**.
 4. Copy and securely store the generated API key — you’ll use this as your `api_token`.
 
 
@@ -67,7 +67,7 @@ Ensure Robusta is part of a contact group or explicitly included in your alert d
     define contactgroup {
         contactgroup_name               all_contacts
         alias                           Nagios Administrators
-        members                         pagerduty,robusta
+        members                         (other contacts listed here),robusta
     }
 
 Step 4: Create the Bash Command Script
