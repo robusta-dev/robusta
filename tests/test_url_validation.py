@@ -12,7 +12,6 @@ class TestUrlValidation:
         ("https://grafana.com/d/dashboard", True),
         ("http://mimir.monitoring.svc.cluster.local:9009/graph?g0.expr=up", True),
         ("https://loki.example.com/graph?g0.expr=count(up)", True),
-        ("ftp://example.com/file", True),  # Valid URL with scheme and netloc
         
         # Invalid URLs that should be rejected by Slack
         ("?g0.expr=up", False),  # Missing scheme and netloc
@@ -23,6 +22,9 @@ class TestUrlValidation:
         ("://invalid", False),  # Invalid format
         ("http://", False),  # Incomplete URL
         ("https://", False),  # Incomplete URL
+        ("ftp://example.com/file", False),  # Non-HTTP/HTTPS scheme
+        ("ssh://server.com", False),  # Non-HTTP/HTTPS scheme
+        ("file:///path/to/file", False),  # Non-HTTP/HTTPS scheme
     ])
     def test_is_valid_url(self, url, expected):
         """Test URL validation with various URL formats."""

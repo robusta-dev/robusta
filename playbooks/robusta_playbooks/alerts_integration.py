@@ -224,11 +224,11 @@ def minimal_default_enricher(alert: PrometheusKubernetesAlert):
 def is_valid_url(url: str) -> bool:
     """
     Check if a URL is valid for use in Slack messages.
-    Validates that the URL has both scheme and netloc components.
+    Validates that the URL has HTTP/HTTPS scheme and netloc components.
     """
     try:
         parsed = urlparse(url)
-        return bool(parsed.scheme and parsed.netloc)
+        return bool(parsed.scheme in ('http', 'https') and parsed.netloc)
     except Exception:
         return False
 
