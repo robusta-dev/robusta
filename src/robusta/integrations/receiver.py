@@ -37,7 +37,6 @@ from robusta.utils.auth_provider import AuthProvider
 from robusta.utils.error_codes import ErrorCodes
 
 WEBSOCKET_RELAY_ADDRESS = os.environ.get("WEBSOCKET_RELAY_ADDRESS", "wss://relay.robusta.dev")
-CLOUD_ROUTING = json.loads(os.environ.get("CLOUD_ROUTING", "True").lower())
 RECEIVER_ENABLE_WEBSOCKET_TRACING = json.loads(os.environ.get("RECEIVER_ENABLE_WEBSOCKET_TRACING", "False").lower())
 INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3))
 WEBSOCKET_THREADPOOL_SIZE = int(os.environ.get("WEBSOCKET_THREADPOOL_SIZE", 10))
@@ -104,10 +103,6 @@ class ActionRequestReceiver:
         self.start_receiver()
 
     def start_receiver(self):
-        if not CLOUD_ROUTING:
-            logging.info("outgoing messages only mode. Incoming event receiver not initialized")
-            return
-
         if WEBSOCKET_RELAY_ADDRESS == "":
             logging.warning("relay address empty. Not initializing relay")
             return
