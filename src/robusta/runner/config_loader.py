@@ -64,9 +64,9 @@ class ConfigLoader:
         self.event_handler = event_handler
         self.root_playbook_path = PLAYBOOKS_ROOT
         self.reload_lock = threading.RLock()
-        self.watcher = FileSystemWatcher(self.root_playbook_path, self.__reload_playbook_packages)
-        self.conf_watcher = FileSystemWatcher(self.config_file_path, self.__reload_playbook_packages)
-        self.__reload_playbook_packages("initialization")
+        self.watcher = FileSystemWatcher(self.root_playbook_path, self.reload)
+        self.conf_watcher = FileSystemWatcher(self.config_file_path, self.reload)
+        self.reload("initialization")
 
     def close(self):
         self.watcher.stop_watcher()
@@ -74,6 +74,7 @@ class ConfigLoader:
 
     def reload(self, description: str):
         self.__reload_playbook_packages(description)
+        self.registry.get_event_emitter().emit_event("config_reload")
 
     def __reload_scheduler(self, playbooks_registry: PlaybooksRegistry):
         scheduler = self.registry.get_scheduler()
@@ -86,7 +87,7 @@ class ConfigLoader:
     def __reload_receiver(self):
         receiver = self.registry.get_receiver()
         if not receiver:  # no existing receiver, just start one
-            self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
+            self.__create_receiver()
             return
 
         current_account_id = self.event_handler.get_global_config().get("account_id")
@@ -95,8 +96,20 @@ class ConfigLoader:
         if current_account_id != receiver.account_id or current_cluster_name != receiver.cluster_name:
             # need to re-create the receiver
             receiver.stop()
-            self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
+            self.__create_receiver()
 
+    def __create_receiver(self):
+        robusta_sinks = self.registry.get_sinks().get_robusta_sinks()
+        if not robusta_sinks:
+            logging.info("No robusta sinks found, skipping receiver creation")
+            return
+
+        robusta_sink = robusta_sinks[0]
+
+        receiver = ActionRequestReceiver(self.event_handler, robusta_sink)
+        self.registry.set_receiver(receiver)
+        return receiver
+    
     @staticmethod
     def __get_package_name_from_pyproject(local_path: str) -> str:
         with open(os.path.join(local_path, "pyproject.toml"), "r") as pyproj_toml:
@@ -235,8 +248,6 @@ class ConfigLoader:
                 # This needs to be set before the robusta sink is created since a cluster status is sent on creation
                 self.registry.set_light_actions(runner_config.light_actions if runner_config.light_actions else [])
 
-                self.__reload_receiver()
-
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
                     runner_config,
                     self.registry.get_sinks(),
@@ -250,6 +261,8 @@ class ConfigLoader:
                 self.registry.set_actions(action_registry)
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
+                self.__reload_receiver()
+
 
                 telemetry = self.registry.get_telemetry()
                 telemetry.playbooks_count = len(runner_config.active_playbooks) if runner_config.active_playbooks else 0

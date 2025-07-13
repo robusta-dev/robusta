@@ -62,10 +62,17 @@ class TopServiceResolver:
         if name is None or namespace is None:
             return None
 
-        for cached_resource in cls.__namespace_to_resource[namespace]:
+        longest_match = None
+        max_length = -1
+
+        for cached_resource in cls.__namespace_to_resource.get(namespace, []):
             if name.startswith(cached_resource.name):
-                return cached_resource
-        return None
+                match_length = len(cached_resource.name)
+                if match_length > max_length:
+                    longest_match = cached_resource
+                    max_length = match_length
+
+        return longest_match
 
     @classmethod
     def add_cached_resource(cls, resource: TopLevelResource):

@@ -1,6 +1,6 @@
 import json
 import logging
-
+import re
 import requests
 from prometrix import PrometheusQueryResult
 
@@ -361,8 +361,8 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                 for tool in holmes_result.tool_calls:
                     if tool.tool_name != "execute_prometheus_range_query":
                         continue
-
-                    json_content = json.loads(tool.result)
+                    holmes_result.analysis = re.sub(r"<<.*?>>", "", holmes_result.analysis).strip()
+                    json_content = json.loads(tool.result["data"])
                     query_result = PrometheusQueryResult(data=json_content.get("data", {}))
                     try:
                         output_type_str = json_content.get("output_type", "Plain")
