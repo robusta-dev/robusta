@@ -260,6 +260,7 @@ def is_state_in_oom_status(state: ContainerState):
         return False
     return state.terminated.reason == "OOMKilled"
 
+
 def pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodResources:
     pod_cpu_req: float = 0.0
     pod_mem_req: int = 0
