@@ -394,11 +394,11 @@ def fail_krr_scan(event: PodEvent, params: FailedScanParams):
         return
     scan_id = params.scan_id
     if not scan_id:
-        scan_id = pod.metadata.labels.get("scan-id")
+        scan_id = pod.metadata.annotations.get("scan-id")
 
     start_time = params.start_time
     if not start_time:
-        start_time = pod.metadata.labels.get("start-time")
+        start_time = pod.metadata.annotations.get("start-time")
 
     if not start_time or not scan_id:
         logging.error(f"cannot run fail_krr_scan, scan_id or start_time are missing: {event}")
@@ -532,7 +532,11 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     update_state(ScanState.PENDING)
 
     try:
-        krr_pod_labels = {"app": "krr.robusta.dev", "scan-id": scan_id, "start-time": start_time}
+        krr_pod_labels = {"app": "krr.robusta.dev"}
+        krr_annotations = {"scan-id": scan_id, "start-time": start_time}
+        if params.custom_annotations:
+            krr_annotations.update(params.custom_annotations)
+
         logs = RobustaJob.run_simple_job_spec(
             spec,
             job_name,
