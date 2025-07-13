@@ -78,8 +78,8 @@ class ActionRequestReceiver:
     def __init__(self, event_handler: PlaybooksEventHandler, robusta_sink: "RobustaSink"):
         self.event_handler = event_handler
         self.active = True
-        self.account_id = self.event_handler.get_global_config().get("account_id")
-        self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
+        self.account_id = robusta_sink.account_id
+        self.cluster_name = robusta_sink.cluster_name
         self.auth_provider = AuthProvider()
         self.healthy = False
         self.robusta_sink = robusta_sink
@@ -280,17 +280,15 @@ class ActionRequestReceiver:
         logging.info(f"Relay websocket error: {error}")
 
     def on_open(self, ws):
-        account_id = self.event_handler.get_global_config().get("account_id")
-        cluster_name = self.event_handler.get_global_config().get("cluster_name")
         token = self.robusta_sink.dal.get_session_token()
         open_payload = {
             "action": "auth",
-            "account_id": account_id,
-            "cluster_name": cluster_name,
+            "account_id": self.account_id,
+            "cluster_name": self.cluster_name,
             "version": RUNNER_VERSION,
             "token": token,
         }
-        logging.info(f"connecting to server as account_id={account_id}; cluster_name={cluster_name}")
+        logging.info(f"connecting to server as account_id={self.account_id}; cluster_name={self.cluster_name}")
         ws.send(json.dumps(open_payload))
 
     def __validate_request(self, action_request: ExternalActionRequest, validate_timestamp: bool) -> ValidationResponse:
