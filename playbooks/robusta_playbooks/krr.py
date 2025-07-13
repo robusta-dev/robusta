@@ -406,7 +406,7 @@ def fail_krr_scan(event: PodEvent, params: FailedScanParams):
 
     failure_message = get_terminated_reason_or_default(pod, params.default_failure_message)
     metadata = {"job": {"name": f"krr-job-{params.scan_id}", "namespace": INSTALLATION_NAMESPACE}}
-    _emit_failed_scan_event(event, scan_id, start_time, metadata, failure_message, None, params.result)
+    _emit_failed_scan_event(event, scan_id, start_time, metadata, failure_message, None, None)
 
 @action
 def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
