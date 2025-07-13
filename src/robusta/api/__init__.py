@@ -99,6 +99,7 @@ from robusta.core.model.pods import (
     format_unit,
     get_oom_kill_time,
     get_oom_killed_container,
+    get_terminated_reason_or_default,
     is_state_in_oom_status,
     k8s_memory_factors,
     pod_limits,

@@ -27,6 +27,8 @@ from robusta.api import (
     ScanReportRow,
     ScanType,
     action,
+    PodEvent,
+    get_terminated_reason_or_default,
 )
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, load_bool
 from robusta.core.reporting.consts import ScanState
@@ -304,7 +306,13 @@ class ProcessScanParams(ActionParams):
     result: Any
     scan_id: str
     start_time: datetime
-    
+
+class FailedScanParams(ActionParams):
+    default_failure_message: str = "Unknown failure"
+    scan_id: Optional[str] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
 def _emit_failed_scan_event(event, scan_id, start_time, metadata, reason_msg, exception=None, result=None):
     if exception:
         logging.exception(reason_msg)
@@ -377,6 +385,28 @@ def _generate_krr_report_block(scan_id: str, start_time: datetime, krr_scan: KRR
         ],
         config=config_json,
     )
+
+@action
+def fail_krr_scan(event: PodEvent, params: FailedScanParams):
+    pod = event.get_pod()
+    if not pod:
+        logging.error(f"cannot run fail_krr_scan on alert with no pod object: {event}")
+        return
+    scan_id = params.scan_id
+    if not scan_id:
+        scan_id = pod.metadata.labels.get("scan-id")
+
+    start_time = params.start_time
+    if not start_time:
+        start_time = pod.metadata.labels.get("start-time")
+
+    if not start_time or not scan_id:
+        logging.error(f"cannot run fail_krr_scan, scan_id or start_time are missing: {event}")
+        return
+
+    failure_message = get_terminated_reason_or_default(pod, params.default_failure_message)
+    metadata = {"job": {"name": f"krr-job-{params.scan_id}", "namespace": INSTALLATION_NAMESPACE}}
+    _emit_failed_scan_event(event, scan_id, start_time, metadata, failure_message, None, params.result)
 
 @action
 def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
@@ -502,7 +532,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     update_state(ScanState.PENDING)
 
     try:
-        krr_pod_labels = {"app": "krr.robusta.dev"}
+        krr_pod_labels = {"app": "krr.robusta.dev", "scan-id": scan_id, "start-time": start_time}
         logs = RobustaJob.run_simple_job_spec(
             spec,
             job_name,
@@ -514,6 +544,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             process_name=False,
             finalizers=["robusta.dev/krr-job-output"] if not KRR_PUSH_SCAN else None,
             custom_pod_labels=krr_pod_labels,
+            return_logs= False if not KRR_PUSH_SCAN else False,
         )
 
         if KRR_PUSH_SCAN:
