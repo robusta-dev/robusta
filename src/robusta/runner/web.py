@@ -22,7 +22,6 @@ from robusta.runner.config_loader import ConfigLoader
 from robusta.utils.task_queue import QueueMetrics, TaskQueue
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Accept up to 50MB
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
 
 
