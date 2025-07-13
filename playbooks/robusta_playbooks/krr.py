@@ -392,6 +392,7 @@ def fail_krr_scan(event: PodEvent, params: FailedScanParams):
     if not pod:
         logging.error(f"cannot run fail_krr_scan on alert with no pod object: {event}")
         return
+    logging.debug("failed scan triggered %s", pod.metadata.name)
     scan_id = params.scan_id
     if not scan_id:
         scan_id = pod.metadata.annotations.get("scan-id")
