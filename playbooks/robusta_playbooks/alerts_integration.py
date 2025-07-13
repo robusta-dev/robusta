@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from string import Template
 from typing import Any, Dict, Iterable, List, Optional
+from urllib.parse import urlparse
 
 import requests
 from hikaru.model.rel_1_26 import Node
@@ -220,6 +221,18 @@ def minimal_default_enricher(alert: PrometheusKubernetesAlert):
     alert.add_enrichment([])
 
 
+def is_valid_url(url: str) -> bool:
+    """
+    Check if a URL is valid for use in Slack messages.
+    Validates that the URL has HTTP/HTTPS scheme and netloc components.
+    """
+    try:
+        parsed = urlparse(url)
+        return bool(parsed.scheme in ('http', 'https') and parsed.netloc)
+    except Exception:
+        return False
+
+
 @action
 def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherParams):
     """
@@ -228,7 +241,10 @@ def default_enricher(alert: PrometheusKubernetesAlert, params: DefaultEnricherPa
     By default, this enricher is last in the processing order, so it will be added to all alerts, that aren't silenced.
     """
     if alert.alert.generatorURL and params.alert_generator_link:
-        alert.add_link(Link(url=alert.alert.generatorURL, name="View Graph", type=LinkType.PROMETHEUS_GENERATOR_URL))
+        if is_valid_url(alert.alert.generatorURL):
+            alert.add_link(Link(url=alert.alert.generatorURL, name="View Graph", type=LinkType.PROMETHEUS_GENERATOR_URL))
+        else:
+            logging.debug(f"Skipping invalid generator URL: {alert.alert.generatorURL}")
 
     labels = alert.alert.labels
     alert.add_enrichment(

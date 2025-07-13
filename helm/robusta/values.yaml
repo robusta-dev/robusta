@@ -99,8 +99,6 @@ enableServiceMonitors: true
 monitorHelmReleases: true
 argoRollouts: false
 
-# disable messages routed by Robusta cloud
-disableCloudRouting: false
 
 # scale alerts processing.
 # Used to support clusters with high load of alerts. When used, the runner will consume more memory

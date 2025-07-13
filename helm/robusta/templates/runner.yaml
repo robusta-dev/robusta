@@ -74,10 +74,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          {{- if .Values.disableCloudRouting }}
-          - name: CLOUD_ROUTING
-            value: "False"
-          {{- end }}
           {{- if not .Values.monitorHelmReleases }}
           - name: DISABLE_HELM_MONITORING
             value: "True"
