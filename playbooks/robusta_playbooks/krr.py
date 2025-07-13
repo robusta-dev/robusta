@@ -546,7 +546,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             process_name=False,
             finalizers=["robusta.dev/krr-job-output"] if not KRR_PUSH_SCAN else None,
             custom_pod_labels=krr_pod_labels,
-            return_logs= False if not KRR_PUSH_SCAN else False,
+            return_logs=not KRR_PUSH_SCAN,
         )
 
         if KRR_PUSH_SCAN:
