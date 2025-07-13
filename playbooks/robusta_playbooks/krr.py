@@ -27,8 +27,7 @@ from robusta.api import (
     ScanReportRow,
     ScanType,
     action,
-    PodEvent,
-    get_terminated_reason_or_default,
+    JobEvent,
 )
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, load_bool
 from robusta.core.reporting.consts import ScanState
@@ -308,7 +307,6 @@ class ProcessScanParams(ActionParams):
     start_time: datetime
 
 class FailedScanParams(ActionParams):
-    default_failure_message: str = "Unknown failure"
     scan_id: Optional[str] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
@@ -387,27 +385,26 @@ def _generate_krr_report_block(scan_id: str, start_time: datetime, krr_scan: KRR
     )
 
 @action
-def fail_krr_scan(event: PodEvent, params: FailedScanParams):
-    pod = event.get_pod()
-    if not pod:
-        logging.error(f"cannot run fail_krr_scan on alert with no pod object: {event}")
+def fail_krr_scan(event: JobEvent, params: FailedScanParams):
+    job = event.get_job()
+    if not job:
+        logging.error(f"cannot run fail_krr_scan on alert with no job object: {event}")
         return
-    logging.debug("failed scan triggered %s", pod.metadata.name)
+    logging.debug("failed scan triggered %s", job.metadata.name)
     scan_id = params.scan_id
     if not scan_id:
-        scan_id = pod.metadata.annotations.get("scan-id")
+        scan_id = job.metadata.annotations.get("scan-id")
 
     start_time = params.start_time
     if not start_time:
-        start_time = pod.metadata.annotations.get("start-time")
+        start_time = job.metadata.annotations.get("start-time")
 
     if not start_time or not scan_id:
         logging.error(f"cannot run fail_krr_scan, scan_id or start_time are missing: {event}")
         return
 
-    failure_message = get_terminated_reason_or_default(pod, params.default_failure_message)
     metadata = {"job": {"name": f"krr-job-{params.scan_id}", "namespace": INSTALLATION_NAMESPACE}}
-    _emit_failed_scan_event(event, scan_id, start_time, metadata, failure_message, None, None)
+    _emit_failed_scan_event(event, scan_id, start_time, metadata, "Krr Job Failed", None, None)
 
 @action
 def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):

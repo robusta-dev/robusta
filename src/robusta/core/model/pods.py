@@ -260,25 +260,6 @@ def is_state_in_oom_status(state: ContainerState):
         return False
     return state.terminated.reason == "OOMKilled"
 
-def get_terminated_reason_or_default(pod: Pod, default_message: str = "Not Terminated") -> str:
-    """
-    Returns the termination reason of the first terminated container in the pod,
-    or a default message if no container is terminated.
-    """
-    if not pod.status or not pod.status.containerStatuses:
-        return default_message
-
-    for c_status in pod.status.containerStatuses:
-        state = c_status.state
-        if state and state.terminated:
-            return state.terminated.reason or "Terminated without reason"
-
-        # Optionally check lastState if current state is not terminated
-        if c_status.lastState and c_status.lastState.terminated:
-            return c_status.lastState.terminated.reason or "Terminated without reason"
-
-    return default_message
-
 def pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodResources:
     pod_cpu_req: float = 0.0
     pod_mem_req: int = 0
