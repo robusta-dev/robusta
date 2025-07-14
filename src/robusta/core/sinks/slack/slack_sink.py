@@ -1,8 +1,8 @@
 import logging
 
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
-from robusta.core.reporting.base import Finding, FindingStatus
-from robusta.core.sinks.sink_base import NotificationGroup, NotificationSummary, SinkBase
+from robusta.core.reporting.base import Finding
+from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta.integrations import slack as slack_module
 
@@ -47,7 +47,6 @@ class SlackSink(SinkBase):
             finding_data["cluster"] = self.cluster_name
             resolved = finding.title.startswith("[RESOLVED]")
 
-            # 1. Notification accounting
             group_key, group_header = self.get_group_key_and_header(
                 finding_data, self.params.grouping.group_by
             )
@@ -58,7 +57,7 @@ class SlackSink(SinkBase):
                 )
                 notification_summary = self.summaries[group_key]
                 notification_summary.register_notification(
-                    summary_key, resolved, self.params.grouping.interval
+                    summary_key, resolved, self.params.grouping.interval, self.params.grouping.aligned
                 )
                 slack_thread_ts = self.slack_sender.send_or_update_summary_message(
                     group_header,
