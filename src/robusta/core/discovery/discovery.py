@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import threading
 import time
 from collections import defaultdict
@@ -87,6 +88,7 @@ class DiscoveryResults(BaseModel):
 
 DISCOVERY_STACKTRACE_FILE = "/tmp/make_discovery_stacktrace"
 DISCOVERY_STACKTRACE_TIMEOUT_S = int(os.environ.get("DISCOVERY_STACKTRACE_TIMEOUT_S", 10))
+DISCOVERY_POD_SHOW_OWNER_REGEX = os.environ.get("DISCOVERY_POD_SHOW_OWNER_REGEX", None)
 
 
 class Discovery:
@@ -807,6 +809,16 @@ def should_report_pod(pod: Union[Pod, V1Pod]) -> bool:
     if not owner_references:
         # Reporting unowned pods
         return True
+    # Check if any owner matches the regex, if defined for example custom operators
+    elif DISCOVERY_POD_SHOW_OWNER_REGEX:
+        try:
+            regex_pattern = re.compile(DISCOVERY_POD_SHOW_OWNER_REGEX, re.IGNORECASE)
+            if any(regex_pattern.search(owner.kind) for owner in owner_references):
+                return True
+        except re.error:
+            # If the regex is invalid, log an error and continue with the default behavior
+            logging.debug(f"Invalid pod regex pattern: {DISCOVERY_POD_SHOW_OWNER_REGEX}")
+            return False
     elif DISCOVERY_POD_OWNED_PODS:
         non_pod_owners = [reference for reference in owner_references if reference.kind.lower() != "pod"]
         # we report only if there are no owner references or they are pod owner refereces
