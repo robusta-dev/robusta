@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+from pickle import NONE
 import shlex
 import uuid
 from datetime import datetime
@@ -192,6 +193,9 @@ class KRRSecretKeyValuePair(KRRSecret):
     arg_key: str
 
 
+def __create_metadata(scan_id: str):
+    return {"job": {"name": f"krr-job-{scan_id}", "namespace": INSTALLATION_NAMESPACE}}
+
 def _generate_krr_job_secret(scan_id: str, krr_secrets: Optional[List[KRRSecret]]) -> Optional[JobSecret]:
     if not krr_secrets:
         return None
@@ -306,11 +310,6 @@ class ProcessScanParams(ActionParams):
     scan_id: str
     start_time: datetime
 
-class FailedScanParams(ActionParams):
-    scan_id: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-
 def _emit_failed_scan_event(event, scan_id, start_time, metadata, reason_msg, exception=None, result=None):
     if exception:
         logging.exception(reason_msg)
@@ -385,54 +384,43 @@ def _generate_krr_report_block(scan_id: str, start_time: datetime, krr_scan: KRR
     )
 
 @action
-def fail_krr_scan(event: JobEvent, params: FailedScanParams):
+def fail_krr_scan(event: JobEvent):
     job = event.get_job()
     if not job:
         logging.error(f"cannot run fail_krr_scan on alert with no job object: {event}")
         return
     logging.debug("failed scan triggered %s", job.metadata.name)
-    scan_id = params.scan_id
-    if not scan_id:
-        scan_id = job.metadata.annotations.get("scan-id")
-
-    start_time = params.start_time
-    if not start_time:
-        start_time = job.metadata.annotations.get("start-time")
+    
+    scan_id = job.metadata.annotations.get("scan-id")
+    start_time = job.metadata.annotations.get("start-time")
 
     if not start_time or not scan_id:
         logging.error(f"cannot run fail_krr_scan, scan_id or start_time are missing: {event}")
         return
 
-    metadata = {"job": {"name": f"krr-job-{params.scan_id}", "namespace": INSTALLATION_NAMESPACE}}
+    metadata = __create_metadata(scan_id)
     _emit_failed_scan_event(event, scan_id, start_time, metadata, "Krr Job Failed", None, None)
 
-@action
-def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
-    if params.scan_type.lower() != "krr":
-        logging.warning(f"Processing scans not supported for type: {params.scan_type}")
-        return
-
-    logging.info(f"Received process_scan request")
-    logging.debug(f"process scan contents {params}")
-
-    metadata = {"job": {"name": f"krr-job-{params.scan_id}", "namespace": INSTALLATION_NAMESPACE}}
-
-    try:
-        krr_scan = KRRResponse(**params.result)
+def _publish_krr_finding(event: ExecutionBaseEvent, krr_json: Dict[str, Any],scan_id: str, start_time: str, metadata: Dict[str, Any], timeout: Optional[str] = None, config_json = Optional[str]):
+    try:        
+        krr_scan = KRRResponse(**krr_json)
     except Exception as e:
         if isinstance(e, json.JSONDecodeError):
             msg = "*KRR scan job failed. Expecting json result.*"
-        elif isinstance(e, TypeError):
-            msg = "*KRR scan job failed.\n Error from KRR pod:*"
+        elif isinstance(e, ValidationError):
+            msg = "*KRR scan job failed. Result format issue.*"
+        elif str(e) == "Failed to reach wait condition" and timeout:
+            msg = f"*KRR scan job failed. The job wait condition timed out ({timeout}s)*"
         else:
             msg = f"*KRR scan job unexpected error.*\n {e}"
-        _emit_failed_scan_event(event, params.scan_id, params.start_time, metadata, msg, e, params.result)
+
+        _emit_failed_scan_event(event, scan_id, start_time, metadata, msg, e, str(krr_json))
         return
 
     _enrich_metadata_from_krr_response(krr_scan, metadata)
 
     scan_block = _generate_krr_report_block(
-        params.scan_id, params.start_time, krr_scan, metadata, params.json(indent=4)
+        scan_id, start_time, krr_scan, metadata, config_json
     )
 
     finding = Finding(
@@ -446,6 +434,20 @@ def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
     event.add_finding(finding)
 
 @action
+def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
+    if params.scan_type.lower() != "krr":
+        logging.warning(f"Processing scans not supported for type: {params.scan_type}")
+        return
+
+    logging.info(f"Received process_scan request for scan {params.scan_id}")
+    logging.debug(f"process scan contents {params}")
+
+    metadata = __create_metadata(params.scan_id)
+
+    _publish_krr_finding(event=event,krr_json=params.result, scan_id=params.scan_id, start_time=params.start_time, metadata=metadata, timeout=None, config_json=NONE)
+
+
+@action
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.
@@ -453,12 +455,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     scan_id = str(uuid.uuid4())
     start_time = datetime.now()
     job_name = f"krr-job-{scan_id}"
-    metadata = {
-        "job": {
-            "name": job_name,
-            "namespace": INSTALLATION_NAMESPACE,
-        }
-    }
+    metadata = __create_metadata(scan_id)
 
     prom_config = generate_prometheus_config(params)
     additional_flags = get_krr_additional_flags(params)
@@ -562,33 +559,15 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
         logs = logs[logs.find("{"):]
         krr_response = json.loads(logs)
-        krr_scan = KRRResponse(**krr_response)
-
+    
     except Exception as e:
         if isinstance(e, json.JSONDecodeError):
             msg = "*KRR scan job failed. Expecting json result.*"
-        elif isinstance(e, ValidationError):
-            msg = "*KRR scan job failed. Result format issue.*"
-        elif str(e) == "Failed to reach wait condition":
-            msg = f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*"
         else:
             msg = f"*KRR scan job unexpected error.*\n {e}"
 
         _emit_failed_scan_event(event, scan_id, start_time, metadata, msg, e, logs)
         return
+    
+    _publish_krr_finding(event=event,krr_json=krr_response, scan_id=scan_id, start_time=start_time, metadata=metadata, timeout=params.timeout, config_json=params.json(indent=4))
 
-    _enrich_metadata_from_krr_response(krr_scan, metadata)
-
-    scan_block = _generate_krr_report_block(
-        scan_id, start_time, krr_scan, metadata, params.json(indent=4)
-    )
-
-    finding = Finding(
-        title="KRR Report",
-        source=FindingSource.MANUAL,
-        aggregation_key="KrrReport",
-        finding_type=FindingType.REPORT,
-        failure=False,
-    )
-    finding.add_enrichment([scan_block], annotations={EnrichmentAnnotation.SCAN: True})
-    event.add_finding(finding)
