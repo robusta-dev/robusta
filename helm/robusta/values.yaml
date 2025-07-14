@@ -192,6 +192,16 @@ builtinPlaybooks:
   - pod_events_enricher: {}
   - enrich_pod_with_node_events: {}
 
+- name: "KrrJobFailed"
+  triggers:
+  - on_job_failure:
+      scope:
+        include:
+          - labels:
+              - "app=krr.robusta.dev"
+  actions:
+  - fail_krr_scan: {}
+
 - name: "PodOOMKill"
   triggers:
   - on_pod_oom_killed:
