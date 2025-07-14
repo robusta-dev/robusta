@@ -99,8 +99,6 @@ enableServiceMonitors: true
 monitorHelmReleases: true
 argoRollouts: false
 
-# disable messages routed by Robusta cloud
-disableCloudRouting: false
 
 # scale alerts processing.
 # Used to support clusters with high load of alerts. When used, the runner will consume more memory
@@ -109,6 +107,9 @@ scaleAlertsProcessing: False
 # Enable loading playbooks to a persistent volume
 playbooksPersistentVolume: false
 playbooksPersistentVolumeSize: 4Gi
+# StorageClass(string) to use for the playbooks PVC. Leave empty to let
+# the cluster default apply.
+playbooksPersistentVolumeStorageClass: ""
 
 # priority builtin playbooks for running before all playbooks
 priorityBuiltinPlaybooks:
