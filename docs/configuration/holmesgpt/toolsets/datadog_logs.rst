@@ -75,6 +75,10 @@ Getting API and Application Keys
 To use this toolset, you need both a Datadog API key and Application key:
 
 1. **API Key**: Go to Organization Settings > API Keys in your Datadog console
+   
+   * The API key must have the ``logs_read_data`` permission scope
+   * When creating a new key, ensure this permission is enabled
+
 2. **Application Key**: Go to Organization Settings > Application Keys in your Datadog console
 
 For more information, see the `Datadog API documentation <https://docs.datadoghq.com/api/latest/authentication/>`_.
