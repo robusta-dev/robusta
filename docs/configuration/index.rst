@@ -4,7 +4,7 @@ Integrations Overview
 ==========================
 
 
-Robusta can receive alerts from many sources and send them to many destinations.
+Robusta can receive alerts from many monitoring systems and enrich them with AI analysis.
 
 
 .. grid::
@@ -17,43 +17,37 @@ Robusta can receive alerts from many sources and send them to many destinations.
 
         Analyze alerts with `Holmes GPT <https://stackoverflow.com/>`_.
 
-    .. grid-item-card:: :octicon:`book;1em;` Data Sources
+    .. grid-item-card:: :octicon:`book;1em;` Forward Alerts to Robusta
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/index
         :link-type: doc
 
-        Send data to Robusta from Prometheus, AlertManager, Grafana, Thanos and others.
-
-    .. grid-item-card:: :octicon:`book;1em;` Sinks (Destinations)
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/index
-        :link-type: doc
-
-        Send notifications from Robusta to 15+ integrations like Slack, MS Teams, and Email.
+        Send alerts to Robusta from Prometheus, AlertManager, Grafana, Nagios, SolarWinds and others.
 
 
-Popular Sinks (Destinations)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Forward Alerts to Robusta
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. grid:: 1 1 2 4
+.. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`cpu;1em;` MS Teams
+    .. grid-item-card:: :octicon:`pulse;1em;` Prometheus & AlertManager
         :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/ms-teams
+        :link: alertmanager-integration/index
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Slack
+        In-cluster, centralized, or managed Prometheus services
+
+    .. grid-item-card:: :octicon:`bell;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/slack
+        :link: alertmanager-integration/nagios
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Jira
+        Forward Nagios alerts to Robusta via webhook
+
+    .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/jira
+        :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Robusta UI
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/RobustaUI
-        :link-type: doc
+        Forward SolarWinds alerts to Robusta via webhook
