@@ -22,13 +22,13 @@ Choose your monitoring system:
         :link: alertmanager-integration/nagios
         :link-type: doc
 
-        **Legacy systems** - Forward alerts via webhook
+        **Nagios monitoring** - Forward alerts via webhook
 
     .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-        **Enterprise monitoring** - Forward alerts via webhook
+        **SolarWinds monitoring** - Forward alerts via webhook
 
 Don't see your system? Robusta accepts alerts from any system that can send HTTP webhooks.
