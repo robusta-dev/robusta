@@ -28,15 +28,18 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: 🔌 Integrations
+   :caption: 🚨 Alert Sources
    :hidden:
 
    configuration/index
-   🪄 AI Analysis - HolmesGPT <configuration/holmesgpt/index>
-   🔥 Alert Sources <configuration/alertmanager-integration/index>
-   Cost Savings - KRR <configuration/resource-recommender>
-   K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
-   configuration/exporting/exporting-data
+   🔥 Prometheus & AlertManager <configuration/alertmanager-integration/index>
+
+.. toctree::
+   :maxdepth: 4
+   :caption: 🤖 AI Analysis
+   :hidden:
+
+   configuration/holmesgpt/index
 
 .. toctree::
    :maxdepth: 4
@@ -57,6 +60,9 @@
    :hidden:
 
    playbook-reference/index
+   Cost Savings - KRR <configuration/resource-recommender>
+   K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
+   configuration/exporting/exporting-data
 
 .. toctree::
    :maxdepth: 4
