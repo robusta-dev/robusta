@@ -58,7 +58,7 @@ Configuration
             dd_app_key: <your-datadog-app-key> # Required. Your Datadog Application key
             site_api_url: https://api.datadoghq.com # Required. Your Datadog site URL (e.g. https://api.us3.datadoghq.com for US3)
             indexes: ["*"] # Optional. List of Datadog indexes to search. Default: ["*"]
-              storage_tiers: ["indexes"] # Optional. Ordered list of storage tiers to query (fallback mechanism). Options: "indexes", "online-archives", "flex". Default: ["indexes"]
+            storage_tiers: ["indexes"] # Optional. Ordered list of storage tiers to query (fallback mechanism). Options: "indexes", "online-archives", "flex". Default: ["indexes"]
             labels: # Optional. Map Datadog labels to Kubernetes resources
               pod: "pod_name"
               namespace: "kube_namespace"
