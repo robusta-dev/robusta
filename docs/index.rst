@@ -35,6 +35,7 @@
    🔥 Prometheus & AlertManager <configuration/alertmanager-integration/index>
    🔔 Nagios <configuration/alertmanager-integration/nagios>
    🌐 SolarWinds <configuration/alertmanager-integration/solarwinds>
+   🔗 Custom Webhooks <configuration/exporting/exporting-data>
 
 .. toctree::
    :maxdepth: 4
@@ -65,7 +66,6 @@
    playbook-reference/index
    Cost Savings - KRR <configuration/resource-recommender>
    K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
-   configuration/exporting/exporting-data
 
 .. toctree::
    :maxdepth: 4
