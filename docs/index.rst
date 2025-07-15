@@ -33,7 +33,7 @@
 
    configuration/index
    🪄 AI Analysis - HolmesGPT <configuration/holmesgpt/index>
-   🔥 Prometheus/AlertManager <configuration/alertmanager-integration/index>
+   🔥 Alert Sources <configuration/alertmanager-integration/index>
    Cost Savings - KRR <configuration/resource-recommender>
    K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
    configuration/exporting/exporting-data

@@ -1,7 +1,7 @@
 :hide-toc:
 
 
-Integrating with Prometheus
+Alert Sources
 ================================
 .. toctree::
    :hidden:
@@ -22,18 +22,22 @@ Integrating with Prometheus
    solarwinds
 
 
-Robusta works best when integrated with Prometheus and AlertManager. When properly setup, Robusta will:
+Robusta can receive alerts from various monitoring systems. Choose the integration that matches your monitoring setup:
 
-1. Show your existing Prometheus alerts in Robusta, enriched with extra information
-2. Fetch relevant metrics from Prometheus and show them on related alerts
-3. Fetch metrics from Prometheus and show them in the Robusta UI (optional, only relevant for UI users)
+**Prometheus/AlertManager** - The most popular choice. When integrated with Prometheus, Robusta will:
 
-If you installed Robusta's :ref:`Embedded Prometheus Stack`, then everything is pre-integrated and not setup is necessary. If not, you will need follow a guide below.
+1. Show your existing Prometheus alerts, enriched with extra information
+2. Fetch relevant metrics from Prometheus and show them on related alerts  
+3. Display metrics in the Robusta UI (optional, only relevant for UI users)
+
+**Other Systems** - Robusta also supports webhook-based integrations for legacy and enterprise monitoring systems.
+
+If you installed Robusta's :ref:`Embedded Prometheus Stack`, then Prometheus is pre-integrated and no setup is necessary. Otherwise, choose a guide below.
 
 .. _alertmanager-setup-options:
 
-Setup Instructions
-^^^^^^^^^^^^^^^^^^
+Prometheus & AlertManager Setup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. grid:: 1 1 2 3
     :gutter: 3

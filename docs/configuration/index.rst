@@ -3,51 +3,58 @@
 Integrations Overview
 ==========================
 
+Robusta connects to your existing monitoring infrastructure to receive alerts and enrich them with AI analysis and automated responses.
 
-Robusta can receive alerts from many monitoring systems and enrich them with AI analysis.
-
+Key Integration Categories
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. grid::
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` AI Analysis
+    .. grid-item-card:: :octicon:`pulse;1em;` Alert Sources
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/index
+        :link-type: doc
+
+        Connect monitoring systems like Prometheus, Nagios, and SolarWinds to forward alerts to Robusta.
+
+    .. grid-item-card:: :octicon:`brain;1em;` AI Analysis
         :class-card: sd-bg-light sd-bg-text-light
         :link: holmesgpt/index
         :link-type: doc
 
-        Analyze alerts with `Holmes GPT <https://stackoverflow.com/>`_.
+        Automatically investigate alerts using Holmes GPT with access to logs, metrics, and Kubernetes context.
 
-    .. grid-item-card:: :octicon:`book;1em;` Forward Alerts to Robusta
+    .. grid-item-card:: :octicon:`tools;1em;` Additional Tools
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/index
+        :link: resource-recommender
         :link-type: doc
 
-        Send alerts to Robusta from Prometheus, AlertManager, Grafana, Nagios, SolarWinds and others.
+        Extend Robusta with cost optimization (KRR) and cluster misconfiguration detection.
 
-
-Forward Alerts to Robusta
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Popular Alert Sources
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`pulse;1em;` Prometheus & AlertManager
+    .. grid-item-card:: :octicon:`pulse;1em;` Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/index
+        :link: alertmanager-integration/alert-manager
         :link-type: doc
 
-        In-cluster, centralized, or managed Prometheus services
+        Most popular - works with any Prometheus setup
 
     .. grid-item-card:: :octicon:`bell;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/nagios
         :link-type: doc
 
-        Forward Nagios alerts to Robusta via webhook
+        Legacy monitoring systems via webhook
 
     .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-        Forward SolarWinds alerts to Robusta via webhook
+        Enterprise monitoring systems via webhook
