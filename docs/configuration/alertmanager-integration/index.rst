@@ -18,19 +18,13 @@ Alert Sources
    embedded-prometheus
    troubleshooting-alertmanager
    alert-custom-prometheus
-   nagios
-   solarwinds
 
 
-Robusta can receive alerts from various monitoring systems. Choose the integration that matches your monitoring setup:
-
-**Prometheus/AlertManager** - The most popular choice. When integrated with Prometheus, Robusta will:
+Robusta works best when integrated with Prometheus and AlertManager. When properly setup, Robusta will:
 
 1. Show your existing Prometheus alerts, enriched with extra information
 2. Fetch relevant metrics from Prometheus and show them on related alerts  
 3. Display metrics in the Robusta UI (optional, only relevant for UI users)
-
-**Other Systems** - Robusta also supports webhook-based integrations for legacy and enterprise monitoring systems.
 
 If you installed Robusta's :ref:`Embedded Prometheus Stack`, then Prometheus is pre-integrated and no setup is necessary. Otherwise, choose a guide below.
 
@@ -107,25 +101,3 @@ Prometheus & AlertManager Setup
 
         All-in-one package of Robusta + kube-prometheus-stack (optional)
 
-
-Other Alerting Systems
-^^^^^^^^^^^^^^^^^^^^^^
-
-Robusta can also receive alerts from non-prometheus monitoring tools like Nagios and SolarWinds:
-
-.. grid:: 1 1 2 3
-    :gutter: 3
-
-    .. grid-item-card:: :octicon:`bell;1em;` Nagios
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: nagios
-        :link-type: doc
-
-        Send Nagios alerts to Robusta using a webhook-based integration.
-
-    .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: solarwinds
-        :link-type: doc
-
-        Forward SolarWinds alerts to Robusta via webhook for centralized visibility.

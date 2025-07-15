@@ -33,6 +33,8 @@
 
    configuration/index
    🔥 Prometheus & AlertManager <configuration/alertmanager-integration/index>
+   🔔 Nagios <configuration/alertmanager-integration/nagios>
+   🌐 SolarWinds <configuration/alertmanager-integration/solarwinds>
 
 .. toctree::
    :maxdepth: 4
