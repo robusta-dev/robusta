@@ -15,7 +15,7 @@ Choose your monitoring system:
         :link: alertmanager-integration/index
         :link-type: doc
 
-        **Most popular** - Works with any Prometheus setup (in-cluster, managed services, VictoriaMetrics, etc.)
+        **Most popular** - Works with any Prometheus-compatible stack
 
     .. grid-item-card:: :octicon:`bell;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light
@@ -31,4 +31,4 @@ Choose your monitoring system:
 
         **SolarWinds monitoring** - Forward alerts via webhook
 
-Don't see your system? Robusta accepts alerts from any system that can send HTTP webhooks.
+Don't see your system? Robusta accepts alerts from any system that can send :doc:`HTTP webhooks <../playbook-reference/triggers/webhook>`.
