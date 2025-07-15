@@ -1,5 +1,3 @@
-:hide-navigation:
-:hide-toc:
 
 .. toctree::
    :maxdepth: 4
