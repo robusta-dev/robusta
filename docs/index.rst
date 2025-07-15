@@ -46,8 +46,9 @@
    :caption: 🔔 Notifications & Routing
    :hidden:
 
-   🔔 Sinks <configuration/sinks/index>
+   notification-routing/index
    notification-routing/configuring-sinks
+   📧 Sink Reference <configuration/sinks/index>
    Routing (Scopes) <notification-routing/routing-with-scopes>
    Grouping (Slack Threads) <notification-routing/notification-grouping>
    notification-routing/routing-by-time
