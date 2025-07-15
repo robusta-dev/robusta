@@ -273,8 +273,8 @@ html_theme_options = {
     "features": [
         "navigation.instant",
         "navigation.top",
-        "navigation.tabs",
-        "navigation.tabs.sticky",
+        "navigation.sections",
+        "navigation.expand",
         "search.share",
         "toc.follow",
         "toc.sticky",
