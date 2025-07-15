@@ -1,16 +1,11 @@
+:hide-toc:
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Home
+   :maxdepth: 1
+   :caption: 📖 Overview
    :hidden:
 
    self
-
-.. toctree::
-   :maxdepth: 4
-   :caption: How it works
-   :hidden:
-
    how-it-works/architecture
    how-it-works/oss-vs-saas
    how-it-works/coverage
@@ -33,14 +28,8 @@
    🔥 Prometheus & AlertManager <configuration/alertmanager-integration/index>
    🔔 Nagios <configuration/alertmanager-integration/nagios>
    🌐 SolarWinds <configuration/alertmanager-integration/solarwinds>
-   🔗 Custom Webhooks <configuration/exporting/exporting-data>
+   🔗 Custom Webhooks <configuration/exporting/custom-webhooks>
 
-.. toctree::
-   :maxdepth: 4
-   :caption: 🤖 AI Analysis
-   :hidden:
-
-   configuration/holmesgpt/index
 
 .. toctree::
    :maxdepth: 4
@@ -67,6 +56,15 @@
 
 .. toctree::
    :maxdepth: 4
+   :caption: 💼 Robusta Pro Features
+   :hidden:
+
+   configuration/exporting/robusta-pro-features
+   configuration/holmesgpt/index
+   configuration/exporting/exporting-data
+
+.. toctree::
+   :maxdepth: 4
    :caption: Help
    :hidden:
 
@@ -74,8 +72,8 @@
    contributing
    community-tutorials
 
-Better Prometheus Alerts (and more) for Kubernetes
-=====================================================
+Welcome to Robusta
+====================
 
 .. grid:: 1 1 2 2
     :margin: 0

@@ -1,12 +1,17 @@
 Alert History Import and Export API
 ==============================================
 
-The Robusta SaaS platform exposes several HTTP APIs:
+.. note::
+    This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
 
-* :ref:`API to export alerts <alert-export-api>`
-* :ref:`API to fetch aggregate alert statistics <alert-reporting-api>`
-* :ref:`API to send alerts <send-alerts-api>`
-* :ref:`API to send configuration changes <send-configuration-changes-api>`
+The Robusta SaaS platform exposes several HTTP APIs for exporting data and sending alerts:
+
+* :ref:`API to export alerts <alert-export-api>` - Export historical alert data
+* :ref:`API to fetch aggregate alert statistics <alert-reporting-api>` - Get aggregated alert statistics  
+* :ref:`API to send alerts <send-alerts-api>` - Send custom alerts programmatically
+* :ref:`API to send configuration changes <send-configuration-changes-api>` - Track configuration changes
+
+For a simpler webhook integration guide, see :doc:`Custom Webhooks <custom-webhooks>`.
 
 There is an quick-start `Prometheus report-generator <https://github.com/robusta-dev/prometheus-report-generator>`_  on GitHub that demonstrates how to use the export APIs.
 
