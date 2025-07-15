@@ -3,22 +3,9 @@
 Alert Sources Overview
 ==========================
 
-Connect your existing monitoring systems to Robusta to receive alerts for enrichment, analysis, and automated responses.
+Forward alerts from your monitoring system to Robusta for enrichment and automation.
 
-Robusta supports alerts from various monitoring platforms through different integration methods:
-
-**Prometheus/AlertManager Integration** - The most common setup, supporting:
-- In-cluster and external Prometheus instances
-- Managed Prometheus services (AWS, Azure, Google Cloud)
-- Prometheus-compatible systems (VictoriaMetrics, Thanos, Mimir)
-
-**Webhook-based Integrations** - For legacy and enterprise monitoring systems:
-- Nagios
-- SolarWinds
-- Any system that can send HTTP webhooks
-
-Getting Started
-^^^^^^^^^^^^^^^
+Choose your monitoring system:
 
 .. grid:: 1 1 2 3
     :gutter: 3
@@ -28,18 +15,20 @@ Getting Started
         :link: alertmanager-integration/index
         :link-type: doc
 
-        Most popular - comprehensive setup guide for all Prometheus variants
+        **Most popular** - Works with any Prometheus setup (in-cluster, managed services, VictoriaMetrics, etc.)
 
     .. grid-item-card:: :octicon:`bell;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/nagios
         :link-type: doc
 
-        Legacy monitoring systems via webhook integration
+        **Legacy systems** - Forward alerts via webhook
 
     .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-        Enterprise monitoring systems via webhook integration
+        **Enterprise monitoring** - Forward alerts via webhook
+
+Don't see your system? Robusta accepts alerts from any system that can send HTTP webhooks.
