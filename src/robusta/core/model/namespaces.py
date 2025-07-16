@@ -1,9 +1,20 @@
+from typing import Optional, List
 from pydantic import BaseModel
 from kubernetes.client import V1Namespace
 
+class ResourceCount(BaseModel):
+    kind: str
+    apiKey: str
+    groupKey: str
+    count: int
+
+
+class NamespaceMetadata(BaseModel):
+    resources: Optional[List[ResourceCount]]
 
 class NamespaceInfo(BaseModel):
     name: str
+    metadata: Optional[NamespaceMetadata] = None
     deleted: bool = False
 
     @classmethod

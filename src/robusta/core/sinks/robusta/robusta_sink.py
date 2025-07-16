@@ -10,7 +10,7 @@ from collections import defaultdict
 
 import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
-
+from robusta.core.model.namespaces import NamespaceMetadata, ResourceCount
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults, ResourceAccessForbiddenError
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.discovery.utils import from_api_server_node
@@ -52,20 +52,6 @@ HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
 
 # Define the cache with a single slot and the configured TTL
 _holmes_slackbot_cache = TTLCache(maxsize=1, ttl=HOLMES_SLACKBOT_CACHE_TTL)
-
-class ResourceCount(BaseModel):
-    kind: str
-    apiKey: str
-    groupKey: str
-    count: int
-
-
-class NamespaceResources(BaseModel):
-    resources: List[ResourceCount]
-
-
-class ClusterResourceCounts(BaseModel):
-    namespaces: Dict[str, NamespaceResources]
 
 
 class RobustaSink(SinkBase, EventHandler):
@@ -348,6 +334,7 @@ class RobustaSink(SinkBase, EventHandler):
             logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
 
     def __discover_custom_namespaced_resources(self):
+        self.__assert_namespaces_cache_initialized()
         aggregated_counts = defaultdict(lambda: defaultdict(int))
         resource_metadata = {}
 
@@ -360,8 +347,8 @@ class RobustaSink(SinkBase, EventHandler):
                         version=resource.apiVersion
                     )
 
-                    for namespace, count in results.items():
-                        aggregated_counts[namespace][resource.kind] += count
+                    for namespace_name, count in results.items():
+                        aggregated_counts[namespace_name][resource.kind] += count
                         resource_metadata[resource.kind] = {
                             "apiKey": resource.apiVersion,
                             "groupKey": resource.apiGroup
@@ -374,8 +361,9 @@ class RobustaSink(SinkBase, EventHandler):
 
             # Transform aggregated_counts into Pydantic model
             namespaces = {}
+            updated_namespaces: List[NamespaceInfo] = []
 
-            for namespace, resources in aggregated_counts.items():
+            for namespace_name, resources in aggregated_counts.items():
                 resource_list = []
                 for kind, count in resources.items():
                     meta = resource_metadata.get(kind, {})
@@ -385,15 +373,23 @@ class RobustaSink(SinkBase, EventHandler):
                         groupKey=meta.get("groupKey", ""),
                         count=count
                     ))
-                namespaces[namespace] = NamespaceResources(resources=resource_list)
+                namespaces[namespace_name] = NamespaceMetadata(resources=resource_list)
+                updated_namespace = self.__namespaces_cache.get(namespace_name)
+                if updated_namespace:
+                    updated_namespace.metadata = NamespaceMetadata(resources=resource_list)
+                    self.__namespaces_cache[namespace_name] = updated_namespace
+                    updated_namespaces.append(updated_namespace)
 
-            output = ClusterResourceCounts(namespaces=namespaces)
-            logging.warning(f"Discovered resources per namespace: {output.json(indent=2)}")
-            return output
+                else:
+                    logging.warning(f"Namespace '{namespace_name}' not found in cache when assigning metadata.")
+
+            self.dal.publish_namespaces(updated_namespaces)
+            logging.info("Completed populating namespace metadata.")
+            
+            return
 
         except Exception as e:
             logging.exception(f"Discovery process failed: {e}")
-            return ClusterResourceCounts(namespaces={})
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
@@ -694,7 +690,10 @@ class RobustaSink(SinkBase, EventHandler):
 
         # new or changed namespaces
         for namespace_name, updated_namespace in curr_namespaces.items():
-            if self.__namespaces_cache.get(namespace_name) != updated_namespace:
+            cached_namespace = self.__namespaces_cache.get(namespace_name)
+            if cached_namespace:
+                updated_namespace.metadata = cached_namespace.metadata
+            if cached_namespace != updated_namespace:
                 updated_namespaces.append(updated_namespace)
                 self.__namespaces_cache[namespace_name] = updated_namespace
 
