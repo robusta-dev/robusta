@@ -6,6 +6,7 @@ import threading
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+from collections import defaultdict
 
 import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
@@ -61,6 +62,8 @@ class RobustaSink(SinkBase, EventHandler):
         self.token = sink_config.robusta_sink.token
         self.ttl_hours = sink_config.robusta_sink.ttl_hours
         self.persist_events = sink_config.robusta_sink.persist_events
+        self.namespace_monitored_resources = sink_config.robusta_sink.namespaceMonitoredResources
+
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
             logging.error(
@@ -135,6 +138,10 @@ class RobustaSink(SinkBase, EventHandler):
             self._thread = threading.Thread(target=self.__discover_cluster, daemon=True)
             self._thread.start()
 
+        if not hasattr(self, '_custom_resource_thread') and self.namespace_monitored_resources:
+            self._custom_resource_thread = threading.Thread(target=self.__discover_custom_namespaced_resources, daemon=True)
+            self._custom_resource_thread.start()
+        
     def set_cluster_active(self, active: bool):
         self.dal.set_cluster_active(active)
 
@@ -323,6 +330,34 @@ class RobustaSink(SinkBase, EventHandler):
                 logging.debug("Sent `helm release` trigger event.")
         except Exception:
             logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
+
+    def __discover_custom_namespaced_resources(self):
+        aggregated_counts = defaultdict(lambda: defaultdict(int))
+
+        try:
+            for resource in self.namespace_monitored_resources:
+                try:
+                    results = Discovery.count_resources(
+                        kind=resource.kind,
+                        api_group=resource.apiGroup,
+                        version=resource.apiVersion
+
+                    )
+
+                    for namespace, count in results.items():
+                        aggregated_counts[namespace][resource.kind] += count
+
+                except Exception as e:
+                    logging.exception(f"Error counting resource {resource.kind}: {e}")
+
+            aggregated_counts = {ns: dict(counts) for ns, counts in aggregated_counts.items()}
+            logging.warning(f"Discovered resources per namespace: {aggregated_counts}")
+
+            return aggregated_counts
+
+        except Exception as e:
+            logging.exception(f"Discovery process failed: {e}")
+            return {}
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
@@ -555,6 +590,16 @@ class RobustaSink(SinkBase, EventHandler):
                 return
             time.sleep(DISCOVERY_WATCHDOG_CHECK_SEC)
         logging.warning("Watchdog finished")
+
+    def __discover_namespace_resources(self):
+        logging.info("Namespace Resources discovery initialized")
+        while self.__activ:
+            start_t = time.time()
+            self.__discover_custom_namespaced_resources()
+            # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
+            time.sleep(3600)
+
+        logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")

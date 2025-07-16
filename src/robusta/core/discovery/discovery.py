@@ -185,6 +185,35 @@ class Discovery:
         )
 
     @staticmethod
+    def count_resources(kind, api_group, version):
+        namespace_counts = defaultdict(int)
+        continue_ref = None
+
+        for _ in range(DISCOVERY_MAX_BATCHES):
+            try:
+                crd_res = client.CustomObjectsApi().list_cluster_custom_object(
+                    group=api_group,
+                    version=version,
+                    plural=kind,
+                    limit=DISCOVERY_BATCH_SIZE,
+                    _continue=continue_ref,
+                )
+            except Exception:
+                logging.exception(msg=f"Failed to list {kind} from api.")
+                break
+
+            for crd in crd_res.get("items", []):
+                metadata = crd.get("metadata", {})
+                namespace = metadata.get("namespace", "cluster-scoped")
+                namespace_counts[namespace] += 1
+
+            continue_ref = crd_res.get("metadata", {}).get("continue")
+            if not continue_ref:
+                break
+
+        return dict(namespace_counts)
+
+    @staticmethod
     def discovery_process() -> DiscoveryResults:
         create_monkey_patches()
         Discovery.stacktrace_thread_active = True

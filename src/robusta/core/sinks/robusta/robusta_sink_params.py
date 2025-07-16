@@ -1,5 +1,5 @@
 from pydantic.main import BaseModel
-
+from typing import List, Optional
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 
@@ -11,11 +11,16 @@ class RobustaToken(BaseModel):
     email: str
     password: str
 
+class NamespaceMonitoredResources(BaseModel):
+    apiGroup: str
+    apiVersion: str
+    kind: str
 
 class RobustaSinkParams(SinkBaseParams):
     token: str
     ttl_hours: int = 4380  # Time before unactive cluster data is deleted. 6 Months default.
     persist_events: bool = False
+    namespaceMonitoredResources: Optional[List[NamespaceMonitoredResources]]
 
     @classmethod
     def _get_sink_type(cls):
