@@ -11,7 +11,7 @@ from collections import defaultdict
 import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
 
-from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
+from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults, ResourceAccessForbiddenError
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.discovery.utils import from_api_server_node
 from robusta.core.model.base_params import HolmesParams
@@ -45,12 +45,28 @@ from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
 from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT
 from cachetools import TTLCache
+from pydantic import BaseModel
 
 RUNNER_GET_HOLMES_SLACKBOT_INFO = f"{ROBUSTA_API_ENDPOINT}/api/holmes/integrations/slack/runner"
 HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
 
 # Define the cache with a single slot and the configured TTL
 _holmes_slackbot_cache = TTLCache(maxsize=1, ttl=HOLMES_SLACKBOT_CACHE_TTL)
+
+class ResourceCount(BaseModel):
+    kind: str
+    apiKey: str
+    groupKey: str
+    count: int
+
+
+class NamespaceResources(BaseModel):
+    resources: List[ResourceCount]
+
+
+class ClusterResourceCounts(BaseModel):
+    namespaces: Dict[str, NamespaceResources]
+
 
 class RobustaSink(SinkBase, EventHandler):
     services_publish_lock = threading.Lock()
@@ -333,6 +349,7 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __discover_custom_namespaced_resources(self):
         aggregated_counts = defaultdict(lambda: defaultdict(int))
+        resource_metadata = {}
 
         try:
             for resource in self.namespace_monitored_resources:
@@ -341,23 +358,42 @@ class RobustaSink(SinkBase, EventHandler):
                         kind=resource.kind,
                         api_group=resource.apiGroup,
                         version=resource.apiVersion
-
                     )
 
                     for namespace, count in results.items():
                         aggregated_counts[namespace][resource.kind] += count
+                        resource_metadata[resource.kind] = {
+                            "apiKey": resource.apiVersion,
+                            "groupKey": resource.apiGroup
+                        }
 
+                except ResourceAccessForbiddenError as e:
+                    logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
                 except Exception as e:
-                    logging.exception(f"Error counting resource {resource.kind}: {e}")
+                    logging.exception(f"Unexpected error counting resource {resource.kind}: {e}")
 
-            aggregated_counts = {ns: dict(counts) for ns, counts in aggregated_counts.items()}
-            logging.warning(f"Discovered resources per namespace: {aggregated_counts}")
+            # Transform aggregated_counts into Pydantic model
+            namespaces = {}
 
-            return aggregated_counts
+            for namespace, resources in aggregated_counts.items():
+                resource_list = []
+                for kind, count in resources.items():
+                    meta = resource_metadata.get(kind, {})
+                    resource_list.append(ResourceCount(
+                        kind=kind,
+                        apiKey=meta.get("apiKey", ""),
+                        groupKey=meta.get("groupKey", ""),
+                        count=count
+                    ))
+                namespaces[namespace] = NamespaceResources(resources=resource_list)
+
+            output = ClusterResourceCounts(namespaces=namespaces)
+            logging.warning(f"Discovered resources per namespace: {output.json(indent=2)}")
+            return output
 
         except Exception as e:
             logging.exception(f"Discovery process failed: {e}")
-            return {}
+            return ClusterResourceCounts(namespaces={})
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better

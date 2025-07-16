@@ -19,6 +19,7 @@ from hikaru.model.rel_1_26 import (
     Volume,
 )
 from kubernetes import client
+from kubernetes.client.exceptions import ApiException
 from kubernetes.client import (
     V1Container,
     V1DaemonSet,
@@ -87,7 +88,29 @@ class DiscoveryResults(BaseModel):
 
 DISCOVERY_STACKTRACE_FILE = "/tmp/make_discovery_stacktrace"
 DISCOVERY_STACKTRACE_TIMEOUT_S = int(os.environ.get("DISCOVERY_STACKTRACE_TIMEOUT_S", 10))
+KIND_TO_COREV1_METHOD = {
+    "pods": "list_pod_for_all_namespaces",
+    "configmaps": "list_config_map_for_all_namespaces",
+    "endpoints": "list_endpoints_for_all_namespaces",
+    "services": "list_service_for_all_namespaces",
+    "secrets": "list_secret_for_all_namespaces",
+    "persistentvolumeclaims": "list_persistent_volume_claim_for_all_namespaces",
+    "serviceaccounts": "list_service_account_for_all_namespaces",
+    "replicationcontrollers": "list_replication_controller_for_all_namespaces",
+    "limitranges": "list_limit_range_for_all_namespaces",
+    "resourcequotas": "list_resource_quota_for_all_namespaces",
+    "events": "list_event_for_all_namespaces",
+    "podtemplates": "list_pod_template_for_all_namespaces",
+    # Cluster scoped
+    "namespaces": "list_namespace",
+    "nodes": "list_node",
+    "persistentvolumes": "list_persistent_volume",
+    "componentstatuses": "list_component_status"
+}
 
+class ResourceAccessForbiddenError(Exception):
+    """Raised when access to a Kubernetes resource is forbidden (HTTP 403)."""
+    pass
 
 class Discovery:
     executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process
@@ -187,31 +210,79 @@ class Discovery:
     @staticmethod
     def count_resources(kind, api_group, version):
         namespace_counts = defaultdict(int)
-        continue_ref = None
+        kind_lower = kind.lower()
 
-        for _ in range(DISCOVERY_MAX_BATCHES):
-            try:
-                crd_res = client.CustomObjectsApi().list_cluster_custom_object(
-                    group=api_group,
-                    version=version,
-                    plural=kind,
-                    limit=DISCOVERY_BATCH_SIZE,
-                    _continue=continue_ref,
-                )
-            except Exception:
-                logging.exception(msg=f"Failed to list {kind} from api.")
-                break
+        try:
+            items = []
 
-            for crd in crd_res.get("items", []):
-                metadata = crd.get("metadata", {})
-                namespace = metadata.get("namespace", "cluster-scoped")
+            if not api_group:
+                if version != "v1":
+                    logging.error(f"Unsupported CoreV1 resource version '{version}' for kind '{kind}'")
+                    return {}
+
+                method_name = KIND_TO_COREV1_METHOD.get(kind_lower)
+                if not method_name:
+                    logging.warning(f"No CoreV1Api mapping for kind: '{kind}'")
+                    return {}
+
+                core_v1 = client.CoreV1Api()
+                method = getattr(core_v1, method_name, None)
+                if not method:
+                    logging.warning(f"CoreV1Api does not have method '{method_name}' for kind '{kind}'")
+                    return {}
+
+                try:
+                    response = method()
+                    items = getattr(response, 'items', response)
+                except ApiException as e:
+                    if e.status == 403:
+                        raise ResourceAccessForbiddenError(f"Access forbidden to CoreV1 resource '{kind}': {e.body}")
+                    raise
+
+            else:
+                continue_ref = None
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    try:
+                        crd_res = client.CustomObjectsApi().list_cluster_custom_object(
+                            group=api_group,
+                            version=version,
+                            plural=kind_lower,
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                        items.extend(crd_res.get("items", []))
+                        continue_ref = crd_res.get("metadata", {}).get("continue")
+                        if not continue_ref:
+                            break
+                    except ApiException as e:
+                        if e.status == 403:
+                            raise ResourceAccessForbiddenError(f"Access forbidden to resource '{kind}' in group '{api_group}': {e.body}")
+                        logging.exception(f"Failed to list {kind} from api group '{api_group}'.")
+                        break
+
+            for item in items:
+                metadata = getattr(item, 'metadata', None)
+                namespace = None
+
+                if metadata:
+                    namespace = getattr(metadata, 'namespace', None)
+                elif isinstance(item, dict):
+                    metadata = item.get('metadata', {})
+                    namespace = metadata.get('namespace')
+
+                if not namespace:
+                    logging.warning(f"Missing namespace for resource '{kind}': metadata={metadata}")
+                    namespace = "cluster-scoped"
+
                 namespace_counts[namespace] += 1
+                
+            return dict(namespace_counts)
 
-            continue_ref = crd_res.get("metadata", {}).get("continue")
-            if not continue_ref:
-                break
-
-        return dict(namespace_counts)
+        except ResourceAccessForbiddenError:
+            raise  # propagate the custom forbidden exception
+        except Exception as e:
+            logging.exception(f"count_resources failed for kind '{kind}' group '{api_group}' version '{version}': {e}")
+            return {}
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:

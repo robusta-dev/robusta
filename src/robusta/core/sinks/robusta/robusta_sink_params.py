@@ -12,7 +12,7 @@ class RobustaToken(BaseModel):
     password: str
 
 class NamespaceMonitoredResources(BaseModel):
-    apiGroup: str
+    apiGroup: Optional[str] # no group in V1 core resources
     apiVersion: str
     kind: str
 
