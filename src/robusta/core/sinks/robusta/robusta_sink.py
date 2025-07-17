@@ -45,8 +45,8 @@ from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
 from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT
 from cachetools import TTLCache
-from pydantic import BaseModel
 
+NAMESPACE_DISCOVERY_SECONDS = int(os.getenv("NAMESPACE_DISCOVERY_SECONDS", 3600))
 RUNNER_GET_HOLMES_SLACKBOT_INFO = f"{ROBUSTA_API_ENDPOINT}/api/holmes/integrations/slack/runner"
 HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
 
@@ -335,61 +335,53 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __discover_custom_namespaced_resources(self):
         self.__assert_namespaces_cache_initialized()
-        aggregated_counts = defaultdict(lambda: defaultdict(int))
-        resource_metadata = {}
 
-        try:
-            for resource in self.namespace_monitored_resources:
-                try:
-                    results = Discovery.count_resources(
-                        kind=resource.kind,
-                        api_group=resource.apiGroup,
-                        version=resource.apiVersion
-                    )
+        logging.info(f"Starting namespace discovery loop every {NAMESPACE_DISCOVERY_SECONDS} seconds")
 
-                    for namespace_name, count in results.items():
-                        aggregated_counts[namespace_name][resource.kind] += count
-                        resource_metadata[resource.kind] = {
-                            "apiVersion": resource.apiVersion,
-                            "apiGroup": resource.apiGroup
-                        }
+        while True:
+            updated_namespaces: defaultdict = defaultdict(list)
 
-                except ResourceAccessForbiddenError as e:
-                    logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
-                except Exception as e:
-                    logging.exception(f"Unexpected error counting resource {resource.kind}: {e}")
+            try:
+                for resource in self.namespace_monitored_resources:
+                    try:
+                        results = Discovery.count_resources(
+                            kind=resource.kind,
+                            api_group=resource.apiGroup,
+                            version=resource.apiVersion
+                        )
 
-            # Transform aggregated_counts into Pydantic model
-            namespaces = {}
-            updated_namespaces: List[NamespaceInfo] = []
+                        for namespace_name, count in results.items():
+                            updated_namespaces[namespace_name].append(ResourceCount(
+                                kind=resource.kind,
+                                apiVersion=resource.apiVersion,
+                                apiGroup=resource.apiGroup,
+                                count=count
+                            ))
 
-            for namespace_name, resources in aggregated_counts.items():
-                resource_list = []
-                for kind, count in resources.items():
-                    meta = resource_metadata.get(kind, {})
-                    resource_list.append(ResourceCount(
-                        kind=kind,
-                        apiVersion=meta.get("apiVersion", ""),
-                        apiGroup=meta.get("apiGroup", ""),
-                        count=count
-                    ))
-                namespaces[namespace_name] = NamespaceMetadata(resources=resource_list)
-                updated_namespace = self.__namespaces_cache.get(namespace_name)
-                if updated_namespace:
-                    updated_namespace.metadata = NamespaceMetadata(resources=resource_list)
-                    self.__namespaces_cache[namespace_name] = updated_namespace
-                    updated_namespaces.append(updated_namespace)
+                    except ResourceAccessForbiddenError as e:
+                        logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
+                    except Exception as e:
+                        logging.exception(f"Unexpected error counting resource {resource.kind}: {e}")
 
-                else:
-                    logging.warning(f"Namespace '{namespace_name}' not found in cache when assigning metadata.")
+                namespaces_to_publish = []
+                for namespace_name, resources in updated_namespaces.items():
+                    namespace_info = self.__namespaces_cache.get(namespace_name)
+                    if namespace_info:
+                        namespace_info.metadata = NamespaceMetadata(resources=resources)
+                        namespaces_to_publish.append(namespace_info)
+                    else:
+                        logging.warning(f"Namespace '{namespace_name}' not found in cache when assigning metadata.")
 
-            self.dal.publish_namespaces(updated_namespaces)
-            logging.info("Completed populating namespace metadata.")
-            
-            return
+                if namespaces_to_publish:
+                    self.dal.publish_namespaces(namespaces_to_publish)
+                    logging.info(f"Published metadata for {len(namespaces_to_publish)} namespaces")
 
-        except Exception as e:
-            logging.exception(f"Discovery process failed: {e}")
+            except Exception as e:
+                logging.exception(f"Discovery process failed: {e}")
+
+            logging.info(f"Discovery completed, sleeping for {NAMESPACE_DISCOVERY_SECONDS} seconds")
+            time.sleep(NAMESPACE_DISCOVERY_SECONDS)
+
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better

@@ -209,80 +209,88 @@ class Discovery:
 
     @staticmethod
     def count_resources(kind, api_group, version):
-        namespace_counts = defaultdict(int)
-        kind_lower = kind.lower()
+        if not api_group:
+            items = Discovery._fetch_corev1_resources(kind, version)
+        else:
+            items = Discovery._fetch_crd_resources(kind, api_group, version)
+
+        return Discovery._count_items_by_namespace(items, kind)
+
+
+    @staticmethod
+    def _fetch_corev1_resources(kind, version):
+        if version != "v1":
+            logging.error(f"Unsupported CoreV1 resource version '{version}' for kind '{kind}'")
+            return []
+
+        method_name = KIND_TO_COREV1_METHOD.get(kind.lower())
+        if not method_name:
+            logging.warning(f"No CoreV1Api mapping for kind: '{kind}'")
+            return []
+
+        core_v1 = client.CoreV1Api()
+        method = getattr(core_v1, method_name, None)
+        if not method:
+            logging.warning(f"CoreV1Api does not have method '{method_name}' for kind '{kind}'")
+            return []
 
         try:
-            items = []
+            response = method()
+            return getattr(response, 'items', response)
+        except ApiException as e:
+            if e.status == 403:
+                raise ResourceAccessForbiddenError(f"Access forbidden to CoreV1 resource '{kind}': {e.body}")
+            raise
 
-            if not api_group:
-                if version != "v1":
-                    logging.error(f"Unsupported CoreV1 resource version '{version}' for kind '{kind}'")
-                    return {}
 
-                method_name = KIND_TO_COREV1_METHOD.get(kind_lower)
-                if not method_name:
-                    logging.warning(f"No CoreV1Api mapping for kind: '{kind}'")
-                    return {}
+    @staticmethod
+    def _fetch_crd_resources(kind, api_group, version):
+        items = []
+        continue_ref = None
+        for _ in range(DISCOVERY_MAX_BATCHES):
+            try:
+                crd_res = client.CustomObjectsApi().list_cluster_custom_object(
+                    group=api_group,
+                    version=version,
+                    plural=kind.lower(),
+                    limit=DISCOVERY_BATCH_SIZE,
+                    _continue=continue_ref,
+                )
+                items.extend(crd_res.get("items", []))
+                continue_ref = crd_res.get("metadata", {}).get("continue")
+                if not continue_ref:
+                    break
+            except ApiException as e:
+                if e.status == 403:
+                    raise ResourceAccessForbiddenError(
+                        f"Access forbidden to resource '{kind}' in group '{api_group}': {e.body}"
+                    )
+                logging.exception(f"Failed to list {kind} from api group '{api_group}'.")
+                break
+        return items
 
-                core_v1 = client.CoreV1Api()
-                method = getattr(core_v1, method_name, None)
-                if not method:
-                    logging.warning(f"CoreV1Api does not have method '{method_name}' for kind '{kind}'")
-                    return {}
 
-                try:
-                    response = method()
-                    items = getattr(response, 'items', response)
-                except ApiException as e:
-                    if e.status == 403:
-                        raise ResourceAccessForbiddenError(f"Access forbidden to CoreV1 resource '{kind}': {e.body}")
-                    raise
+    @staticmethod
+    def _count_items_by_namespace(items, kind):
+        namespace_counts = defaultdict(int)
+        for item in items:
+            metadata = getattr(item, 'metadata', None)
+            namespace = None
 
-            else:
-                continue_ref = None
-                for _ in range(DISCOVERY_MAX_BATCHES):
-                    try:
-                        crd_res = client.CustomObjectsApi().list_cluster_custom_object(
-                            group=api_group,
-                            version=version,
-                            plural=kind_lower,
-                            limit=DISCOVERY_BATCH_SIZE,
-                            _continue=continue_ref,
-                        )
-                        items.extend(crd_res.get("items", []))
-                        continue_ref = crd_res.get("metadata", {}).get("continue")
-                        if not continue_ref:
-                            break
-                    except ApiException as e:
-                        if e.status == 403:
-                            raise ResourceAccessForbiddenError(f"Access forbidden to resource '{kind}' in group '{api_group}': {e.body}")
-                        logging.exception(f"Failed to list {kind} from api group '{api_group}'.")
-                        break
+            if metadata:
+                namespace = getattr(metadata, 'namespace', None)
+            elif isinstance(item, dict):
+                metadata = item.get('metadata', {})
+                namespace = metadata.get('namespace')
 
-            for item in items:
-                metadata = getattr(item, 'metadata', None)
-                namespace = None
+            if not namespace:
+                logging.warning(f"Missing namespace for resource '{kind}': metadata={metadata}")
+                continue
 
-                if metadata:
-                    namespace = getattr(metadata, 'namespace', None)
-                elif isinstance(item, dict):
-                    metadata = item.get('metadata', {})
-                    namespace = metadata.get('namespace')
+            namespace_counts[namespace] += 1
 
-                if not namespace:
-                    logging.warning(f"Missing namespace for resource '{kind}': metadata={metadata}")
-                    namespace = "cluster-scoped"
+        return dict(namespace_counts)
 
-                namespace_counts[namespace] += 1
-                
-            return dict(namespace_counts)
-
-        except ResourceAccessForbiddenError:
-            raise  # propagate the custom forbidden exception
-        except Exception as e:
-            logging.exception(f"count_resources failed for kind '{kind}' group '{api_group}' version '{version}': {e}")
-            return {}
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:
