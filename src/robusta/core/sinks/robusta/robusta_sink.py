@@ -350,8 +350,8 @@ class RobustaSink(SinkBase, EventHandler):
                     for namespace_name, count in results.items():
                         aggregated_counts[namespace_name][resource.kind] += count
                         resource_metadata[resource.kind] = {
-                            "apiKey": resource.apiVersion,
-                            "groupKey": resource.apiGroup
+                            "apiVersion": resource.apiVersion,
+                            "apiGroup": resource.apiGroup
                         }
 
                 except ResourceAccessForbiddenError as e:
@@ -369,8 +369,8 @@ class RobustaSink(SinkBase, EventHandler):
                     meta = resource_metadata.get(kind, {})
                     resource_list.append(ResourceCount(
                         kind=kind,
-                        apiKey=meta.get("apiKey", ""),
-                        groupKey=meta.get("groupKey", ""),
+                        apiVersion=meta.get("apiVersion", ""),
+                        apiGroup=meta.get("apiGroup", ""),
                         count=count
                     ))
                 namespaces[namespace_name] = NamespaceMetadata(resources=resource_list)

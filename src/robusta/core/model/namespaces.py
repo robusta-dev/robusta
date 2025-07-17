@@ -4,8 +4,8 @@ from kubernetes.client import V1Namespace
 
 class ResourceCount(BaseModel):
     kind: str
-    apiKey: str
-    groupKey: str
+    apiVersion: str
+    apiGroup: str
     count: int
 
 
