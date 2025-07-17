@@ -6,11 +6,12 @@ import threading
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+from collections import defaultdict
 
 import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
-
-from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
+from robusta.core.model.namespaces import NamespaceMetadata, ResourceCount
+from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults, ResourceAccessForbiddenError
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.discovery.utils import from_api_server_node
 from robusta.core.model.base_params import HolmesParams
@@ -45,11 +46,13 @@ from robusta.utils.stack_tracer import StackTracer
 from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT
 from cachetools import TTLCache
 
+NAMESPACE_DISCOVERY_SECONDS = int(os.getenv("NAMESPACE_DISCOVERY_SECONDS", 3600))
 RUNNER_GET_HOLMES_SLACKBOT_INFO = f"{ROBUSTA_API_ENDPOINT}/api/holmes/integrations/slack/runner"
 HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
 
 # Define the cache with a single slot and the configured TTL
 _holmes_slackbot_cache = TTLCache(maxsize=1, ttl=HOLMES_SLACKBOT_CACHE_TTL)
+
 
 class RobustaSink(SinkBase, EventHandler):
     services_publish_lock = threading.Lock()
@@ -61,6 +64,8 @@ class RobustaSink(SinkBase, EventHandler):
         self.token = sink_config.robusta_sink.token
         self.ttl_hours = sink_config.robusta_sink.ttl_hours
         self.persist_events = sink_config.robusta_sink.persist_events
+        self.namespace_monitored_resources = sink_config.robusta_sink.namespaceMonitoredResources
+
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
             logging.error(
@@ -135,6 +140,10 @@ class RobustaSink(SinkBase, EventHandler):
             self._thread = threading.Thread(target=self.__discover_cluster, daemon=True)
             self._thread.start()
 
+        if not hasattr(self, '_custom_resource_thread') and self.namespace_monitored_resources:
+            self._custom_resource_thread = threading.Thread(target=self.__discover_custom_namespaced_resources, daemon=True)
+            self._custom_resource_thread.start()
+        
     def set_cluster_active(self, active: bool):
         self.dal.set_cluster_active(active)
 
@@ -323,6 +332,56 @@ class RobustaSink(SinkBase, EventHandler):
                 logging.debug("Sent `helm release` trigger event.")
         except Exception:
             logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
+
+    def __discover_custom_namespaced_resources(self):
+        self.__assert_namespaces_cache_initialized()
+
+        logging.info(f"Starting namespace discovery loop every {NAMESPACE_DISCOVERY_SECONDS} seconds")
+
+        while True:
+            updated_namespaces: defaultdict = defaultdict(list)
+
+            try:
+                for resource in self.namespace_monitored_resources:
+                    try:
+                        results = Discovery.count_resources(
+                            kind=resource.kind,
+                            api_group=resource.apiGroup,
+                            version=resource.apiVersion
+                        )
+
+                        for namespace_name, count in results.items():
+                            updated_namespaces[namespace_name].append(ResourceCount(
+                                kind=resource.kind,
+                                apiVersion=resource.apiVersion,
+                                apiGroup=resource.apiGroup,
+                                count=count
+                            ))
+
+                    except ResourceAccessForbiddenError as e:
+                        logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
+                    except Exception as e:
+                        logging.exception(f"Unexpected error counting resource {resource.kind}: {e}")
+
+                namespaces_to_publish = []
+                for namespace_name, resources in updated_namespaces.items():
+                    namespace_info = self.__namespaces_cache.get(namespace_name)
+                    if namespace_info:
+                        namespace_info.metadata = NamespaceMetadata(resources=resources)
+                        namespaces_to_publish.append(namespace_info)
+                    else:
+                        logging.warning(f"Namespace '{namespace_name}' not found in cache when assigning metadata.")
+
+                if namespaces_to_publish:
+                    self.dal.publish_namespaces(namespaces_to_publish)
+                    logging.info(f"Published metadata for {len(namespaces_to_publish)} namespaces")
+
+            except Exception as e:
+                logging.exception(f"Discovery process failed: {e}")
+
+            logging.info(f"Discovery completed, sleeping for {NAMESPACE_DISCOVERY_SECONDS} seconds")
+            time.sleep(NAMESPACE_DISCOVERY_SECONDS)
+
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
@@ -556,6 +615,16 @@ class RobustaSink(SinkBase, EventHandler):
             time.sleep(DISCOVERY_WATCHDOG_CHECK_SEC)
         logging.warning("Watchdog finished")
 
+    def __discover_namespace_resources(self):
+        logging.info("Namespace Resources discovery initialized")
+        while self.__activ:
+            start_t = time.time()
+            self.__discover_custom_namespaced_resources()
+            # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
+            time.sleep(3600)
+
+        logging.info(f"Service discovery for sink {self.sink_name} ended.")
+
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
         get_history = self.__should_run_history()
@@ -613,7 +682,10 @@ class RobustaSink(SinkBase, EventHandler):
 
         # new or changed namespaces
         for namespace_name, updated_namespace in curr_namespaces.items():
-            if self.__namespaces_cache.get(namespace_name) != updated_namespace:
+            cached_namespace = self.__namespaces_cache.get(namespace_name)
+            if cached_namespace:
+                updated_namespace.metadata = cached_namespace.metadata
+            if cached_namespace != updated_namespace:
                 updated_namespaces.append(updated_namespace)
                 self.__namespaces_cache[namespace_name] = updated_namespace
 
