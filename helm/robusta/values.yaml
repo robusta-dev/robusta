@@ -99,8 +99,6 @@ enableServiceMonitors: true
 monitorHelmReleases: true
 argoRollouts: false
 
-# disable messages routed by Robusta cloud
-disableCloudRouting: false
 
 # scale alerts processing.
 # Used to support clusters with high load of alerts. When used, the runner will consume more memory
@@ -109,6 +107,9 @@ scaleAlertsProcessing: False
 # Enable loading playbooks to a persistent volume
 playbooksPersistentVolume: false
 playbooksPersistentVolumeSize: 4Gi
+# StorageClass(string) to use for the playbooks PVC. Leave empty to let
+# the cluster default apply.
+playbooksPersistentVolumeStorageClass: ""
 
 # priority builtin playbooks for running before all playbooks
 priorityBuiltinPlaybooks:
@@ -190,6 +191,16 @@ builtinPlaybooks:
   - pod_evicted_enricher: {}
   - pod_events_enricher: {}
   - enrich_pod_with_node_events: {}
+
+- name: "KrrJobFailed"
+  triggers:
+  - on_job_failure:
+      scope:
+        include:
+          - labels:
+              - "app=krr.robusta.dev"
+  actions:
+  - fail_krr_scan: {}
 
 - name: "PodOOMKill"
   triggers:
