@@ -46,7 +46,6 @@ from robusta.utils.stack_tracer import StackTracer
 from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT
 from cachetools import TTLCache
 
-NAMESPACE_DISCOVERY_SECONDS = int(os.getenv("NAMESPACE_DISCOVERY_SECONDS", 3600))
 RUNNER_GET_HOLMES_SLACKBOT_INFO = f"{ROBUSTA_API_ENDPOINT}/api/holmes/integrations/slack/runner"
 HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
 
@@ -65,6 +64,7 @@ class RobustaSink(SinkBase, EventHandler):
         self.ttl_hours = sink_config.robusta_sink.ttl_hours
         self.persist_events = sink_config.robusta_sink.persist_events
         self.namespace_monitored_resources = sink_config.robusta_sink.namespaceMonitoredResources
+        self.namespace_discovery_seconds = sink_config.robusta_sink.namespace_discovery_seconds
 
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
@@ -139,10 +139,6 @@ class RobustaSink(SinkBase, EventHandler):
         if not hasattr(self, '_thread'):
             self._thread = threading.Thread(target=self.__discover_cluster, daemon=True)
             self._thread.start()
-
-        if not hasattr(self, '_custom_resource_thread') and self.namespace_monitored_resources:
-            self._custom_resource_thread = threading.Thread(target=self.__discover_namespace_resources, daemon=True)
-            self._custom_resource_thread.start()
         
     def set_cluster_active(self, active: bool):
         self.dal.set_cluster_active(active)
@@ -337,9 +333,6 @@ class RobustaSink(SinkBase, EventHandler):
         if not self.namespace_monitored_resources:
             return
 
-        self.__assert_namespaces_cache_initialized()
-
-        logging.info(f"Starting namespace discovery loop every {NAMESPACE_DISCOVERY_SECONDS} seconds")
         updated_namespaces: defaultdict = defaultdict(list)
 
         try:
@@ -613,36 +606,41 @@ class RobustaSink(SinkBase, EventHandler):
             time.sleep(DISCOVERY_WATCHDOG_CHECK_SEC)
         logging.warning("Watchdog finished")
 
-    def __discover_namespace_resources(self):
-        logging.info("Namespace Resources discovery initialized")
-        while self.__active:
-            self.__discover_custom_namespaced_resources()
-            logging.info(f"Discovery completed, sleeping for {NAMESPACE_DISCOVERY_SECONDS} seconds")
-            time.sleep(NAMESPACE_DISCOVERY_SECONDS)
-
-        logging.info(f"Service discovery for sink {self.sink_name} ended.")
-
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
         get_history = self.__should_run_history()
+        last_namespace_discovery = 0
+
         while self.__active:
             start_t = time.time()
             self.__periodic_cluster_status()
             discovery_results = self.__discover_resources()
+
             if get_history:
                 self.__get_events_history()
                 get_history = False
 
             if discovery_results and discovery_results.helm_releases:
-                self.__send_helm_release_events(release_data=discovery_results.helm_releases)
+                self.__send_helm_release_events(discovery_results.helm_releases)
 
             duration = round(time.time() - start_t)
-            # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)
-            logging.debug(f"Discovery duration: {duration} next discovery in {sleep_dur}")
+
+            if self.namespace_monitored_resources:
+                next_ns_due = last_namespace_discovery + self.namespace_discovery_seconds
+                sleep_dur = min(sleep_dur, max(0, next_ns_due - time.time()))
+
+            logging.debug(f"Discovery duration: {duration}. Sleeping {sleep_dur}s")
             time.sleep(sleep_dur)
 
+            if self.namespace_monitored_resources and (time.time() - last_namespace_discovery) >= self.namespace_discovery_seconds:
+                logging.debug("Running custom namespaced resource discovery")
+                self.__discover_custom_namespaced_resources()
+                last_namespace_discovery = time.time()
+
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
+
+
 
     def __periodic_cluster_status(self):
         first_alert = False

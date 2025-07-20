@@ -21,7 +21,8 @@ class RobustaSinkParams(SinkBaseParams):
     ttl_hours: int = 4380  # Time before unactive cluster data is deleted. 6 Months default.
     persist_events: bool = False
     namespaceMonitoredResources: Optional[List[NamespaceMonitoredResources]]
-
+    namespace_discovery_seconds: int = 3600
+    
     @classmethod
     def _get_sink_type(cls):
         return "robusta"
