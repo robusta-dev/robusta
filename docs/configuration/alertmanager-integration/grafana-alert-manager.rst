@@ -8,13 +8,9 @@ Grafana can send alerts to the Robusta timeline for visualization and AI investi
   :align: center
 
 
-This guide only covers integrating alerts from Grafana Alerting with Robusta.
+This guide only covers sending alerts from Grafana Alerting to the Robusta timeline.
+If you'd like Robusta to also query metrics from Grafana, refer to general :ref:`metrics-integration docs for Prometheus <Integrating with Prometheus>`.
 
-Kubernetes Alerts
-=================================
-In case your alerts are from a Kubernetes cluster monitored by Robusta, and your alerts has a ``cluster`` label, make sure it matches the ``cluster_name`` that appears in Robusta ``generated_values.yaml``.
-
-** This is optional - you can send any alert to the Robusta timeline! **
 
 Send Alerts to Robusta's Timeline
 ===========================================
@@ -85,6 +81,13 @@ Save your new ``Notification Policy``
 That's it!
 
 You can now see your Grafana alerts in the Robusta Timeline, and use AI to analyze it.
+
+
+Kubernetes Alerts
+=================================
+In case your alerts are from a Kubernetes cluster monitored by Robusta, and your alerts has a ``cluster`` label, make sure it matches the ``cluster_name`` that appears in Robusta ``generated_values.yaml``.
+
+** This is optional - you can send any alert to the Robusta timeline! **
 
 
 Send Alerts to Robusta for enrichments
