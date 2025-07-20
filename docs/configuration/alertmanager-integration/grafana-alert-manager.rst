@@ -1,25 +1,98 @@
 Grafana AlertManager
 ****************************************
 
-Grafana can send alerts to Robusta for automatic enrichment and visualization.
+Grafana can send alerts to the Robusta timeline for visualization and AI investigation.
 
 .. image:: /images/grafana-docs-robusta-ui.png
   :width: 600
   :align: center
 
 
-This guide only covers integrating alerts from Grafana Alerting with Robusta, not configuring Robusta to query metrics from the relevant Grafana data source.
+This guide only covers integrating alerts from Grafana Alerting with Robusta.
 
-After completing this tutorial, we recommend configuring a metrics integration according to the :ref:`standard instructions for your metrics backend <Integrating with Prometheus>`
-
-Prerequisite
+Kubernetes Alerts
 =================================
-* A label in the following format ``cluster_name: YourClusterName`` added to each alert, with the cluster name as it appears in Robusta ``generated_values.yaml``.
+In case your alerts are from a Kubernetes cluster monitored by Robusta, and your alerts has a ``cluster`` label, make sure it matches the ``cluster_name`` that appears in Robusta ``generated_values.yaml``.
 
-Send Alerts to Robusta
-============================
+** This is optional - you can send any alert to the Robusta timeline! **
 
-This integration lets you send Grafana alerts to Robusta.
+Send Alerts to Robusta's Timeline
+===========================================
+
+This integration lets you send Grafana alerts to Robusta's Timeline. To configure it:
+
+1. Get your Robusta ``account_id`` from your ``generated_values.yaml`` file. It appears under the ``globalConfig`` section.
+
+2. Create an ``api key``
+
+In the Robusta UI, navigate to the ``settings`` page, and select the ``API Keys`` tab.
+
+.. image:: /images/robusta-api-keys.png
+  :width: 600
+  :align: center
+
+
+Click ``New API Key``. Select a name for your key, and check the ``Alerts Write`` capability.
+Generate and save your new ``API Key``
+
+.. image:: /images/new-api-key.png
+  :width: 600
+  :align: center
+
+
+3. In the Grafana UI, navigate to the ``Alerting`` tab, click on ``Manage Contact Points``, and then ``Create contact point``.
+
+Select ``Webhook`` from the Integration options.
+Add the following URL. Add your ``account_id`` to it:
+
+.. code-block::
+
+    https://api.robusta.dev/integrations/alerts/grafana?account_id=YOUR_ACCOUNT_ID
+
+.. image:: /images/robusta-contact-point-1.png
+  :width: 600
+  :align: center
+
+On the ``Optional Webhook settings`` add your ``API Key`` in the ``Bearer Token`` field:
+
+.. image:: /images/robusta-contact-point-2.png
+  :width: 600
+  :align: center
+
+Lastly, on the ``Notification settings``, check the ``Send resolved`` checkbox:
+
+.. image:: /images/grafana-send-resolved.png
+  :width: 600
+  :align: center
+
+Click  the ``Test`` button. If successful, you will receive a notification in the Robusta UI under the ``external`` cluster.
+
+Save your new ``Contact Point``
+
+4. Create a new ``Notification Policy``. Navigate to ``Alerting`` tab, and click ``Manage notification policies``
+Create a new policy.
+
+Add a policy without matchers, that handles all alerts. Disable grouping, by specifying ``Group By = ...``
+
+.. image:: /images/robusta-new-notification-policy.png
+  :width: 600
+  :align: center
+
+
+Save your new ``Notification Policy``
+
+
+That's it!
+
+You can now see your Grafana alerts in the Robusta Timeline, and use AI to analyze it.
+
+
+Send Alerts to Robusta for enrichments
+===================================================================
+
+You can use Robusta to enrich alerts with extra context, and to route it to other systems as well.
+
+If you'd like to do that, this integration is for you.
 
 To configure it:
 
