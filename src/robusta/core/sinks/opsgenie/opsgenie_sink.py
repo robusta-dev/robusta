@@ -1,9 +1,10 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 import opsgenie_sdk
 
 from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity
+from robusta.core.sinks.common.channel_transformer import ChannelTransformer
 from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.transformer import Transformer
@@ -22,8 +23,17 @@ class OpsGenieSink(SinkBase):
 
         self.api_key = sink_config.opsgenie_sink.api_key
         self.teams = sink_config.opsgenie_sink.teams
+        self.default_team = sink_config.opsgenie_sink.default_team
         self.tags = sink_config.opsgenie_sink.tags
         self.extra_details_labels = sink_config.opsgenie_sink.extra_details_labels
+
+        # Check for dangerous configuration
+        team_has_templates = any("$" in team for team in self.teams)
+        if team_has_templates and not self.default_team:
+            logging.warning(
+                "OpsGenie sink is configured with templated team names but no default_team specified. "
+                "Alerts may fail to route if the required label or annotation is missing."
+            )
 
         opsgenie_sdk.configuration.Configuration.set_default(None)
         self.conf = opsgenie_sdk.configuration.Configuration()
@@ -73,17 +83,80 @@ class OpsGenieSink(SinkBase):
         except opsgenie_sdk.ApiException as err:
             logging.error(f"Error acking opsGenie alert {fingerprint} {err}", exc_info=True)
 
+    def __resolve_templates(
+            self,
+            raw_values: List[str],
+            finding: Finding,
+            fallback: Optional[str] = None,
+            prepend: Optional[str] = None,
+            log_context: str = "value",
+    ) -> List[str]:
+        """Resolve a list of dynamic or static values, optionally handling templated strings and prepending one fixed value."""
+        returned_values = [prepend] if prepend else []
+
+        for value_str in raw_values:
+            try:
+                if "$" in value_str:
+                    evaluated_value = ChannelTransformer.template(
+                        value_str,
+                        fallback,
+                        self.cluster_name,
+                        finding.subject.labels,
+                        finding.subject.annotations,
+                    )
+                    if evaluated_value and evaluated_value not in returned_values:
+                        returned_values.append(evaluated_value)
+                else:
+                    if value_str and value_str not in returned_values:
+                        returned_values.append(value_str)
+            except Exception as e:
+                logging.warning(
+                    f"Failed to process {log_context} '{value_str}' for alert subject {finding.service_key}: {e}"
+                )
+                continue
+
+        return returned_values
+
+    def __get_tags(self, finding: Finding) -> List[str]:
+        return self.__resolve_templates(
+            raw_values=self.tags,
+            finding=finding,
+            fallback=None,
+            prepend=self.cluster_name,
+            log_context="tag"
+        )
+
+    def __get_teams(self, finding: Finding) -> List[str]:
+        teams = self.__resolve_templates(
+            raw_values=self.teams,
+            finding=finding,
+            fallback=self.default_team,
+            log_context="team"
+        )
+
+        if not teams:
+            if self.default_team:
+                teams = [self.default_team]
+            elif self.teams:
+                logging.warning(
+                    f"No valid teams resolved for finding {finding.title}. Alert may not be routed properly.")
+
+        return teams
+
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
         details = self.__to_details(finding)
-        tags = self.tags.copy()
-        tags.insert(0, self.cluster_name)
+
+        # Get teams and tags based on templates
+        teams = self.__get_teams(finding)
+        tags = self.__get_tags(finding)
+
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
             message=finding.title,
             description=description,
             alias=finding.fingerprint,
-            responders=[{"name": team, "type": "team"} for team in self.teams],
+            responders=[{"name": team, "type": "team"} for team in teams],
             details=details,
             tags=tags,
             entity=finding.service_key,

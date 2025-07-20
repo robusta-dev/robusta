@@ -20,7 +20,7 @@ Prometheus Alerts
 
 .. warning::
 
-    You must :ref:`send your Prometheus alerts to Robusta by webhook <Integrating AlertManager and Prometheus>` for these to work.
+    You must :ref:`send your Prometheus alerts to Robusta by webhook <Integrating with Prometheus>` for these to work.
 
 Other errors
 ----------------
@@ -39,7 +39,7 @@ Change Tracking
 By default all changes to Deployments, DaemonSets, and StatefulSets are sent to the Robusta UI for correlation
 with Prometheus alerts and other errors.
 
-These changes are not sent to other sinks (e.g. Slack) by default because they are spammy. :ref:`Automation Basics`
+These changes are not sent to other sinks (e.g. Slack) by default because they are spammy. :ref:`Routing Cookbook`
 explains how to selectively track changes you care about in Slack as well.
 
 We also wrote a blog post `Why everyone should track Kubernetes changes and top four ways to do so <https://home.robusta.dev/blog/why-everyone-should-track-and-audit-kubernetes-changes-and-top-ways/>`_

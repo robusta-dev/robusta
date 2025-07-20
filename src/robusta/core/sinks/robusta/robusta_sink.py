@@ -42,7 +42,14 @@ from robusta.integrations.prometheus.utils import HolmesDiscovery
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
+from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT
+from cachetools import TTLCache
 
+RUNNER_GET_HOLMES_SLACKBOT_INFO = f"{ROBUSTA_API_ENDPOINT}/api/holmes/integrations/slack/runner"
+HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
+
+# Define the cache with a single slot and the configured TTL
+_holmes_slackbot_cache = TTLCache(maxsize=1, ttl=HOLMES_SLACKBOT_CACHE_TTL)
 
 class RobustaSink(SinkBase, EventHandler):
     services_publish_lock = threading.Lock()
@@ -86,9 +93,9 @@ class RobustaSink(SinkBase, EventHandler):
         )
         self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
         self.__pods_running_count: int = 0
-        self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         self.registry.subscribe("scan_updated", self)
+        self.registry.subscribe("config_reload", self)
 
         # start cluster discovery
         self.__active = True
@@ -101,14 +108,14 @@ class RobustaSink(SinkBase, EventHandler):
         self.__jobs_cache_initialized: bool = False
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
-        self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__watchdog_thread = threading.Thread(target=self.__discovery_watchdog)
-        self.__thread.start()
         self.__watchdog_thread.start()
 
     def handle_event(self, event_name: str, **kwargs):
         if event_name == "scan_updated":
             self._on_scan_updated(**kwargs)
+        elif event_name == "config_reload":
+            self._on_config_reload(**kwargs)
         else:
             logging.warning("RobustaSink subscriber called with unknown event")
 
@@ -119,6 +126,14 @@ class RobustaSink(SinkBase, EventHandler):
             self.dal.insert_scan_meta(scan_id, start_time, type)
 
         self.dal.set_scan_state(scan_id, state, metadata)
+
+    def _on_config_reload(self) -> None:
+        # make sure cluster status and periodic check start after all config has been reloaded successfuly.
+        self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
+
+        if not hasattr(self, '_thread'):
+            self._thread = threading.Thread(target=self.__discover_cluster, daemon=True)
+            self._thread.start()
 
     def set_cluster_active(self, active: bool):
         self.dal.set_cluster_active(active)
@@ -695,3 +710,26 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__safe_delete_job(job_key)
                 self.__discovery_metrics.on_jobs_updated(1)
                 return
+
+    def is_holmes_slackbot_connected(self) -> bool:
+        if 'status' in _holmes_slackbot_cache:
+            return _holmes_slackbot_cache['status']
+        session_token = self.dal.get_session_token()
+        try:
+            message_json = {
+                "session_token": session_token,
+                "account_id": self.account_id,
+            }
+            response = requests.post(
+                RUNNER_GET_HOLMES_SLACKBOT_INFO,
+                json=message_json,
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+            is_connected = bool(response.json().get("integrations"))
+            _holmes_slackbot_cache['status'] = is_connected
+            return is_connected
+        except Exception as e:
+            logging.warning(f"Failed to get holmes slackbot info {e}")
+            _holmes_slackbot_cache['status'] = False
+            return False

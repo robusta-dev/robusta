@@ -44,7 +44,7 @@ from robusta.api import (
     pod_restarts,
 )
 from robusta.core.discovery import utils
-from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
+from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST, CUSTOM_CRD
 from robusta.core.model.pods import ResourceAttributes
 
 
@@ -96,7 +96,7 @@ class RelatedPod(BaseModel):
 
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node", "DeploymentConfig", "Rollout"]
-
+supported_resources.extend(CUSTOM_CRD)
 
 def to_pod_row(pod: V1Pod, cluster_name: str) -> List:
     resource_requests = k8s_pod_requests(pod)
@@ -153,7 +153,8 @@ def get_related_pods_with_extra_info(resource, limit: Optional[int]=None, _conti
             _continue=_continue,
         )
     else:
-        selector = build_selector_query(resource.spec.selector)
+        selector = resource.spec.get("selector", {}) if isinstance(resource.spec, dict) else resource.spec.selector
+        selector = build_selector_query(selector)
         result = client.CoreV1Api().list_namespaced_pod(
             namespace=resource.metadata.namespace,
             label_selector=selector,
@@ -379,3 +380,62 @@ def status_enricher(event: KubernetesResourceEvent, params: StatusEnricherParams
             ),
         ]
     )
+
+
+class ListPodsParams(ActionParams):
+    """
+    :var name: Filter pods with name that contains this paramater
+    :var namespace: Filter pods in this namespace. If ommitted, pods from all namespaces are returned
+    :var limit: Max number of pods to return
+    """
+
+    name: str
+    namespace: Optional[str] = None
+    limit: int = 50
+
+
+@action
+def list_pods(event: ExecutionBaseEvent, params: ListPodsParams):
+    """
+    List pods by name, and potentially namespace
+    """
+    cluster = event.get_context().cluster_name
+    filtered_pods = []
+    continue_token = None
+    batch_size = 300  # Load pods in batches
+
+    # Keep fetching until we have enough matching pods or no more pods
+    while len(filtered_pods) < params.limit:
+        if params.namespace:
+            pod_list = client.CoreV1Api().list_namespaced_pod(
+                namespace=params.namespace,
+                limit=batch_size,
+                _continue=continue_token
+            )
+        else:
+            pod_list = client.CoreV1Api().list_pod_for_all_namespaces(
+                limit=batch_size,
+                _continue=continue_token
+            )
+        # Filter pods by name from current batch
+        batch_filtered = [
+            pod for pod in pod_list.items
+            if params.name.lower() in pod.metadata.name.lower()
+        ]
+        filtered_pods.extend(batch_filtered)
+
+        # Check if we have more pods to fetch
+        continue_token = getattr(pod_list.metadata, 'continue', None)
+        if not continue_token:
+            break
+
+    # Apply final limit
+    limited_pods = filtered_pods[:params.limit]
+
+    # Convert to RelatedPod format (same as related_pods action)
+    pod_objects = [to_pod_obj(pod, cluster, include_raw_data=False) for pod in limited_pods]
+
+    # Return as JSON
+    event.add_enrichment([
+        JsonBlock(json.dumps([pod.dict() for pod in pod_objects], default=str))
+    ])

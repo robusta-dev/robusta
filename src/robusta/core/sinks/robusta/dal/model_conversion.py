@@ -89,12 +89,29 @@ class ModelConversion:
     @staticmethod
     def append_to_structured_data_tool_calls(tool_calls: List[ToolCallResult], structured_data) -> None:
         for tool_call in tool_calls:
-            file_block = FileBlock(f"{tool_call.description}.txt", tool_call.result.encode())
+            if isinstance(tool_call.result, str):
+                result = tool_call.result.encode()
+            elif isinstance(tool_call.result, dict):
+                result = json.dumps(tool_call.result).encode()
+                
+            file_block = FileBlock(f"{tool_call.description}.txt", result)
             file_block.zip()
             data_obj = ModelConversion.get_file_object(file_block)
             data_obj["metadata"] = {"description": tool_call.description, "tool_name": tool_call.tool_name}
             structured_data.append(data_obj)
 
+    @staticmethod
+    def append_to_structured_files(files: List[FileBlock], structured_data) -> None:
+        if not files:
+            return
+        for file in files:
+            file_name = file.filename  # changes after zip
+            file.zip()
+            data_obj = ModelConversion.get_file_object(file)
+            data_obj["metadata"] = {
+                "file_name": file_name,
+            }
+            structured_data.append(data_obj)
 
     @staticmethod
     def add_ai_chat_data(structured_data: List[Dict], block: HolmesChatResultsBlock):
@@ -105,6 +122,7 @@ class ModelConversion:
                 "data": Transformer.to_github_markdown(block.holmes_result.analysis),
             }
         )
+        ModelConversion.append_to_structured_files(block.holmes_result.files, structured_data)
         ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls, structured_data)
 
         conversation_history_block = FileBlock(

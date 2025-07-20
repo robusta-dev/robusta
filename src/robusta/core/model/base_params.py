@@ -81,9 +81,8 @@ class ResourceInfo(BaseModel):
 
 
 class HolmesParams(ActionParams):
-
     holmes_url: Optional[str]
-
+    model: Optional[str]
     @validator("holmes_url", allow_reuse=True)
     def validate_protocol(cls, v):
         if v and not v.startswith("http"):  # if the user configured url without http(s)
@@ -190,6 +189,7 @@ class HolmesChatParams(HolmesParams):
 
     ask: str
     conversation_history: Optional[list[dict]] = None
+    render_graph_images: bool = False
 
 
 class HolmesIssueChatParams(HolmesChatParams):
@@ -251,6 +251,7 @@ class HolmesWorkloadHealthChatParams(HolmesParams):
     conversation_history: Optional[list[dict]] = None
 
 
+
 class NamespacedResourcesParams(ActionParams):
     """
     :var name: Resource name
@@ -309,6 +310,7 @@ class PrometheusParams(ActionParams):
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
     :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
     :var prometheus_url_query_string: Additional query string parameters to be appended to the Prometheus connection URL
+    :var prometheus_additional_headers: additional HTTP headers (if defined) to add to every prometheus query
     :var prometheus_additional_labels: A dictionary of additional labels needed for multi-cluster prometheus
     :var add_additional_labels: adds the additional labels (if defined) to the query
 
@@ -324,6 +326,7 @@ class PrometheusParams(ActionParams):
     prometheus_url: Optional[str] = None
     prometheus_auth: Optional[SecretStr] = None
     prometheus_url_query_string: Optional[str] = None
+    prometheus_additional_headers: Optional[Dict[str, str]] = None
     prometheus_additional_labels: Optional[Dict[str, str]] = None
     add_additional_labels: bool = True
     prometheus_graphs_overrides: Optional[List[OverrideGraph]] = None

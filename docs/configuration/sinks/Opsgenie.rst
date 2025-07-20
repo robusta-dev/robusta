@@ -14,7 +14,9 @@ We can add Prometheus alert labels into Opsgenie alert extra details by setting 
 Configuring the OpsGenie sink
 ------------------------------------------------
 
-.. admonition:: Add this to your generated_values.yaml
+The OpsGenie sink supports static and dynamic team and tag routing, optional fallback teams, tagging, and enrichment with Kubernetes labels.
+
+.. admonition:: Add this to your `generated_values.yaml`
 
     .. code-block:: yaml
 
@@ -23,13 +25,34 @@ Configuring the OpsGenie sink
             name: ops_genie_sink
             api_key: OpsGenie integration API key  # configured from OpsGenie team integration
             teams:
-            - "noc"
-            - "sre"
+            - "noc"                  # Static team
+            - "$labels.team"  # Dynamic routing based on alert labels or annotations.
+                              # For example, if an alert subject has `team=infra`, it routes to the "infra" team.
+                              # Use $labels.<label_name> or $annotations.<label_name> as placeholders.
+            default_team: "oncall"   # Optional fallback team for Dynamic team routing
             tags:
             - "prod a"
+            - "$labels.app"
             extra_details_labels: false # optional, default is false
 
-Save the file and run
+In this example:
+
+- Alerts will be routed to the **"noc"** team by default.
+- If the alert includes a **"team" label**, it will also be routed to team of the value of that label.
+- If the **"team" label is missing**, the alert will be routed to the **"oncall"** team as a fallback.
+- The tag **"prod a"** will be included with every alert.
+- If the alert includes a **"app" label**, the value will added as a tag for that label.
+- Kubernetes labels **will not be added** to alert details, as `extra_details_labels` is set to `false`.
+
+.. note::
+
+   - Dynamic team routing using label-based templates (e.g., ``$labels.team``) is only supported on **OpsGenie Standard** or **Enterprise** plans.
+     If you are on a Free or Essentials plan, these templates will not function as expected.
+
+   - The API key must be from a **Global API Integration** for dynamic routing to work.
+     If you use a **team-specific API key**, alerts will be routed **only to that team**.
+
+Save the file and apply the configuration:
 
 .. code-block:: bash
    :name: cb-add-opsgenie-sink

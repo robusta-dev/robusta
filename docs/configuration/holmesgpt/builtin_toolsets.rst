@@ -10,6 +10,7 @@ Builtin Toolsets
    toolsets/aws
    toolsets/confluence
    toolsets/coralogix_logs
+   toolsets/datadog_logs
    toolsets/datetime
    toolsets/docker
    toolsets/grafanaloki
@@ -18,7 +19,10 @@ Builtin Toolsets
    toolsets/internet
    toolsets/kafka
    toolsets/kubernetes
-   toolsets/opensearch
+   toolsets/newrelic
+   toolsets/notion
+   toolsets/opensearch_logs
+   toolsets/opensearch_status
    toolsets/prometheus
    toolsets/rabbitmq
    toolsets/robusta
@@ -57,6 +61,11 @@ by the user by providing credentials or API keys to external systems.
     .. grid-item-card:: :octicon:`cpu;1em;` Coralogix logs
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/coralogix_logs
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Datadog logs
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/datadog_logs
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Datetime
@@ -99,9 +108,24 @@ by the user by providing credentials or API keys to external systems.
         :link: toolsets/kubernetes
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch
+    .. grid-item-card:: :octicon:`cpu;1em;` New Relic
         :class-card: sd-bg-light sd-bg-text-light
-        :link: toolsets/opensearch
+        :link: toolsets/newrelic
+        :link-type: doc
+    
+    .. grid-item-card:: :octicon:`cpu;1em;` Notion
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/notion
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch logs
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/opensearch_logs
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` OpenSearch status
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/opensearch_status
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Prometheus

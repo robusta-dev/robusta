@@ -7,6 +7,7 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 class OpsGenieSinkParams(SinkBaseParams):
     api_key: str
     teams: List[str] = []
+    default_team: Optional[str] = None
     tags: List[str] = []
     host: Optional[str] = None  # NOTE: If None, the default value will be used from opsgenie_sdk
     extra_details_labels: Optional[bool] = False

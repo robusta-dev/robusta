@@ -523,6 +523,7 @@ class RobustaJob(Job):
             List[str]
         ] = None,  # Finalizers are used to verify the pod is not deleted before getting the logs
         custom_pod_labels: Optional[Dict[str, str]] = None,
+        return_logs: bool = True,
     ) -> str:
         pod_meta = ObjectMeta(annotations=custom_annotations, labels=custom_pod_labels)
         if finalizers:
@@ -546,6 +547,8 @@ class RobustaJob(Job):
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
             if job_secret:
                 job.create_job_owned_secret(job_secret)
+            if not return_logs:
+                return ""
             job: RobustaJob = wait_until_job_complete(job, timeout)
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
             pod = job.get_single_pod()
