@@ -101,11 +101,6 @@ KIND_TO_COREV1_METHOD = {
     "resourcequotas": "list_resource_quota_for_all_namespaces",
     "events": "list_event_for_all_namespaces",
     "podtemplates": "list_pod_template_for_all_namespaces",
-    # Cluster scoped
-    "namespaces": "list_namespace",
-    "nodes": "list_node",
-    "persistentvolumes": "list_persistent_volume",
-    "componentstatuses": "list_component_status"
 }
 
 class ResourceAccessForbiddenError(Exception):
