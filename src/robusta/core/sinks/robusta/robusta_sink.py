@@ -371,7 +371,7 @@ class RobustaSink(SinkBase, EventHandler):
                 logging.info(f"Published metadata for {len(namespaces_to_publish)} namespaces")
 
         except Exception as e:
-            logging.exception(f"Discovery process failed: {e}")
+            logging.exception(f"Namespace discovery failed: {e}")
 
 
     def __discover_resources(self) -> DiscoveryResults:
