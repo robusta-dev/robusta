@@ -141,7 +141,7 @@ class RobustaSink(SinkBase, EventHandler):
             self._thread.start()
 
         if not hasattr(self, '_custom_resource_thread') and self.namespace_monitored_resources:
-            self._custom_resource_thread = threading.Thread(target=self.__discover_custom_namespaced_resources, daemon=True)
+            self._custom_resource_thread = threading.Thread(target=self.__discover_namespace_resources, daemon=True)
             self._custom_resource_thread.start()
         
     def set_cluster_active(self, active: bool):
@@ -334,53 +334,51 @@ class RobustaSink(SinkBase, EventHandler):
             logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
 
     def __discover_custom_namespaced_resources(self):
+        if not self.namespace_monitored_resources:
+            return
+
         self.__assert_namespaces_cache_initialized()
 
         logging.info(f"Starting namespace discovery loop every {NAMESPACE_DISCOVERY_SECONDS} seconds")
+        updated_namespaces: defaultdict = defaultdict(list)
 
-        while True:
-            updated_namespaces: defaultdict = defaultdict(list)
+        try:
+            for resource in self.namespace_monitored_resources:
+                try:
+                    results = Discovery.count_resources(
+                        kind=resource.kind,
+                        api_group=resource.apiGroup,
+                        version=resource.apiVersion
+                    )
 
-            try:
-                for resource in self.namespace_monitored_resources:
-                    try:
-                        results = Discovery.count_resources(
+                    for namespace_name, count in results.items():
+                        updated_namespaces[namespace_name].append(ResourceCount(
                             kind=resource.kind,
-                            api_group=resource.apiGroup,
-                            version=resource.apiVersion
-                        )
+                            apiVersion=resource.apiVersion,
+                            apiGroup=resource.apiGroup,
+                            count=count
+                        ))
 
-                        for namespace_name, count in results.items():
-                            updated_namespaces[namespace_name].append(ResourceCount(
-                                kind=resource.kind,
-                                apiVersion=resource.apiVersion,
-                                apiGroup=resource.apiGroup,
-                                count=count
-                            ))
+                except ResourceAccessForbiddenError as e:
+                    logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
+                except Exception as e:
+                    logging.exception(f"Unexpected error counting resource {resource.kind}: {e}")
 
-                    except ResourceAccessForbiddenError as e:
-                        logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
-                    except Exception as e:
-                        logging.exception(f"Unexpected error counting resource {resource.kind}: {e}")
+            namespaces_to_publish = []
+            for namespace_name, resources in updated_namespaces.items():
+                namespace_info = self.__namespaces_cache.get(namespace_name)
+                if namespace_info:
+                    namespace_info.metadata = NamespaceMetadata(resources=resources)
+                    namespaces_to_publish.append(namespace_info)
+                else:
+                    logging.warning(f"Namespace '{namespace_name}' not found in cache when assigning metadata.")
 
-                namespaces_to_publish = []
-                for namespace_name, resources in updated_namespaces.items():
-                    namespace_info = self.__namespaces_cache.get(namespace_name)
-                    if namespace_info:
-                        namespace_info.metadata = NamespaceMetadata(resources=resources)
-                        namespaces_to_publish.append(namespace_info)
-                    else:
-                        logging.warning(f"Namespace '{namespace_name}' not found in cache when assigning metadata.")
+            if namespaces_to_publish:
+                self.dal.publish_namespaces(namespaces_to_publish)
+                logging.info(f"Published metadata for {len(namespaces_to_publish)} namespaces")
 
-                if namespaces_to_publish:
-                    self.dal.publish_namespaces(namespaces_to_publish)
-                    logging.info(f"Published metadata for {len(namespaces_to_publish)} namespaces")
-
-            except Exception as e:
-                logging.exception(f"Discovery process failed: {e}")
-
-            logging.info(f"Discovery completed, sleeping for {NAMESPACE_DISCOVERY_SECONDS} seconds")
-            time.sleep(NAMESPACE_DISCOVERY_SECONDS)
+        except Exception as e:
+            logging.exception(f"Discovery process failed: {e}")
 
 
     def __discover_resources(self) -> DiscoveryResults:
@@ -617,11 +615,10 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __discover_namespace_resources(self):
         logging.info("Namespace Resources discovery initialized")
-        while self.__activ:
-            start_t = time.time()
+        while self.__active:
             self.__discover_custom_namespaced_resources()
-            # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
-            time.sleep(3600)
+            logging.info(f"Discovery completed, sleeping for {NAMESPACE_DISCOVERY_SECONDS} seconds")
+            time.sleep(NAMESPACE_DISCOVERY_SECONDS)
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
