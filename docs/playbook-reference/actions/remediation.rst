@@ -26,3 +26,47 @@ Node
 .. robusta-action:: playbooks.robusta_playbooks.node_actions.uncordon on_node_create
 
 .. robusta-action:: playbooks.robusta_playbooks.node_actions.drain on_node_create
+
+Kubectl
+*****************
+
+.. robusta-action:: playbooks.robusta_playbooks.kubectl_enrichments.kubectl_command
+
+    Use `kubectl_command` to run kubectl with dynamic placeholders:
+    - `$namespace`: resource namespace
+    - `$kind`: resource kind (e.g., Pod, Deployment)
+    - `$name`: resource name
+
+    Example: **Scale Down Deployment on Crash Loop**
+
+    .. code-block:: yaml
+
+        customPlaybooks:
+        - name: CrashLoopScaleDown
+          triggers:
+          - on_pod_crash_loop:
+              restart_count: 3
+          actions:
+            - kubectl_command:
+                description: "Scale Down Deployment"
+                command: kubectl scale --replicas=0 deployment/payment-processing-worker -n $namespace
+
+    If the pod is in the `production` namespace, the command will be:
+
+    .. code-block:: bash
+
+        kubectl scale --replicas=0 deployment/payment-processing-worker -n production
+
+    Example: **Delete Crashing Resource**
+
+    This deletes the crashing resource by kind, name, and namespace:
+
+    .. code-block:: bash
+
+        kubectl delete $kind $name -n $namespace
+
+    For example, deleting a crashing pod named `api-worker-1` in the `staging` namespace:
+
+    .. code-block:: bash
+
+        kubectl delete Pod api-worker-1 -n staging
