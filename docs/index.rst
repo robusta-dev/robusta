@@ -84,9 +84,9 @@ Welcome to Robusta
 
     .. grid-item::
 
-        Robusta enriches Prometheus alerts with Kubernetes context.
+        Robusta OSS enriches Prometheus alerts with Kubernetes context.
 
-        When Prometheus alerts fire, Robusta automatically adds pod logs, events, and metrics. Connect to your existing Prometheus setup.
+        When Prometheus alerts fire, Robusta automatically adds pod logs, events, and metrics. Robusta Pro adds web UI, AI analysis, and support for non-Kubernetes monitoring systems.
 
         .. raw:: html
 
