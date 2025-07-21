@@ -4,7 +4,7 @@ Robusta Pro Features
 .. note::
     These features are available with the Robusta SaaS platform and self-hosted commercial plans. They are not available in the open-source version.
 
-Robusta Pro provides a comprehensive monitoring platform that includes the open-source runner plus a full SaaS UI, advanced integrations, and enterprise APIs. Most users choose Robusta Pro to get the complete Robusta experience with all capabilities and minimal setup.
+Robusta Pro adds a web UI, additional integrations, and enterprise APIs to the open-source engine. Available as SaaS (we handle hosting) or self-hosted on-premise.
 
 Custom Alert Ingestion
 -----------------------
@@ -38,20 +38,20 @@ Features include:
 AI Analysis
 -----------
 
-Robusta Pro includes advanced AI-powered investigation capabilities to help you understand and resolve alerts faster.
+Optional AI-powered alert investigation using HolmesGPT.
 
-:doc:`AI Analysis (Holmes GPT) <../holmesgpt/index>`
-    Use AI to investigate Kubernetes alerts, analyze logs, and get remediation suggestions automatically.
+:doc:`AI Analysis (HolmesGPT) <../holmesgpt/index>`
+    Automatically analyze Kubernetes alerts, logs, and metrics. Get potential root causes and remediation suggestions.
 
 Additional Pro Features
 -----------------------
 
-Beyond the APIs and AI analysis listed above, Robusta Pro includes:
+Additional capabilities in Robusta Pro:
 
-* **Full SaaS UI**: Complete web interface for managing alerts, playbooks, and configuration
-* **Managed Prometheus Alerts**: Create and customize Prometheus alerts with templates, without needing to know PromQL
-* **Advanced Analytics**: Historical alert data, trends, and reporting dashboards
-* **Enterprise Support**: Dedicated support for production deployments
+* **Web UI**: Manage alerts, playbooks, and configuration through a browser interface
+* **Alert Templates**: Create Prometheus alerts without writing PromQL
+* **Historical Data**: Query alert history and trends
+* **Enterprise Support**: Production support and SLA options
 
 For more details on the differences between open-source and SaaS, see :doc:`Open Source vs SaaS <../../how-it-works/oss-vs-saas>`.
 

@@ -1,11 +1,11 @@
 :hide-toc:
 
-Alert Sources Overview
-==========================
+Alert Sources
+=============
 
-Forward alerts from your monitoring system to Robusta for enrichment and automation.
+Connect your monitoring system to Robusta. When alerts fire, Robusta automatically enriches them with context and applies your automation rules.
 
-Choose your monitoring system:
+**Choose your setup:**
 
 .. grid:: 1 1 2 3
     :gutter: 3
@@ -15,20 +15,20 @@ Choose your monitoring system:
         :link: alertmanager-integration/index
         :link-type: doc
 
-        **Most popular**. Works with any Prometheus-compatible stack
+        Standard Prometheus integration. Works with any PromQL-based stack.
 
     .. grid-item-card:: :octicon:`bell;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/nagios
         :link-type: doc
 
-        **Nagios monitoring**. Forward alerts via webhook
+        Forward Nagios alerts via webhook integration.
 
     .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-        **SolarWinds monitoring**. Forward alerts via webhook
+        Forward SolarWinds alerts via webhook integration.
 
-Don't see your system? Robusta accepts alerts from any system that can send :doc:`HTTP webhooks <exporting/exporting-data>`.
+**Other systems?** Robusta accepts alerts from any monitoring system via :doc:`HTTP webhooks <exporting/custom-webhooks>`.

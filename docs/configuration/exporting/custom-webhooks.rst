@@ -1,15 +1,15 @@
 Custom Webhooks
 ===============
 
-Send alerts to Robusta from any monitoring system that supports HTTP webhooks.
+Send alerts from any monitoring system to Robusta via HTTP webhooks.
 
 .. note::
-    This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
+    This feature requires Robusta Pro (SaaS or self-hosted commercial plans).
 
 Overview
 --------
 
-Robusta can receive alerts from any monitoring system that can send HTTP webhooks. This makes it easy to integrate with systems like Nagios, SolarWinds, or custom monitoring solutions.
+Forward alerts from any system that can send HTTP POST requests. Robusta will automatically enrich these alerts with Kubernetes context and apply your automation rules.
 
 Webhook Endpoint
 ----------------

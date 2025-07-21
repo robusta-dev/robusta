@@ -24,11 +24,11 @@
    :caption: 🚨 Alert Sources
    :hidden:
 
-   configuration/index
-   🔥 Prometheus & AlertManager <configuration/alertmanager-integration/index>
-   🔔 Nagios <configuration/alertmanager-integration/nagios>
-   🌐 SolarWinds <configuration/alertmanager-integration/solarwinds>
-   🔗 Custom Webhooks <configuration/exporting/custom-webhooks>
+   Overview <configuration/index>
+   Prometheus & AlertManager <configuration/alertmanager-integration/index>
+   Nagios <configuration/alertmanager-integration/nagios>
+   SolarWinds <configuration/alertmanager-integration/solarwinds>
+   Custom Webhooks <configuration/exporting/custom-webhooks>
 
 
 .. toctree::
@@ -36,7 +36,7 @@
    :caption: 🔔 Notifications & Routing
    :hidden:
 
-   notification-routing/index
+   Overview <notification-routing/index>
    notification-routing/configuring-sinks
    📧 Sink Reference <configuration/sinks/index>
    Routing (Scopes) <notification-routing/routing-with-scopes>
@@ -51,6 +51,7 @@
    :hidden:
 
    playbook-reference/index
+   configuration/alertmanager-integration/alert-custom-prometheus
    Cost Savings - KRR <configuration/resource-recommender>
    K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
 
@@ -62,10 +63,11 @@
    configuration/exporting/robusta-pro-features
    configuration/holmesgpt/index
    configuration/exporting/exporting-data
+   configuration/alertmanager-integration/troubleshooting-alertmanager
 
 .. toctree::
    :maxdepth: 4
-   :caption: Help
+   :caption: ❓ Help
    :hidden:
 
    help
@@ -75,25 +77,36 @@
 Welcome to Robusta
 ====================
 
-.. grid:: 1 1 2 2
+.. grid:: 1 1 1 2
     :margin: 0
     :padding: 0
+    :gutter: 3
 
     .. grid-item::
 
-        Robusta extends Prometheus/VictoriaMetrics/Coralogix (and more) with features like:
+        Robusta enriches Prometheus alerts with Kubernetes context.
 
-        * :doc:`Smart Grouping <notification-routing/notification-grouping>` - reduce notification spam with Slack threads 🧵
-        * :ref:`AI Investigation <AI Analysis>` - Kickstart your alert investigations with AI (optional)
-        * :ref:`Alert Enrichment <Automatically Investigate a Prometheus Alert>` - see pods log and other data alongside your alerts
-        * :ref:`Self-Healing <Automatic Remediation>` - define auto-remediation rules for faster fixes
-        * :ref:`Advanced Routing <Defining Sinks>` by team, namespace, k8s metadata and more
-        * :ref:`K8s Problem-Detection <Triggers Reference>` - alert on OOMKills or failing Jobs without PromQL
-        * :ref:`Change Tracking <Track Kubernetes Changes>` - correlate alerts and Kubernetes rollouts
-        * :ref:`Auto-Resolve <Jira>` - send alerts, resolve them when updated (e.g. in Jira)
-        * :ref:`Dozens of Integrations <Integrations Overview>` - Slack, Teams, Jira, and more
+        When Prometheus alerts fire, Robusta automatically adds pod logs, events, and metrics. Connect to your existing Prometheus setup.
 
-        Bring your own Prometheus or install our :ref:`preconfigured bundle <Embedded Prometheus Stack>`.
+        .. raw:: html
+
+           <br>
+
+        **What happens when an alert fires:**
+
+        * **Auto-investigate** - Logs, events, and metrics attached
+        * **AI analysis** - Root causes and fixes suggested  
+        * **Smart routing** - Right team, right channel
+        * **Self-healing** - Automatic remediation rules
+        * **Change tracking** - Correlate alerts with deployments
+
+        .. raw:: html
+
+           <br>
+
+        **Works with your existing setup**
+
+        Connect to your existing Prometheus or install our all-in-one bundle (based on kube-prometheus-stack).
 
     .. grid-item::
 
@@ -119,10 +132,10 @@ Welcome to Robusta
                .. image:: /images/jira_example.png
                    :width: 800px
 
-Who uses Robusta?
--------------------------------------
+Ready to get started?
+---------------------
 
-Robusta is used in production by hundreds of teams, from cloud-native pioneers to the Fortune 500.
+Join hundreds of teams already running Robusta in production.
 
 .. button-ref:: ../setup-robusta/installation/index
     :color: primary

@@ -1,18 +1,15 @@
 Open Source vs SaaS
 ################################
 
-There are several ways to use Robusta:
+Robusta has three deployment options:
 
-- Robusta OSS: Send data to external destinations like Slack. No UI.
-- Robusta OSS + `SaaS UI <https://home.robusta.dev/ui/>`_: The full experience.
-- Robusta OSS + Self-hosted UI: The on-prem experience.
+- **Open Source**: MIT-licensed engine that sends alerts to Slack, Teams, etc. No web UI.
+- **SaaS**: Open source engine + hosted web UI with additional features.
+- **Self-hosted**: Open source engine + on-premise web UI (enterprise plans).
 
-Which option is right for me?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Which should I choose?**
 
-Most people use Robusta with the SaaS platform enabled. This gives you the full Robusta experience, with all capabilities and minimum hassle.
-
-That said, the choice is yours. You can use the open-source without the SaaS platform, or you can self-host the SaaS platform via our enterprise plans.
+Most teams use the SaaS option for the complete feature set without infrastructure overhead. The open source version works well if you only need basic alert routing to external systems.
 
 Pricing
 ^^^^^^^^^^^^
