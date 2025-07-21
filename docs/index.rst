@@ -8,7 +8,6 @@
    self
    how-it-works/architecture
    how-it-works/oss-vs-saas
-   how-it-works/coverage
    how-it-works/usage-faq
    how-it-works/alert-builtin-enrichment
 
@@ -77,6 +76,8 @@
 Welcome to Robusta
 ====================
 
+Robusta transforms basic Prometheus alerts into actionable insights with full Kubernetes context, and magical automation.
+
 .. grid:: 1 1 1 2
     :margin: 0
     :padding: 0
@@ -84,53 +85,20 @@ Welcome to Robusta
 
     .. grid-item::
 
-        Robusta OSS enriches Prometheus alerts with Kubernetes context.
+        **How Robusta Improves Alerts:**
 
-        When Prometheus alerts fire, Robusta automatically adds pod logs, events, and metrics. Robusta Pro adds web UI, AI analysis, and support for non-Kubernetes monitoring systems.
-
-        .. raw:: html
-
-           <br>
-
-        **What happens when an alert fires:**
-
-        * **Auto-investigate** - Logs, events, and metrics attached
-        * **AI analysis** - Root causes and fixes suggested  
-        * **Smart routing** - Right team, right channel
+        * **Auto-investigate** - Correlate alerts with logs and events
+        * **AI analysis** - Root causes and remediation steps  
+        * **Smart routing** - Route based on context
         * **Self-healing** - Automatic remediation rules
         * **Change tracking** - Correlate alerts with deployments
 
-        .. raw:: html
-
-           <br>
-
-        **Works with your existing setup**
-
-        Connect to your existing Prometheus or install our all-in-one bundle (based on kube-prometheus-stack).
+        Connect to your existing Prometheus or install our all-in-one bundle (based on kube-prometheus-stack). Need to go beyond Kubernetes? `Try Robusta Pro <https://home.robusta.dev>`_.
 
     .. grid-item::
 
-        .. md-tab-set::
-
-            .. md-tab-item:: Alert Enrichment
-
-               .. image:: /images/prometheus-alert-with-robusta.png
-                   :width: 800px
-
-            .. md-tab-item:: AI Investigation
-
-               .. image:: /images/ai-analysis.png
-                   :width: 800px
-
-            .. md-tab-item:: Kubernetes Problems
-
-               .. image:: /images/oomkillpod.png
-                   :width: 800px
-
-            .. md-tab-item:: JIRA Integration
-
-               .. image:: /images/jira_example.png
-                   :width: 800px
+        .. image:: /images/prometheus-alert-with-robusta.png
+            :width: 400px
 
 Ready to get started?
 ---------------------
