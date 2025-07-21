@@ -10,6 +10,7 @@ Builtin Toolsets
    toolsets/aws
    toolsets/confluence
    toolsets/coralogix_logs
+   toolsets/datadog_logs
    toolsets/datetime
    toolsets/docker
    toolsets/grafanaloki
@@ -60,6 +61,11 @@ by the user by providing credentials or API keys to external systems.
     .. grid-item-card:: :octicon:`cpu;1em;` Coralogix logs
         :class-card: sd-bg-light sd-bg-text-light
         :link: toolsets/coralogix_logs
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Datadog logs
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: toolsets/datadog_logs
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Datetime
