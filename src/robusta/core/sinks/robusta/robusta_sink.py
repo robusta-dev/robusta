@@ -6,7 +6,6 @@ import threading
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from collections import defaultdict
 
 import requests
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet

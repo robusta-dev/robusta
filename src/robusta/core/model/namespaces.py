@@ -1,4 +1,3 @@
-from importlib.metadata import metadata
 from typing import Optional, List
 from pydantic import BaseModel
 from kubernetes.client import V1Namespace
