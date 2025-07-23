@@ -343,12 +343,15 @@ class RobustaSink(SinkBase, EventHandler):
                     )
 
                     for namespace_name, count in results.items():
-                        namespaces[namespace_name].metadata = (NamespaceMetadata(resources = ResourceCount(
+                        if not namespaces[namespace_name].metadata:
+                            namespaces[namespace_name].metadata = NamespaceMetadata(resources=[])
+
+                        namespaces[namespace_name].metadata.resources.append(resources = ResourceCount(
                             kind=resource.kind,
                             apiVersion=resource.apiVersion,
                             apiGroup=resource.apiGroup,
                             count=count
-                        )))
+                        ))
 
                 except ResourceAccessForbiddenError as e:
                     logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
@@ -599,7 +602,6 @@ class RobustaSink(SinkBase, EventHandler):
         logging.info("Cluster discovery initialized")
         get_history = self.__should_run_history()
         self.last_namespace_discovery = 0
-
         while self.__active:
             start_t = time.time()
             self.__periodic_cluster_status()
@@ -608,18 +610,15 @@ class RobustaSink(SinkBase, EventHandler):
             if get_history:
                 self.__get_events_history()
                 get_history = False
-
             if discovery_results and discovery_results.helm_releases:
-                self.__send_helm_release_events(discovery_results.helm_releases)
-
+                self.__send_helm_release_events(release_data=discovery_results.helm_releases)
             duration = round(time.time() - start_t)
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)
 
-            logging.debug(f"Discovery duration: {duration}. Sleeping {sleep_dur}s")
+            logging.debug(f"Discovery duration: {duration} next discovery in {sleep_dur}")
             time.sleep(sleep_dur)
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
-
 
 
     def __periodic_cluster_status(self):
@@ -657,10 +656,7 @@ class RobustaSink(SinkBase, EventHandler):
 
         # new or changed namespaces
         for namespace_name, updated_namespace in curr_namespaces.items():
-            cached_namespace = self.__namespaces_cache.get(namespace_name)
-            if cached_namespace:
-                updated_namespace.metadata = cached_namespace.metadata
-            if cached_namespace != updated_namespace:
+            if self.__namespaces_cache.get(namespace_name) != updated_namespace:
                 updated_namespaces.append(updated_namespace)
                 self.__namespaces_cache[namespace_name] = updated_namespace
 
