@@ -1,40 +1,56 @@
 Architecture
 ==================
 
-The base installation for Robusta runs in-cluster as two Kubernetes deployments
+Robusta follows a modular architecture designed to integrate seamlessly with your existing Kubernetes observability stack. The system consists of core components that run in-cluster and optional components for enhanced functionality.
 
-* robusta-forwarder - Connects to the APIServer and monitors Kubernetes changes. Forwards them to robusta-runner.
-* robusta-runner - Receives all events, evaluates playbooks, sends notifications
+Core Components
+^^^^^^^^^^^^^^^
+
+Robusta's core architecture runs entirely within your Kubernetes cluster:
+
+**robusta-forwarder**
+  A lightweight deployment that connects to the Kubernetes APIServer to monitor cluster events and resource changes. It forwards relevant events to the runner component for processing. This component ensures Robusta stays up-to-date with your cluster state in real-time.
+
+**robusta-runner** 
+  The main processing engine that receives events from the forwarder, evaluates playbook rules, executes enrichment actions, and sends notifications to configured destinations. It contains the business logic for alert correlation, data enrichment, and routing decisions.
 
 .. image:: ../images/arch-1/arch-1.png
    :width: 600
    :align: center
 
-Optionally, Robusta has some additional components, described below.
+Data Flow
+^^^^^^^^^
 
-HolmesGPT (Optional)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Robusta's next generation AI-engine that investigates alerts automatically. See :ref:`AI Analysis <AI Analysis>`.
+1. **Event Collection**: The forwarder monitors Kubernetes APIServer for resource changes and forwards them to the runner
+2. **Alert Processing**: Prometheus AlertManager webhooks are received by the runner for alert enrichment
+3. **Playbook Execution**: The runner evaluates configured playbooks and triggers appropriate actions
+4. **Enrichment**: Additional context is gathered (logs, metrics, resource states) and attached to alerts
+5. **Routing**: Enriched alerts are routed to configured sinks (Slack, Teams, etc.) based on routing rules
 
-Bundled Prometheus (Optional)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Extended Architecture
+^^^^^^^^^^^^^^^^^^^^
 
-Install Robusta with :ref:`Prometheus included <embedded Prometheus stack>`. This is powered by ``kube-prometheus-stack``.
+**AI Analysis with HolmesGPT**
+  Robusta's AI engine automatically investigates alerts by analyzing logs, events, and cluster state to provide root cause analysis and remediation suggestions. See :ref:`AI Analysis <AI Analysis>` for configuration details.
 
-Alternatively, you can :ref:`integrate an existing Prometheus with Robusta <Integrating with Prometheus>`.
+**Prometheus Integration**
+  Robusta can work with your existing Prometheus setup or be installed with a :ref:`bundled Prometheus stack <embedded Prometheus stack>` powered by ``kube-prometheus-stack``. The integration enables automatic alert enrichment and correlation.
 
-Web UI (Optional)
-^^^^^^^^^^^^^^^^^^^^^^
+**Centralized Management**
+  The Robusta `SaaS platform <http://home.robusta.dev/?from=docs>`_ provides centralized alert management, historical analysis, and cross-cluster visibility. Self-hosted options are available for enterprise deployments.
 
-The Robusta `SaaS platform <http://home.robusta.dev/?from=docs>`_ provides a single pane of glass for all your alerts and clusters.
+**CLI Tooling**
+  The ``robusta`` CLI simplifies installation and configuration management by auto-generating Helm values and providing cluster diagnostics.
 
-On commercial plans, the UI is available for self-hosting in your own environment.
+Security & Networking
+^^^^^^^^^^^^^^^^^^^^^
 
-CLI (Optional)
-^^^^^^^^^^^^^^^^
-The ``robusta`` cli makes it easier to install Robusta by auto-generating Helm values.
+* All core components run within your cluster with configurable RBAC permissions.
+* External integrations use secure webhook endpoints with optional authentication.
+* SaaS connectivity is outbound-only with no inbound access required.
+* All data remains in your cluster unless explicitly sent to configured sinks (destinations).
 
 Next Steps
-^^^^^^^^^^^^^
+^^^^^^^^^^
 
 :ref:`Ready to install Robusta? Get started. <install>`
