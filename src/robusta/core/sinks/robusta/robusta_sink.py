@@ -329,11 +329,14 @@ class RobustaSink(SinkBase, EventHandler):
         except Exception:
             logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
 
-    def __discover_custom_namespaced_resources(self, namespaces = List[NamespaceInfo]):
+    def __discover_custom_namespaced_resources(self, namespaces: List[NamespaceInfo]):
         if not self.namespace_monitored_resources:
             return
 
         try:
+            # Step 1: Collect counts in a temporary map
+            resource_map = {}  # type: Dict[str, List[ResourceCount]]
+
             for resource in self.namespace_monitored_resources:
                 try:
                     results = Discovery.count_resources(
@@ -343,10 +346,10 @@ class RobustaSink(SinkBase, EventHandler):
                     )
 
                     for namespace_name, count in results.items():
-                        if not namespaces[namespace_name].metadata:
-                            namespaces[namespace_name].metadata = NamespaceMetadata(resources=[])
+                        if namespace_name not in resource_map:
+                            resource_map[namespace_name] = []
 
-                        namespaces[namespace_name].metadata.resources.append(resources = ResourceCount(
+                        resource_map[namespace_name].append(ResourceCount(
                             kind=resource.kind,
                             apiVersion=resource.apiVersion,
                             apiGroup=resource.apiGroup,
@@ -357,9 +360,20 @@ class RobustaSink(SinkBase, EventHandler):
                     logging.warning(f"Skipping resource {resource.kind} due to insufficient permissions: {e}")
                 except Exception as e:
                     logging.exception(f"Unexpected error counting resource {resource.kind}: {e}")
+
+            # Step 2: Apply metadata to matching NamespaceInfo entries
+            for ns in namespaces:
+                if ns.name in resource_map:
+                    if not ns.metadata:
+                        ns.metadata = NamespaceMetadata(resources=[])
+                    ns.metadata.resources.extend(resource_map[ns.name])
+                    
+            logging.info("Discovered Namespaced custom resources")
             return namespaces
+
         except Exception as e:
             logging.exception(f"Namespace discovery failed: {e}")
+
 
 
     def __discover_resources(self) -> DiscoveryResults:
