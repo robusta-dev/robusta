@@ -378,7 +378,9 @@ class RobustaSink(SinkBase, EventHandler):
         updated_namespaces: List[NamespaceInfo] = []
 
         for namespace_name, namespace in discovered_namespaces.items():
-            namespace.metadata = self.__namespaces_cache.get(namespace_name).metadata
+            cached_namespace = self.__namespaces_cache.get(namespace_name)
+            if cached_namespace:
+                namespace.metadata = cached_namespace.metadata
             updated_namespaces.append(namespace)
         
         return updated_namespaces
