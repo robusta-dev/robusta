@@ -1,6 +1,8 @@
+from importlib.metadata import metadata
 from typing import Optional, List
 from pydantic import BaseModel
 from kubernetes.client import V1Namespace
+import json
 
 class ResourceCount(BaseModel):
     kind: str
@@ -25,7 +27,17 @@ class NamespaceInfo(BaseModel):
 
     @classmethod
     def from_db_row(cls, namespace: dict) -> "NamespaceInfo":
+        metadata_raw = namespace.get("metadata")
+
+        if isinstance(metadata_raw, str):
+            metadata_dict = json.loads(metadata_raw)
+        elif isinstance(metadata_raw, dict):
+            metadata_dict = metadata_raw
+        else:
+            metadata_dict = None
+
         return cls(
-            name=namespace["name"],
-            deleted=namespace["deleted"],
+            name=namespace.get("name"),
+            deleted=namespace.get("deleted", False),
+            metadata=NamespaceMetadata(**metadata_dict) if metadata_dict else None
         )
