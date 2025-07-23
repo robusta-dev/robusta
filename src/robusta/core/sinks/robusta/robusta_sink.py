@@ -373,7 +373,15 @@ class RobustaSink(SinkBase, EventHandler):
         except Exception as e:
             logging.exception(f"Namespace discovery failed: {e}")
 
+    def __add_cached_namespace_metadata(self, namespaces: List[NamespaceInfo]):
+        discovered_namespaces = {namespace.name: namespace for namespace in namespaces}
+        updated_namespaces: List[NamespaceInfo] = []
 
+        for namespace_name, namespace in discovered_namespaces.items():
+            namespace.metadata = self.__namespaces_cache.get(namespace_name).metadata
+            updated_namespaces.append(namespace)
+        
+        return updated_namespaces
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
@@ -397,6 +405,8 @@ class RobustaSink(SinkBase, EventHandler):
             if self.namespace_monitored_resources and (time.time() - self.last_namespace_discovery) >= self.namespace_discovery_seconds:
                 namespaces = self.__discover_custom_namespaced_resources(namespaces)
                 self.last_namespace_discovery = time.time()
+            elif self.namespace_monitored_resources:
+                namespaces = self.__add_cached_namespace_metadata(namespaces)
             self.__publish_new_namespaces(namespaces)
 
             self.__pods_running_count = results.pods_running_count
