@@ -586,7 +586,7 @@ class SupabaseDal(AccountResourceFetcher):
         return [NamespaceInfo.from_db_row(namespace) for namespace in res.data]
 
     def __to_db_namespace(self, namespace: NamespaceInfo) -> Dict[Any, Any]:
-        db_job = namespace.dict()
+        db_job = namespace.dict(exclude_none=True)
         db_job["account_id"] = self.account_id
         db_job["cluster_id"] = self.cluster
         db_job["updated_at"] = "now()"
