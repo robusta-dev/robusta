@@ -60,6 +60,46 @@ To do so, configure a shorter retention period by setting the ``ttl_hours`` in t
       # automatically clean up old clusters in the UI if they are disconnected 12+ hours
       ttl_hours: 12
 
+
+.. _cb-robusta-ui-sink-namespace-config:
+
+Monitoring Specific Resources in Namespaces
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, the Robusta UI sink discovers the standard resources in all namespaces using the standard discovery interval. 
+However, we have a configuration to monitor custom namespaced resources, and an API is exposed via the the Robusta Backend to see how many of each resource you have in a namespace.
+
+To configure this, use the ``namespace_discovery_seconds`` and ``namespaceMonitoredResources`` settings in the Robusta UI sink:
+
+.. code-block:: bash
+  :name: cb-robusta-ui-sink-namespace-config-code
+
+  sinksConfig:
+  - robusta_sink:
+      name: robusta_ui_sink
+      token: <your-token>
+      # how often to re-scan for new namespaces (in seconds)
+      namespace_discovery_seconds: 3600
+      # what resource types to actively count per namespace
+      namespaceMonitoredResources:
+        - apiGroup: ""
+          apiVersion: "v1"
+          kind: "Services"
+        - apiGroup: "apps"
+          apiVersion: "v1"
+          kind: "Deployments"
+        - apiGroup: "apps.openshift.io"
+          apiVersion: "v1"
+          kind: "DeploymentConfig"
+        - apiGroup: "batch"
+          apiVersion: "v1"
+          kind: "CronJob"
+        - apiGroup: "networking.k8s.io"
+          apiVersion: "v1"
+          kind: "Ingress"
+
+
+
 More Information about the UI
 -------------------------------------
 For more information on UI features, view `robusta.dev <https://home.robusta.dev>`_.
