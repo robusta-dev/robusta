@@ -2,7 +2,7 @@
 
 :hide-toc:
 
-Sinks Reference
+Sink Reference
 ==================
 
 .. toctree::
