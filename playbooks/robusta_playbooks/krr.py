@@ -36,7 +36,7 @@ from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 from robusta.utils.parsing import format_event_templated_string
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.24.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.24.1")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
@@ -468,7 +468,10 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     publish_scan_args = ""
     if KRR_PUSH_SCAN:
         publish_scan_args = f"--publish_scan_url={KRR_PUBLISH_URL} --scan_id={scan_id} --start_time=\"{start_time}\""
-
+        if event.named_sinks:
+            # Append one flag per sink
+            for sink in event.named_sinks:
+                publish_scan_args += f' --named_sinks="{sink}"'
 
     python_command = (
         f"python krr.py {params.strategy} {publish_scan_args} {args_sanitized} {additional_flags} "
