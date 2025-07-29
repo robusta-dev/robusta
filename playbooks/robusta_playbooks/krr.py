@@ -308,7 +308,7 @@ class ProcessScanParams(ActionParams):
     scan_type: str
     result: Any
     scan_id: str
-    start_time: datetime
+    start_time: str
 
 def _emit_failed_scan_event(event, scan_id, start_time, metadata, reason_msg, exception=None, result=None):
     if exception:
