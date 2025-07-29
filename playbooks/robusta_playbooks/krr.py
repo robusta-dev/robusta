@@ -540,7 +540,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             job_name,
             params.timeout,
             secret,
-            custom_annotations=params.custom_annotations,
+            custom_annotations=krr_annotations,
             ttl_seconds_after_finished=43200,
             delete_job_post_execution=False,
             process_name=False,
