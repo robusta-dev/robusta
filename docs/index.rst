@@ -87,11 +87,11 @@ Robusta transforms basic Prometheus alerts into actionable insights with full Ku
 
         **How Robusta Improves Alerts:**
 
-        * **Auto-investigate** - Correlate alerts with logs and events
-        * **AI analysis** - Root causes and remediation steps  
-        * **Smart routing** - Route based on context
-        * **Self-healing** - Automatic remediation rules
-        * **Change tracking** - Correlate alerts with deployments
+        * **Self-Healing** - Define auto-remediation rules for faster fixes
+        * **Smart Grouping** - Reduce notification spam
+        * **AI Investigation** - Kickstart alert investigation with AI
+        * **Alert Enrichment** - Pod logs, events and more alongside alerts
+        * **Advanced Routing** - Based on team, namespace, and more
 
         Connect to your existing Prometheus or install our all-in-one bundle (based on kube-prometheus-stack). Need to go beyond Kubernetes? `Try Robusta Pro <https://home.robusta.dev>`_.
 
