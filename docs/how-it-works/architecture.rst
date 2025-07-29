@@ -48,7 +48,7 @@ Security & Networking
 * All core components run within your cluster with configurable RBAC permissions.
 * External integrations use secure webhook endpoints with optional authentication.
 * SaaS connectivity is outbound-only with no inbound access required.
-* All data remains in your cluster unless explicitly sent to configured sinks (destinations).
+* All data remains in your cluster unless explicitly sent to configured sinks e.g. Slack, Robusta UI.
 
 Next Steps
 ^^^^^^^^^^
