@@ -359,7 +359,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         if params.render_graph_images:
             try:
                 for tool in holmes_result.tool_calls:
-                    if tool.tool_name != "execute_prometheus_range_query":
+                    if tool.tool_name not in ["execute_prometheus_range_query", "query_datadog_metrics"]:
                         continue
                     holmes_result.analysis = re.sub(r"<<.*?>>", "", holmes_result.analysis).strip()
                     json_content = json.loads(tool.result["data"])
