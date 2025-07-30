@@ -137,6 +137,7 @@ class PrometheusDiscovery(ServiceDiscovery):
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
                 "app=prometheus,component=server,release!=kubecost",
+                "app.kubernetes.io/name=prometheus,app.kubernetes.io/component=server",
                 "app=prometheus-server",
                 "app=prometheus-operator-prometheus",
                 "app=rancher-monitoring-prometheus",
