@@ -1,59 +1,34 @@
 :hide-toc:
 
-Integrations Overview
-==========================
+Alert Sources
+=============
 
+Connect your monitoring system to Robusta. When alerts fire, Robusta automatically enriches them with context and applies your automation rules.
 
-Robusta can receive alerts from many sources and send them to many destinations.
+**Choose your setup:**
 
-
-.. grid::
+.. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` AI Analysis
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: holmesgpt/index
-        :link-type: doc
-
-        Analyze alerts with `Holmes GPT <https://stackoverflow.com/>`_.
-
-    .. grid-item-card:: :octicon:`book;1em;` Data Sources
+    .. grid-item-card:: :octicon:`pulse;1em;` Prometheus & AlertManager
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/index
         :link-type: doc
 
-        Send data to Robusta from Prometheus, AlertManager, Grafana, Thanos and others.
+        Standard Prometheus integration. Works with any PromQL-based stack.
 
-    .. grid-item-card:: :octicon:`book;1em;` Sinks (Destinations)
+    .. grid-item-card:: :octicon:`bell;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/index
+        :link: alertmanager-integration/nagios
         :link-type: doc
 
-        Send notifications from Robusta to 15+ integrations like Slack, MS Teams, and Email.
+        Forward Nagios alerts via webhook integration.
 
-
-Popular Sinks (Destinations)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. grid:: 1 1 2 4
-    :gutter: 3
-
-    .. grid-item-card:: :octicon:`cpu;1em;` MS Teams
+    .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/ms-teams
+        :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Slack
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/slack
-        :link-type: doc
+        Forward SolarWinds alerts via webhook integration.
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Jira
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/jira
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Robusta UI
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/RobustaUI
-        :link-type: doc
+**Other systems?** Robusta accepts alerts from any monitoring system via :doc:`HTTP webhooks <exporting/custom-webhooks>`.

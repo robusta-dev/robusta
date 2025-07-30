@@ -1,6 +1,9 @@
 SolarWinds Integration with Robusta
 ===================================
 
+.. note::
+    This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
+
 This guide explains how to configure SolarWinds to send alert webhooks directly to Robusta.
 
 Requirements

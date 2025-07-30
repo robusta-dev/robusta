@@ -273,13 +273,11 @@ html_theme_options = {
     "features": [
         "navigation.instant",
         "navigation.top",
-        "navigation.tabs",
-        "navigation.tabs.sticky",
         "search.share",
         "toc.follow",
         "toc.sticky",
     ],
-    "globaltoc_collapse": False,
+    "globaltoc_collapse": True,
     "social": [
         {
             "icon": "fontawesome/brands/github",
