@@ -49,7 +49,6 @@ spec:
         {{ else }}
         image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
         {{- end }}
-#        command: ['sh', '-c', 'cp -r /venv/lib/python3.11/site-packages/* /venv-writable/ || true']
         command:
           - sh
           - -c
