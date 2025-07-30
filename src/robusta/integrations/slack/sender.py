@@ -61,7 +61,7 @@ class SlackSender:
     verified_api_tokens: Set[str] = set()
     channel_name_to_id = {}
 
-    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, registry, is_preview: bool = False):
+    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str, registry, is_preview: bool = False, disable_holmes_note: bool = False):
         """
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
@@ -84,6 +84,7 @@ class SlackSender:
         self.account_id = account_id
         self.cluster_name = cluster_name
         self.is_preview = is_preview
+        self.disable_holmes_note = disable_holmes_note
 
         if slack_token not in self.verified_api_tokens:
             try:
@@ -743,9 +744,10 @@ class SlackSender:
         blocks.append(DividerBlock())
 
         is_holmes_slackbot_enabled = self.__is_holmes_slackbot_enabled()
-        holmes_block = self.get_holmes_block(platform_enabled, is_holmes_slackbot_enabled)
-        if holmes_block:
-            blocks.append(holmes_block)
+        if not self.disable_holmes_note:
+            holmes_block = self.get_holmes_block(platform_enabled, is_holmes_slackbot_enabled)
+            if holmes_block:
+                blocks.append(holmes_block)
 
 
         if len(attachment_blocks):

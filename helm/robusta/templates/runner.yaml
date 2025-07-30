@@ -41,6 +41,24 @@ spec:
       securityContext:
       {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.runner.hardenedFs }}
+      initContainers:
+      - name: setup-venv
+        {{- if .Values.runner.image }}
+        image: {{ .Values.runner.image }}
+        {{ else }}
+        image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
+        {{- end }}
+        command:
+          - sh
+          - -c
+          - >
+            SRC="/venv/lib/$(python -V | cut -d' ' -f2 | cut -d. -f1,2)/site-packages" &&
+            cp -a "${SRC}/." /venv-writable/
+        volumeMounts:
+        - name: venv-lib-volume
+          mountPath: /venv-writable
+      {{- end }}
       containers:
       - name: runner
         {{- if .Values.runner.image }}
@@ -51,7 +69,12 @@ spec:
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
         {{- with .Values.runner.securityContext.container }}
         securityContext:
-        {{- toYaml . | nindent 12 }}
+        {{- if $.Values.runner.hardenedFs }}
+          {{- $hardened := merge (dict "readOnlyRootFilesystem" true) . }}
+          {{- toYaml $hardened | nindent 12 }}
+        {{- else }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
         {{- end }}
         env:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
@@ -129,6 +152,16 @@ spec:
           - name: persistent-playbooks-storage
             mountPath: /etc/robusta/playbooks/storage
           {{- end }}
+          {{- if .Values.runner.hardenedFs }}
+          - name: tmp-volume
+            mountPath: /tmp
+          - name: app-git-volume
+            mountPath: /app/robusta-git
+          - name: cache-volume
+            mountPath: /root/.cache
+          - name: venv-lib-volume
+            mountPath: /venv/lib/python3.11/site-packages
+          {{- end }}
           {{- with .Values.runner.extraVolumeMounts }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
@@ -181,6 +214,16 @@ spec:
         - name: persistent-playbooks-storage
           persistentVolumeClaim:
             claimName: persistent-playbooks-pv-claim
+        {{- end }}
+        {{- if .Values.runner.hardenedFs }}
+        - name: tmp-volume
+          emptyDir: {}
+        - name: app-git-volume
+          emptyDir: {}
+        - name: cache-volume
+          emptyDir: {}
+        - name: venv-lib-volume
+          emptyDir: {}
         {{- end }}
         {{- with .Values.runner.extraVolumes }}
         {{- toYaml . | nindent 8 }}
