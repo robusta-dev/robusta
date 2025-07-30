@@ -60,7 +60,7 @@ Getting Started
 
 To access these features:
 
-1. **Robusta SaaS**: `Sign up for free <https://home.robusta.dev/ui/>`_ to get started with the full platform
+1. **Robusta SaaS**: `Sign up for free <https://platform.robusta.dev/signup>`_ to get started with the full platform
 2. **Self-hosted Commercial**: Contact support@robusta.dev for enterprise plans with self-hosted UI
 3. **API Access**: Generate API keys in the Robusta platform under **Settings** → **API Keys**
 
