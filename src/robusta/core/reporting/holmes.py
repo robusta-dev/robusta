@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from robusta.core.model.base_params import (
     ConversationType,
@@ -38,6 +38,7 @@ class HolmesChatRequest(BaseModel):
     ask: str
     conversation_history: Optional[List[dict]] = None
     model: Optional[str] = None
+    stream: bool = Field(default=False)
 
 
 class HolmesIssueChatRequest(HolmesChatRequest):
