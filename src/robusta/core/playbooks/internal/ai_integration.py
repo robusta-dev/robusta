@@ -351,8 +351,24 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
     cluster_name = event.get_context().cluster_name
 
     try:
-        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history, model=params.model)
-        result = requests.post(f"{holmes_url}/api/chat", data=holmes_req.json())
+        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history, model=params.model, stream=params.stream)
+        url = f"{holmes_url}/api/chat"
+        if params.stream:
+            with requests.post(
+                url,
+                data=holmes_req.json(),
+                stream=True,
+                headers={"Connection": "keep-alive"},
+            ) as resp:
+                resp.raise_for_status()
+                for line in resp.iter_content(
+                    chunk_size=None, decode_unicode=True
+                ):  # Avoid streaming chunks from holmes. send them as they arrive.
+                    if line:
+                        event.ws(data=line)
+            return
+
+        result = requests.post(url, data=holmes_req.json())
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
         holmes_result.files = []
