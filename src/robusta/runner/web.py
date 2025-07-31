@@ -11,7 +11,7 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.clients.robusta_client import fetch_runner_info
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
-    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -68,7 +68,7 @@ class Web:
 
     @staticmethod
     def run():
-        app.run(host="0.0.0.0", port=PORT, use_reloader=False)
+        app.run(host=RUNNER_BIND_ADDR, port=PORT, use_reloader=False)
 
     @classmethod
     def _relabel_alert(cls, alert: PrometheusAlert) -> PrometheusAlert:
