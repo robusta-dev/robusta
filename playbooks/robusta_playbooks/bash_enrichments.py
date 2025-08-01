@@ -1,8 +1,6 @@
 import logging, subprocess
 from typing import List
-
-from robusta.api import BaseBlock, BashParams, MarkdownBlock, NodeEvent, PodEvent, RobustaPod, action
-
+from robusta.api import BaseBlock, BashParams, ExecutionBaseEvent, MarkdownBlock, NodeEvent, PodEvent, RobustaPod, action
 
 @action
 def pod_bash_enricher(event: PodEvent, params: BashParams):
