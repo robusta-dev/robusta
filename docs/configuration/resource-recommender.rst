@@ -154,6 +154,224 @@ To prevent the KRR job from OOMKill (Out of Memory), you can configure the memor
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
 
+KRR API
+======================================
+
+You can retrieve KRR recommendations programmatically using the Robusta API. This allows you to integrate resource recommendations into your own tools and workflows.
+
+
+Authentication
+---------------------
+
+The KRR API requires authentication via API key.
+
+To create your key, on the ``Robusta Platform``, go to the ``settings`` page, and choose the ``API keys`` tab.
+
+Click ``New API Key``. Choose a name for your key, and check the ``KRR Read`` capability.
+
+.. image:: /images/krr-api-key.png
+    :width: 500px
+
+GET /api/krr-recommendations
+----------------------------------------------------
+
+Retrieves KRR resource recommendations for a specific cluster and namespace.
+
+**Query Parameters**
+
+.. list-table::
+   :widths: 20 15 40 15
+   :header-rows: 1
+
+   * - Parameter
+     - Type
+     - Description
+     - Required
+   * - ``cluster``
+     - STRING
+     - The cluster name to get recommendations for
+     - Yes
+   * - ``namespace``
+     - STRING
+     - The namespace to get recommendations for (use "*" for all namespaces)
+     - Yes
+   * - ``limit``
+     - INTEGER
+     - Maximum number of recommendations to return (default: 100)
+     - No
+
+**Request Headers**
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - Header
+     - Value
+   * - ``Authorization``
+     - ``Bearer <your-api-key>``
+   * - ``Content-Type``
+     - ``application/json``
+
+**Example Request**
+
+.. code-block:: bash
+
+    curl -X GET "https://api.robusta.dev/api/krr-recommendations?cluster=my-cluster&namespace=default&limit=50" \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json"
+
+**Success Response (200 OK)**
+
+.. code-block:: json
+
+    {
+      "scans": [
+        {
+          "object": {
+            "cluster": "my-cluster",
+            "name": "nginx-deployment",
+            "container": "nginx",
+            "namespace": "default",
+            "kind": "Deployment",
+            "allocations": {
+              "requests": {
+                "cpu": 0.1,
+                "memory": 128
+              },
+              "limits": {
+                "cpu": 0.5,
+                "memory": 512
+              }
+            },
+            "warnings": [],
+            "current_pod_count": 3
+          },
+          "recommended": {
+            "requests": {
+              "cpu": {
+                "value": 0.05,
+                "severity": "WARNING"
+              },
+              "memory": {
+                "value": 64,
+                "severity": "OK"
+              }
+            },
+            "limits": {
+              "cpu": {
+                "value": 0.2,
+                "severity": "WARNING"
+              },
+              "memory": {
+                "value": 256,
+                "severity": "OK"
+              }
+            },
+            "info": {
+              "cpu": "CPU usage is consistently low",
+              "memory": "Memory usage is within acceptable range"
+            }
+          },
+          "severity": "WARNING",
+          "metrics": {
+            "cpu": {
+              "query": "avg(container_cpu_usage_seconds_total)",
+              "start_time": "2024-01-01T00:00:00Z",
+              "end_time": "2024-01-07T00:00:00Z",
+              "step": "1h"
+            },
+            "memory": {
+              "query": "avg(container_memory_usage_bytes)",
+              "start_time": "2024-01-01T00:00:00Z", 
+              "end_time": "2024-01-07T00:00:00Z",
+              "step": "1h"
+            }
+          }
+        }
+      ],
+      "score": 75,
+      "resources": ["cpu", "memory"],
+      "description": "Resource recommendations based on 7-day usage analysis",
+      "strategy": {
+        "name": "simple",
+        "settings": {
+          "history_duration": 336,
+          "cpu_percentile": 99,
+          "memory_buffer_percentage": 15
+        }
+      }
+    }
+
+**Response Fields**
+
+.. list-table::
+   :widths: 25 15 60
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``scans``
+     - ARRAY
+     - Array of KRR scan results for workloads
+   * - ``scans[].object.name``
+     - STRING
+     - Name of the Kubernetes workload
+   * - ``scans[].object.kind``
+     - STRING
+     - Type of Kubernetes resource (Deployment, StatefulSet, etc.)
+   * - ``scans[].object.namespace``
+     - STRING
+     - Namespace of the workload
+   * - ``scans[].object.container``
+     - STRING
+     - Container name within the workload
+   * - ``scans[].object.allocations``
+     - OBJECT
+     - Current CPU/memory requests and limits
+   * - ``scans[].recommended.requests``
+     - OBJECT
+     - Recommended CPU/memory requests with severity
+   * - ``scans[].recommended.limits``
+     - OBJECT
+     - Recommended CPU/memory limits with severity
+   * - ``scans[].severity``
+     - STRING
+     - Overall severity: CRITICAL, WARNING, OK, GOOD, UNKNOWN
+   * - ``score``
+     - INTEGER
+     - Overall efficiency score (0-100)
+   * - ``strategy``
+     - OBJECT
+     - KRR strategy and settings used for recommendations
+
+**Error Responses**
+
+**401 Unauthorized**
+
+.. code-block:: json
+
+    {
+      "error": "Invalid or missing API key"
+    }
+
+**400 Bad Request**
+
+.. code-block:: json
+
+    {
+      "error": "Missing required parameter: cluster"
+    }
+
+**404 Not Found**
+
+.. code-block:: json
+
+    {
+      "error": "Cluster 'my-cluster' not found or no data available"
+    }
+
 Reference
 ======================================
 .. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule

@@ -95,7 +95,8 @@ cssselect = "^1.1.0"
 tinycss = "^0.4"
 rsa = "^4.8"
 sphinxcontrib-details-directive = "^0.1.0"
-sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.git" }
+#sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.git" }
+sphinx-immaterial = "^0.11.0"
 # TODO: Attempt to have different groups (docs, lint, etc) and install them separately
 # Flake8 5.0.4 is the last version that supports Python 3.7
 # As it does not work witn sphynx-immaterial, we need to exclude it from the dev dependencies
