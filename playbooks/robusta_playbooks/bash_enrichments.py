@@ -1,4 +1,4 @@
-import logging
+import logging, subprocess
 from typing import List
 
 from robusta.api import BaseBlock, BashParams, MarkdownBlock, NodeEvent, PodEvent, RobustaPod, action
