@@ -28,19 +28,14 @@ Connect Robusta to your Prometheus setup to get enriched alerts with logs, event
     :gutter: 3
 
 
-    .. grid-item-card:: Prometheus in same cluster
+    .. grid-item-card:: In-cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: alert-manager
         :link-type: doc
 
-    .. grid-item-card:: Prometheus outside cluster
+    .. grid-item-card:: External Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: outofcluster-prometheus
-        :link-type: doc
-
-    .. grid-item-card:: AWS Managed Prometheus
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: eks-managed-prometheus
         :link-type: doc
 
     .. grid-item-card:: Azure Managed Prometheus
@@ -48,14 +43,19 @@ Connect Robusta to your Prometheus setup to get enriched alerts with logs, event
         :link: azure-managed-prometheus
         :link-type: doc
 
-    .. grid-item-card:: Google Managed Prometheus
+    .. grid-item-card:: AWS Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: google-managed-prometheus
+        :link: eks-managed-prometheus
         :link-type: doc
 
     .. grid-item-card:: Coralogix
         :class-card: sd-bg-light sd-bg-text-light
         :link: coralogix_managed_prometheus
+        :link-type: doc
+
+    .. grid-item-card:: Google Managed Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: google-managed-prometheus
         :link-type: doc
 
     .. grid-item-card:: VictoriaMetrics
