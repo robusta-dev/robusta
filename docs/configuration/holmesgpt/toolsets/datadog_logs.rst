@@ -69,6 +69,19 @@ Configuration
         kubernetes/logs:
           enabled: false # HolmesGPT's default logging mechanism MUST be disabled
 
+
+DataDog Kubernetes cluster label
+***********************************
+
+In multi cluster environments, HolmesGPT will route alerts investigations to the Kubernetes cluster the alert is firing on.
+
+Add the ``cluster`` label to your DataDog monitoring agent:
+
+    .. image:: /images/datadog-cluster-label.png
+        :width: 1000
+        :align: center
+
+
 Getting API and Application Keys
 ********************************
 
