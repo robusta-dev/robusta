@@ -1,4 +1,5 @@
 :tocdepth: 2
+:globaltoc_collapse: false
 
 .. _install-all-in-one:
 

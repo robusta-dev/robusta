@@ -89,5 +89,3 @@ export REPO_LOCAL_BASE_DIR=./deployment/git_playbooks
 export INSTALLATION_NAMESPACE=default
 
 mirrord exec -f mirrord.json -- poetry run python3 -m robusta.runner.main
-#mirrord exec -f mirrord.json -- poetry run memray run -m robusta.runner.main
-#poetry run python3 -m robusta.runner.main
