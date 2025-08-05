@@ -52,7 +52,7 @@
    playbook-reference/index
    configuration/alertmanager-integration/alert-custom-prometheus
    Cost Savings - KRR <configuration/resource-recommender>
-   K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
+   K8s Misconfigurations - Popeye <playbook-reference/actions/scans>
 
 .. toctree::
    :maxdepth: 4

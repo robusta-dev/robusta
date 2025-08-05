@@ -32,7 +32,7 @@ Use the ``robusta`` CLI to generate a token:
 Add a new sink to your Helm values (``generated_values.yaml``), under ``sinksConfig``, with the token you generated:
 
 .. code-block:: bash
-  :name: cb-robusta-ui-sink-config
+  :name: cb-robusta-ui-sink-config-basic
 
   sinksConfig:
   - robusta_sink:
@@ -51,7 +51,7 @@ If you have many short-lived clusters, you can remove them from the UI automatic
 To do so, configure a shorter retention period by setting the ``ttl_hours`` in the Robusta UI sink settings:
 
 .. code-block:: bash
-  :name: cb-robusta-ui-sink-config
+  :name: cb-robusta-ui-sink-config-ttl
 
   sinksConfig:
   - robusta_sink:

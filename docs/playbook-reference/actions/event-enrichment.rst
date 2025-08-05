@@ -1,7 +1,7 @@
 Event Enrichment
 ####################################
 
-The actions are used to gather extra data on errors, alerts, and other cluster events.
+Enrichment actions automatically gather context when alerts fire. They fetch logs, metrics, events, and diagnostic data to help you understand and resolve issues faster.
 
 Use them as building blocks in your own automations, or write :ref:`your own enrichment actions in Python <Developing New Actions>`.
 

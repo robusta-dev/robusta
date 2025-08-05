@@ -74,7 +74,7 @@ Ensure Robusta is part of a contact group or explicitly included in your alert d
     }
 
 Step 4: Create the Bash Command Script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Save this as `notify-robusta.sh`, ensure it's executable (`chmod +x notify-robusta.sh`), and Nagios can access it.
 
