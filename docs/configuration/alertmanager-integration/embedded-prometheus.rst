@@ -54,5 +54,5 @@ Apply the change by performing a :ref:`Helm Upgrade <Simple Upgrade>`.
 Troubleshooting
 ---------------------
 
-Encountering issues with your Prometheus? Follow this guide to resolve some :ref:`common errors <Common Errors>`.
+Encountering issues with your Prometheus? Follow this guide to resolve some :doc:`common errors </help>`.
 

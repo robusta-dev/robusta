@@ -7,7 +7,7 @@ Here's how to integrate an existing Prometheus with Robusta in the same cluster:
 * Point Robusta at Prometheus so it can query metrics and silence alerts
     * Robusta will attempt auto-detection, so this is not always necessary!
 
-If your Prometheus is in a different cluster, refer to :ref:`Centralized Prometheus`.
+If your Prometheus is in a different cluster, refer to :ref:`External Prometheus`.
 
 Send Alerts to Robusta
 ============================

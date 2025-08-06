@@ -7,7 +7,7 @@ Robusta can proxy Prometheus alerts to Slack, adding powerful features like :ref
    :width: 600px
    :align: center
 
-Optionally, Robusta can monitor Kubernetes directly and send notifications on deployment changes or Kubernetes errors.
+Robusta can send both Prometheus alerts and direct Kubernetes notifications (pod crashes, deployment changes, etc.) to Slack.
 
 .. warning::
 
@@ -15,15 +15,19 @@ Optionally, Robusta can monitor Kubernetes directly and send notifications on de
 
    Follow `these steps <https://docs.robusta.dev/master/setup-robusta/upgrade.html#helm-upgrade>`_ to upgrade.
 
-Connecting Slack
+Quick Start
 ------------------------------------------------
 
-When installing Robusta, run ``robusta gen-config`` and follow the prompt to create a Slack API key. This will use our `official
+**Option 1: Automatic Setup (Recommended)**
+
+When installing Robusta, run ``robusta gen-config`` and follow the prompts. This automatically configures Slack using our `official
 Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_.
 
-**Note: Robusta can only write messages and doesn't require read permissions.**
+Note: Robusta can only write messages and doesn't require read permissions.
 
-You can also generate a Slack API key by running ``robusta integrations slack`` and setting the following Helm values in your ``generated_values.yaml``:
+**Option 2: Manual Configuration**
+
+Generate a Slack API key by running ``robusta integrations slack``, then add to your ``generated_values.yaml``:
 
 .. code-block:: yaml
 

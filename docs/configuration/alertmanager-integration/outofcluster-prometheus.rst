@@ -1,4 +1,4 @@
-Centralized Prometheus
+External Prometheus
 **************************************
 
 Follow this guide to connect Robusta to a central Prometheus (e.g. Thanos/Mimir), running outside the cluster monitored by Robusta.
@@ -50,7 +50,7 @@ This integration lets your central Prometheus send alerts to Robusta, as if they
 Filtering Prometheus Queries by Cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If the same centralized Prometheus is used for many clusters, you will want to add a cluster name to all queries.
+If the same external Prometheus is used for many clusters, you will want to add a cluster name to all queries.
 
 You can do so with the ``prometheus_url_query_string`` parameter, shown below:
 

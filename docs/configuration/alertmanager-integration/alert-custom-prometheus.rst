@@ -23,37 +23,35 @@ Prerequisites
 * Kube-Prometheus-Stack, installed via Robusta or seperately.
 * Enable global rule selection for the Prometheus operator. Add the following config to your ``generated_values.yaml``. (By default Prometheus Operator picks up only certain new alerts, here we tell it to pick up all new alerts)
 
-  .. grid-item::
+  .. md-tab-set::
 
-      .. md-tab-set::
+      .. md-tab-item:: Robusta Prometheus
 
-          .. md-tab-item:: Robusta Prometheus
+          .. code-block:: yaml
 
-            .. code-block:: yaml
-
-              kube-prometheus-stack:
-                prometheus:
-                  prometheusSpec:
-                    ruleNamespaceSelector: {} # (1)
-                    ruleSelector: {} # (2)
-                    ruleSelectorNilUsesHelmValues: false # (3)
-
-            .. code-annotations::
-              1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
-              2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
-              3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using helm values file.
-
-          .. md-tab-item:: Other Prometheus
-
-            .. code-block:: yaml
-
+            kube-prometheus-stack:
               prometheus:
                 prometheusSpec:
                   ruleNamespaceSelector: {} # (1)
                   ruleSelector: {} # (2)
                   ruleSelectorNilUsesHelmValues: false # (3)
 
-            .. code-annotations::
+          .. code-annotations::
+            1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
+            2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
+            3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using helm values file.
+
+      .. md-tab-item:: Other Prometheus
+
+          .. code-block:: yaml
+
+            prometheus:
+              prometheusSpec:
+                ruleNamespaceSelector: {} # (1)
+                ruleSelector: {} # (2)
+                ruleSelectorNilUsesHelmValues: false # (3)
+
+          .. code-annotations::
               1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
               2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
               3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using helm values file.
