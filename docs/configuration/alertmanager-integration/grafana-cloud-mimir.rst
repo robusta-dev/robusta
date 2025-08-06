@@ -35,7 +35,8 @@ You'll need credentials for Grafana API Access (used by both Robusta Runner and 
 Find Your Cluster Name
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The cluster name is used to identify your specific cluster in Prometheus queries:
+If your grafana setup covers  multiple clusters, the cluster name is required and used to 
+identify your specific cluster in Prometheus queries:
 
 1. Go to Grafana → Explore
 2. Run query: ``up{cluster!=""}``
@@ -52,10 +53,7 @@ Using the Grafana API, list your datasources:
     curl -H "Authorization: Bearer YOUR_GLSA_TOKEN" \
       "https://YOUR-INSTANCE.grafana.net/api/datasources" | jq
 
-Note the UIDs for:
-
-* Prometheus datasource UID (typically ``grafanacloud-prom``)
-* AlertManager datasource UID (typically ``grafanacloud-ngalertmanager``)
+Note the UID for Prometheus datasource UID (typically ``grafanacloud-prom``)
 
 Step 2: Configure Robusta Runner
 =================================
@@ -114,39 +112,16 @@ Step 3: Configure Holmes Prometheus Toolset
 
 Holmes requires additional configuration to work with Grafana Cloud's Mimir backend.
 
-Update Holmes Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For detailed instructions on configuring Holmes with Grafana Cloud, see the **Grafana Cloud (Mimir) Configuration** section in :doc:`/configuration/holmesgpt/toolsets/prometheus`.
 
-Add to your ``generated_values.yaml`` under the ``holmes`` section:
+The key configuration points for Grafana Cloud are:
 
-.. code-block:: yaml
+* Use the proxy endpoint URL format: ``https://YOUR-INSTANCE.grafana.net/api/datasources/proxy/uid/PROMETHEUS_DATASOURCE_UID``
+* Set ``fetch_labels_with_labels_api: false`` (important for Mimir compatibility)
+* Set ``fetch_metadata_with_series_api: true`` (important for Mimir compatibility)
+* Use Bearer authentication with your service account token
 
-    holmes:
-      enableHolmesGPT: true
-      additionalEnvVars:
-        - name: MODEL
-          value: YOUR_LLM_MODEL  # e.g., gpt-4o, azure/gpt-4o
-      
-      # Holmes-specific toolsets configuration
-      toolsets:
-        prometheus/metrics:
-          enabled: true
-          config:
-            prometheus_url: https://YOUR-INSTANCE.grafana.net/api/datasources/proxy/uid/PROMETHEUS_DATASOURCE_UID
-            fetch_labels_with_labels_api: false  # Important for Mimir
-            fetch_metadata_with_series_api: true   # Important for Mimir
-            headers:
-              Authorization: Bearer YOUR_GLSA_TOKEN
-              # X-Scope-Org-Id is usually not needed when using proxy endpoint
-
-.. note::
-
-    The ``fetch_labels_with_labels_api: false`` and ``fetch_metadata_with_series_api: true`` settings are important for compatibility with Mimir's API implementation.
-
-Apply Holmes Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Apply the changes and restart Holmes:
+After updating your ``generated_values.yaml`` with the Holmes configuration, apply the changes:
 
 .. code-block:: bash
 

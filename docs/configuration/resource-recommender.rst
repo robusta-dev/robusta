@@ -172,7 +172,7 @@ Click ``New API Key``. Choose a name for your key, and check the ``KRR Read`` ca
 .. image:: /images/krr-api-key.png
     :width: 500px
 
-GET /api/krr-recommendations
+GET /api/query/krr/recommendations
 ----------------------------------------------------
 
 Retrieves KRR resource recommendations for a specific cluster and namespace.
@@ -187,17 +187,17 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
      - Type
      - Description
      - Required
-   * - ``cluster``
+   * - ``account_id``
      - STRING
-     - The cluster name to get recommendations for
+     - The account ID associated with the API key
+     - Yes
+   * - ``cluster_id``
+     - STRING
+     - The cluster ID to get recommendations for
      - Yes
    * - ``namespace``
      - STRING
-     - The namespace to get recommendations for (use "*" for all namespaces)
-     - Yes
-   * - ``limit``
-     - INTEGER
-     - Maximum number of recommendations to return (default: 100)
+     - The namespace to filter recommendations (optional)
      - No
 
 **Request Headers**
@@ -217,7 +217,7 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
 
 .. code-block:: bash
 
-    curl -X GET "https://api.robusta.dev/api/krr-recommendations?cluster=my-cluster&namespace=default&limit=50" \
+    curl -X GET "https://api.robusta.dev/api/query/krr/recommendations?account_id=YOUR_ACCOUNT_ID&cluster_id=my-cluster&namespace=default" \
       -H "Authorization: Bearer YOUR_API_KEY" \
       -H "Content-Type: application/json"
 
@@ -226,125 +226,100 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
 .. code-block:: json
 
     {
-      "scans": [
+      "cluster_id": "my-cluster",
+      "scan_id": "12345-67890-abcde",
+      "scan_date": "2024-01-07T12:00:00Z",
+      "scan_state": "success",
+      "results": [
         {
-          "object": {
-            "cluster": "my-cluster",
-            "name": "nginx-deployment",
-            "container": "nginx",
-            "namespace": "default",
-            "kind": "Deployment",
-            "allocations": {
-              "requests": {
-                "cpu": 0.1,
-                "memory": 128
-              },
-              "limits": {
-                "cpu": 0.5,
-                "memory": 512
-              }
-            },
-            "warnings": [],
-            "current_pod_count": 3
-          },
-          "recommended": {
-            "requests": {
-              "cpu": {
-                "value": 0.05,
-                "severity": "WARNING"
-              },
-              "memory": {
-                "value": 64,
-                "severity": "OK"
-              }
-            },
-            "limits": {
-              "cpu": {
-                "value": 0.2,
-                "severity": "WARNING"
-              },
-              "memory": {
-                "value": 256,
-                "severity": "OK"
-              }
-            },
-            "info": {
-              "cpu": "CPU usage is consistently low",
-              "memory": "Memory usage is within acceptable range"
-            }
-          },
-          "severity": "WARNING",
-          "metrics": {
-            "cpu": {
-              "query": "avg(container_cpu_usage_seconds_total)",
-              "start_time": "2024-01-01T00:00:00Z",
-              "end_time": "2024-01-07T00:00:00Z",
-              "step": "1h"
-            },
-            "memory": {
-              "query": "avg(container_memory_usage_bytes)",
-              "start_time": "2024-01-01T00:00:00Z", 
-              "end_time": "2024-01-07T00:00:00Z",
-              "step": "1h"
-            }
-          }
+          "cluster_id": "my-cluster",
+          "namespace": "default",
+          "name": "nginx-deployment",
+          "kind": "Deployment",
+          "container": "nginx",
+          "priority": "MEDIUM",
+          "current_cpu_request": 100,
+          "recommended_cpu_request": 50,
+          "current_cpu_limit": 500,
+          "recommended_cpu_limit": 200,
+          "current_memory_request": 134217728,
+          "recommended_memory_request": 67108864,
+          "current_memory_limit": 536870912,
+          "recommended_memory_limit": 268435456,
+          "pods_count": 3
         }
-      ],
-      "score": 75,
-      "resources": ["cpu", "memory"],
-      "description": "Resource recommendations based on 7-day usage analysis",
-      "strategy": {
-        "name": "simple",
-        "settings": {
-          "history_duration": 336,
-          "cpu_percentile": 99,
-          "memory_buffer_percentage": 15
-        }
-      }
+      ]
     }
 
 **Response Fields**
 
 .. list-table::
-   :widths: 25 15 60
+   :widths: 30 15 55
    :header-rows: 1
 
    * - Field
      - Type
      - Description
-   * - ``scans``
+   * - ``cluster_id``
+     - STRING
+     - The cluster ID for which recommendations were generated
+   * - ``scan_id``
+     - STRING
+     - Unique identifier for this KRR scan
+   * - ``scan_date``
+     - STRING
+     - Timestamp when the scan was completed (ISO 8601 format)
+   * - ``scan_state``
+     - STRING
+     - State of the scan (e.g., "success")
+   * - ``results``
      - ARRAY
-     - Array of KRR scan results for workloads
-   * - ``scans[].object.name``
+     - Array of KRR recommendations for workloads
+   * - ``results[].cluster_id``
      - STRING
-     - Name of the Kubernetes workload
-   * - ``scans[].object.kind``
-     - STRING
-     - Type of Kubernetes resource (Deployment, StatefulSet, etc.)
-   * - ``scans[].object.namespace``
+     - Cluster ID of the workload
+   * - ``results[].namespace``
      - STRING
      - Namespace of the workload
-   * - ``scans[].object.container``
+   * - ``results[].name``
+     - STRING
+     - Name of the Kubernetes workload
+   * - ``results[].kind``
+     - STRING
+     - Type of Kubernetes resource (Deployment, StatefulSet, etc.)
+   * - ``results[].container``
      - STRING
      - Container name within the workload
-   * - ``scans[].object.allocations``
-     - OBJECT
-     - Current CPU/memory requests and limits
-   * - ``scans[].recommended.requests``
-     - OBJECT
-     - Recommended CPU/memory requests with severity
-   * - ``scans[].recommended.limits``
-     - OBJECT
-     - Recommended CPU/memory limits with severity
-   * - ``scans[].severity``
+   * - ``results[].priority``
      - STRING
-     - Overall severity: CRITICAL, WARNING, OK, GOOD, UNKNOWN
-   * - ``score``
+     - Priority level of the recommendation
+   * - ``results[].current_cpu_request``
+     - NUMBER
+     - Current CPU request in millicores
+   * - ``results[].recommended_cpu_request``
+     - NUMBER
+     - Recommended CPU request in millicores
+   * - ``results[].current_cpu_limit``
+     - NUMBER
+     - Current CPU limit in millicores
+   * - ``results[].recommended_cpu_limit``
+     - NUMBER
+     - Recommended CPU limit in millicores
+   * - ``results[].current_memory_request``
+     - NUMBER
+     - Current memory request in bytes
+   * - ``results[].recommended_memory_request``
+     - NUMBER
+     - Recommended memory request in bytes
+   * - ``results[].current_memory_limit``
+     - NUMBER
+     - Current memory limit in bytes
+   * - ``results[].recommended_memory_limit``
+     - NUMBER
+     - Recommended memory limit in bytes
+   * - ``results[].pods_count``
      - INTEGER
-     - Overall efficiency score (0-100)
-   * - ``strategy``
-     - OBJECT
-     - KRR strategy and settings used for recommendations
+     - Number of pods for this workload
 
 **Error Responses**
 
@@ -361,15 +336,17 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
 .. code-block:: json
 
     {
-      "error": "Missing required parameter: cluster"
+      "msg": "Bad query parameters [error details]",
+      "error_code": "BAD_PARAMETER"
     }
 
-**404 Not Found**
+**500 Internal Server Error**
 
 .. code-block:: json
 
     {
-      "error": "Cluster 'my-cluster' not found or no data available"
+      "msg": "Failed to query KRR recommendations",
+      "error_code": "UNEXPECTED_ERROR"
     }
 
 Reference
