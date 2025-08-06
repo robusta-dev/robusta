@@ -15,8 +15,6 @@ Installation Guides
    extend-prometheus-installation
    standalone-installation
    dev-setup
-   
-
 
 .. grid:: 1 1 2 2
     :gutter: 2
@@ -26,33 +24,18 @@ Installation Guides
         :link: all-in-one-installation
         :link-type: doc
 
-    .. grid-item-card:: Integrate with Existing Prometheus
+        Five minute setup. Great default alerts. Powered by Prometheus and Robusta.
+
+    .. grid-item-card:: Add Robusta to Existing Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: extend-prometheus-installation
         :link-type: doc
 
-    .. grid-item::
-        .. raw:: html
+        Make your existing alerts better. Attach pod logs. Automatic alert insights.
 
-           <span style="color: #808080;">Five minute setup. Great default alerts. Powered by Prometheus and Robusta.</span>
+    .. grid-item-card:: Use Robusta's AI Agent with other monitoring tools
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: install-barebones
+        :link-type: doc
 
-    .. grid-item::
-        .. raw:: html
-
-           <span style="color: #808080;">Make your existing alerts better. Attach pod logs. Automatic alert insights.</span>
-
-Don't want Prometheus? Use :ref:`Robusta without Prometheus <install-barebones>`.
-
-
-Already installed Robusta? See what you can do with it.
--------------------------------------------------------------
-
-`Route alerts to different teams based on namespace, alertname, and more <https://docs.robusta.dev/master/tutorials/index.html#notification-routing>`_
-
-`Enhance Prometheus alerts with Robusta <https://docs.robusta.dev/master/tutorials/alert-builtin-enrichment.html>`_
-
-`Define new Prometheus alerts <https://docs.robusta.dev/master/tutorials/alert-custom-prometheus.html>`_
-
-`Configure auto-remediate for Prometheus alerts <https://docs.robusta.dev/master/tutorials/alert-remediation.html>`_
-
-`Track Kubernetes errors and changes using simple YAML <https://docs.robusta.dev/master/tutorials/index.html#custom-alerts-and-playbooks>`_
+        Use Robusta's AI Agent alongside DataDog, NewRelic, SolarWinds, and more. 
