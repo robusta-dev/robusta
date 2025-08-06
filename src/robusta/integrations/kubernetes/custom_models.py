@@ -238,6 +238,8 @@ class RobustaPod(Pod):
         env: Optional[List[EnvVar]] = None,
         mount_host_root: bool = False,
         custom_annotations: Optional[Dict[str, str]] = None,
+        custom_volume_mounts: Optional[List[VolumeMount]] = None,
+        custom_volumes: Optional[List[Volume]] = None,
     ) -> "RobustaPod":
         """
         Creates a debugging pod with high privileges
@@ -248,6 +250,9 @@ class RobustaPod(Pod):
         if mount_host_root:
             volume_mounts = [VolumeMount(name="host-root", mountPath="/host")]
             volumes = [Volume(name="host-root", hostPath=HostPathVolumeSource(path="/", type="Directory"))]
+
+        volume_mounts = (volume_mounts or []) + (custom_volume_mounts or [])
+        volumes = (volumes or []) + (custom_volumes or [])
 
         debugger = RobustaPod(
             apiVersion="v1",
@@ -321,9 +326,16 @@ class RobustaPod(Pod):
         cmd,
         debug_image=PYTHON_DEBUGGER_IMAGE,
         custom_annotations: Optional[Dict[str, str]] = None,
+        custom_volume_mounts: Optional[List[VolumeMount]] = None,
+        custom_volumes: Optional[List[Volume]] = None,
     ) -> str:
         debugger = RobustaPod.create_debugger_pod(
-            pod_name, node_name, debug_image, custom_annotations=custom_annotations
+            pod_name,
+            node_name,
+            debug_image,
+            custom_annotations=custom_annotations,
+            custom_volume_mounts=custom_volume_mounts,
+            custom_volumes=custom_volumes,
         )
         try:
             return debugger.exec(cmd)
