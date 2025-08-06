@@ -1,7 +1,7 @@
 .. _toolset_opensearch_logs:
 
 OpenSearch logs
-==============
+===============
 
 By enabling this toolset, HolmesGPT will fetch pod logs from `OpenSearch <https://opensearch.org/>`_.
 

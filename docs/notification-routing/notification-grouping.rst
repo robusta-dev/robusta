@@ -3,14 +3,13 @@
 Notification Grouping (Slack Only)
 =========================================================
 
-You can consolidate alerts into Slack threads to reduce the number of notifications.
-Each thread begins with a summary message that updates in real time as new alerts are received.
+Reduce alert noise by grouping related notifications into Slack threads. Instead of flooding channels with individual alerts, Robusta creates summary messages with threaded details.
 
 .. image:: /images/notification-grouping.png
    :width: 600px
    :align: center
 
-*Example: Alerts from a cluster are consolidated into a daily summary message, with individual alerts in the thread.*
+*Example: Multiple alerts consolidated into a daily summary with individual alerts in the thread.*
 
 Configuring Notification Grouping
 ----------------------------------

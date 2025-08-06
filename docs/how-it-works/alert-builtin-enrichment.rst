@@ -25,14 +25,14 @@ Testing out Prometheus alerts
 1. Deploy a broken pod that will be stuck in pending state:
 
 .. code-block:: bash
-   :name: cb-apply-crashpod
+   :name: cb-apply-pendingpod
 
    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/pending_pods/pending_pod_resources.yaml
 
 2. Trigger a Prometheus alert immediately, skipping the normal delays:
 
 .. code-block:: bash
-   :name: cb-apply-crashpod
+   :name: cb-trigger-prometheus-alert
 
    robusta playbooks trigger prometheus_alert alert_name=KubePodCrashLooping namespace=default pod_name=example-pod
 
@@ -47,7 +47,7 @@ Testing out APIServer alerts
 Let's deploy a crashing pod:
 
 .. code-block:: bash
-   :name: cb-apply-crashpod
+   :name: cb-apply-crashpod-apiserver
 
    kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
 

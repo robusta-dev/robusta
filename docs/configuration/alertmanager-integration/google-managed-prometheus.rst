@@ -9,10 +9,10 @@ Prerequisites
 ****************
 An instance of Google Managed Prometheus with the following components configured:
 
-* Prometheus Frontend (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/query#ui-prometheus>`_)
-* Node Exporter (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/node_exporter>`_)
-* Scraping configuration for Kubelet and cAdvisor (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_)
-* Kube State Metrics (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_)
+* Prometheus Frontend (`Frontend Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/query#ui-prometheus>`_)
+* Node Exporter (`Node Exporter Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/node_exporter>`_)
+* Scraping configuration for Kubelet and cAdvisor (`Kubelet/cAdvisor Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_)
+* Kube State Metrics (`Kube State Metrics Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_)
 
 Send Alerts to Robusta
 ********************************************
