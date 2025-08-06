@@ -15,7 +15,7 @@ AI Analysis
 Why use HolmesGPT?
 ^^^^^^^^^^^^^^^^^^^
 
-Robusta can integrate with `Holmes GPT <https://github.com/robusta-dev/holmesgpt>`_ to analyze health issues on your cluster, and to run AI based root cause analysis for alerts.
+Robusta integrates with `HolmesGPT <https://github.com/robusta-dev/holmesgpt>`_ to provide AI-powered root cause analysis for your alerts. It automatically investigates issues by analyzing logs, metrics, and Kubernetes state.
 
 This requires a Robusta SaaS account, and for the Robusta UI sink to be enabled. (We have plans to support HolmesGPT in a pure OSS mode in the near future. Stay tuned!)
 
