@@ -15,6 +15,7 @@ Prometheus & AlertManager
    google-managed-prometheus
    victoria-metrics
    grafana-alert-manager
+   grafana-cloud-mimir
    embedded-prometheus
 
 
@@ -66,6 +67,11 @@ Connect Robusta to your Prometheus setup to get enriched alerts with logs, event
     .. grid-item-card:: Grafana Alerts
         :class-card: sd-bg-light sd-bg-text-light
         :link: grafana-alert-manager
+        :link-type: doc
+
+    .. grid-item-card:: Grafana Cloud (Mimir)
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: grafana-cloud-mimir
         :link-type: doc
 
     .. grid-item-card:: Install Prometheus with Robusta
