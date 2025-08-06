@@ -10,6 +10,7 @@ spec:
     matchLabels:
       app: {{ include "robusta.fullname" . }}-forwarder
   replicas: 1
+  revisionHistoryLimit: {{ .Values.kubewatch.revisionHistoryLimit }}
   template:
     metadata:
       annotations:
