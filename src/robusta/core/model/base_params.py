@@ -2,7 +2,7 @@ import logging
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, SecretStr, validator
+from pydantic import BaseModel, SecretStr, validator, Field
 
 from robusta.integrations import openshift
 from robusta.utils.documented_pydantic import DocumentedModel
@@ -190,6 +190,7 @@ class HolmesChatParams(HolmesParams):
     ask: str
     conversation_history: Optional[list[dict]] = None
     render_graph_images: bool = False
+    stream: bool = Field(default=False)
 
 
 class HolmesIssueChatParams(HolmesChatParams):
@@ -249,7 +250,6 @@ class HolmesWorkloadHealthChatParams(HolmesParams):
     workload_health_result: HolmesInvestigationResult
     resource: ResourceInfo
     conversation_history: Optional[list[dict]] = None
-
 
 
 class NamespacedResourcesParams(ActionParams):

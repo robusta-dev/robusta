@@ -8,6 +8,7 @@ metadata:
     app: {{ include "robusta.fullname" . }}-runner
 spec:
   replicas: 1
+  revisionHistoryLimit: {{ .Values.runner.revisionHistoryLimit }}
   selector:
     matchLabels:
       app: {{ include "robusta.fullname" . }}-runner
