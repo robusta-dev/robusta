@@ -7,9 +7,13 @@ Grafana can send alerts to the Robusta timeline for visualization and AI investi
   :width: 600
   :align: center
 
+.. note::
 
-This guide only covers sending alerts from Grafana Alerting to the Robusta timeline.
-If you'd like Robusta to also query metrics from Grafana, refer to general :ref:`metrics-integration docs for Prometheus <Integrating with Prometheus>`.
+    **Using Grafana Cloud with Mimir?** For complete integration including metrics querying and Holmes configuration, see :doc:`grafana-cloud-mimir`.
+
+This guide covers sending alerts from Grafana Alerting to the Robusta timeline.
+For metrics integration with self-hosted Grafana, refer to :ref:`metrics-integration docs for Prometheus <Integrating with Prometheus>`.
+For Grafana Cloud metrics integration, see :doc:`grafana-cloud-mimir`.
 
 
 Send Alerts to Robusta's Timeline

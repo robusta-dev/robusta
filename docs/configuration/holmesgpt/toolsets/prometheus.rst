@@ -112,6 +112,47 @@ Capabilities
      - Execute a PromQL range query
 
 
+Grafana Cloud (Mimir) Configuration
+******************************************
+
+To configure Grafana Cloud's Mimir endpoint with HolmesGPT:
+
+1. Create a service account token in Grafana Cloud:
+
+   - Go to **Administration → Service accounts**
+   - Create a new service account
+   - Generate a service account token (starts with ``glsa_``)
+
+2. Find your Prometheus datasource UID:
+
+   .. code-block:: bash
+
+      curl -H "Authorization: Bearer YOUR_GLSA_TOKEN" \
+        "https://YOUR-INSTANCE.grafana.net/api/datasources" | jq
+
+   Look for the UID of your Prometheus datasource (typically ``grafanacloud-prom``).
+
+3. Add the following configuration to your ``generated_values.yaml``:
+
+   .. code-block:: yaml
+
+      holmes:
+        toolsets:
+          prometheus/metrics:
+            enabled: true
+            config:
+              prometheus_url: https://YOUR-INSTANCE.grafana.net/api/datasources/proxy/uid/PROMETHEUS_DATASOURCE_UID
+              fetch_labels_with_labels_api: false  # Important for Mimir
+              fetch_metadata_with_series_api: true  # Important for Mimir
+              headers:
+                Authorization: Bearer YOUR_GLSA_TOKEN
+
+.. note::
+
+   The proxy endpoint URL format (``/api/datasources/proxy/uid/``) is crucial for Grafana Cloud integration as it handles authentication and routing to Mimir automatically.
+
+For complete Grafana Cloud integration including Robusta Runner configuration, see :doc:`/configuration/alertmanager-integration/grafana-cloud-mimir`.
+
 Coralogix Prometheus Configuration
 ******************************************
 
