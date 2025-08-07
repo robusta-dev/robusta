@@ -592,6 +592,7 @@ kubewatch:
   image: ~ # image can be used to override image.registry/imageName
   imageName: kubewatch:v2.11.0
   imagePullPolicy: IfNotPresent
+  revisionHistoryLimit: 10
   pprof: True
   resources:
     requests:
@@ -671,6 +672,7 @@ runner:
   image: ~  # image can be used to override image.registry/imageName
   imageName: robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
+  revisionHistoryLimit: 10
   log_level: INFO
   sentry_dsn: https://4f1a66f025c60830fec303a094dcdf94@o1120648.ingest.sentry.io/6156573
   sendAdditionalTelemetry: false

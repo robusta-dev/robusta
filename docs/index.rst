@@ -52,7 +52,7 @@
    playbook-reference/index
    configuration/alertmanager-integration/alert-custom-prometheus
    Cost Savings - KRR <configuration/resource-recommender>
-   K8s Misconfigurations - Popeye <configuration/cluster-misconfigurations>
+   K8s Misconfigurations - Popeye <playbook-reference/actions/scans>
 
 .. toctree::
    :maxdepth: 4
@@ -91,7 +91,7 @@ Robusta transforms basic Prometheus alerts into actionable insights with full Ku
         * **Smart Grouping** - Reduce notification spam
         * **AI Investigation** - Kickstart alert investigation with AI
         * **Alert Enrichment** - Pod logs, events and more alongside alerts
-        * **Advanced Routing** - Based on team, namespace, and more
+
 
         Connect to your existing Prometheus or install our all-in-one bundle (based on kube-prometheus-stack). Need to go beyond Kubernetes? `Try Robusta Pro <https://home.robusta.dev>`_.
 

@@ -55,7 +55,7 @@ Add the following code to your generated_values.yaml. This will send all alerts 
 Save the file and run
 
 .. code-block:: bash
-   :name: cb-add-pagerduty-sink
+   :name: cb-add-pagerduty-sink-alerts
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
@@ -91,7 +91,7 @@ Add the following code to your generated_values.yaml file. This will send all ch
 Save the file and run
 
 .. code-block:: bash
-   :name: cb-add-pagerduty-sink
+   :name: cb-add-pagerduty-sink-changes
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

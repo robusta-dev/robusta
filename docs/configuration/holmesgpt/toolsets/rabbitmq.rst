@@ -1,4 +1,4 @@
-.. _toolset_prometheus:
+.. _toolset_rabbitmq:
 
 RabbitMQ
 ========

@@ -63,12 +63,15 @@ HolmesGPT needs permission to establish a port-forward to ArgoCD. The configurat
             - name: ARGOCD_AUTH_TOKEN
               value: <your argocd auth token>
             - name: ARGOCD_OPTS
-              value: "--port-forward --port-forward-namespace <your_argocd_namespace> --grpc-web"
+              value: "--port-forward --port-forward-namespace <your_argocd_namespace> --server <your_server_address> --grpc-web"
         toolsets:
             argocd/core:
                 enabled: true
 
 .. note::
+
+    For in cluster address, use the cluster dns. For example: ``--port-forward --port-forward-namespace argocd --server argocd-server.argocd.svc.cluster.local --insecure --grpc-web``
+    Add ``--insecure`` to work with self signed certificates.
 
     Change the namespace ``--port-forward-namespace <your_argocd_namespace>`` to the namespace in which your argocd service
     is deployed.
