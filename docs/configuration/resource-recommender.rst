@@ -172,7 +172,7 @@ Click ``New API Key``. Choose a name for your key, and check the ``KRR Read`` ca
 .. image:: /images/krr-api-key.png
     :width: 500px
 
-GET /api/query/krr/recommendations
+GET /api/krr/recommendations
 ----------------------------------------------------
 
 Retrieves KRR resource recommendations for a specific cluster and namespace.
