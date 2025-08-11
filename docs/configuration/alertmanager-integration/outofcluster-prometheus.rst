@@ -44,3 +44,18 @@ This integration lets your central Prometheus send alerts to Robusta, as if they
       3. Enables sending resolved alerts to Robusta
 
 .. include:: ./_testing_integration.rst
+
+.. include:: ./_pull_integration.rst
+
+Filtering Prometheus Queries by Cluster
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the same external Prometheus is used for many clusters, you will want to add a cluster name to all queries.
+
+You can do so with the ``prometheus_url_query_string`` parameter, shown below:
+
+.. code-block:: yaml
+
+  globalConfig:
+    # Additional query string parameters to be appended to the Prometheus connection URL (optional)
+    prometheus_url_query_string: "cluster=prod1&x=y"
