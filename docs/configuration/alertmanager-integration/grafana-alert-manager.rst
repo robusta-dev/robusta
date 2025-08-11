@@ -1,5 +1,5 @@
-Grafana AlertManager
-****************************************
+Grafana Alerts
+**************
 
 Grafana can send alerts to the Robusta timeline for visualization and AI investigation.
 
@@ -185,35 +185,8 @@ Alternatively, trigger a `demo OOMKill alert <https://github.com/robusta-dev/kub
 Optional Settings
 =============================
 
-Authentication Headers
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+For authentication and SSL configuration when querying metrics from Grafana's backend Prometheus, see the relevant metric provider documentation:
 
-If Prometheus and/or AlertManager require authentication, add the following to ``generated_values.yaml``:
-
-.. code-block:: yaml
-
-  globalConfig:
-    prometheus_auth: Bearer <YOUR TOKEN> # Replace <YOUR TOKEN> with your actual token or use any other auth header as needed
-    alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # Replace <USER:PASSWORD base64-encoded> with your actual credentials, base64-encoded, or use any other auth header as needed
-
-These settings may be configured independently.
-
-SSL Verification
-^^^^^^^^^^^^^^^^^^^^
-By default, Robusta does not verify the SSL certificate of the Prometheus server.
-
-To enable SSL verification, add the following to Robusta's ``generated_values.yaml``:
-
-.. code-block:: yaml
-
-  runner:
-    additional_env_vars:
-    - name: PROMETHEUS_SSL_ENABLED
-      value: "true"
-
-If you have a custom Certificate Authority (CA) certificate, add one more setting:
-
-.. code-block:: yaml
-
-  runner:
-    certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
+- :doc:`/configuration/metric-providers-in-cluster` for in-cluster Prometheus
+- :doc:`/configuration/metric-providers-external` for external Prometheus
+- Or the appropriate cloud provider metric documentation

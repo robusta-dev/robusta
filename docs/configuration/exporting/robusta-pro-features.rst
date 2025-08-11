@@ -1,10 +1,18 @@
-Robusta Pro Features
-====================
+Overview
+========
 
 .. note::
     These features are available with the Robusta SaaS platform and self-hosted commercial plans. They are not available in the open-source version.
 
 Robusta Pro adds a web UI, additional integrations, and enterprise APIs to the open-source engine. Available as SaaS (we handle hosting) or self-hosted on-premise.
+
+AI Analysis
+-----------
+
+Automatically investigate and resolve issues with AI-powered analysis.
+
+:doc:`AI Analysis (HolmesGPT) <../holmesgpt/index>`
+    Automatically analyze Kubernetes alerts, logs, and metrics. Get potential root causes and remediation suggestions.
 
 Custom Alert Ingestion
 -----------------------
@@ -34,14 +42,6 @@ Features include:
 * **Alert Reporting API**: Get aggregated statistics and counts for different alert types
 * **Custom Alert API**: Send alerts programmatically from external systems
 * **Configuration Changes API**: Track configuration changes in your environment
-
-AI Analysis
------------
-
-Optional AI-powered alert investigation using HolmesGPT.
-
-:doc:`AI Analysis (HolmesGPT) <../holmesgpt/index>`
-    Automatically analyze Kubernetes alerts, logs, and metrics. Get potential root causes and remediation suggestions.
 
 Additional Pro Features
 -----------------------

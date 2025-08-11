@@ -1,9 +1,9 @@
-External Prometheus
+External AlertManager Integration
 **************************************
 
-Follow this guide to connect Robusta to a central Prometheus (e.g. Thanos/Mimir), running outside the cluster monitored by Robusta.
+This guide shows how to send alerts from a central AlertManager (e.g. Thanos/Mimir) running outside the cluster to Robusta.
 
-You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
+For configuring metric querying and advanced Prometheus settings, see :doc:`/configuration/metric-providers-external`.
 
 Send Alerts to Robusta
 ==============================
@@ -44,18 +44,3 @@ This integration lets your central Prometheus send alerts to Robusta, as if they
       3. Enables sending resolved alerts to Robusta
 
 .. include:: ./_testing_integration.rst
-
-.. include:: ./_pull_integration.rst
-
-Filtering Prometheus Queries by Cluster
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If the same external Prometheus is used for many clusters, you will want to add a cluster name to all queries.
-
-You can do so with the ``prometheus_url_query_string`` parameter, shown below:
-
-.. code-block:: yaml
-
-  globalConfig:
-    # Additional query string parameters to be appended to the Prometheus connection URL (optional)
-    prometheus_url_query_string: "cluster=prod1&x=y"

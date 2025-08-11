@@ -28,7 +28,7 @@ You'll need your API key and account ID:
 1. **Account ID**: Found in your ``generated_values.yaml`` file
 2. **API Key**: Generate this in the Robusta platform under **Settings** → **API Keys** → **New API Key**
 
-For detailed API documentation including request format, authentication, and examples, see :doc:`Alert History Import and Export API <exporting-data>`.
+For detailed API documentation including request format, authentication, and examples, see :doc:`Send Alerts API <send-alerts-api>`.
 
 Quick Example
 -------------
@@ -56,4 +56,4 @@ Here's a simple example of sending a custom alert:
 Next Steps
 ----------
 
-For complete API documentation including all available fields and response formats, see :doc:`Alert History Import and Export API <exporting-data>`.
+For complete API documentation including all available fields and response formats, see :doc:`Send Alerts API <send-alerts-api>`.
