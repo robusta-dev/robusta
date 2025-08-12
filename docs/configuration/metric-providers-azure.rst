@@ -48,6 +48,9 @@ Quick Start
 
       3. Grant your app access to the workspace (Monitoring Data Reader role)
 
+      4. :ref:`Update Robusta <Simple Upgrade>` 
+
+
    .. tab-item:: Managed Identity
       :name: managed-identity
 
@@ -84,18 +87,15 @@ Quick Start
          - Add role assignment → Monitoring Data Reader
          - Select the Managed Identity from step 1
 
-3. :ref:`Update Robusta <Simple Upgrade>`
-
-Important Notes
----------------
+      4. :ref:`Update Robusta <Simple Upgrade>` 
 
 .. warning::
 
    Azure Managed Prometheus does not support the Prometheus flags API. Always set ``check_prometheus_flags: false``.
 
-- The prometheus URL must include port ``:443``
-- SSL is required and automatically enabled
-- AlertManager URL is not needed (Azure handles alerting separately)
+   - The prometheus URL must include port ``:443``
+   - SSL is required and automatically enabled
+   - AlertManager URL is not needed (Azure handles alerting separately)
 
 Troubleshooting
 ---------------
