@@ -88,7 +88,7 @@ SERVICE_CACHE_TTL_SEC = int(os.environ.get("SERVICE_CACHE_TTL_SEC", 900))
 SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
 
 PORT = int(os.environ.get("PORT", 5000))  # PORT
-RUNNER_BIND_ADDR = os.environ.get("RUNNER_BIND_ADDR", "127.0.0.1")  # Listen address for runner
+RUNNER_BIND_ADDR = os.environ.get("RUNNER_BIND_ADDR", "0.0.0.0")  # Listen address for runner
 
 # additional certificate to verify, base64 encoded.
 ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
