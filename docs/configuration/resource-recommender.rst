@@ -154,6 +154,201 @@ To prevent the KRR job from OOMKill (Out of Memory), you can configure the memor
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
 
+KRR API
+======================================
+
+You can retrieve KRR recommendations programmatically using the Robusta API. This allows you to integrate resource recommendations into your own tools and workflows.
+
+
+Authentication
+---------------------
+
+The KRR API requires authentication via API key.
+
+To create your key, on the ``Robusta Platform``, go to the ``settings`` page, and choose the ``API keys`` tab.
+
+Click ``New API Key``. Choose a name for your key, and check the ``KRR Read`` capability.
+
+.. image:: /images/krr-api-key.png
+    :width: 500px
+
+GET /api/krr/recommendations
+----------------------------------------------------
+
+Retrieves KRR resource recommendations for a specific cluster and namespace.
+
+**Query Parameters**
+
+.. list-table::
+   :widths: 20 15 40 15
+   :header-rows: 1
+
+   * - Parameter
+     - Type
+     - Description
+     - Required
+   * - ``account_id``
+     - STRING
+     - The account ID associated with the API key
+     - Yes
+   * - ``cluster_id``
+     - STRING
+     - The cluster ID to get recommendations for
+     - Yes
+   * - ``namespace``
+     - STRING
+     - The namespace to filter recommendations (optional)
+     - No
+
+**Request Headers**
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - Header
+     - Value
+   * - ``Authorization``
+     - ``Bearer <your-api-key>``
+   * - ``Content-Type``
+     - ``application/json``
+
+**Example Request**
+
+.. code-block:: bash
+
+    curl -X GET "https://api.robusta.dev/api/query/krr/recommendations?account_id=YOUR_ACCOUNT_ID&cluster_id=my-cluster&namespace=default" \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json"
+
+**Success Response (200 OK)**
+
+.. code-block:: json
+
+    {
+      "cluster_id": "my-cluster",
+      "scan_id": "12345-67890-abcde",
+      "scan_date": "2024-01-07T12:00:00Z",
+      "scan_state": "success",
+      "results": [
+        {
+          "cluster_id": "my-cluster",
+          "namespace": "default",
+          "name": "nginx-deployment",
+          "kind": "Deployment",
+          "container": "nginx",
+          "priority": "MEDIUM",
+          "current_cpu_request": 100,
+          "recommended_cpu_request": 50,
+          "current_cpu_limit": 500,
+          "recommended_cpu_limit": 200,
+          "current_memory_request": 134217728,
+          "recommended_memory_request": 67108864,
+          "current_memory_limit": 536870912,
+          "recommended_memory_limit": 268435456,
+          "pods_count": 3
+        }
+      ]
+    }
+
+**Response Fields**
+
+.. list-table::
+   :widths: 30 15 55
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``cluster_id``
+     - STRING
+     - The cluster ID for which recommendations were generated
+   * - ``scan_id``
+     - STRING
+     - Unique identifier for this KRR scan
+   * - ``scan_date``
+     - STRING
+     - Timestamp when the scan was completed (ISO 8601 format)
+   * - ``scan_state``
+     - STRING
+     - State of the scan (e.g., "success")
+   * - ``results``
+     - ARRAY
+     - Array of KRR recommendations for workloads
+   * - ``results[].cluster_id``
+     - STRING
+     - Cluster ID of the workload
+   * - ``results[].namespace``
+     - STRING
+     - Namespace of the workload
+   * - ``results[].name``
+     - STRING
+     - Name of the Kubernetes workload
+   * - ``results[].kind``
+     - STRING
+     - Type of Kubernetes resource (Deployment, StatefulSet, etc.)
+   * - ``results[].container``
+     - STRING
+     - Container name within the workload
+   * - ``results[].priority``
+     - STRING
+     - Priority level of the recommendation
+   * - ``results[].current_cpu_request``
+     - NUMBER
+     - Current CPU request in millicores
+   * - ``results[].recommended_cpu_request``
+     - NUMBER
+     - Recommended CPU request in millicores
+   * - ``results[].current_cpu_limit``
+     - NUMBER
+     - Current CPU limit in millicores
+   * - ``results[].recommended_cpu_limit``
+     - NUMBER
+     - Recommended CPU limit in millicores
+   * - ``results[].current_memory_request``
+     - NUMBER
+     - Current memory request in bytes
+   * - ``results[].recommended_memory_request``
+     - NUMBER
+     - Recommended memory request in bytes
+   * - ``results[].current_memory_limit``
+     - NUMBER
+     - Current memory limit in bytes
+   * - ``results[].recommended_memory_limit``
+     - NUMBER
+     - Recommended memory limit in bytes
+   * - ``results[].pods_count``
+     - INTEGER
+     - Number of pods for this workload
+
+**Error Responses**
+
+**401 Unauthorized**
+
+.. code-block:: json
+
+    {
+      "error": "Invalid or missing API key"
+    }
+
+**400 Bad Request**
+
+.. code-block:: json
+
+    {
+      "msg": "Bad query parameters [error details]",
+      "error_code": "BAD_PARAMETER"
+    }
+
+**500 Internal Server Error**
+
+.. code-block:: json
+
+    {
+      "msg": "Failed to query KRR recommendations",
+      "error_code": "UNEXPECTED_ERROR"
+    }
+
 Reference
 ======================================
 .. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
