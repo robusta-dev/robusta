@@ -71,8 +71,8 @@ spec:
             cpu: {{ .Values.kubewatch.resources.requests.cpu }}
             memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.kubewatch.resources.requests.memory | quote }}{{ end }}
           limits:
+            cpu: {{ .Values.kubewatch.resources.limits.cpu }}
             memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else if .Values.kubewatch.resources.limits.memory }}{{ .Values.kubewatch.resources.limits.memory | quote }}{{ else }}{{ .Values.kubewatch.resources.requests.memory | quote }}{{ end }}
-            {{ if .Values.kubewatch.resources.limits.cpu }}cpu: {{ .Values.kubewatch.resources.limits.cpu | quote }}{{ end }}
       volumes:
         - name:  {{ include "robusta.fullname" . }}-kubewatch-config
           configMap:
