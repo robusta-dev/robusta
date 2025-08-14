@@ -97,29 +97,6 @@ Quick Start
    - SSL is required and automatically enabled
    - AlertManager URL is not needed (Azure handles alerting separately)
 
-Troubleshooting
----------------
-
-**Authentication failures?**
-   - Verify your Service Principal credentials or Managed Identity permissions
-   - Ensure the app/identity has "Monitoring Data Reader" role on the workspace
-   - Check that tenant ID and client ID are correct
-
-**Connection errors?**
-   - Verify the workspace URL includes ``:443``
-   - Ensure ``PROMETHEUS_SSL_ENABLED`` is set to ``true``
-   - Check that ``check_prometheus_flags`` is set to ``false``
-
-**No metrics showing?**
-   - Verify your workspace is collecting metrics from your AKS cluster
-   - Check that the workspace is in the same region as your cluster (or configured for cross-region)
-   - Ensure time sync between cluster and Azure
-
-Test the connection:
-
-.. code-block:: bash
-
-    kubectl logs -n robusta deployment/robusta-runner | grep -i "prometheus\|azure"
 
 Next Steps
 ----------

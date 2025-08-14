@@ -91,29 +91,6 @@ After configuration, verify the integration:
 
        kubectl logs -n robusta deployment/robusta-runner | grep -i prometheus
 
-Troubleshooting
----------------
-
-**Frontend not found?**
-   - Ensure you've deployed the Prometheus Frontend component
-   - Check the correct namespace and service name
-   - Verify the frontend is running: ``kubectl get pods -n default | grep frontend``
-
-**No metrics showing?**
-   - Verify all exporters are properly configured
-   - Check that metrics are being ingested into Google Managed Prometheus
-   - Ensure the frontend can query the backend storage
-
-**Connection errors?**
-   - Verify network policies allow communication
-   - Check that services are exposed correctly
-   - Ensure ``check_prometheus_flags`` is set to ``false``
-
-**Missing components?**
-   Follow Google's guides to set up any missing components:
-   
-   - `Frontend setup <https://cloud.google.com/stackdriver/docs/managed-prometheus/query#ui-prometheus>`_
-   - `Exporter configuration <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters>`_
 
 Next Steps
 ----------

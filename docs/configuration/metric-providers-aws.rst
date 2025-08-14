@@ -127,29 +127,6 @@ Important Notes
 - Ensure your AWS credentials have permissions to query the AMP workspace
 - The workspace must be in the same region specified in AWS_REGION
 
-Troubleshooting
----------------
-
-**Authentication failures?**
-   - Verify AWS credentials are correct
-   - Check IAM permissions for the access key
-   - Ensure the secret was created in the correct namespace
-
-**Connection errors?**
-   - Verify the workspace URL is correct
-   - Check that AWS_REGION matches your workspace region
-   - Ensure ``check_prometheus_flags`` is set to ``false``
-
-**No metrics showing?**
-   - Verify your AMP workspace is receiving metrics
-   - Check that the workspace is configured to scrape your cluster
-   - Ensure time sync between cluster and AWS
-
-Test the connection:
-
-.. code-block:: bash
-
-    kubectl logs -n robusta deployment/robusta-runner | grep -i "prometheus\|aws"
 
 Next Steps
 ----------

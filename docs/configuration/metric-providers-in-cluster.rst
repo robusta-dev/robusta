@@ -113,14 +113,3 @@ If you have a custom Certificate Authority (CA) certificate, add one more settin
     runner:
         certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
 
-Troubleshooting
----------------
-
-**Connection errors?**
-Test connectivity from Robusta's namespace:
-
-.. code-block:: bash
-
-    # Replace prometheus-service.namespace with your actual service and namespace
-    kubectl run test-curl -n robusta --image=curlimages/curl --rm -it -- \
-        curl -v http://prometheus-service.namespace.svc.cluster.local:9090/-/healthy

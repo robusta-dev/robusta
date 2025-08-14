@@ -169,28 +169,6 @@ If you prefer separate Prometheus URLs per cluster instead of filtering:
     globalConfig:
         prometheus_url: "https://prometheus-staging.company.com:9090"
 
-Troubleshooting
----------------
-
-**Connection timeouts?**
-   - Check network connectivity and firewall rules
-   - Verify the URL is accessible from within your cluster
-   - Ensure any VPN or private endpoint is configured
-
-**Authentication errors?**
-   - Double-check your token or credentials
-   - Ensure proper Base64 encoding for Basic auth
-   - Verify the authentication header format
-
-**SSL/TLS errors?**
-   - Enable SSL verification if using HTTPS
-   - Add custom CA certificate if using internal certificates
-   - Check certificate validity and hostname matching
-
-**No metrics showing?**
-   - Verify Prometheus has metrics for your cluster
-   - Check cluster filtering configuration
-   - Ensure time sync between cluster and Prometheus
 
 Next Steps
 ----------

@@ -95,13 +95,19 @@ For multi-tenant VictoriaMetrics:
         prometheus_additional_headers:
             X-Scope-OrgID: "tenant-123"
 
-Compatibility Notes
--------------------
+.. warning::
 
-- VictoriaMetrics is fully compatible with Prometheus API
-- Supports all Prometheus query features used by Robusta
-- The flags API is supported (no need to disable ``check_prometheus_flags``)
-- Works with both VMAlert and standard AlertManager
+   **Prometheus Flags API Check**
+   
+   If you encounter issues with Robusta connecting to VictoriaMetrics due to Prometheus flags API compatibility, you may need to disable the flags check:
+
+   .. code-block:: yaml
+
+       globalConfig:
+           prometheus_url: "http://vmsingle-victoria-metrics.default.svc.cluster.local:8429"
+           check_prometheus_flags: false
+
+   Some VictoriaMetrics configurations may not fully implement the Prometheus flags API, which can cause connection issues during Robusta initialization.
 
 Verification
 ------------
@@ -122,32 +128,6 @@ After configuration:
    .. code-block:: bash
 
        kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/oomkill/oomkill_job.yaml
-
-Troubleshooting
----------------
-
-**Auto-detection not working?**
-   - Ensure VictoriaMetrics service name contains "victoria" or "vmsingle"
-   - Check that services are in standard namespaces
-   - Manually configure if using non-standard names
-
-**Connection errors?**
-   - For VMCluster, ensure you're using vmselect endpoint, not vmstorage
-   - Check the correct port (8429 for vmsingle, 8481 for vmselect)
-   - Verify no network policies blocking access
-
-**Metrics not showing?**
-   - Ensure VictoriaMetrics is scraping your cluster metrics
-   - Check retention settings if historical data is missing
-   - Verify time sync between cluster and VictoriaMetrics
-
-Performance Tips
-----------------
-
-- VictoriaMetrics is highly efficient with resources
-- Consider enabling query caching for better performance
-- Use downsampling for long-term retention
-- Configure appropriate retention periods
 
 Next Steps
 ----------
