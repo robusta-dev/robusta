@@ -14,7 +14,7 @@ Quick Start
 
 1. **Create AWS credentials** if you don't have them:
    
-   Follow the `AWS guide <https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html>`_ to create an access key.
+   Follow the `AWS guide <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey>`_ to create an access key.
 
 2. **Store credentials in Kubernetes**:
 

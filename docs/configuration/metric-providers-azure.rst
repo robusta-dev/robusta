@@ -25,7 +25,7 @@ Quick Start
    .. tab-item:: Service Principal
       :name: service-principal
 
-      1. `Register an Azure AD app <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#register-an-app-with-azure-active-directory>`_
+      1. `Create a Service Principal <https://learn.microsoft.com/en-us/azure/azure-monitor/metrics/prometheus-api-promql#authentication>`_ (app registration)
       
       2. Add to ``generated_values.yaml``:
 
