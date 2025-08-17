@@ -119,7 +119,7 @@ spec:
           - name: CLUSTER_DOMAIN
             value: {{ .Values.global.clusterDomain }}
           - name: SET_KRR_SECURITY_CONTEXT
-            value: {{ .Values.setKRRSecurityContext | quote }}
+            value: {{ .Values.runner.setKRRSecurityContext | quote }}
           {{- if .Values.openshift.enabled }}
           - name: IS_OPENSHIFT
             value: "True"
