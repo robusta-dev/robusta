@@ -154,6 +154,18 @@ To prevent the KRR job from OOMKill (Out of Memory), you can configure the memor
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
 
+Enable KRR security context
+======================================
+
+To enable KRR security context, add the following to your ``generated_values.yaml`` file:
+
+.. code-block:: yaml
+
+    runner:
+      setKRRSecurityContext: true
+
+
+
 KRR API
 ======================================
 
