@@ -37,6 +37,7 @@ class ErrorCodes(Enum):
     HOLMES_REQUEST_ERROR = 5201
     HOLMES_UNEXPECTED_ERROR = 5202
     HOLMES_DISCOVERY_FAILED = 5203
+    HOLMES_RATE_LIMIT_EXCEEDED = 5204
 
 class ActionException(Exception):
     def __init__(self, error: ErrorCodes, msg: Optional[str] = None):
