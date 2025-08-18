@@ -87,7 +87,7 @@ Kubernetes Alerts
 =================================
 In case your alerts are from a Kubernetes cluster monitored by Robusta, and your alerts has a ``cluster`` label, make sure it matches the ``cluster_name`` that appears in Robusta ``generated_values.yaml``.
 
-** This is optional - you can send any alert to the Robusta timeline! **
+**This is optional - you can send any alert to the Robusta timeline!**
 
 
 Send Alerts to Robusta for enrichments
