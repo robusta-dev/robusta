@@ -710,6 +710,7 @@ runner:
     pod: {}
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
+  setKRRSecurityContext: false
 
 kube-prometheus-stack:
   alertmanager:
