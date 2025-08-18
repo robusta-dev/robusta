@@ -89,7 +89,7 @@ Quick Start
 
       4. :ref:`Update Robusta <Simple Upgrade>` 
 
-.. warning::
+.. Note::
 
    Azure Managed Prometheus does not support the Prometheus flags API. Always set ``check_prometheus_flags: false``.
 

@@ -12,7 +12,7 @@ This integration lets you send Coralogix alerts to Robusta.
 
 To configure it:
 
-1. In the Coralogix site go to Data Flow and in the Webhook section click ``Webhook``.
+1. In the Coralogix site go to Data Flow, then Outbound Webhooks, and click ``Generic webhook``.
 2. In the url insert:
 
 .. code-block::
@@ -59,11 +59,11 @@ To configure it:
     }
 
 
-6. Click the 'Test Config' button and check your robusta sinks that you received an alert
+6. Click the 'Test Config' button and check your robusta sink for a "Test configuration" alert. 
 7. Click Save
 
 
 Configure Metric Querying
 ==============================
 
-To enable Robusta to pull metrics from Coralogix Prometheus, see :doc:`/configuration/metric-providers-coralogix`.
+To enable Robusta to pull metrics from Coralogix Prometheus, see :doc:`/configuration/metric-providers-coralogix` metrics provider settings.
