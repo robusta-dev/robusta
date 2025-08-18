@@ -10,18 +10,18 @@ To develop new playbook actions, you don't need to install from source. Refer to
 Using Mirrord (Recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Use `Mirrord <https://mirrord.dev/>`_ to build and test Robusta on your local machine:
+Use `mirrord <https://metalbear.co/mirrord/>`_ to build and test Robusta on your local machine:
 
 1. :ref:`Install Robusta normally with Helm <install>`
 
 2. Clone Robusta's source code: ``git clone https://github.com/robusta-dev/robusta.git && cd robusta``
 
-3. Run Robusta via Mirrord ``./run_runner_locally.sh`` and follow the instructions in your terminal.
+3. Run Robusta via mirrord ``./run_runner_locally.sh`` and follow the instructions in your terminal.
 
 Developing Playbooks Locally
 ---------------------------------
 
-1. Run Robusta with Mirrord, as described above
+1. Run Robusta with mirrord, as described above
 
 2. Add a local playbooks directory to ``deployment/playbooks/active_playbooks.yaml``:
 
@@ -68,10 +68,10 @@ Developing Playbooks Locally
 
             If this occurs, disable the ``Attach to subprocess`` option on your debugger.
 
-Using Skaffold (Alternative to Using Mirrord)
+Using Skaffold (Alternative to Using mirrord)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Instead of running Robusta locally with Mirrord, you can test Robusta inside a Kubernetes cluster using Skaffold:
+Instead of running Robusta locally with mirrord, you can test Robusta inside a Kubernetes cluster using Skaffold:
 
 1. ``git clone`` the source code.
 2. Install `skaffold <https://skaffold.dev/>`_ and `helm <https://helm.sh/>`_
