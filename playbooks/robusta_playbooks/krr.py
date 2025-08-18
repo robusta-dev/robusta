@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
+from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector, SecurityContext, Capabilities, SeccompProfile
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
 from robusta.api import (
@@ -30,7 +30,7 @@ from robusta.api import (
     action,
     JobEvent,
 )
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, load_bool
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, SET_KRR_SECURITY_CONTEXT, load_bool
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
@@ -501,6 +501,17 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         requests={"memory": str(KRR_MEMORY_REQUEST)},
     )
 
+    security_context = None
+    if SET_KRR_SECURITY_CONTEXT:
+        security_context = SecurityContext(
+            runAsNonRoot=True, 
+            capabilities=Capabilities(
+                drop=["ALL"]
+            ),
+            allowPrivilegeEscalation=False,
+            seccompProfile=SeccompProfile(type="RuntimeDefault")
+        )
+
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
         containers=[
@@ -511,6 +522,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                 command=["/bin/sh", "-c", python_command],
                 env=env_var,
                 resources=resources,
+                securityContext=security_context,
             )
         ],
         restartPolicy="Never",
