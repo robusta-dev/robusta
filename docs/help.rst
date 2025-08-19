@@ -250,6 +250,46 @@ Holmes
 
         See :ref:`Reading the Robusta UI Token from a secret in HolmesGPT` to configure Holmes to read the ``token``
 
+Phase 4: Integration Issues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Problems with external service integrations after Robusta is running.
+
+**Slack Integration**
+
+.. details:: Slack notifications not arriving
+
+    1. Verify Slack webhook URL is correct in your values.yaml
+    2. Check robusta-runner logs for Slack-related errors:
+
+    .. code-block:: bash
+
+        kubectl logs -n <NAMESPACE> <ROBUSTA-RUNNER-POD-NAME> | grep -i slack
+
+    3. Test the webhook URL manually using curl
+    4. Ensure the Slack app has proper permissions in your workspace
+
+**Prometheus Connection Issues**
+
+.. details:: Cannot connect to Prometheus
+
+    1. Verify Prometheus URL in your configuration
+    2. Check if Prometheus is accessible from robusta-runner pod:
+
+    .. code-block:: bash
+
+        kubectl exec -n <NAMESPACE> <ROBUSTA-RUNNER-POD-NAME> -- wget -qO- <PROMETHEUS_URL>/api/v1/status/config
+
+    3. For managed Prometheus services, verify authentication tokens and endpoints
+
+**Teams/Email Integration**
+
+.. details:: Microsoft Teams or email notifications not working
+
+    1. Verify webhook URLs and authentication credentials
+    2. Check for network connectivity issues
+    3. Review logs for integration-specific error messages
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Alert Manager is not working
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
