@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from typing import NoReturn
 import requests
 from prometrix import PrometheusQueryResult
 
@@ -47,6 +48,19 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
     return params.context.get("issue_type", "unknown health issue")
 
 
+def handle_holmes_error(e: Exception) -> NoReturn:
+    if isinstance(e, requests.ConnectionError):
+        raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
+    elif isinstance(e, requests.HTTPError):
+        if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
+            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
+        elif e.response.status_code == 429:
+            raise ActionException(ErrorCodes.HOLMES_RATE_LIMIT_EXCEEDED, "Holmes rate limit exceeded.")
+        raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
+    else:
+        raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+
+
 @action
 def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
@@ -66,7 +80,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             include_tool_calls=True,
             include_tool_call_results=True,
             sections=params.sections,
-            model=params.model
+            model=params.model,
         )
 
         if params.stream:
@@ -119,15 +133,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         logging.exception(
             f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}", exc_info=True
         )
-        if isinstance(e, requests.ConnectionError):
-            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
-        elif isinstance(e, requests.HTTPError):
-            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
-                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
-        else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+        handle_holmes_error(e)
 
 
 @action
@@ -161,9 +167,11 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(params.resource.kind)
-                if params.resource
-                else FindingSubjectType.TYPE_NONE,
+                subject_type=(
+                    FindingSubjectType.from_kind(params.resource.kind)
+                    if params.resource
+                    else FindingSubjectType.TYPE_NONE
+                ),
                 node=params.resource.node if params.resource else "",
                 container=params.resource.container if params.resource else "",
             ),
@@ -177,15 +185,7 @@ def holmes_workload_health(event: ExecutionBaseEvent, params: HolmesWorkloadHeal
         event.add_finding(finding)
     except Exception as e:
         logging.exception(f"Failed to get holmes analysis for {params.resource}, {params.ask}", exc_info=True)
-        if isinstance(e, requests.ConnectionError):
-            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
-        elif isinstance(e, requests.HTTPError):
-            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
-                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
-        else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+        handle_holmes_error(e)
 
 
 def build_conversation_title(params: HolmesConversationParams) -> str:
@@ -231,9 +231,11 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(params_resource_kind)
-                if params.resource
-                else FindingSubjectType.TYPE_NONE,
+                subject_type=(
+                    FindingSubjectType.from_kind(params_resource_kind)
+                    if params.resource
+                    else FindingSubjectType.TYPE_NONE
+                ),
                 node=params.resource.node if params.resource else "",
                 container=params.resource.container if params.resource else "",
             ),
@@ -248,15 +250,7 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
 
     except Exception as e:
         logging.exception(f"Failed to get holmes chat for {conversation_title}", exc_info=True)
-        if isinstance(e, requests.ConnectionError):
-            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
-        elif isinstance(e, requests.HTTPError):
-            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
-                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
-        else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+        handle_holmes_error(e)
 
 
 class DelayedHealthCheckParams(HolmesWorkloadHealthParams):
@@ -301,7 +295,7 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
             conversation_history=params.conversation_history,
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
-            model=params.model
+            model=params.model,
         )
         result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
         result.raise_for_status()
@@ -314,9 +308,11 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(params_resource_kind)
-                if params.resource
-                else FindingSubjectType.TYPE_NONE,
+                subject_type=(
+                    FindingSubjectType.from_kind(params_resource_kind)
+                    if params.resource
+                    else FindingSubjectType.TYPE_NONE
+                ),
                 node=params.resource.node if params.resource else "",
                 container=params.resource.container if params.resource else "",
             ),
@@ -331,15 +327,7 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
 
     except Exception as e:
         logging.exception(f"Failed to get holmes chat for {conversation_title}", exc_info=True)
-        if isinstance(e, requests.ConnectionError):
-            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
-        elif isinstance(e, requests.HTTPError):
-            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
-                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
-        else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+        handle_holmes_error(e)
 
 
 @action
@@ -351,7 +339,9 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
     cluster_name = event.get_context().cluster_name
 
     try:
-        holmes_req = HolmesChatRequest(ask=params.ask, conversation_history=params.conversation_history, model=params.model, stream=params.stream)
+        holmes_req = HolmesChatRequest(
+            ask=params.ask, conversation_history=params.conversation_history, model=params.model, stream=params.stream
+        )
         url = f"{holmes_url}/api/chat"
         if params.stream:
             with requests.post(
@@ -418,15 +408,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
 
     except Exception as e:
         logging.exception(f"Failed to get holmes chat for {cluster_name} cluster", exc_info=True)
-        if isinstance(e, requests.ConnectionError):
-            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
-        elif isinstance(e, requests.HTTPError):
-            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
-                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
-        else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+        handle_holmes_error(e)
 
 
 @action
@@ -441,7 +423,7 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
             conversation_history=params.conversation_history,
             workload_health_result=params.workload_health_result,
             resource=params.resource,
-            model=params.model
+            model=params.model,
         )
         result = requests.post(f"{holmes_url}/api/workload_health_chat", data=holmes_req.json())
         result.raise_for_status()
@@ -454,9 +436,11 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
             subject=FindingSubject(
                 name=params.resource.name if params.resource else "",
                 namespace=params.resource.namespace if params.resource else "",
-                subject_type=FindingSubjectType.from_kind(params.resource.kind)
-                if params.resource
-                else FindingSubjectType.TYPE_NONE,
+                subject_type=(
+                    FindingSubjectType.from_kind(params.resource.kind)
+                    if params.resource
+                    else FindingSubjectType.TYPE_NONE
+                ),
                 node=params.resource.node if params.resource else "",
                 container=params.resource.container if params.resource else "",
             ),
@@ -471,12 +455,4 @@ def holmes_workload_chat(event: ExecutionBaseEvent, params: HolmesWorkloadHealth
 
     except Exception as e:
         logging.exception(f"Failed to get holmes chat for health check of {params.resource}", exc_info=True)
-        if isinstance(e, requests.ConnectionError):
-            raise ActionException(ErrorCodes.HOLMES_CONNECTION_ERROR, "Holmes endpoint is currently unreachable.")
-        elif isinstance(e, requests.HTTPError):
-            if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
-                raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key.")
-
-            raise ActionException(ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes internal configuration error.")
-        else:
-            raise ActionException(ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured.")
+        handle_holmes_error(e)
