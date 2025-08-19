@@ -643,11 +643,11 @@ class SlackSender:
 
     def get_holmes_block(self, platform_enabled: bool, slackbot_enabled) -> Optional[MarkdownBlock]:
         if not platform_enabled and not slackbot_enabled:
-            return MarkdownBlock("_Ask AI questions about this alert, by connecting <https://platform.robusta.dev/create-account|Robusta SaaS> and tagging @holmes._")
+            return MarkdownBlock("_Ask AI questions about this alert, by connecting <https://platform.robusta.dev/create-account|Robusta SaaS> and tagging holmes._")
         elif platform_enabled and not slackbot_enabled:
-            return MarkdownBlock("_Ask AI questions about this alert, by adding @holmes to your <https://docs.robusta.dev/master/configuration/holmesgpt/index.html#enable-holmes-in-slack-in-the-platform|Slack>._")
+            return MarkdownBlock("_Ask AI questions about this alert, by adding holmes to your <https://docs.robusta.dev/master/configuration/holmesgpt/index.html#enable-holmes-in-slack-in-the-platform|Slack>._")
         elif platform_enabled and slackbot_enabled:
-            return MarkdownBlock("_Ask AI questions about this alert, by tagging @holmes in a threaded reply_")
+            return MarkdownBlock("_Ask AI questions about this alert, by tagging holmes in a threaded reply_")
         return None
 
 
