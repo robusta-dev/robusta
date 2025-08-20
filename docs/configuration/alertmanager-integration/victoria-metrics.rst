@@ -1,7 +1,7 @@
 VictoriaMetrics Alerts
-**********************
+***********************
 
-This guide shows how to send alerts from `VictoriaMetrics <https://victoriametrics.com/>`_ to Robusta.
+This guide shows how to send alerts from `VictoriaMetrics <https://victoriametrics.com/>`_ with Robusta.
 
 For configuring metric querying from VictoriaMetrics, see :doc:`/configuration/metric-providers-victoria`.
 
