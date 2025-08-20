@@ -1,12 +1,6 @@
 Namespace Resources API
 ==============================================
 
-.. warning::
-
-   Due to updates in the Namespace Resources API, these instructions may be outdated.
-   Please contact our team for support on Slack (https://bit.ly/robusta-slack) or by email (support@robusta.dev).
-   We're working on updating the documentation.
-
 .. note::
     This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
 
@@ -23,7 +17,7 @@ Prerequisites
 ^^^^^^^^^^^^^
 
 This API relies on resource types configured in the Robusta UI sink.  
-Make sure to configure them as described in :ref:`cb-robusta-ui-sink-namespace-config`.
+Make sure to configure all the individual resources you need as described in :ref:`cb-robusta-ui-sink-namespace-config`.
 
 Request Body Schema
 ^^^^^^^^^^^^^^^^^^^
