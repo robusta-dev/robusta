@@ -1,6 +1,12 @@
 VictoriaMetrics
 ===============
 
+.. warning::
+
+   Due to updates in the VictoriaMetrics API, these instructions may be outdated.
+   Please contact our team for support on Slack (https://bit.ly/robusta-slack) or by email (support@robusta.dev).
+   We're working on updating the documentation.
+
 Configure Robusta to use VictoriaMetrics as your metrics provider.
 
 Quick Start

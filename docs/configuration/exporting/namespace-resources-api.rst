@@ -1,6 +1,12 @@
 Namespace Resources API
 ==============================================
 
+.. warning::
+
+   Due to updates in the Namespace Resources API, these instructions may be outdated.
+   Please contact our team for support on Slack (https://bit.ly/robusta-slack) or by email (support@robusta.dev).
+   We're working on updating the documentation.
+
 .. note::
     This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
 
@@ -74,10 +80,9 @@ Here is an example of a ``POST`` request to query the resource count in a namesp
       "cluster_name": "your-cluster-name",
       "resources": [
         {"kind": "Deployments", "apiGroup": "apps", "apiVersion": "v1"},
-        {"kind": "Ingresses", "apiGroup": "networking.k8s.io", "apiVersion": "v1"},
         {"kind": "Services", "apiGroup": "", "apiVersion": "v1"},
-        {"kind": "HorizontalPodAutoscalers", "apiGroup": "autoscaling", "apiVersion": "v2"},
-        {"kind": "ReplicationControllers", "apiGroup": "", "apiVersion": "v1"}
+        {"kind": "Ingresses", "apiGroup": "networking.k8s.io", "apiVersion": "v1"},
+        {"kind": "CronJobs", "apiGroup": "batch", "apiVersion": "v1"}
       ]
     }'
 
@@ -111,8 +116,14 @@ If the request is successful, the API returns the following structure:
             {
                 "apiGroup": "",
                 "apiVersion": "v1",
-                "count": 5,
-                "kind": "Pods"
+                "count": 3,
+                "kind": "Services"
+            },
+            {
+                "apiGroup": "networking.k8s.io",
+                "apiVersion": "v1",
+                "count": 1,
+                "kind": "Ingresses"
             },
             ...
         ]

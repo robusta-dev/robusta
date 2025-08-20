@@ -1,6 +1,12 @@
 Google Managed Prometheus Alerts
 =================================
 
+.. warning::
+
+   Due to updates in the Google Managed Prometheus API, these instructions may be outdated.
+   Please contact our team for support on Slack (https://bit.ly/robusta-slack) or by email (support@robusta.dev).
+   We're working on updating the documentation.
+
 This guide shows how to send alerts from `Google Managed Prometheus <https://cloud.google.com/stackdriver/docs/managed-prometheus>`_ to Robusta.
 
 For configuring metric querying from Google Managed Prometheus, see :doc:`/configuration/metric-providers-google`.

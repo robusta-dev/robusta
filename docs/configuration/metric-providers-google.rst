@@ -1,6 +1,12 @@
 Google Managed Prometheus
 =========================
 
+.. warning::
+
+   Due to updates in the Google Managed Prometheus API, these instructions may be outdated.
+   Please contact our team for support on Slack (https://bit.ly/robusta-slack) or by email (support@robusta.dev).
+   We're working on updating the documentation.
+
 Configure Robusta to use Google Cloud's Managed Service for Prometheus.
 
 Prerequisites
