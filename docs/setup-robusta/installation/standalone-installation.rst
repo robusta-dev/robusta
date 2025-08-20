@@ -2,7 +2,7 @@
 
 .. _install-barebones:
 
-Barebones Installation
+Use HolmesGPT without Prometheus
 ####################################
 
 *Estimated time: 5 minutes*
