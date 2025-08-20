@@ -37,11 +37,18 @@ If auto-detection fails you must add the ``prometheus_url`` parameter and :ref:`
     1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
 
 Optional Settings
-==================
+----------------------
 
 **Prometheus flags checks**
 
-.. include:: ./_prometheus_flags_check.rst
+Robusta utilizes the flags API to retrieve data from Prometheus-style metric stores. However, some platforms like Google Managed Prometheus, Azure Managed Prometheus etc, do not implement the flags API.
+
+You can disable the Prometheus flags API check by setting the following option to false.
+
+.. code-block:: yaml
+
+    globalConfig:
+      check_prometheus_flags: true/false
 
 Next Steps
 ----------

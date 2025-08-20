@@ -174,5 +174,5 @@ Next Steps
 ----------
 
 - Configure :doc:`alert routing </notification-routing/index>`
-- Set up :doc:`AI-powered insights </configuration/holmesgpt/index>`
+- Set up :doc:`AI-powered insights </configuration/holmesgpt/getting-started>`
 - Learn about :doc:`common configuration options <metric-providers>`

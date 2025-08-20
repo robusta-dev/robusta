@@ -1,12 +1,12 @@
 VictoriaMetrics Alerts
-***********************
+=======================
 
 This guide shows how to send alerts from `VictoriaMetrics <https://victoriametrics.com/>`_ with Robusta.
 
 For configuring metric querying from VictoriaMetrics, see :doc:`/configuration/metric-providers-victoria`.
 
 Send Alerts to Robusta
-============================
+--------------------------
 
 Add the following to your Victoria Metrics Alertmanager configuration (e.g., Helm values file or VMAlertmanagerConfig CRD):
 
@@ -38,6 +38,6 @@ Add the following to your Victoria Metrics Alertmanager configuration (e.g., Hel
 .. include:: ./_testing_integration.rst
 
 Configure Metrics Querying
-====================================
+-----------------------------
 
 To enable Robusta to query metrics from VictoriaMetrics, see metrics provider :doc:`/configuration/metric-providers-victoria` configuration docs.

@@ -4,7 +4,7 @@ Coralogix
 Configure Robusta to use Coralogix's managed Prometheus service.
 
 Quick Start
-==============================
+--------------
 
 Metrics querying lets Robusta pull metrics from Coralogix Managed Prometheus.
 
