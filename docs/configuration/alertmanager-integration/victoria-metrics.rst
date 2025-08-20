@@ -40,4 +40,4 @@ Add the following to your Victoria Metrics Alertmanager configuration (e.g., Hel
 Configure Metrics Querying
 ====================================
 
-To enable Robusta to query metrics from VictoriaMetrics, see :doc:`/configuration/metric-providers-victoria`.
+To enable Robusta to query metrics from VictoriaMetrics, see metrics provider :doc:`/configuration/metric-providers-victoria` configuration docs.
