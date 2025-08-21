@@ -1,0 +1,136 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+docs/
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+CODING-CONVENTIONS.md
+ATTRIBUTION.md
+LICENSE
+*.md
+*.rst
+
+# Build and deployment artifacts
+build/
+src/build/
+dist/
+src/dist/
+dist/**/*
+*.egg
+*.egg-info/
+__pycache__/
+*.py[cod]
+*.pyc
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.run
+
+# Testing
+tests/
+*test*.py
+pytest.ini
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+tests/last_used_tag.txt
+gen-config-test
+
+# Linting and formatting
+.flake8
+.mypy_cache/
+.pylint.d/
+.isort.cfg
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints
+
+# Deployment and configuration files
+deployment/
+values/
+playground/
+generated_values*.yaml
+*.code-workspace
+skaffold.yaml
+skaffold.dev.yaml
+mirrord.json
+
+# Development scripts
+build_*.sh
+run_runner_locally.sh
+docs_autobuild.sh
+scripts/
+
+# Helm charts (not needed in runtime image)
+helm/
+
+# Research and experimental code
+research/
+
+# Logos and images
+logos/
+images/
+
+# Configuration files
+config.env
+*.env
+.env*
+staging.environment.env
+
+# Log files
+*.log
+logs.txt
+*.txt
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Claude Code settings
+**/.claude/settings.local.json
+
+# Poetry lock file (already copied separately)
+# Note: keeping poetry.lock as it's needed for reproducible builds
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Kubernetes manifests and configs
+*.yaml
+*.yml
+!pyproject.toml
