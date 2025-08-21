@@ -297,7 +297,7 @@ class ActionRequestReceiver:
             logging.info(f"connecting to server as account_id={self.account_id}; cluster_name={self.cluster_name}")
             ws.send(json.dumps(open_payload))
         except Exception as e:
-            logging.exception(f"on_open failed: {e}", exc_info=True)
+            logging.exception(f"on_open failed: {e}")
             try:
                 ws.close()
             except Exception:
