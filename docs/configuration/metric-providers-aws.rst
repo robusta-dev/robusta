@@ -100,21 +100,6 @@ Create an IAM policy with minimal permissions:
         ]
     }
 
-Alternative: IAM Roles for Service Accounts
---------------------------------------------
-
-For EKS clusters, you can use IAM Roles for Service Accounts (IRSA):
-
-1. Create an IAM role with the above policy
-2. Configure the role trust relationship for your EKS cluster
-3. Annotate Robusta's service account:
-
-.. code-block:: yaml
-
-    runner:
-        serviceAccount:
-            annotations:
-                eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/robusta-amp-role
 
 Important Notes
 ---------------
