@@ -71,34 +71,6 @@ Configuration Details
 - ``AWS_SERVICE_NAME``: Always ``"aps"`` for Amazon Prometheus Service
 - ``AWS_REGION``: The AWS region where your workspace is located
 
-**Security Best Practices**:
-
-1. Use IAM roles instead of access keys when possible
-2. Limit access key permissions to AMP read operations only
-3. Rotate credentials regularly
-
-IAM Policy Example
-------------------
-
-Create an IAM policy with minimal permissions:
-
-.. code-block:: json
-
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": [
-                    "aps:QueryMetrics",
-                    "aps:GetSeries",
-                    "aps:GetLabels",
-                    "aps:GetMetricMetadata"
-                ],
-                "Resource": "arn:aws:aps:*:*:workspace/*"
-            }
-        ]
-    }
 
 
 Important Notes
