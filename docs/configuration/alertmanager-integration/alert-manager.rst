@@ -1,13 +1,9 @@
-In-cluster Prometheus
+In-cluster AlertManager Integration
 ****************************************
 
-Here's how to integrate an existing Prometheus with Robusta in the same cluster:
+This guide shows how to send alerts from an existing AlertManager to Robusta in the same cluster.
 
-* Send alerts to Robusta by adding a receiver to AlertManager
-* Point Robusta at Prometheus so it can query metrics and silence alerts
-    * Robusta will attempt auto-detection, so this is not always necessary!
-
-If your Prometheus is in a different cluster, refer to :ref:`External Prometheus`.
+If your AlertManager is in a different cluster, refer to :ref:`External Prometheus`.
 
 Send Alerts to Robusta
 ============================

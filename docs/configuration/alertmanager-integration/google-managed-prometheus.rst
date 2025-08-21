@@ -1,9 +1,15 @@
-Google Managed Prometheus
-==========================
+Google Managed Prometheus Alerts
+=================================
 
-This guide walks you through integrating your `Google Managed Prometheus <https://cloud.google.com/stackdriver/docs/managed-prometheus>`_ with Robusta.
+.. warning::
 
-You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
+   Due to updates in the Google Managed Prometheus API, these instructions may be outdated.
+   Please contact our team for support on Slack (https://bit.ly/robusta-slack) or by email (support@robusta.dev).
+   We're working on updating the documentation.
+
+This guide shows how to send alerts from `Google Managed Prometheus <https://cloud.google.com/stackdriver/docs/managed-prometheus>`_ to Robusta.
+
+For configuring metric querying from Google Managed Prometheus, see :doc:`/configuration/metric-providers-google`.
 
 Prerequisites
 ****************
@@ -62,23 +68,4 @@ You know it works if you receive an alert from Robusta.
 Configure Metric Querying
 ******************************
 
-A pull integration lets Robusta pull metrics and create silences.
-
-Add the following to Robusta's configuration(``generated_values.yaml``) and :ref:`update Robusta <Simple Upgrade>`.
-
-.. code-block:: yaml
-
-   globalConfig: # this line should already exist
-      prometheus_url: "http://frontend.default.svc.cluster.local:9090"
-      alertmanager_url: "http://alertmanager.gmp-system.svc.cluster.local:9093"
-
-
-Verify it Works
----------------------
-Run the following command to create a Pod that triggers an OOMKilled alert
-
-.. code-block:: yaml
-
-   kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/oomkill/oomkill_job.yaml
-
-You know it works if you receive an alert from Robusta with a graph.
+To enable Robusta to pull metrics from Google Managed Prometheus, see :doc:`/configuration/metric-providers-google`.

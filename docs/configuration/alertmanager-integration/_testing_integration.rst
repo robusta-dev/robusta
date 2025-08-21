@@ -56,4 +56,4 @@ If everything is setup properly, this alert will reach Robusta. It will show up 
 
     Robusta enriches alerts with Kubernetes and log data using Prometheus labels for mapping.
     Standard label names are used by default. If your setup differs, you can
-    :ref:`customize this mapping <Relabel Prometheus Alerts>` to fit your environment.
+    `customize this mapping </setup-robusta/additional-settings.html#alert-label-mapping>`_ to fit your environment.

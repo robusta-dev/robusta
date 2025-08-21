@@ -29,6 +29,19 @@
    SolarWinds <configuration/alertmanager-integration/solarwinds>
    Custom Webhooks <configuration/exporting/custom-webhooks>
 
+.. toctree::
+   :maxdepth: 4
+   :caption: 📊 Metric Providers
+   :hidden:
+
+   General Settings <configuration/metric-providers>
+   In-cluster Prometheus <configuration/metric-providers-in-cluster>
+   External Prometheus <configuration/metric-providers-external>
+   Azure Managed <configuration/metric-providers-azure>
+   AWS Managed <configuration/metric-providers-aws>
+   Google Managed <configuration/metric-providers-google>
+   Coralogix <configuration/metric-providers-coralogix>
+   VictoriaMetrics <configuration/metric-providers-victoria>
 
 .. toctree::
    :maxdepth: 4
@@ -56,11 +69,20 @@
 
 .. toctree::
    :maxdepth: 4
+   :caption: 🤖 AI Analysis
+   :hidden:
+
+   configuration/holmesgpt/main-features
+   configuration/holmesgpt/getting-started
+   Configuring HolmesGPT <https://holmesgpt.dev>
+
+.. toctree::
+   :maxdepth: 4
    :caption: 💼 Robusta Pro Features
    :hidden:
 
    configuration/exporting/robusta-pro-features
-   configuration/holmesgpt/index
+   setup-robusta/alertsui
    configuration/exporting/exporting-data
    configuration/alertmanager-integration/troubleshooting-alertmanager
 
