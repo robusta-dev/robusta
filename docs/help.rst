@@ -28,16 +28,27 @@ Commercial Support
 Contact support@robusta.dev for details.
 
 --------------------------------
-Common Errors
+Troubleshooting Guide
 --------------------------------
 
-This list contains some common errors we have encountered over time.
+Issues are organized by installation phase to help you quickly find solutions.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Robusta CLI tool
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Quick Diagnosis:**
 
-Errors installing the robusta cli config creation tool. Not relevant when using the Web Installation method.
+.. raw:: html
+
+   <div style="margin: 20px 0; padding: 15px; background-color: #f0f7ff; border-left: 4px solid #0066cc;">
+   <strong>Where are you stuck?</strong><br>
+   • <a href="#phase-1-configuration-generation">Phase 1: Configuration Generation</a> - Issues with robusta gen-config<br>
+   • <a href="#phase-2-helm-installation">Phase 2: Helm Installation</a> - Helm install/upgrade failures<br>
+   • <a href="#phase-3-runtime-issues">Phase 3: Runtime Issues</a> - Alerts not arriving, pods crashing<br>
+   • <a href="#phase-4-integration-issues">Phase 4: Integration Issues</a> - Slack, Prometheus connection problems
+   </div>
+
+Phase 1: Configuration Generation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Issues when running ``robusta gen-config`` or generating initial configuration.
 
 .. details:: command not found: robusta (CLI not in path)
 
@@ -75,9 +86,8 @@ Errors installing the robusta cli config creation tool. Not relevant when using 
     For more info see:
     https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Helm installation fails
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Phase 2: Helm Installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Problems when running ``helm install`` command or installing via GitOps.
 
@@ -95,12 +105,33 @@ Problems when running ``helm install`` command or installing via GitOps.
 
       Error: UPGRADE FAILED: execution error at (robusta/templates/playbooks-config.yaml:9:7): At least one sink must be defined!
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Robusta runner, Prometheus or Holmes failures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid: metadata.annotations: Too long
 
-robusta-runner
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      This is often a CRD issue which can be fixed by enabling server-side apply option as shown below. Check out `this blog <https://blog.ediri.io/kube-prometheus-stack-and-argocd-25-server-side-apply-to-the-rescue>`_ to learn more. 
+
+      .. image:: /images/Argocd_crd_issue_fix.png 
+        :width: 400
+        :align: center
+
+.. details:: one or more objects failed to apply... CustomResourceDefinition.apiextensions.k8s.io "prometheusagents.monitoring.coreos.com" is invalid
+
+      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+
+      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
+
+.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid
+
+
+      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+
+      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
+
+Phase 3: Runtime Issues
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Issues after installation when pods are running but not working correctly.
+
+**robusta-runner pod issues**
 
 .. details:: robusta-runner pod is in Pending state due to memory issues
 
@@ -159,9 +190,7 @@ robusta-runner
 
                 If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions in :ref:`Deploying Behind Proxies` to ensure Robusta has the necessary access.
 
-
-Prometheus
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Prometheus issues**
 
 .. details:: Prometheus' pods are in Pending state due to memory issues
 
@@ -221,6 +250,46 @@ Holmes
 
         See :ref:`Reading the Robusta UI Token from a secret in HolmesGPT` to configure Holmes to read the ``token``
 
+Phase 4: Integration Issues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Problems with external service integrations after Robusta is running.
+
+**Slack Integration**
+
+.. details:: Slack notifications not arriving
+
+    1. Verify Slack webhook URL is correct in your values.yaml
+    2. Check robusta-runner logs for Slack-related errors:
+
+    .. code-block:: bash
+
+        kubectl logs -n <NAMESPACE> <ROBUSTA-RUNNER-POD-NAME> | grep -i slack
+
+    3. Test the webhook URL manually using curl
+    4. Ensure the Slack app has proper permissions in your workspace
+
+**Prometheus Connection Issues**
+
+.. details:: Cannot connect to Prometheus
+
+    1. Verify Prometheus URL in your configuration
+    2. Check if Prometheus is accessible from robusta-runner pod:
+
+    .. code-block:: bash
+
+        kubectl exec -n <NAMESPACE> <ROBUSTA-RUNNER-POD-NAME> -- wget -qO- <PROMETHEUS_URL>/api/v1/status/config
+
+    3. For managed Prometheus services, verify authentication tokens and endpoints
+
+**Teams/Email Integration**
+
+.. details:: Microsoft Teams or email notifications not working
+
+    1. Verify webhook URLs and authentication credentials
+    2. Check for network connectivity issues
+    3. Review logs for integration-specific error messages
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Alert Manager is not working
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -256,29 +325,4 @@ Alert Manager is not working
                             resources:
                               requests:
                                 storage: 10Gi
-
-
-CRD issues
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid: metadata.annotations: Too long
-
-      This is often a CRD issue which can be fixed by enabling server-side apply option as shown below. Check out `this blog <https://blog.ediri.io/kube-prometheus-stack-and-argocd-25-server-side-apply-to-the-rescue>`_ to learn more. 
-
-      .. image:: /images/Argocd_crd_issue_fix.png 
-        :width: 400
-        :align: center
-
-.. details:: one or more objects failed to apply... CustomResourceDefinition.apiextensions.k8s.io "prometheusagents.monitoring.coreos.com" is invalid
-
-      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
-
-      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
-
-.. details:: CustomResourceDefinition.apiextensions.k8s.io "prometheuses.monitoring.coreos.com" is invalid
-
-
-      This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
-
-      Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
 

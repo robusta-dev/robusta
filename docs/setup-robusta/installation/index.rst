@@ -35,7 +35,7 @@ Installation Guides
 
     .. grid-item-card:: Use Robusta's AI Agent with other monitoring tools
         :class-card: sd-bg-light sd-bg-text-light
-        :link: install-barebones
+        :link: standalone-installation
         :link-type: doc
 
         Use Robusta's AI Agent alongside DataDog, NewRelic, SolarWinds, and more. 

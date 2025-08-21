@@ -2,19 +2,18 @@
 
 .. _install-barebones:
 
-Barebones Installation
+Use HolmesGPT without Prometheus
 ####################################
 
 *Estimated time: 5 minutes*
 
-Robusta normally uses the APIServer and Prometheus as data-sources. It's possible to disable Prometheus and still benefit
-from Robusta's other features, like notifications on crashing pods and OOMKills.
+Robusta's AI Agent works with many monitoring tools beyond Prometheus - including Datadog, New Relic, PagerDuty, and more. This installation method is ideal when you already have monitoring infrastructure in place and want to enhance it with Robusta's AI-powered investigation and automation capabilities.
 
-.. warning::
+.. note::
 
-   Most people should install with Prometheus **instead** of this tutorial.
-
-   Robusta is useful standalone, but Prometheus makes it even better!
+   This installation method is most relevant for Robusta SaaS users who want to integrate with existing monitoring tools. The AI Agent can analyze alerts from multiple sources and provide intelligent investigation across your entire observability stack.
+   
+   If you're looking for standalone open source monitoring, you should install Robusta with Prometheus using the :ref:`all-in-one installation <install-with-prometheus>` instead.
 
 Prerequisites
 ---------------------

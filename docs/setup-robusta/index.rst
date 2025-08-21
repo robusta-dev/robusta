@@ -22,7 +22,6 @@
    node-selector
    proxies
    privacy-and-security
-   alertsui
    additional-settings
    installation-faq
    
