@@ -277,19 +277,32 @@ class ActionRequestReceiver:
         return f"{event_dict} {body} {to_safe_str(action_params)}"
 
     def on_error(self, ws, error):
+        # Ignore websocket-client’s noisy teardown race after a failed on_open/close
+        if isinstance(error, AttributeError) and "sock" in str(error):
+            logging.debug(f"Ignoring websocket-client internal close error: {error!r}")
+            return
         logging.info(f"Relay websocket error: {error}")
 
+
     def on_open(self, ws):
-        token = self.robusta_sink.dal.get_session_token()
-        open_payload = {
-            "action": "auth",
-            "account_id": self.account_id,
-            "cluster_name": self.cluster_name,
-            "version": RUNNER_VERSION,
-            "token": token,
-        }
-        logging.info(f"connecting to server as account_id={self.account_id}; cluster_name={self.cluster_name}")
-        ws.send(json.dumps(open_payload))
+        try:
+            token = self.robusta_sink.dal.get_session_token()
+            open_payload = {
+                "action": "auth",
+                "account_id": self.account_id,
+                "cluster_name": self.cluster_name,
+                "version": RUNNER_VERSION,
+                "token": token,
+            }
+            logging.info(f"connecting to server as account_id={self.account_id}; cluster_name={self.cluster_name}")
+            ws.send(json.dumps(open_payload))
+        except Exception as e:
+            logging.exception(f"on_open failed: {e}")
+            try:
+                ws.close()
+            except Exception:
+                pass
+
 
     def __validate_request(self, action_request: ExternalActionRequest, validate_timestamp: bool) -> ValidationResponse:
         """
