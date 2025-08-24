@@ -33,14 +33,14 @@ Data Export and Reporting APIs
 
 Export alert history and generate reports using Robusta's REST APIs.
 
-:doc:`Alert History Import and Export API <exporting-data>`
-    Comprehensive API for exporting alert history, generating reports, and sending custom alerts programmatically.
+**Robusta API Reference**
+    Comprehensive APIs for exporting alert history, generating reports, and sending custom alerts programmatically.
 
 Features include:
 
 * :doc:`Alert Export API <alert-export-api>`: Export historical alert data with filtering by time range, alert name, and account
 * :doc:`Alert Reporting API <alert-statistics-api>`: Get aggregated statistics and counts for different alert types
-* :doc:`Custom Alert API <send-alerts-api>`: Send alerts programmatically from external systems
+* :doc:`Send Alerts API <send-alerts-api>`: Send alerts programmatically from external systems or via integrations
 * :doc:`Configuration Changes API <configuration-changes-api>`: Track configuration changes in your environment
 
 Additional Pro Features
@@ -64,4 +64,4 @@ To access these features:
 2. **Self-hosted Commercial**: Contact support@robusta.dev for enterprise plans with self-hosted UI
 3. **API Access**: Generate API keys in the Robusta platform under **Settings** → **API Keys**
 
-For detailed API documentation and examples, see :doc:`Alert History Import and Export API <exporting-data>`.
+For detailed API documentation and examples, see the individual API references listed above.

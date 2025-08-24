@@ -83,8 +83,11 @@
 
    configuration/exporting/robusta-pro-features
    setup-robusta/alertsui
-   configuration/exporting/exporting-data
-   configuration/alertmanager-integration/troubleshooting-alertmanager
+   configuration/exporting/send-alerts-api
+   configuration/exporting/configuration-changes-api
+   configuration/exporting/alert-export-api
+   configuration/exporting/alert-statistics-api
+   configuration/exporting/namespace-resources-api
 
 .. toctree::
    :maxdepth: 4
