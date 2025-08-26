@@ -53,9 +53,9 @@ def encode_url(url: str) -> str:
 
     parsed_url = urllib.parse.urlsplit(url)
 
-    encoded_path = urllib.parse.quote(parsed_url.path)
-    encoded_query = urllib.parse.quote_plus(parsed_url.query, safe="=&")
-    encoded_fragment = urllib.parse.quote(parsed_url.fragment, safe="")
+    encoded_path = urllib.parse.quote(parsed_url.path, safe="/%")
+    encoded_query = urllib.parse.quote_plus(parsed_url.query, safe="=&%")
+    encoded_fragment = urllib.parse.quote(parsed_url.fragment, safe="%")
 
     return parsed_url._replace(
         path=encoded_path,
