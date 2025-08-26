@@ -237,10 +237,6 @@ Troubleshooting
         2. **Check your specific integration:** Each alert source has its own troubleshooting guide on its documentation page
         3. **Verify authentication:** Ensure API keys and webhook URLs are correctly configured
 
-        **Need to test your integration?**
-
-        Refer to your specific alert source documentation for testing procedures.
-
     .. tab-item:: AlertManager
 
         **Not receiving alerts?**
