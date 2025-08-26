@@ -156,8 +156,6 @@ Finding Your Workspace URL
 4. Copy the **Workspace endpoint URL**
 5. Your prometheus_url is: ``<endpoint-url>``
 
----
-
 Configuration Details
 ---------------------
 
