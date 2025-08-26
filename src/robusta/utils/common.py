@@ -1,4 +1,5 @@
 import re
+import urllib.parse
 from typing import List
 
 from hikaru import DiffDetail, HikaruBase
@@ -41,3 +42,23 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
             pass  # in case the field doesn't exist on this object
 
     return duplication
+
+
+def encode_url(url: str) -> str:
+    """
+    Encode a URL so that it can be safely used in contexts where special characters must be escaped.
+    """
+    if not url:
+        return ""
+
+    parsed_url = urllib.parse.urlsplit(url)
+
+    encoded_path = urllib.parse.quote(parsed_url.path)
+    encoded_query = urllib.parse.quote_plus(parsed_url.query, safe="=&")
+    encoded_fragment = urllib.parse.quote(parsed_url.fragment, safe="")
+
+    return parsed_url._replace(
+        path=encoded_path,
+        query=encoded_query,
+        fragment=encoded_fragment
+    ).geturl()

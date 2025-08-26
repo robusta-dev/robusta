@@ -16,6 +16,7 @@ from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
 from robusta.integrations.kubernetes.api_client_utils import get_namespace_labels
+from robusta.utils.common import encode_url
 from robusta.utils.scope import BaseScopeMatcher
 
 
@@ -361,6 +362,7 @@ class Finding(Filterable):
     def add_link(self, link: Link, suppress_warning: bool = False) -> None:
         if self.dirty and not suppress_warning:
             logging.warning("Updating a finding after it was added to the event is not allowed!")
+        link.url = encode_url(link.url)
         self.links.append(link)
 
     def add_video_link(self, video_link: Link, suppress_warning: bool = False) -> None:
