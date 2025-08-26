@@ -276,22 +276,23 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
             )
 
     if isinstance(prom_config, AWSPrometheusConfig):
-        krr_secrets.extend(
-            [
-                KRRSecret(
-                    env_var_name="AWS_KEY",
-                    secret_key="aws-key",
-                    secret_value=prom_config.access_key,
-                    command_flag="--eks-access-key",
-                ),
-                KRRSecret(
-                    env_var_name="AWS_SECRET",
-                    secret_key="aws-secret",
-                    secret_value=prom_config.secret_access_key,
-                    command_flag="--eks-secret-key",
-                ),
-            ]
-        )
+        if prom_config.access_key and prom_config.secret_access_key:
+            krr_secrets.extend(
+                [
+                    KRRSecret(
+                        env_var_name="AWS_KEY",
+                        secret_key="aws-key",
+                        secret_value=prom_config.access_key,
+                        command_flag="--eks-access-key",
+                    ),
+                    KRRSecret(
+                        env_var_name="AWS_SECRET",
+                        secret_key="aws-secret",
+                        secret_value=prom_config.secret_access_key,
+                        command_flag="--eks-secret-key",
+                    ),
+                ]
+            )
     if isinstance(prom_config, CoralogixPrometheusConfig):
         krr_secrets.append(
             KRRSecret(

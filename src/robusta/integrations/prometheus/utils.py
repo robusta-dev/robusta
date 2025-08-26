@@ -25,9 +25,9 @@ AZURE_TOKEN_ENDPOINT = os.environ.get(
     "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
 )
 CORALOGIX_PROMETHEUS_TOKEN = os.environ.get("CORALOGIX_PROMETHEUS_TOKEN")
-AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-AWS_SERVICE_NAME = os.environ.get("AWS_SERVICE_NAME")
+AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", None)
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
+AWS_SERVICE_NAME = os.environ.get("AWS_SERVICE_NAME", "aps")
 AWS_REGION = os.environ.get("AWS_REGION")
 VICTORIA_METRICS_CONFIGURED = os.environ.get("VICTORIA_METRICS_CONFIGURED", "false").lower() == "true"
 
@@ -57,7 +57,7 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
         baseconfig["headers"] = prometheus_params.prometheus_additional_headers
 
     # aws config
-    if AWS_ACCESS_KEY:
+    if AWS_REGION:
         return AWSPrometheusConfig(
             access_key=AWS_ACCESS_KEY,
             secret_access_key=AWS_SECRET_ACCESS_KEY,
