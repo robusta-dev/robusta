@@ -25,7 +25,6 @@ With IRSA, you don’t need to manage long-lived AWS access keys — credentials
 
 .. dropdown:: AWS Setup for IRSA
    :animate: fade-in-slide-down
-   :icon: cloud
 
    1. Ensure your EKS cluster has an OIDC provider associated.  
       See the AWS guide: `Associate IAM OIDC Provider <https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html>`_.
