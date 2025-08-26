@@ -199,7 +199,9 @@ redirects = {
     "developer-guide/platform/docs-contributions.html": "/master/docs-contributions.html#improving-these-docs",
     "developer-guide/platform/sinks-guide.html": "/master/configuration/sinks/sinks-development.html",
     "user-guide/robusta-cli.html": "/master/setup-robusta/installation/index.html",
-    "advanced/index.html": "/master/setup-robusta/installation/index.html"
+    "advanced/index.html": "/master/setup-robusta/installation/index.html",
+    "configuration/exporting/exporting-data.html": "/master/configuration/exporting/send-alerts-api.html",
+    "configuration/alertmanager-integration/troubleshooting-alertmanager.html": "/master/configuration/exporting/send-alerts-api.html"
 } 
 
 
