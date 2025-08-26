@@ -26,10 +26,10 @@ With IRSA, you don’t need to manage long-lived AWS access keys — credentials
 .. dropdown:: AWS Setup for IRSA
    :animate: fade-in-slide-down
 
-   1. Ensure your EKS cluster has an OIDC provider associated.  
+   1. **Ensure your EKS cluster has an OIDC provider associated**:  
       See the AWS guide: `Associate IAM OIDC Provider <https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html>`_.
 
-   2. Create an IAM role for Prometheus access with the correct trust policy.  
+   2. **Create an IAM role for Prometheus access with the correct trust policy**:  
       The role must include:
 
       - The managed policy ``AmazonPrometheusQueryAccess`` (or equivalent custom policy).
@@ -97,17 +97,6 @@ Quick Start
              value: "us-east-1"  # Your workspace region
 
 3. :ref:`Update Robusta <Simple Upgrade>`
-
-Finding Your Workspace URL
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-1. Open the AWS Console
-2. Navigate to Amazon Managed Service for Prometheus
-3. Select your workspace
-4. Copy the **Workspace endpoint URL**
-5. Your prometheus_url is: ``<endpoint-url>``
-
----
 
 Access Keys (Alternative)
 -------------------------
