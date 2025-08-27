@@ -60,13 +60,7 @@ With IRSA, you don’t need to manage long-lived AWS access keys — credentials
 Quick Start
 ~~~~~~~~~~~
 
-1. **Annotate Robusta service accounts** in the namespace where you installed the Helm chart.  
-   At minimum, these two are critical:
-
-   - ``robusta-runner-service-account``
-   - ``robusta-holmes-service-account``
-
-   Example:
+1. **Configure Robusta** - update the ``generated_values.yaml`` file with the required settings, ensuring you include the correct IRSA-related annotations.
 
    .. code-block:: yaml
 
@@ -78,15 +72,21 @@ Quick Start
          serviceAccount:
            annotations:
              eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>
-
-2. **Configure Robusta** - add to ``generated_values.yaml``:
-
-   .. code-block:: yaml
-
+        toolsets:
+          prometheus/metrics:
+            config:
+              prometheus_url:  "https://aps-example-workspace.us-east-1.amazonaws.com/workspaces/ws-12345678"
+              aws_region: us-east-1
+              aws_service_name: aps
+              prometheus_ssl_enabled: true
+              additional_labels: # Add cluster label to all queries
+                cluster: my_cluster_name 
+            enabled: true
        globalConfig:
-           prometheus_url: "https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-12345678"
+           prometheus_url: "https://aps-example-workspace.us-east-1.amazonaws.com/workspaces/ws-12345678"
            check_prometheus_flags: false  # Required for AWS
-           
+           prometheus_additional_labels: # Add cluster label to all queries
+               cluster: 'my_cluster_name'
        runner:
            additional_env_vars:
            - name: PROMETHEUS_SSL_ENABLED
@@ -96,7 +96,7 @@ Quick Start
            - name: AWS_REGION
              value: "us-east-1"  # Your workspace region
 
-3. :ref:`Update Robusta <Simple Upgrade>`
+2. :ref:`Update Robusta <Simple Upgrade>`
 
 Access Keys (Alternative)
 -------------------------
