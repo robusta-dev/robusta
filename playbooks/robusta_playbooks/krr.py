@@ -36,7 +36,7 @@ from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 from robusta.utils.parsing import format_event_templated_string
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.25.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.26.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
@@ -276,22 +276,23 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
             )
 
     if isinstance(prom_config, AWSPrometheusConfig):
-        krr_secrets.extend(
-            [
-                KRRSecret(
-                    env_var_name="AWS_KEY",
-                    secret_key="aws-key",
-                    secret_value=prom_config.access_key,
-                    command_flag="--eks-access-key",
-                ),
-                KRRSecret(
-                    env_var_name="AWS_SECRET",
-                    secret_key="aws-secret",
-                    secret_value=prom_config.secret_access_key,
-                    command_flag="--eks-secret-key",
-                ),
-            ]
-        )
+        if prom_config.access_key and prom_config.secret_access_key:
+            krr_secrets.extend(
+                [
+                    KRRSecret(
+                        env_var_name="AWS_KEY",
+                        secret_key="aws-key",
+                        secret_value=prom_config.access_key,
+                        command_flag="--eks-access-key",
+                    ),
+                    KRRSecret(
+                        env_var_name="AWS_SECRET",
+                        secret_key="aws-secret",
+                        secret_value=prom_config.secret_access_key,
+                        command_flag="--eks-secret-key",
+                    ),
+                ]
+            )
     if isinstance(prom_config, CoralogixPrometheusConfig):
         krr_secrets.append(
             KRRSecret(
