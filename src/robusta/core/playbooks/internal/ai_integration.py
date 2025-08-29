@@ -345,6 +345,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
             model=params.model, 
             stream=params.stream, 
             enable_tool_approval=params.enable_tool_approval,
+            tool_decisions=params.tool_decisions,
         )
         url = f"{holmes_url}/api/chat"
         if params.stream:
