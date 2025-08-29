@@ -7,6 +7,7 @@ from robusta.core.model.base_params import (
     HolmesInvestigationResult,
     HolmesOldConversationIssueContext,
     ResourceInfo,
+    ToolApprovalDecision,
 )
 from robusta.core.reporting import BaseBlock
 from robusta.core.reporting.blocks import FileBlock
@@ -32,14 +33,6 @@ class HolmesConversationRequest(BaseModel):
     context: HolmesOldConversationIssueContext
     include_tool_calls: bool = False
     include_tool_call_results: bool = False
-
-
-class ToolApprovalDecision(BaseModel):
-    """Represents a user's decision on a tool approval."""
-
-    tool_call_id: str
-    approved: bool
-    modified_params: Optional[Dict[str, Any]] = None
 
 
 class HolmesChatRequest(BaseModel):
