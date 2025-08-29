@@ -332,6 +332,7 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
 
 @action
 def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
+    print(f"RCVD HOLMES CHAT {params}")
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
         raise ActionException(ErrorCodes.HOLMES_DISCOVERY_FAILED, "Robusta couldn't connect to the Holmes client.")
@@ -340,7 +341,11 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
 
     try:
         holmes_req = HolmesChatRequest(
-            ask=params.ask, conversation_history=params.conversation_history, model=params.model, stream=params.stream
+            ask=params.ask, 
+            conversation_history=params.conversation_history, 
+            model=params.model, 
+            stream=params.stream, 
+            enable_tool_approval=params.enable_tool_approval,
         )
         url = f"{holmes_url}/api/chat"
         if params.stream:

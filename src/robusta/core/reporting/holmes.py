@@ -34,11 +34,22 @@ class HolmesConversationRequest(BaseModel):
     include_tool_call_results: bool = False
 
 
+class ToolApprovalDecision(BaseModel):
+    """Represents a user's decision on a tool approval."""
+
+    tool_call_id: str
+    approved: bool
+    modified_params: Optional[Dict[str, Any]] = None
+
+
 class HolmesChatRequest(BaseModel):
     ask: str
     conversation_history: Optional[List[dict]] = None
     model: Optional[str] = None
     stream: bool = Field(default=False)
+    enable_tool_approval: bool = Field(default=False)
+    tool_decisions: Optional[List[ToolApprovalDecision]] = None
+
 
 
 class HolmesIssueChatRequest(HolmesChatRequest):
