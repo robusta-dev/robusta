@@ -64,37 +64,38 @@ Quick Start
 
    .. code-block:: yaml
 
-       runnerServiceAccount:
-         annotations:
-           eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>
-
        holmes:
          serviceAccount:
            annotations:
              eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>
-        toolsets:
-          prometheus/metrics:
-            config:
-              prometheus_url:  "https://aps-example-workspace.us-east-1.amazonaws.com/workspaces/ws-12345678"
-              aws_region: us-east-1
-              aws_service_name: aps
-              prometheus_ssl_enabled: true
-              additional_labels: # Add cluster label to all queries
-                cluster: my_cluster_name 
-            enabled: true
+         toolsets:
+           prometheus/metrics:
+             enabled: true
+             config:
+               prometheus_url:  "https://aps-example-workspace.us-east-1.amazonaws.com/workspaces/ws-12345678"
+               aws_region: us-east-1
+               aws_service_name: aps
+               prometheus_ssl_enabled: true
+               additional_labels: # Add cluster label to all queries
+                 cluster: my_cluster_name
+
+
+       runnerServiceAccount:
+         annotations:
+           eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>
        globalConfig:
-           prometheus_url: "https://aps-example-workspace.us-east-1.amazonaws.com/workspaces/ws-12345678"
-           check_prometheus_flags: false  # Required for AWS
-           prometheus_additional_labels: # Add cluster label to all queries
-               cluster: 'my_cluster_name'
+         prometheus_url: "https://aps-example-workspace.us-east-1.amazonaws.com/workspaces/ws-12345678"
+         check_prometheus_flags: false  # Required for AWS
+         prometheus_additional_labels: # Add cluster label to all queries
+           cluster: 'my_cluster_name'
        runner:
-           additional_env_vars:
-           - name: PROMETHEUS_SSL_ENABLED
-             value: "true"
-           - name: AWS_SERVICE_NAME
-             value: "aps"
-           - name: AWS_REGION
-             value: "us-east-1"  # Your workspace region
+         additional_env_vars:
+         - name: PROMETHEUS_SSL_ENABLED
+           value: "true"
+         - name: AWS_SERVICE_NAME
+           value: "aps"
+         - name: AWS_REGION
+           value: "us-east-1"  # Your workspace region
 
 2. :ref:`Update Robusta <Simple Upgrade>`
 
@@ -123,27 +124,27 @@ If you prefer not to use IRSA, you can authenticate with long-lived AWS access k
       .. code-block:: yaml
 
           globalConfig:
-              prometheus_url: "https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-12345678"
-              check_prometheus_flags: false  # Required for AWS
+            prometheus_url: "https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-12345678"
+            check_prometheus_flags: false  # Required for AWS
               
           runner:
-              additional_env_vars:
-              - name: PROMETHEUS_SSL_ENABLED
-                value: "true"
-              - name: AWS_ACCESS_KEY
-                valueFrom:
-                  secretKeyRef:
-                    name: aws-secret-key
-                    key: access-key
-              - name: AWS_SECRET_ACCESS_KEY
-                valueFrom:
-                  secretKeyRef:
-                    name: aws-secret-key
-                    key: secret-key
-              - name: AWS_SERVICE_NAME
-                value: "aps"
-              - name: AWS_REGION
-                value: "us-east-1"  # Your workspace region
+            additional_env_vars:
+            - name: PROMETHEUS_SSL_ENABLED
+              value: "true"
+            - name: AWS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret-key
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret-key
+                  key: secret-key
+            - name: AWS_SERVICE_NAME
+              value: "aps"
+            - name: AWS_REGION
+              value: "us-east-1"  # Your workspace region
 
    4. :ref:`Update Robusta <Simple Upgrade>`
 
