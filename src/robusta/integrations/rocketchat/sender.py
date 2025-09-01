@@ -18,7 +18,7 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     ScanReportBlock,
-    TableBlock,
+    TableBlock, EmptyFileBlock,
 )
 
 from robusta.core.reporting.consts import EnrichmentAnnotation, SlackAnnotations, FindingSource
@@ -167,6 +167,8 @@ class RocketchatSender:
             return self.__to_rocketchat_links(block.links)
         elif isinstance(block, ScanReportBlock):
             raise "to_rocketchat() should never be called on a ScanReportBlock"
+        elif isinstance(block, EmptyFileBlock):
+            return []  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to rocketchat format block: {block}")
             return []  # no reason to crash the entire report

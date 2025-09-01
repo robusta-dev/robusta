@@ -3,6 +3,7 @@ import re
 from queue import PriorityQueue
 from typing import Dict, List, Tuple, Union
 
+from robusta.core.reporting import EmptyFileBlock
 from robusta.core.reporting import (
     BaseBlock,
     FileBlock,
@@ -152,6 +153,8 @@ class JiraSender:
                     ],
                 }
             ]
+        elif isinstance(block, EmptyFileBlock):
+            return []  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to jira format block")
             return []  # no reason to crash the entire report

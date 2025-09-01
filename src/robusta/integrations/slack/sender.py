@@ -37,7 +37,7 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     ScanReportBlock,
-    TableBlock,
+    TableBlock, EmptyFileBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations
@@ -228,6 +228,8 @@ class SlackSender:
             raise AssertionError("to_slack() should never be called on a ScanReportBlock")
         elif isinstance(block, dict):
             return [block]
+        elif isinstance(block, EmptyFileBlock):
+            return []  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report

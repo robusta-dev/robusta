@@ -1,5 +1,6 @@
 import logging
 
+from robusta.core.reporting import EmptyFileBlock
 from robusta.core.reporting import (
     BaseBlock,
     CallbackBlock,
@@ -35,7 +36,8 @@ class MsTeamsSender:
         elif isinstance(block, CallbackBlock):
             logging.error("CallbackBlock not supported for msteams")
         else:
-            logging.warning(f"cannot convert block of type {type(block)} to msteams format block: {block}")
+            if not isinstance(block, EmptyFileBlock):
+                logging.warning(f"cannot convert block of type {type(block)} to msteams format block: {block}")
 
     @classmethod
     def __split_block_to_files_and_all_the_rest(cls, enrichment: Enrichment):

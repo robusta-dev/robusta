@@ -190,11 +190,31 @@ class K8sBaseTrigger(BaseTrigger):
         return True
 
     @classmethod
+    def __patch_k8s_object(cls, obj: Dict[Any, Any], model_class: type) -> None:
+        """
+        Apply resource-specific patches to K8s objects before hikaru processing.
+        This handles compatibility issues between K8s API and hikaru/kubernetes-client library.
+        """
+        # Fix for Jobs with podFailurePolicy missing onPodConditions
+        # K8s allows onPodConditions to be optional, but hikaru/kubernetes-client requires it
+        # See: https://github.com/kubernetes-client/python/issues/2056
+        if model_class.__name__ in ["Job", "RobustaJob"]:
+            spec = obj.get("spec", {})
+            pod_failure_policy = spec.get("podFailurePolicy", {})
+            rules = pod_failure_policy.get("rules", [])
+            for rule in rules:
+                if isinstance(rule, dict) and "onPodConditions" not in rule:
+                    rule["onPodConditions"] = []
+
+    @classmethod
     def __load_hikaru_obj(cls, obj: Dict[Any, Any], model_class: type) -> HikaruBase:
         if obj:
             metadata = obj.get("metadata")
             if metadata:
                 metadata["managedFields"] = None
+            
+            cls.__patch_k8s_object(obj, model_class)
+        
         return hikaru.from_dict(obj, cls=model_class)
 
     @classmethod

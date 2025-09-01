@@ -275,6 +275,8 @@ class ModelConversion:
             elif isinstance(block, LinksBlock):
                 links = [link.dict() for link in block.links]
                 structured_data.append({"type": "list", "data": links})
+            elif isinstance(block, EmptyFileBlock):
+                continue  # skip empty block
             else:
                 logging.warning(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
                 continue  # no reason to crash the entire report

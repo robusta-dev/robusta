@@ -54,19 +54,12 @@ def patch_on_pod_conditions():
     logging.debug("Creating kubernetes PodFailurePolicyRule.on_pod_conditions monkey patch")
 
     def patched_setter(self, on_pod_conditions):
+        # If None is provided, use an empty list instead to avoide schema validation failure
+        if on_pod_conditions is None:
+            on_pod_conditions = []
         self._on_pod_conditions = on_pod_conditions
 
     V1PodFailurePolicyRule.on_pod_conditions = V1PodFailurePolicyRule.on_pod_conditions.setter(patched_setter)
-    
-    original_init = V1PodFailurePolicyRule.__init__
-    
-    def patched_init(self, action=None, on_exit_codes=None, on_pod_conditions=None, local_vars_configuration=None):
-        # Provide empty list default to avoid Hikaru "None" validation
-        if on_pod_conditions is None:
-            on_pod_conditions = []
-        original_init(self, action=action, on_exit_codes=on_exit_codes, on_pod_conditions=on_pod_conditions, local_vars_configuration=local_vars_configuration)
-    
-    V1PodFailurePolicyRule.__init__ = patched_init
 
 
 def event_time(self, event_time):

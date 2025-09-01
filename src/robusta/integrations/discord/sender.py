@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import requests
 
+from robusta.core.reporting import EmptyFileBlock
 from robusta.core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
 from robusta.core.reporting import (
     BaseBlock,
@@ -186,6 +187,8 @@ class DiscordSender:
             return self.__to_discord(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_discord_diff(block, sink_name)
+        elif isinstance(block, EmptyFileBlock):
+            return []  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to discord format block: {block}")
             return []  # no reason to crash the entire report
