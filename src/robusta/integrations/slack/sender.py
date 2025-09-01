@@ -14,7 +14,6 @@ from slack_sdk.errors import SlackApiError
 from slack_sdk.http_retry import all_builtin_retry_handlers
 from robusta.core.sinks.slack.templates.template_loader import template_loader
 
-from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
     HOLMES_ASK_SLACK_BUTTON_ENABLED,
@@ -22,7 +21,6 @@ from robusta.core.model.env_vars import (
     SLACK_REQUEST_TIMEOUT,
     SLACK_TABLE_COLUMNS_LIMIT,
 )
-from robusta.core.playbooks.internal.ai_integration import ask_holmes
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
 from robusta.core.reporting.blocks import (
     BaseBlock,
@@ -37,7 +35,8 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     ScanReportBlock,
-    TableBlock, EmptyFileBlock,
+    TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations

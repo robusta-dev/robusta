@@ -1,12 +1,10 @@
 import logging
 import re
-from enum import Enum
 from itertools import chain
 from typing import Dict, List, Optional, Tuple, Union
 
 import requests
 
-from robusta.core.reporting import EmptyFileBlock
 from robusta.core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
 from robusta.core.reporting import (
     BaseBlock,
@@ -18,6 +16,7 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkParams

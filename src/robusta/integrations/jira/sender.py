@@ -3,7 +3,6 @@ import re
 from queue import PriorityQueue
 from typing import Dict, List, Tuple, Union
 
-from robusta.core.reporting import EmptyFileBlock
 from robusta.core.reporting import (
     BaseBlock,
     FileBlock,
@@ -13,6 +12,7 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.utils import add_pngs_for_all_svgs

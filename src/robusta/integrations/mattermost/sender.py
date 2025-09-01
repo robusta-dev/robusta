@@ -12,7 +12,8 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     ScanReportBlock,
-    TableBlock, EmptyFileBlock,
+    TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.reporting.utils import add_pngs_for_all_svgs

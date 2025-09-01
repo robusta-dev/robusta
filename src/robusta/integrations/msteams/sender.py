@@ -1,6 +1,5 @@
 import logging
 
-from robusta.core.reporting import EmptyFileBlock
 from robusta.core.reporting import (
     BaseBlock,
     CallbackBlock,
@@ -13,6 +12,7 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
 from robusta.integrations.msteams.msteams_msg import MsTeamsMsg

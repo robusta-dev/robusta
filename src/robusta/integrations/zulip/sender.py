@@ -11,9 +11,10 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.base import BaseBlock, Finding, FindingStatus, LinkType
-from robusta.core.reporting.blocks import FileBlock, LinksBlock, EmptyFileBlock
+from robusta.core.reporting.blocks import LinksBlock
 from robusta.core.reporting.consts import FindingSource
 from robusta.core.reporting.utils import convert_svg_to_png
 from robusta.core.sinks.common import ChannelTransformer

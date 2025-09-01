@@ -18,7 +18,8 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     ScanReportBlock,
-    TableBlock, EmptyFileBlock,
+    TableBlock,
+    EmptyFileBlock,
 )
 
 from robusta.core.reporting.consts import EnrichmentAnnotation, SlackAnnotations, FindingSource
