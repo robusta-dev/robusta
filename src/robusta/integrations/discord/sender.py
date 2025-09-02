@@ -1,6 +1,5 @@
 import logging
 import re
-from enum import Enum
 from itertools import chain
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -17,6 +16,7 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkParams
@@ -186,6 +186,8 @@ class DiscordSender:
             return self.__to_discord(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_discord_diff(block, sink_name)
+        elif isinstance(block, EmptyFileBlock):
+            return []  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to discord format block: {block}")
             return []  # no reason to crash the entire report

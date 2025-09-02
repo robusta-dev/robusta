@@ -11,9 +11,10 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.base import BaseBlock, Finding, FindingStatus, LinkType
-from robusta.core.reporting.blocks import FileBlock, LinksBlock
+from robusta.core.reporting.blocks import LinksBlock
 from robusta.core.reporting.consts import FindingSource
 from robusta.core.reporting.utils import convert_svg_to_png
 from robusta.core.sinks.common import ChannelTransformer
@@ -122,7 +123,7 @@ class ZulipSender:
                     fname, contents = self.__convert_svg_to_png(block)
                 file_link = self.__upload_to_zulip(fname, contents)
                 yield self.__to_zulip_link(fname, file_link)
-        else:
+        elif not isinstance(block, EmptyFileBlock):
             logging.warning(f"Zulip Sink: cannot convert block of type {type(block)} to a zulip format block: {block}")
 
     def send_finding_to_zulip(self, finding: Finding, sink_params: ZulipSinkParams, platform_enabled: bool):
