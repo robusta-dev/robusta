@@ -64,7 +64,7 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
             secret_access_key=AWS_SECRET_ACCESS_KEY,
             service_name=AWS_SERVICE_NAME,
             aws_region=AWS_REGION,
-            aws_assume_role=AWS_ASSUME_ROLE,
+            assume_role_arn=AWS_ASSUME_ROLE,
             **baseconfig,
         )
     # coralogix config

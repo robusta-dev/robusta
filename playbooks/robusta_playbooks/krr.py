@@ -239,9 +239,9 @@ def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
             + f" --eks-managed-prom-region {prom_config.aws_region}"
             + f" --eks-service-name {prom_config.service_name}"
         )
-        if prom_config.aws_assume_role:
-            additional_cmd_line_args += f" --eks-assume-role {prom_config.aws_assume_role}"
-            
+        if prom_config.assume_role_arn:
+            additional_cmd_line_args += f" --eks-assume-role {prom_config.assume_role_arn}"
+
     return additional_cmd_line_args
 
 
