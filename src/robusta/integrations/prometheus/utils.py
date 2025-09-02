@@ -2,7 +2,6 @@ import logging
 import os
 from typing import Dict, List, Optional
 
-from aws_connect import AWS_ASSUME_ROLE
 from cachetools import TTLCache
 from prometrix import (
     AWSPrometheusConfig,
