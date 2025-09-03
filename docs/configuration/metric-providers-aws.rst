@@ -78,7 +78,10 @@ Quick Start
                prometheus_ssl_enabled: true
                additional_labels: # Add cluster label to all queries
                  cluster: my_cluster_name
-
+              # Optional: Configure cross-account role assumption for AMP
+              # Set assume_role_arn if your Prometheus workspace is in a different AWS account
+              # than the one running your Kubernetes service account.
+              # assume_role_arn: arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>
 
        runnerServiceAccount:
          annotations:
@@ -96,6 +99,11 @@ Quick Start
            value: "aps"
          - name: AWS_REGION
            value: "us-east-1"  # Your workspace region
+        # Optional: Configure cross-account role assumption for AMP
+        # Set this if your Prometheus workspace is in a different AWS account
+        # than the one running your Kubernetes service account.
+        # - name: AWS_ASSUME_ROLE
+        #   value: "arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>"
 
 2. :ref:`Update Robusta <Simple Upgrade>`
 
