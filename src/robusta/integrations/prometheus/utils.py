@@ -29,6 +29,7 @@ AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", None)
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
 AWS_SERVICE_NAME = os.environ.get("AWS_SERVICE_NAME", "aps")
 AWS_REGION = os.environ.get("AWS_REGION")
+AWS_ASSUME_ROLE = os.environ.get("AWS_ASSUME_ROLE")
 VICTORIA_METRICS_CONFIGURED = os.environ.get("VICTORIA_METRICS_CONFIGURED", "false").lower() == "true"
 
 
@@ -63,6 +64,7 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
             secret_access_key=AWS_SECRET_ACCESS_KEY,
             service_name=AWS_SERVICE_NAME,
             aws_region=AWS_REGION,
+            assume_role_arn=AWS_ASSUME_ROLE,
             **baseconfig,
         )
     # coralogix config

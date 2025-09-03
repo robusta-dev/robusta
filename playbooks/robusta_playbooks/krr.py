@@ -36,7 +36,7 @@ from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 from robusta.utils.parsing import format_event_templated_string
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.26.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.26.1")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
@@ -239,6 +239,9 @@ def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
             + f" --eks-managed-prom-region {prom_config.aws_region}"
             + f" --eks-service-name {prom_config.service_name}"
         )
+        if prom_config.assume_role_arn:
+            additional_cmd_line_args += f" --eks-assume-role {prom_config.assume_role_arn}"
+
     return additional_cmd_line_args
 
 
