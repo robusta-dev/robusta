@@ -108,7 +108,7 @@ MAX_ALLOWED_RULES_PER_CRD_ALERT = int(os.environ.get("MAX_ALLOWED_RULES_PER_CRD_
 IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "robustadev")
 
 FIO_IMAGE = os.environ.get("FIO_IMAGE", "robusta-fio-benchmark:1.0")
-DISK_TOOLS_IMAGE = os.environ.get("DISK_TOOLS_IMAGE", "disk-tools:1.6")
+DISK_TOOLS_IMAGE = os.environ.get("DISK_TOOLS_IMAGE", "disk-tools:1.7")
 
 CLUSTER_DOMAIN = os.environ.get("CLUSTER_DOMAIN", "cluster.local")
 
