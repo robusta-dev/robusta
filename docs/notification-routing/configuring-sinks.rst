@@ -90,6 +90,22 @@ Description of each option:
 | *parameters*     | Slack and webhook_url for MSTeams                       |                                                          |                                               |
 +------------------+---------------------------------------------------------+----------------------------------------------------------+-----------------------------------------------+
 
+Ignoring Sinks Initialization Errors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, when Robusta fails to initialize any of the Sinks, it will not start.
+
+On some scenarios, you may want to ignore Sinks initialization errors.
+
+For example, if Robusta is not allowed to connect to Slack, but you still want to receive notifications on the Robusta UI.
+
+In order to enable that, add the below to ``globalConfig`` in your ``generated_values.yaml`` file:
+
+.. code-block:: yaml
+
+    globalConfig:
+      continue_on_sink_errors: True
+
 Learn More
 ^^^^^^^^^^^^
 

@@ -4,7 +4,7 @@ import re
 import urllib.parse
 import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
@@ -289,7 +289,7 @@ class Finding(Filterable):
         self.fingerprint = (
             fingerprint if fingerprint else self.__calculate_fingerprint(subject, source, aggregation_key)
         )
-        self.starts_at = starts_at if starts_at else datetime.now()
+        self.starts_at = starts_at if starts_at else datetime.now(timezone.utc)
         self.ends_at = ends_at
         self.dirty = False
 
