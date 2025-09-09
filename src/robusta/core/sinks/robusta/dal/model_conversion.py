@@ -2,7 +2,7 @@ import base64
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, List
 
 from robusta.core.model.env_vars import ENABLE_GRAPH_BLOCK
@@ -26,6 +26,7 @@ from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.holmes import HolmesChatResultsBlock, HolmesResultsBlock, ToolCallResult
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
+from robusta.utils.time_utils import current_utc_timestamp
 
 
 class ModelConversion:
@@ -52,7 +53,7 @@ class ModelConversion:
             "account_id": account_id,
             "video_links": [link.dict() for link in finding.links],  # TD: Migrate column in table.
             "starts_at": datetime_to_db_str(finding.starts_at),
-            "updated_at": datetime_to_db_str(datetime.now(timezone.utc)),
+            "updated_at": datetime_to_db_str(current_utc_timestamp()),
         }
 
         if finding.creation_date:

@@ -4,7 +4,7 @@ import re
 import urllib.parse
 import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
@@ -17,6 +17,7 @@ from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
 from robusta.integrations.kubernetes.api_client_utils import get_namespace_labels
 from robusta.utils.scope import BaseScopeMatcher
+from robusta.utils.time_utils import current_utc_timestamp
 
 
 class BaseBlock(BaseModel):
@@ -289,7 +290,7 @@ class Finding(Filterable):
         self.fingerprint = (
             fingerprint if fingerprint else self.__calculate_fingerprint(subject, source, aggregation_key)
         )
-        self.starts_at = starts_at if starts_at else datetime.now(timezone.utc)
+        self.starts_at = starts_at if starts_at else current_utc_timestamp()
         self.ends_at = ends_at
         self.dirty = False
 

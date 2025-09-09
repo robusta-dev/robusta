@@ -24,7 +24,7 @@ class TestSinkFactory:
       self.config_data = yaml.safe_load(CONFIG)
       self.runner_config = RunnerConfig(**self.config_data)
       self.registry = Registry()
-      new_sinks = SinksRegistry.construct_new_sinks(self.runner_config.sinks_config, {}, self.registry)
+      new_sinks, _ = SinksRegistry.construct_new_sinks(self.runner_config.sinks_config, {}, self.registry)
       self.sinks_registry = SinksRegistry(new_sinks)
 
 
