@@ -45,7 +45,7 @@ That's it! HolmesGPT will now analyze your alerts automatically.
 
 .. note::
 
-   When exploring HolmesGPT documentation, focus on **Helm chart configuration** sections rather than CLI installation. Robusta users should follow the Helm-based configuration examples for data sources and advanced settings.
+   When exploring HolmesGPT documentation, focus on **Robusta Helm chart configuration** sections rather than CLI installation. Robusta users should follow the Robusta Helm Chart based configuration examples for data sources and advanced settings.
 
 Test Your Setup
 ---------------
