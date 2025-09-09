@@ -563,6 +563,7 @@ class RobustaSink(SinkBase, EventHandler):
             holmesModel=holmes_model,
             clusterTimeZone=str(datetime.now().astimezone().tzinfo),
             errors=self.__errors,
+            sinksInitializationErrors=self.registry.has_sink_initialization_errors(),
         )
 
         # checking the status of relay connection
