@@ -43,6 +43,10 @@ Use Robusta's hosted AI service with GPT-4o:
 
 That's it! HolmesGPT will now analyze your alerts automatically.
 
+.. note::
+
+   When exploring HolmesGPT documentation, focus on **Robusta Helm chart configuration** sections rather than CLI installation. Robusta users should follow the Robusta Helm Chart based configuration examples for data sources and advanced settings.
+
 Test Your Setup
 ---------------
 
@@ -167,7 +171,7 @@ Common Issues
    - Consider using Robusta AI for unlimited investigations
 
 **Analysis seems incomplete?**
-   - Enable additional data sources in `HolmesGPT configuration <https://holmesgpt.dev/data-sources/builtin-toolsets/>`_
+   - Enable additional data sources in `HolmesGPT data sources <https://holmesgpt.dev/data-sources/builtin-toolsets/>`_ (follow Helm chart configuration examples)
    - Ensure Prometheus is configured for metrics analysis
    - Check that pod logs are accessible
 
@@ -175,5 +179,5 @@ Next Steps
 ----------
 
 * :doc:`main-features` - See what HolmesGPT can do
-* `Configure Data Sources <https://holmesgpt.dev/data-sources/builtin-toolsets/>`_ - Add more context for better analysis
-* `Advanced Configuration <https://holmesgpt.dev>`_ - Customize HolmesGPT behavior
+* `Configure Data Sources <https://holmesgpt.dev/data-sources/builtin-toolsets/>`_ - Add more context for better analysis (use Helm chart configuration)
+* `Helm Configuration Reference <https://holmesgpt.dev/reference/helm-configuration/>`_ - Advanced HolmesGPT Helm settings

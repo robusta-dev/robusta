@@ -26,4 +26,5 @@ Prerequisites
 Next Steps
 ---------------------------------
 
-:ref:`See how Robusta improves Prometheus <builtin-alert-enrichment>`.
+* :ref:`See how Robusta improves Prometheus <builtin-alert-enrichment>`
+* :ref:`Learn about AI-powered alert analysis <AI Analysis>`

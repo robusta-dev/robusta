@@ -7,7 +7,7 @@ Use HolmesGPT without Prometheus
 
 *Estimated time: 5 minutes*
 
-Robusta's AI Agent works with many monitoring tools beyond Prometheus - including Datadog, New Relic, PagerDuty, and more. This installation method is ideal when you already have monitoring infrastructure in place and want to enhance it with Robusta's AI-powered investigation and automation capabilities.
+Robusta's AI Agent works with many monitoring tools beyond Prometheus - including Datadog, New Relic, PagerDuty, and more. This installation method configures Robusta AI to analyze alerts and incidents from multiple data sources for comprehensive AI-powered investigation and automation capabilities.
 
 .. note::
 
