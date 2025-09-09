@@ -73,6 +73,7 @@ class HolmesChatResult(BaseModel):
     files: Optional[List[FileBlock]] = None
     tool_calls: Optional[List[ToolCallResult]] = None
     conversation_history: Optional[List[dict]] = None
+    metadata: Optional[dict] = None
 
 
 class HolmesChatResultsBlock(BaseBlock):
