@@ -74,7 +74,7 @@
 
    configuration/holmesgpt/main-features
    configuration/holmesgpt/getting-started
-   Configuring HolmesGPT <https://holmesgpt.dev>
+   HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
 
 .. toctree::
    :maxdepth: 4
