@@ -116,10 +116,13 @@ class ModelConversion:
 
     @staticmethod
     def add_ai_chat_data(structured_data: List[Dict], block: HolmesChatResultsBlock):
+        metadata = block.holmes_result.metadata or {} # type: ignore
+        metadata["type"] = "ai_investigation_result"
+        metadata["createdAt"] = datetime_to_db_str(datetime.now())
         structured_data.append(
             {
                 "type": "markdown",
-                "metadata": {"type": "ai_investigation_result", "createdAt": datetime_to_db_str(datetime.now())},
+                "metadata": metadata,
                 "data": Transformer.to_github_markdown(block.holmes_result.analysis),
             }
         )
