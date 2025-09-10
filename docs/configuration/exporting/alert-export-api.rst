@@ -37,7 +37,7 @@ Query Parameters
    * - ``alert_name``
      - string
      - The name of the alert to filter by (e.g., ``CrashLoopBackoff``).
-     - No
+     - Yes
 
 Example Request
 ^^^^^^^^^^^^^^^^^^^^^^^^^
