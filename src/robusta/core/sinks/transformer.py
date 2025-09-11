@@ -1,11 +1,12 @@
 import logging
 import re
-import urllib.parse
 from typing import List, Optional, Union
 
 import markdown2
 from fpdf import FPDF
 from fpdf.fonts import FontFace
+
+from robusta.utils.common import encode_url
 
 try:
     from tabulate import tabulate
@@ -122,9 +123,8 @@ class Transformer:
             # take only the data between the first '<' and last '>'
             splits = match[1:-1].split("|")
             if len(splits) == 2:  # don't replace unexpected strings
-                parsed_url = urllib.parse.urlparse(splits[0])
-                parsed_url = parsed_url._replace(path=urllib.parse.quote_plus(parsed_url.path, safe="/"))
-                replacement = f"[{splits[1]}]({OPENING_ANGULAR}{parsed_url.geturl()}{CLOSING_ANGULAR})"
+                encoded_url = encode_url(splits[0])
+                replacement = f"[{splits[1]}]({OPENING_ANGULAR}{encoded_url}{CLOSING_ANGULAR})"
                 markdown_data = markdown_data.replace(match, replacement)
         return re.sub(r"\*([^\*]*)\*", r"**\1**", markdown_data)
 
