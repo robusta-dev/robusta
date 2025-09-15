@@ -12,8 +12,20 @@ Overview
 The RBAC API provides a single endpoint with three operations:
 
 * **GET** - Retrieve current RBAC configuration
-* **POST** - Set/update RBAC configuration  
+* **POST** - Set/update RBAC configuration
 * **DELETE** - Remove all RBAC configurations
+
+Prerequisites
+-------------
+
+Before using the RBAC API, you need:
+
+1. **API Key** - Create an API key at https://platform.robusta.dev/settings#api-keys
+
+   * The key must have ``READ`` permission for GET requests
+   * The key must have ``WRITE`` permission for POST and DELETE requests
+
+2. **Account ID** - Find your account ID at https://platform.robusta.dev/settings#workspace
 
 Authentication
 --------------
@@ -23,10 +35,6 @@ All requests require API key authentication. Include your API key in the request
 .. code-block:: bash
 
     Authorization: Bearer YOUR_API_KEY
-
-The API key must have:
-- ``READ`` permission for GET requests
-- ``WRITE`` permission for POST and DELETE requests
 
 API Endpoint
 ------------
@@ -43,7 +51,12 @@ Get RBAC Configuration
 
 Retrieve the current RBAC configuration for your account.
 
-**GET** ``/api/rbac?account_id=YOUR_ACCOUNT_ID``
+**Request:**
+
+.. code-block:: bash
+
+    curl -X GET 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
+      -H 'Authorization: Bearer YOUR_API_KEY'
 
 **Response (200 OK):**
 
@@ -83,9 +96,29 @@ Set RBAC Configuration
 
 Create or update the RBAC configuration for your account.
 
-**POST** ``/api/rbac?account_id=YOUR_ACCOUNT_ID``
+.. warning::
+    This operation **completely replaces** all existing RBAC configurations. The API will:
 
-**Request Body:**
+    * Delete ALL existing scopes, groups, and role_permission_groups
+    * Create new configurations based on the provided request body
+
+    If you omit any of these fields (scopes, groups, or role_permission_groups), those configurations will be deleted and not replaced. To preserve existing configurations, you must include them in your request.
+
+**Request:**
+
+.. code-block:: bash
+
+    curl -X POST 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
+      -H 'Authorization: Bearer YOUR_API_KEY' \
+      -H 'Content-Type: application/json' \
+      -d '{
+        "account_id": "YOUR_ACCOUNT_ID",
+        "scopes": [...],
+        "groups": [...],
+        "role_permission_groups": [...]
+      }'
+
+**Request Body Example:**
 
 .. code-block:: json
 
@@ -148,7 +181,12 @@ Delete RBAC Configuration
 
 Remove all RBAC configurations for your account.
 
-**DELETE** ``/api/rbac?account_id=YOUR_ACCOUNT_ID``
+**Request:**
+
+.. code-block:: bash
+
+    curl -X DELETE 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
+      -H 'Authorization: Bearer YOUR_API_KEY'
 
 **Response (200 OK):**
 
