@@ -42,6 +42,7 @@ Features include:
 * :doc:`Alert Reporting API <alert-statistics-api>`: Get aggregated statistics and counts for different alert types
 * :doc:`Send Alerts API <send-alerts-api>`: Send alerts programmatically from external systems or via integrations
 * :doc:`Configuration Changes API <configuration-changes-api>`: Track configuration changes in your environment
+* :doc:`RBAC Configuration API <rbac-api>`: Programmatically manage role-based access control configurations
 
 Additional Pro Features
 -----------------------

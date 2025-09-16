@@ -88,6 +88,7 @@
    configuration/exporting/alert-export-api
    configuration/exporting/alert-statistics-api
    configuration/exporting/namespace-resources-api
+   configuration/exporting/rbac-api
 
 .. toctree::
    :maxdepth: 4
