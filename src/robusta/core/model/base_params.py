@@ -182,6 +182,14 @@ class ConversationType(str, Enum):
     ISSUE = "issue"
 
 
+class ToolApprovalDecision(BaseModel):
+    """Represents a user's decision on a tool approval."""
+
+    tool_call_id: str
+    approved: bool
+    modified_params: Optional[Dict[str, Any]] = None
+
+
 class HolmesChatParams(HolmesParams):
     """
     :var ask: User's prompt for holmes
@@ -191,6 +199,8 @@ class HolmesChatParams(HolmesParams):
     conversation_history: Optional[list[dict]] = None
     render_graph_images: bool = False
     stream: bool = Field(default=False)
+    enable_tool_approval: bool = Field(default=False)
+    tool_decisions: Optional[List[ToolApprovalDecision]] = None
 
 
 class HolmesIssueChatParams(HolmesChatParams):
