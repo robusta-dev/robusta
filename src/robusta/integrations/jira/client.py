@@ -180,12 +180,16 @@ class JiraClient:
         return None
 
     def _resolve_priority(self, priority_name: str) -> dict:
-        """Resolve Jira priority:
-        1. User configured priority mapping (if defined)
-        2. Fallback to current behavior (use priority name as-is)
-
+        """
+        Resolve a Jira priority into the dict shape Jira expects for the issue `priority` field.
+        
+        If a priority mapping is configured on the client (params.priority_mapping), the function will use that mapping to determine the resolved name; otherwise it returns the provided name unchanged.
+        
+        Parameters:
+            priority_name (str): The incoming priority name to resolve. Comparison against configured mappings is exact (case-sensitive).
+        
         Returns:
-            dict: Priority field in format {"name": str}
+            dict: A dictionary in the form {"name": resolved_priority_name} suitable for use in Jira issue payloads.
         """
         # 1. Try user configured priority mapping
         if hasattr(self, "params") and self.params.priority_mapping:
@@ -197,7 +201,16 @@ class JiraClient:
         return {"name": priority_name}
 
     def list_issues(self, search_params: Optional[str] = None):
-        endpoint = "search"
+        """
+        Search Jira using a JQL query and return matching issues.
+        
+        Parameters:
+            search_params (str, optional): JQL query string to filter issues. If omitted or empty, performs an unfiltered search.
+        
+        Returns:
+            list: List of matching issues (parsed JSON issue objects). Returns an empty list if the API call fails or no issues are found.
+        """
+        endpoint = "search/jql"
         search_params = search_params or ""
         url = self._get_full_jira_url(endpoint)
         query = {"jql": search_params}
