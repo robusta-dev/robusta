@@ -29,5 +29,6 @@ Next Steps
 
 Integrate Robusta with AlertManager:
 
-* :ref:`Follow a guide to integrate AlertManager <Integrating with Prometheus>`.
-* :ref:`See the features you'll gain by integrating AlertManager <Enhanced Prometheus Alerts>`.
+* :ref:`Follow a guide to integrate AlertManager <Integrating with Prometheus>`
+* :ref:`See the features you'll gain by integrating AlertManager <Enhanced Prometheus Alerts>`
+* :ref:`Configure AI analysis with your Prometheus data <AI Analysis>`

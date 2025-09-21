@@ -74,5 +74,5 @@ Next Steps
 ----------
 
 * :doc:`getting-started` - Set up HolmesGPT in 5 minutes
-* `HolmesGPT Documentation <https://holmesgpt.dev>`_ - Advanced configuration and customization
-* `Available Data Sources <https://holmesgpt.dev/data-sources/builtin-toolsets/>`_ - See all supported integrations
+* `Available Data Sources <https://holmesgpt.dev/data-sources/builtin-toolsets/>`_ - See all supported integrations (use Robusta Helm Chart configuration method)
+* `Helm Configuration Reference <https://holmesgpt.dev/reference/helm-configuration/>`_ - Advanced HolmesGPT settings for Robusta deployments

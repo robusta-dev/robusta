@@ -26,6 +26,7 @@ from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.holmes import HolmesChatResultsBlock, HolmesResultsBlock, ToolCallResult
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
+from robusta.utils.time_utils import current_utc_timestamp
 
 
 class ModelConversion:
@@ -52,7 +53,7 @@ class ModelConversion:
             "account_id": account_id,
             "video_links": [link.dict() for link in finding.links],  # TD: Migrate column in table.
             "starts_at": datetime_to_db_str(finding.starts_at),
-            "updated_at": datetime_to_db_str(datetime.now()),
+            "updated_at": datetime_to_db_str(current_utc_timestamp()),
         }
 
         if finding.creation_date:
@@ -115,10 +116,13 @@ class ModelConversion:
 
     @staticmethod
     def add_ai_chat_data(structured_data: List[Dict], block: HolmesChatResultsBlock):
+        metadata = block.holmes_result.metadata or {} # type: ignore
+        metadata["type"] = "ai_investigation_result"
+        metadata["createdAt"] = datetime_to_db_str(datetime.now())
         structured_data.append(
             {
                 "type": "markdown",
-                "metadata": {"type": "ai_investigation_result", "createdAt": datetime_to_db_str(datetime.now())},
+                "metadata": metadata,
                 "data": Transformer.to_github_markdown(block.holmes_result.analysis),
             }
         )

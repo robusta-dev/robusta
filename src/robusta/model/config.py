@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
 from robusta.core.playbooks.actions_registry import ActionsRegistry
@@ -46,7 +46,8 @@ class SinksRegistry:
         new_sinks_config: List[SinkConfigBase],
         existing_sinks: Dict[str, SinkBase],
         registry,
-    ) -> Dict[str, SinkBase]:
+        continue_on_sink_errors: bool = False,
+    ) -> Tuple[Dict[str, SinkBase], bool]:
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [sink_name for sink_name in existing_sinks.keys() if sink_name not in new_sink_names]
@@ -56,6 +57,7 @@ class SinksRegistry:
             del existing_sinks[deleted_sink]
 
         new_sinks: Dict[str, SinkBase] = dict()
+        has_sink_errors = False
         
         # Reload sinks, order does matter and should be loaded & added to the dict by config order.
         for sink_config in new_sinks_config:
@@ -68,24 +70,33 @@ class SinksRegistry:
 
             sink_name = sink_config.get_name()
             exists_sink = existing_sinks.get(sink_name, None)
-            if not exists_sink:
-                logging.info(f"Adding {type(sink_config)} sink named {sink_name}")
-                new_sinks[sink_name] = SinkFactory.create_sink(sink_config, registry)
-                continue
+            
+            try:
+                if not exists_sink:
+                    logging.info(f"Adding {type(sink_config)} sink named {sink_name}")
+                    new_sinks[sink_name] = SinkFactory.create_sink(sink_config, registry)
+                    continue
 
-            is_global_config_changed = exists_sink.is_global_config_changed()
-            is_sink_changed = sink_config.get_params() != exists_sink.params or is_global_config_changed
-            if is_sink_changed:
-                config_change_msg = "due to global config change" if is_global_config_changed else "due to param change"
-                logging.info(f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}")
-                exists_sink.stop()
-                new_sinks[sink_name] = SinkFactory.create_sink(sink_config, registry)
-                continue
+                is_global_config_changed = exists_sink.is_global_config_changed()
+                is_sink_changed = sink_config.get_params() != exists_sink.params or is_global_config_changed
+                if is_sink_changed:
+                    config_change_msg = "due to global config change" if is_global_config_changed else "due to param change"
+                    logging.info(f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}")
+                    exists_sink.stop()
+                    new_sinks[sink_name] = SinkFactory.create_sink(sink_config, registry)
+                    continue
 
-            logging.info("Sink %s not changed", sink_name)
-            new_sinks[sink_name] = exists_sink
+                logging.info("Sink %s not changed", sink_name)
+                new_sinks[sink_name] = exists_sink
+                
+            except Exception as e:
+                has_sink_errors = True
+                logging.error(f"Failed to initialize sink {sink_name}: {e}", exc_info=True)
+                if not continue_on_sink_errors:
+                    raise
+                # Skip this sink if continue_on_sink_errors is True
 
-        return new_sinks
+        return new_sinks, has_sink_errors
 
 
 class PlaybooksRegistry:
@@ -171,6 +182,7 @@ class Registry:
         prometheus_enabled=PROMETHEUS_ENABLED,
     )
     _pubsub: EventsPubSub = EventsPubSub()
+    _sink_initialization_errors: bool = False
 
     def set_light_actions(self, light_actions: List[str]):
         self._light_actions = light_actions
@@ -231,3 +243,9 @@ class Registry:
 
     def unsubscribe(self, event_name: str, handler: EventHandler):
         self._pubsub.unsubscribe(event_name, handler)
+    
+    def set_sink_initialization_errors(self, has_errors: bool):
+        self._sink_initialization_errors = has_errors
+    
+    def has_sink_initialization_errors(self) -> bool:
+        return self._sink_initialization_errors

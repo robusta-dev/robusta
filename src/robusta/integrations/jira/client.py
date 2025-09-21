@@ -197,7 +197,7 @@ class JiraClient:
         return {"name": priority_name}
 
     def list_issues(self, search_params: Optional[str] = None):
-        endpoint = "search"
+        endpoint = "search/jql"
         search_params = search_params or ""
         url = self._get_full_jira_url(endpoint)
         query = {"jql": search_params}
