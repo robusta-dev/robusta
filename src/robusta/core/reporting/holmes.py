@@ -39,6 +39,7 @@ class HolmesChatRequest(BaseModel):
     conversation_history: Optional[List[dict]] = None
     model: Optional[str] = None
     stream: bool = Field(default=False)
+    custom_system_prompt: Optional[str] = None
 
 
 class HolmesIssueChatRequest(HolmesChatRequest):
