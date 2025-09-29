@@ -344,7 +344,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
             conversation_history=params.conversation_history,
             model=params.model,
             stream=params.stream,
-            custom_system_prompt=params.custom_system_prompt
+            additional_system_prompt=params.additional_system_prompt
         )
         url = f"{holmes_url}/api/chat"
         if params.stream:
