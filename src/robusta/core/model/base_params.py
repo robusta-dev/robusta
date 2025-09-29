@@ -191,6 +191,7 @@ class HolmesChatParams(HolmesParams):
     conversation_history: Optional[list[dict]] = None
     render_graph_images: bool = False
     stream: bool = Field(default=False)
+    additional_system_prompt: Optional[str] = None
 
 
 class HolmesIssueChatParams(HolmesChatParams):
