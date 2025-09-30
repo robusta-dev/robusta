@@ -50,30 +50,3 @@ Step 2: Create a Dynatrace Problems Webhook
 
 7. Save the webhook notification.
 
-Validation
-----------
-
-- In Dynatrace, use **Send test notification** (if available) on the webhook to verify connectivity.
-- Alternatively, trigger a test problem that matches your environment.
-- In Robusta’s UI, confirm the alert appears with the expected title, description, and problem details.
-
-What the Payload Contains
--------------------------
-
-- ``{ProblemDetailsJSONv2}`` expands to Dynatrace’s full problem JSON (v2), including problem ID, status/open/closed times, impacted entities, evidence, and root cause information.
-- Robusta stores the original Dynatrace payload for troubleshooting and enrichment.
-
-Troubleshooting
----------------
-
-- **401/403 Unauthorized**: Ensure the **Authorization** header uses a valid Robusta API key with **Alerts: Write** permissions.
-- **Missing or incorrect account**: Confirm the **account-id** header exactly matches your Robusta ``account_id`` from **generated_values.yaml** (or **Settings → Workspace**).
-- **Not receiving alerts**: Verify the Dynatrace webhook is **enabled**, the URL is exactly
-  ``https://api.robusta.dev/integrations/generic/dynatrace``, and that problems are actually being generated in your environment.
-- **Firewall/egress**: Ensure the Dynatrace environment can reach ``api.robusta.dev`` over HTTPS (TCP 443).
-
-Change Management
------------------
-
-- If you rotate the Robusta API key, update the **Authorization** header in Dynatrace accordingly.
-- If you migrate workspaces or tenants and your ``account_id`` changes, update the **account-id** header.
