@@ -38,6 +38,13 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
 
         Forward SolarWinds alerts by webhook
 
+    .. grid-item-card:: :octicon:`bell;1em;` Dynatrace
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/dynatrace
+        :link-type: doc
+
+        Forward Dynatrace alerts by webhook
+
     .. grid-item-card:: :octicon:`bell;1em;` Pagerduty
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/pagerduty-alerting
