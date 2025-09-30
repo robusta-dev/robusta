@@ -103,7 +103,7 @@ Example:
 Forwarding Slack via a Gateway
 -------------------------------
 
-In fully or partially air-gapped environments, direct access to to Slack API may be blocked.  
+In fully or partially air-gapped environments, direct access to the Slack API may be blocked.  
 Set the ``SLACK_FORWARD_URL`` environment variable on the Robusta Runner pod to forward all Slack requests.
 
 Add the following to your ``values.yaml`` file and upgrade:
