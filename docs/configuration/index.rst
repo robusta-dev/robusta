@@ -38,4 +38,11 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
 
         Forward SolarWinds alerts by webhook
 
+    .. grid-item-card:: :octicon:`bell;1em;` Pagerduty
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/pagerduty-alerting
+        :link-type: doc
+
+        Forward PagerDuty incidents and alerts by webhook
+
 **Have alerts elsewhere?** Send alerts via the generic :doc:`HTTP webhook endpoint <exporting/custom-webhooks>`.
