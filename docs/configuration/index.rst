@@ -24,11 +24,32 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
 
         Forward Nagios alerts by webhook
 
+    .. grid-item-card:: :octicon:`bell;1em;` NewRelic
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/newrelic
+        :link-type: doc
+
+        Forward NewRelic alerts by webhook
+
     .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/solarwinds
         :link-type: doc
 
         Forward SolarWinds alerts by webhook
+
+    .. grid-item-card:: :octicon:`bell;1em;` Dynatrace
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/dynatrace
+        :link-type: doc
+
+        Forward Dynatrace alerts by webhook
+
+    .. grid-item-card:: :octicon:`bell;1em;` Pagerduty
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/pagerduty-alerting
+        :link-type: doc
+
+        Forward PagerDuty incidents and alerts by webhook
 
 **Have alerts elsewhere?** Send alerts via the generic :doc:`HTTP webhook endpoint <exporting/custom-webhooks>`.
