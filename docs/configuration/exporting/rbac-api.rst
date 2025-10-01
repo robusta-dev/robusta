@@ -20,12 +20,15 @@ Prerequisites
 
 Before using the RBAC API, you need:
 
-1. **API Key** - Create an API key at https://platform.robusta.dev/settings#api-keys
 
-   * The key must have ``READ`` permission for GET requests
-   * The key must have ``WRITE`` permission for POST and DELETE requests
+   Create at: https://platform.robusta.dev/settings#api-keys
 
-2. **Account ID** - Find your account ID at https://platform.robusta.dev/settings#workspace
+   * **RBAC: READ** — required for ``GET``
+   * **RBAC: WRITE** — required for ``POST`` and ``DELETE``
+
+2. **Account ID**
+
+   Find at: https://platform.robusta.dev/settings#workspace
 
 Authentication
 --------------
