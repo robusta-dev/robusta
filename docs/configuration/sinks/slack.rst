@@ -99,6 +99,23 @@ Example:
          slack_channel: my-fallback-channel
          channel_override: "$cluster_name-alerts-$labels.env-${annotations.kubernetes.io/service-name}"
 
+
+Forwarding Slack via a Gateway
+-------------------------------
+
+In fully or partially air-gapped environments, direct access to the Slack API may be blocked.  
+Set the ``SLACK_FORWARD_URL`` environment variable on the Robusta Runner pod to forward all Slack requests.
+
+Add the following to your ``values.yaml`` file and upgrade:
+
+.. code-block:: yaml
+
+    runner:
+        additional_env_vars:
+        - name: SLACK_FORWARD_URL
+          value: "https://api.robusta.dev/slack/"
+
+
 Redirect to Platform
 -------------------------------------------------------------------
 

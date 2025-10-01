@@ -20,6 +20,7 @@ from robusta.core.model.env_vars import (
     HOLMES_ENABLED,
     SLACK_REQUEST_TIMEOUT,
     SLACK_TABLE_COLUMNS_LIMIT,
+    SLACK_FORWARD_URL,
 )
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
 from robusta.core.reporting.blocks import (
@@ -77,7 +78,11 @@ class SlackSender:
             ssl=ssl_context,
             timeout=SLACK_REQUEST_TIMEOUT,
             retry_handlers=all_builtin_retry_handlers(),
+            base_url=SLACK_FORWARD_URL or WebClient.BASE_URL
         )
+        if SLACK_FORWARD_URL:
+            logging.info(f"Slack client configured to forward messages using: {SLACK_FORWARD_URL}")
+
         self.registry = registry
         self.signing_key = signing_key
         self.account_id = account_id
