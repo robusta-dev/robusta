@@ -287,10 +287,16 @@ class ConfigLoader:
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
         registry: Registry,
-    ) -> (SinksRegistry, PlaybooksRegistry):
+    ) -> tuple[SinksRegistry, PlaybooksRegistry]:
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
-        new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)
+        new_sinks, has_sink_errors = SinksRegistry.construct_new_sinks(
+            runner_config.sinks_config, 
+            existing_sinks, 
+            registry,
+            runner_config.global_config.get("continue_on_sink_errors", False)
+        )
         sinks_registry = SinksRegistry(new_sinks)
+        registry.set_sink_initialization_errors(has_sink_errors)
 
         # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
         # First, we load the internal playbooks, then add the user activated playbooks

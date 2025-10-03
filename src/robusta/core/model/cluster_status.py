@@ -23,6 +23,7 @@ class ActivityStats(BaseModel):
     holmesModel: Optional[str]
     clusterTimeZone: str
     errors: List[str]
+    sinksInitializationErrors: bool = False
 
 
 class ClusterStatus(BaseModel):

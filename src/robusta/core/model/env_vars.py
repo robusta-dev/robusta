@@ -73,6 +73,7 @@ TELEMETRY_PERIODIC_SEC = int(os.environ.get("TELEMETRY_PERIODIC_SEC", 60 * 60 * 
 
 SLACK_REQUEST_TIMEOUT = int(os.environ.get("SLACK_REQUEST_TIMEOUT", 90))
 SLACK_TABLE_COLUMNS_LIMIT = int(os.environ.get("SLACK_TABLE_COLUMNS_LIMIT", 3))
+SLACK_FORWARD_URL = os.environ.get("SLACK_FORWARD_URL")  # forward endpoint "https://api.robusta.dev/slack/"
 DISCORD_TABLE_COLUMNS_LIMIT = int(os.environ.get("DISCORD_TABLE_COLUMNS_LIMIT", 4))
 RSA_KEYS_PATH = os.environ.get("RSA_KEYS_PATH", "/etc/robusta/auth")
 
@@ -108,7 +109,7 @@ MAX_ALLOWED_RULES_PER_CRD_ALERT = int(os.environ.get("MAX_ALLOWED_RULES_PER_CRD_
 IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "robustadev")
 
 FIO_IMAGE = os.environ.get("FIO_IMAGE", "robusta-fio-benchmark:1.0")
-DISK_TOOLS_IMAGE = os.environ.get("DISK_TOOLS_IMAGE", "disk-tools:1.6")
+DISK_TOOLS_IMAGE = os.environ.get("DISK_TOOLS_IMAGE", "disk-tools:1.7")
 
 CLUSTER_DOMAIN = os.environ.get("CLUSTER_DOMAIN", "cluster.local")
 

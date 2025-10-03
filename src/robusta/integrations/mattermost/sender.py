@@ -13,6 +13,7 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     ScanReportBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
@@ -73,6 +74,8 @@ class MattermostSender:
             return self.__to_mattermost_diff(block, sink_name)
         elif isinstance(block, ScanReportBlock):
             raise AssertionError("to_mattermost() should never be called on a ScanReportBlock")
+        elif isinstance(block, EmptyFileBlock):
+            return ""  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to mattermost format block: {block}")
             return ""  # no reason to crash the entire report

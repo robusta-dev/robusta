@@ -74,7 +74,7 @@
 
    configuration/holmesgpt/main-features
    configuration/holmesgpt/getting-started
-   Configuring HolmesGPT <https://holmesgpt.dev>
+   HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
 
 .. toctree::
    :maxdepth: 4
@@ -88,6 +88,7 @@
    configuration/exporting/alert-export-api
    configuration/exporting/alert-statistics-api
    configuration/exporting/namespace-resources-api
+   configuration/exporting/rbac-api
 
 .. toctree::
    :maxdepth: 4

@@ -201,6 +201,7 @@ class HolmesChatParams(HolmesParams):
     stream: bool = Field(default=False)
     enable_tool_approval: bool = Field(default=False)
     tool_decisions: Optional[List[ToolApprovalDecision]] = None
+    additional_system_prompt: Optional[str] = None
 
 
 class HolmesIssueChatParams(HolmesChatParams):

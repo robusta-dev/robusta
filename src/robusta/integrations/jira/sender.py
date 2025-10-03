@@ -12,6 +12,7 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
@@ -152,6 +153,8 @@ class JiraSender:
                     ],
                 }
             ]
+        elif isinstance(block, EmptyFileBlock):
+            return []  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to jira format block")
             return []  # no reason to crash the entire report

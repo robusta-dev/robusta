@@ -14,15 +14,14 @@ from slack_sdk.errors import SlackApiError
 from slack_sdk.http_retry import all_builtin_retry_handlers
 from robusta.core.sinks.slack.templates.template_loader import template_loader
 
-from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
     HOLMES_ASK_SLACK_BUTTON_ENABLED,
     HOLMES_ENABLED,
     SLACK_REQUEST_TIMEOUT,
     SLACK_TABLE_COLUMNS_LIMIT,
+    SLACK_FORWARD_URL,
 )
-from robusta.core.playbooks.internal.ai_integration import ask_holmes
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus, LinkType
 from robusta.core.reporting.blocks import (
     BaseBlock,
@@ -38,6 +37,7 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     ScanReportBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations
@@ -78,7 +78,11 @@ class SlackSender:
             ssl=ssl_context,
             timeout=SLACK_REQUEST_TIMEOUT,
             retry_handlers=all_builtin_retry_handlers(),
+            base_url=SLACK_FORWARD_URL or WebClient.BASE_URL
         )
+        if SLACK_FORWARD_URL:
+            logging.info(f"Slack client configured to forward messages using: {SLACK_FORWARD_URL}")
+
         self.registry = registry
         self.signing_key = signing_key
         self.account_id = account_id
@@ -228,6 +232,8 @@ class SlackSender:
             raise AssertionError("to_slack() should never be called on a ScanReportBlock")
         elif isinstance(block, dict):
             return [block]
+        elif isinstance(block, EmptyFileBlock):
+            return []  # skip empty block
         else:
             logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report

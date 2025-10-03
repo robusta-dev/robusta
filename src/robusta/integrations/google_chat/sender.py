@@ -5,7 +5,7 @@ from robusta.core.reporting.base import BaseBlock, Emojis, Finding, FindingStatu
 from robusta.core.reporting.blocks import (
     LinksBlock,
     LinkProp,
-    MarkdownBlock, FileBlock, HeaderBlock, TableBlock, ListBlock,
+    MarkdownBlock, FileBlock, HeaderBlock, TableBlock, ListBlock, EmptyFileBlock,
 )
 from robusta.core.reporting.consts import FindingSource
 from robusta.core.sinks.google_chat.google_chat_params import GoogleChatSinkParams
@@ -97,6 +97,8 @@ class GoogleChatSender:
             )
         elif isinstance(block, str):
             return block if str else None
+        elif isinstance(block, EmptyFileBlock):
+            return None  # skip empty block
         else:
             if block is not None:  # None means nothing to render and is acceptable here
                 logging.warning(f"cannot convert block of type {type(block)} to Google Chat format block")

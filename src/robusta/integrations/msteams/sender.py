@@ -12,6 +12,7 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    EmptyFileBlock,
 )
 from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
 from robusta.integrations.msteams.msteams_msg import MsTeamsMsg
@@ -35,7 +36,8 @@ class MsTeamsSender:
         elif isinstance(block, CallbackBlock):
             logging.error("CallbackBlock not supported for msteams")
         else:
-            logging.warning(f"cannot convert block of type {type(block)} to msteams format block: {block}")
+            if not isinstance(block, EmptyFileBlock):
+                logging.warning(f"cannot convert block of type {type(block)} to msteams format block: {block}")
 
     @classmethod
     def __split_block_to_files_and_all_the_rest(cls, enrichment: Enrichment):

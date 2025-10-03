@@ -42,7 +42,7 @@ class HolmesChatRequest(BaseModel):
     stream: bool = Field(default=False)
     enable_tool_approval: bool = Field(default=False)
     tool_decisions: Optional[List[ToolApprovalDecision]] = None
-
+    additional_system_prompt: Optional[str] = None
 
 
 class HolmesIssueChatRequest(HolmesChatRequest):
@@ -77,6 +77,7 @@ class HolmesChatResult(BaseModel):
     files: Optional[List[FileBlock]] = None
     tool_calls: Optional[List[ToolCallResult]] = None
     conversation_history: Optional[List[dict]] = None
+    metadata: Optional[dict] = None
 
 
 class HolmesChatResultsBlock(BaseBlock):

@@ -2185,13 +2185,13 @@ twisted = ["twisted"]
 
 [[package]]
 name = "prometrix"
-version = "0.2.2"
+version = "0.2.5"
 description = "A Python Prometheus client for all Prometheus instances."
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = "<4.0,>=3.9"
 files = [
-    {file = "prometrix-0.2.2-py3-none-any.whl", hash = "sha256:5a32983a95e6c77fa120f00877e64df6da06a2428eef1ab9bdf3c02a4ea9767d"},
-    {file = "prometrix-0.2.2.tar.gz", hash = "sha256:f51d08c9d6e910de43a10c965f354949beecddf47dd34aa91698fe46fb47c9f5"},
+    {file = "prometrix-0.2.5-py3-none-any.whl", hash = "sha256:82fcd249d24ae2e3c5ce2903abba91383d44f8c48590c418c5345d834d2f37e0"},
+    {file = "prometrix-0.2.5.tar.gz", hash = "sha256:6d3dddc9763bdc328a8df3b4679e0befcab6325a82281576a3717f483c566d5a"},
 ]
 
 [package.dependencies]
@@ -2201,8 +2201,8 @@ fonttools = ">=4.43.0,<5.0.0"
 idna = ">=3.7,<4.0"
 pillow = ">=10.3.0,<11.0.0"
 prometheus-api-client = ">=0.5.3,<0.6.0"
-pydantic = ">=1.8.1,<2.0.0"
-requests = ">=2.32.0,<3.0.0"
+pydantic = ">=1.8.1,<3"
+requests = ">2.32.4"
 urllib3 = ">=1.26.20,<2.0.0"
 zipp = ">=3.20.1,<4.0.0"
 
@@ -2646,13 +2646,13 @@ files = [
 
 [[package]]
 name = "requests"
-version = "2.32.4"
+version = "2.32.5"
 description = "Python HTTP for Humans."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "requests-2.32.4-py3-none-any.whl", hash = "sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c"},
-    {file = "requests-2.32.4.tar.gz", hash = "sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422"},
+    {file = "requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6"},
+    {file = "requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf"},
 ]
 
 [package.dependencies]
@@ -3858,4 +3858,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "grafana-
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9, <3.12"
-content-hash = "c1d04f976b363f12f7e0cc330e1bd217d310bfbdbeae7c631d5b53504da4e4ae"
+content-hash = "c752cf90fa10d45a93df8633a3dc69d56033b6fac3d9830358dbe3801337cbee"
