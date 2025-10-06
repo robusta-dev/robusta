@@ -111,7 +111,7 @@ spec:
             value: "True"
           {{- end }}
           - name: RUNNER_VERSION
-            value: 0.28.1 
+            value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
             value: {{ .Values.runner.certificate }}
           - name: IMAGE_REGISTRY
