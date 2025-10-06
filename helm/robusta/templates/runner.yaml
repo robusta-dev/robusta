@@ -54,7 +54,7 @@ spec:
           - sh
           - -c
           - >
-            SRC="/venv/lib/$(python -V | cut -d' ' -f2 | cut -d. -f1,2)/site-packages" &&
+            SRC="/venv/lib/python$(python -V | cut -d' ' -f2 | cut -d. -f1,2)/site-packages" &&
             cp -a "${SRC}/." /venv-writable/
         volumeMounts:
         - name: venv-lib-volume
