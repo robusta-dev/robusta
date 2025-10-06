@@ -340,11 +340,13 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
 
     try:
         holmes_req = HolmesChatRequest(
-            ask=params.ask,
-            conversation_history=params.conversation_history,
-            model=params.model,
-            stream=params.stream,
-            additional_system_prompt=params.additional_system_prompt
+            ask=params.ask, 
+            conversation_history=params.conversation_history, 
+            model=params.model, 
+            stream=params.stream, 
+            additional_system_prompt=params.additional_system_prompt,
+            enable_tool_approval=params.enable_tool_approval,
+            tool_decisions=params.tool_decisions,
         )
         url = f"{holmes_url}/api/chat"
         if params.stream:

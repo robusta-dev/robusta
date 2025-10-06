@@ -7,6 +7,7 @@ from robusta.core.model.base_params import (
     HolmesInvestigationResult,
     HolmesOldConversationIssueContext,
     ResourceInfo,
+    ToolApprovalDecision,
 )
 from robusta.core.reporting import BaseBlock
 from robusta.core.reporting.blocks import FileBlock
@@ -39,6 +40,8 @@ class HolmesChatRequest(BaseModel):
     conversation_history: Optional[List[dict]] = None
     model: Optional[str] = None
     stream: bool = Field(default=False)
+    enable_tool_approval: bool = Field(default=False)
+    tool_decisions: Optional[List[ToolApprovalDecision]] = None
     additional_system_prompt: Optional[str] = None
 
 
