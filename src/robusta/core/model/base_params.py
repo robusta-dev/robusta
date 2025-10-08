@@ -187,7 +187,6 @@ class ToolApprovalDecision(BaseModel):
 
     tool_call_id: str
     approved: bool
-    modified_params: Optional[Dict[str, Any]] = None
 
 
 class HolmesChatParams(HolmesParams):
