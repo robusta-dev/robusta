@@ -38,6 +38,10 @@ Query Parameters
      - string
      - The name of the alert to filter by (e.g., ``CrashLoopBackoff``).
      - No
+   * - ``namespace``
+     - string
+     - The namespace of the alert to filter by (e.g., ``monitoring``).
+     - No
 
 Example Request
 ^^^^^^^^^^^^^^^^^^^^^^^^^

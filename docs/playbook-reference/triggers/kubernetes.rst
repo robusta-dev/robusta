@@ -261,6 +261,21 @@ Single Resource Triggers
 
 For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
 
+.. note::
+
+    By default, Robusta processes only **Pod** change events that are related to failures or modifications in the **Pod** spec.
+    Other types of **Pod** changes are considered less relevant and are filtered out to reduce noise.
+
+    To process **all Pod** change events, add the following configuration to your `generated_values.yaml` file.
+
+    .. code-block:: yaml
+
+        kubewatch:
+          additional_env_vars:
+          - name: ADVANCED_FILTERS
+            value: "false"
+
+
 .. jinja::
   :inline-ctx: { "resource_name" : "ReplicaSet", "related_actions" : ["related_pods"] }
   :header_update_levels:
@@ -296,6 +311,21 @@ For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
   :header_update_levels:
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
+.. note::
+
+    By default, Robusta processes only **Event Create** events with the type ``Warning``.
+    **Events** with the type ``Normal`` are considered less relevant and are filtered out to reduce noise,
+    except for ``Normal`` events that indicate Pod evictions.
+
+    To process all Kubernetes **Event** change events, add the following configuration to your ``generated_values.yaml`` file.
+
+    .. code-block:: yaml
+
+        kubewatch:
+          additional_env_vars:
+          - name: ADVANCED_FILTERS
+            value: "false"
+
 .. jinja::
   :inline-ctx: { "resource_name" : "HorizontalPodAutoscaler", "related_actions" : [] }
   :header_update_levels:
@@ -320,6 +350,20 @@ For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
   :inline-ctx: { "resource_name" : "Job", "related_actions" : ["Job Enrichers", "related_pods"] }
   :header_update_levels:
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
+
+.. note::
+
+    By default, Robusta processes only **Job** change events that are related to failures or modifications in the **Job** spec.
+    Other types of **Job** changes are considered less relevant and are filtered out to reduce noise.
+
+    To process **all Job** change events, add the following configuration to your ``generated_values.yaml`` file.
+
+    .. code-block:: yaml
+
+        kubewatch:
+          additional_env_vars:
+          - name: ADVANCED_FILTERS
+            value: "false"
 
 .. jinja::
   :inline-ctx: { "resource_name" : "Namespace", "related_actions" : [] }
