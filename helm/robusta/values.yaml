@@ -455,6 +455,19 @@ builtinPlaybooks:
 enablePlatformPlaybooks: false
 
 platformPlaybooks:
+- name: "PodEvictionReport"
+  triggers:
+  - on_event_create:
+      scope:
+        include:
+          - attributes:
+              - "reason=Evicted"
+  actions:
+  - create_event_finding:
+      aggregation_key: "PodEviction"
+  - event_resource_events: {}
+  sinks:
+    - "robusta_ui_sink"
 - name: "K8sWarningEventsReport"
   triggers:
   - on_kubernetes_warning_event_create:
@@ -590,7 +603,7 @@ image:
 # parameters for the robusta forwarder deployment
 kubewatch:
   image: ~ # image can be used to override image.registry/imageName
-  imageName: kubewatch:v2.11.0
+  imageName: kubewatch:v2.12.0
   imagePullPolicy: IfNotPresent
   revisionHistoryLimit: 10
   pprof: True
@@ -600,7 +613,9 @@ kubewatch:
       memory: 512Mi
     limits:
       cpu: ~
-  additional_env_vars: []
+  additional_env_vars:
+  - name: ADVANCED_FILTERS
+    value: "true"
   priorityClassName: ""
   tolerations: []
   annotations: {}

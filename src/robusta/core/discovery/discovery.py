@@ -649,9 +649,22 @@ class Discovery:
         try:
             continue_ref: Optional[str] = None
             for _ in range(DISCOVERY_MAX_BATCHES):
-                current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces(
-                    limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
-                )
+                try:
+                    current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces(
+                        limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
+                    )
+                except ApiException as e:
+                    if e.status == 410 and e.body:
+                        # Continue token expired, extract new token from error and continue
+                        import json
+                        error_body = json.loads(e.body)
+                        new_continue_token = error_body.get("metadata", {}).get("continue")
+                        if new_continue_token:
+                            logging.info("Continue token expired for jobs listing. Continuing")
+                            continue_ref = new_continue_token
+                            continue
+                    raise
+
                 for job in current_jobs.items:
                     job_pods = []
                     job_labels = {}
