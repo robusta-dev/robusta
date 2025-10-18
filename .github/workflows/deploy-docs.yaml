@@ -35,16 +35,16 @@ jobs:
       PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
-    - uses: google-github-actions/auth@v2
+    - uses: google-github-actions/auth@v3
       if: needs.has-secrets.outputs.docs
       with:
         project_id: ${{ secrets.GKE_PROD_PROJECT }}
         workload_identity_provider: 'projects/429189597230/locations/global/workloadIdentityPools/github/providers/robusta-repos' # prod
 
     - name: Set up gcloud CLI
-      uses: google-github-actions/setup-gcloud@v2
+      uses: google-github-actions/setup-gcloud@v3
       if: needs.has-secrets.outputs.docs
       with:
         project_id: ${{ secrets.GKE_PROD_PROJECT }}
