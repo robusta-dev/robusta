@@ -50,9 +50,9 @@ jobs:
         project_id: ${{ secrets.GKE_PROD_PROJECT }}
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
-        python-version: 3.9
+        python-version: 3.11
 
     - name: Install dependencies
       run: |
