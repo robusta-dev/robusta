@@ -22,9 +22,6 @@ Send alerts to Robusta from any monitoring system using HTTP webhooks.
 :doc:`Custom Webhooks <custom-webhooks>`
     Send alerts from any system that supports HTTP webhooks, including custom monitoring solutions.
 
-:doc:`Datadog Integration <../alertmanager-integration/datadog>`
-    Forward alerts from Datadog to Robusta via webhooks.
-
 :doc:`New Relic Integration <../alertmanager-integration/newrelic>`
     Forward alerts from New Relic to Robusta via webhooks.
 
@@ -33,7 +30,7 @@ Send alerts to Robusta from any monitoring system using HTTP webhooks.
 
 :doc:`SolarWinds Integration <../alertmanager-integration/solarwinds>`
     Configure SolarWinds to send alert webhooks directly to Robusta.
-    
+
 :doc:`Nagios Integration <../alertmanager-integration/nagios>`
     Forward alerts from Nagios to Robusta for enrichment and automation.
 
