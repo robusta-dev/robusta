@@ -52,4 +52,11 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
 
         Forward PagerDuty incidents and alerts by webhook
 
+    .. grid-item-card:: :octicon:`bell;1em;` LaunchDarkly
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/launchdarkly
+        :link-type: doc
+
+        Forward LaunchDarkly changes by webhook
+        .. 
 **Have alerts elsewhere?** Send alerts via the generic :doc:`HTTP webhook endpoint <exporting/custom-webhooks>`.
