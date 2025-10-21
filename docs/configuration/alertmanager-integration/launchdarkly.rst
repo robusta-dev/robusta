@@ -60,15 +60,16 @@ In LaunchDarkly:
 Alternative: Using Headers Instead of URL Parameters
 --------------------------------------------------
 
-If you're using a third-party service that can forward requests, you can alternatively configure the webhook to use headers instead of URL parameters:
+Including API keys in URLs can expose them in logs, browser history, and monitoring tools. A more secure approach is to send the key in the request headers whenever possible.
 
-- **URL**: ``https://api.robusta.dev/integrations/generic/launchdarkly``
-- **Headers**: These are the headers to configure:
+If you’re using a third-party service that supports custom headers, configure the webhook like this:
+
+- **URL**: ``https://api.robusta.dev/integrations/generic/launchdarkly?account_id=YOUR_ACCOUNT_ID_HERE``
+- **Headers**:
 
    .. code-block:: http
 
       Authorization: Bearer <api-key>
-      account-id: <account_id>
 
 
 What Gets Tracked
