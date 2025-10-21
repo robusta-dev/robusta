@@ -47,11 +47,15 @@ In LaunchDarkly:
    - Replace ``YOUR_API_KEY_HERE`` with the API key from Step 1.
    - Replace ``YOUR_ACCOUNT_ID_HERE`` with your account ID from Step 1.
 
-4. **Statement**: Leave as default or customize as needed.
+4. **Statement**: Click the Add the statement button.
 5. **Resource type**: Select **FLAG**.
 6. **Select flags**: Choose the specific flags you want to monitor, or select all.
 7. **Project and environments**: Select the projects and environments you want to track.
 8. Save the integration.
+
+.. Note::
+
+   Other resource types other than **FLAG** are not verified to work though they might function without additional configuration.
 
 Alternative: Using Headers Instead of URL Parameters
 --------------------------------------------------
@@ -59,9 +63,13 @@ Alternative: Using Headers Instead of URL Parameters
 If you're using a third-party service that can forward requests, you can alternatively configure the webhook to use headers instead of URL parameters:
 
 - **URL**: ``https://api.robusta.dev/integrations/generic/launchdarkly``
-- **Headers**:
-  - ``account-id``: Your Robusta account ID
-  - ``api_key``: Your Robusta API key
+- **Headers**: These are the headers to configure:
+
+   .. code-block:: http
+
+      Authorization: Bearer <api-key>
+      account-id: <account_id>
+
 
 What Gets Tracked
 -----------------
