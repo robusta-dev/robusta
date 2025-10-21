@@ -25,8 +25,13 @@
 
    Overview <configuration/index>
    Prometheus & AlertManager <configuration/alertmanager-integration/index>
-   Nagios <configuration/alertmanager-integration/nagios>
+   Datadog <configuration/alertmanager-integration/datadog>
+   New Relic <configuration/alertmanager-integration/newrelic>
    SolarWinds <configuration/alertmanager-integration/solarwinds>
+   PagerDuty <configuration/alertmanager-integration/pagerduty-alerting>
+   Dynatrace <configuration/alertmanager-integration/dynatrace>
+   LaunchDarkly <configuration/alertmanager-integration/launchdarkly>
+   Nagios <configuration/alertmanager-integration/nagios>
    Custom Webhooks <configuration/exporting/custom-webhooks>
 
 .. toctree::
