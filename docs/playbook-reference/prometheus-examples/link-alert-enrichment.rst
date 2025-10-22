@@ -10,7 +10,7 @@ Implementation
 
 In this example, we add links to the alert ``KubeContainerCPURequestAlert`` that we created in a :ref:`previous tutorial <Create Custom Prometheus Alerts>`.
 
-Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
+Below there are three alternatives ways to enrich the alert with links. Apply the YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 
@@ -29,6 +29,13 @@ Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Ro
           :scroll: Playbook <https://playbook-url/|Handling High Resource Utilization>
           :github: Adjust CPU requests <https://github.com/YourRepository/|in the `Prod-sre` repository>
           :notion: Internal Docs on <https://notion.com/path-to-docs/|Customizing CPU requests>
+    - templated_button_enricher:
+        button_text: "Playbook for ${team}"
+        button_url: "https://playbook-url/team/${team}"
+    - static_button_enricher:
+        button_text: "GitHub link"
+        button_url: "https://github.com/YourRepository/"
+
 
 .. code-annotations::
     1. We're using custom emojis here that correspond to GitHub and Notion logos. Before you configure this, follow `this guide <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to add emojis to your workspace.
