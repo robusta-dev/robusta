@@ -428,12 +428,12 @@ class TemplatedButtonParams(ActionParams):
 def templated_button_enricher(event: KubernetesResourceEvent, params: TemplatedButtonParams):
     """
     Create a button with a templated text and URL.
-    You can inject the k8s subject info and additionally on Prometheus alerts, any of the alert’s Prometheus labels.
+    You can inject the k8s subject info and additionally on Prometheus alerts, any of the alert's Prometheus labels.
 
     Common variables to use are ${name}, ${kind}, ${namespace}, and ${node}
 
     A variable like ${foo} will be replaced by the value of info/label foo.
-    If it isn’t present then the text “<missing>” will be used instead.
+    If it isn't present then the text "<missing>" will be used instead.
 
     Check example for adding a template link.
 
