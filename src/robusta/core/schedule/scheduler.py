@@ -132,11 +132,12 @@ class Scheduler:
             return (job.state.exec_count >= job.scheduling_params.repeat) and job.scheduling_params.repeat != -1
 
     def __calc_job_delay_for_next_run(self, job: ScheduledJob):
-        if job.state.job_status == JobStatus.NEW:
-            if isinstance(job.scheduling_params, DynamicDelayRepeat):
-                return job.scheduling_params.delay_periods[0]
-            else:
-                return INITIAL_SCHEDULE_DELAY_SEC
+        if not isinstance(job.scheduling_params, CronScheduleRepeat):  # calc initial delay only for non-dron triggers
+            if job.state.job_status == JobStatus.NEW:
+                if isinstance(job.scheduling_params, DynamicDelayRepeat):
+                    return job.scheduling_params.delay_periods[0]
+                else:
+                    return INITIAL_SCHEDULE_DELAY_SEC
 
         if isinstance(job.scheduling_params, DynamicDelayRepeat):
             next_delay_idx = min(job.state.exec_count, len(job.scheduling_params.delay_periods) - 1)
