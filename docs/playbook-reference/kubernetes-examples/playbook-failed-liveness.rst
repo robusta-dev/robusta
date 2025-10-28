@@ -1,7 +1,7 @@
 Track Failed Liveness Probes
 ##############################
 
-Lets track failed Liveness Probes and notify the user. Notifications will be sent to configured :ref:`Sinks <Sinks Reference>`
+Lets track failed Liveness Probes and notify the user. Notifications will be sent to configured :ref:`Sinks <sinks-reference>`
 like Slack or MSTeams. It is also possible to :ref:`route notifications to specific sinks<Routing Alerts to Specific Sinks>`.
 
 Define a Playbook to Track Liveness Probes

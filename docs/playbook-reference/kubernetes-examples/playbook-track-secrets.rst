@@ -114,7 +114,7 @@ Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
        kubectl delete secret test-secret
 
-A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, indicating that the Secret was created, modified, or deleted.
+A Robusta notification will arrive in your configured :ref:`sinks <sinks-reference>`, indicating that the Secret was created, modified, or deleted.
 
 
 Cleanup

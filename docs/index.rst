@@ -49,17 +49,53 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: 🔔 Notifications & Routing
+   :caption: 🔔 Notification Sinks
+   :hidden:
+
+   Overview <notification-routing/configuring-sinks>
+   All Sinks <configuration/sinks/index>
+   configuration/sinks/slack
+   configuration/sinks/ms-teams
+   configuration/sinks/RobustaUI
+   configuration/sinks/mail
+   configuration/sinks/telegram
+   configuration/sinks/discord
+   configuration/sinks/DataDog
+   configuration/sinks/mattermost
+   configuration/sinks/Opsgenie
+   configuration/sinks/PagerDuty
+   configuration/sinks/VictorOps
+   configuration/sinks/YandexMessenger
+   configuration/sinks/jira
+   configuration/sinks/webhook
+   configuration/sinks/file
+   configuration/sinks/webex
+   configuration/sinks/kafka
+   configuration/sinks/rocketchat
+   configuration/sinks/google_chat
+   configuration/sinks/pushover
+   configuration/sinks/ServiceNow
+   configuration/sinks/zulip
+   configuration/sinks/sinks-development
+
+.. toctree::
+   :maxdepth: 4
+   :caption: 🔀 Alert Routing
    :hidden:
 
    Overview <notification-routing/index>
-   notification-routing/configuring-sinks
-   📧 Sink Reference <configuration/sinks/index>
    Routing (Scopes) <notification-routing/routing-with-scopes>
    Grouping (Slack Threads) <notification-routing/notification-grouping>
    notification-routing/routing-by-time
+   notification-routing/routing-by-namespace
+   notification-routing/routing-by-type
+   notification-routing/implementing-monitoring-shifts
+   notification-routing/routing-to-multiple-slack-channels
+   notification-routing/routing-exclusion
+   notification-routing/routing-by-severity
+   notification-routing/excluding-resolved
+   notification-routing/disable-oomkill-notifications
    notification-routing/routing-silencing
-   notification-routing/notification-routing-examples
 
 .. toctree::
    :maxdepth: 4

@@ -12,7 +12,7 @@ Conceptually, Robusta does three things:
 
 1. **Listens passively to various sources:** Robusta monitors Kubernetes events, Prometheus alerts, and other sources to stay informed about your cluster's current state.
 2. **Actively collects observability data:** When noteworthy events occur, Robusta actively gathers and correlates information such as logs, graphs, and thread dumps. All according to the playbooks defined in Robusta.
-3. **Sends notifications:** Based on your preferences, Robusta notifies in :ref:`sinks <Sinks Reference>` like Slack, MSTeams, and PagerDuty
+3. **Sends notifications:** Based on your preferences, Robusta notifies in :ref:`sinks <sinks-reference>` like Slack, MSTeams, and PagerDuty
 
 To get a feel for playbooks, let's explore two examples:
 
