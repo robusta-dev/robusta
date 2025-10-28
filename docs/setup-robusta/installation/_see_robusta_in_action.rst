@@ -17,7 +17,7 @@ Verify the pod is crashing:
    NAME                            READY   STATUS             RESTARTS   AGE
    crashpod-64d8fbfd-s2dvn         0/1     CrashLoopBackOff   1          7s
 
-Once the pod restarts twice, you'll get notified in your configured :ref:`sink <Sinks Reference>`.
+Once the pod restarts twice, you'll get notified in your configured :ref:`sink <sinks-reference>`.
 
 .. admonition:: Example Slack Message
 

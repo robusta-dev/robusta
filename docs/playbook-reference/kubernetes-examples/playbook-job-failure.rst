@@ -1,7 +1,7 @@
 Track Failed Kubernetes Jobs
 ##############################
 
-Notify about failed Kubernetes Jobs in Slack, MSTeams or other :ref:`Sinks <Sinks Reference>`.
+Notify about failed Kubernetes Jobs in Slack, MSTeams or other :ref:`Sinks <sinks-reference>`.
 
 .. image:: /images/failingjobs.png
     :alt: Failing Kubernetes jobs notification on Slack
