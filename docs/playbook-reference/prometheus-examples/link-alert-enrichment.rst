@@ -29,12 +29,9 @@ Below there are three alternatives ways to enrich the alert with links. Apply th
           :scroll: Playbook <https://playbook-url/|Handling High Resource Utilization>
           :github: Adjust CPU requests <https://github.com/YourRepository/|in the `Prod-sre` repository>
           :notion: Internal Docs on <https://notion.com/path-to-docs/|Customizing CPU requests>
-    - templated_button_enricher:
+    - button_enricher:
         button_text: "Playbook for ${team}"
         button_url: "https://playbook-url/team/${team}"
-    - static_button_enricher:
-        button_text: "GitHub link"
-        button_url: "https://github.com/YourRepository/"
 
 
 .. code-annotations::

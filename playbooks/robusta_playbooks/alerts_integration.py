@@ -378,8 +378,8 @@ class TemplateParams(ActionParams):
     template: str = ""
 
 
-def _get_labels(event: KubernetesResourceEvent) -> Dict[str, Any]:
-    labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
+def _get_labels(event: KubernetesResourceEvent, default_value: str = "<missing>") -> Dict[str, Any]:
+    labels: Dict[str, Any] = defaultdict(lambda: default_value)
     if isinstance(event, PrometheusKubernetesAlert):
         labels.update(event.alert.labels)
         labels.update(event.alert.annotations)
@@ -425,7 +425,7 @@ class TemplatedButtonParams(ActionParams):
 
 
 @action
-def templated_button_enricher(event: KubernetesResourceEvent, params: TemplatedButtonParams):
+def button_enricher(event: KubernetesResourceEvent, params: TemplatedButtonParams):
     """
     Create a button with a templated text and URL.
     You can inject the k8s subject info and additionally on Prometheus alerts, any of the alert's Prometheus labels.
@@ -433,32 +433,18 @@ def templated_button_enricher(event: KubernetesResourceEvent, params: TemplatedB
     Common variables to use are ${name}, ${kind}, ${namespace}, and ${node}
 
     A variable like ${foo} will be replaced by the value of info/label foo.
-    If it isn't present then the text "<missing>" will be used instead.
+    If it isn't present, then the text will be skipped.
+
+    If the button_url is empty, then the button will not be added.
 
     Check example for adding a template link.
 
     """
-    labels = _get_labels(event)
+    labels = _get_labels(event, default_value="")
     button_text = Template(params.button_text).safe_substitute(labels)
     button_url = Template(params.button_url).safe_substitute(labels)
-    event.add_link(Link(url=button_url, name=button_text))
-
-
-class StaticButtonParams(ActionParams):
-    """
-    :var button_text: The text of the button
-    :var button_url: The URL of the button
-    """
-    button_text: str
-    button_url: str
-
-
-@action
-def static_button_enricher(event: ExecutionBaseEvent, params: StaticButtonParams):
-    """
-    Create a button with a static text and URL.
-    """
-    event.add_link(Link(url=params.button_url, name=params.button_text))
+    if button_url.strip() != "":
+        event.add_link(Link(url=button_url, name=button_text))
 
 
 class SearchTermParams(ActionParams):
