@@ -6,7 +6,6 @@ import os
 import threading
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
-
 from cachetools import TTLCache
 import requests
 from postgrest._sync.request_builder import SyncQueryRequestBuilder
@@ -18,6 +17,7 @@ from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 
 from robusta.core.model.cluster_status import ClusterStatus
+from robusta.core.exceptions import SupabaseDnsException
 from robusta.core.model.env_vars import SUPABASE_TIMEOUT_SECONDS
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
@@ -541,10 +541,29 @@ class SupabaseDal(AccountResourceFetcher):
 
     def sign_in(self) -> str:
         logging.info("Supabase dal login")
-        res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
-        self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
-        self.client.postgrest.auth(res.session.access_token)
-        return res.user.id
+        try:
+            res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+            self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
+            self.client.postgrest.auth(res.session.access_token)
+            return res.user.id
+        except Exception as e:
+            # Check if this is a DNS-related error
+            error_msg = str(e).lower()
+            if any(dns_indicator in error_msg for dns_indicator in [
+                "temporary failure in name resolution",
+                "name resolution",
+                "dns",
+                "name or service not known",
+                "nodename nor servname provided"
+            ]):
+                message = (
+                    f"\n{e}\nCannot connect to Robusta SaaS <{self.url}>. "
+                    f"\nThis is often due to DNS issues or Firewall policies. "
+                    f"\nPlease run the following command in your cluster and verify it does not print 'Could not resolve host': "
+                    f"\ncurl -I {self.url}\n"
+                )
+                raise SupabaseDnsException(message) from e
+            raise
 
     def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
         db_cluster_status = data.dict()

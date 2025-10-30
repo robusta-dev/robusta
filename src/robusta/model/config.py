@@ -11,6 +11,7 @@ from robusta.core.pubsub.event_subscriber import EventHandler
 from robusta.core.pubsub.events_pubsub import EventsPubSub
 from robusta.core.sinks.robusta.robusta_sink import RobustaSink
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
+from robusta.core.exceptions import SupabaseDnsException
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.sink_factory import SinkFactory
@@ -91,7 +92,9 @@ class SinksRegistry:
                 
             except Exception as e:
                 has_sink_errors = True
-                logging.error(f"Failed to initialize sink {sink_name}: {e}", exc_info=True)
+                # Don't show trace for Robusta SaaS DNS-related exception to avoid hiding the error in noisy logs
+                exec_info = not isinstance(e, SupabaseDnsException)
+                logging.error(f"Failed to initialize sink {sink_name}: {e}", exc_info=exec_info)
                 if not continue_on_sink_errors:
                     raise
                 # Skip this sink if continue_on_sink_errors is True
