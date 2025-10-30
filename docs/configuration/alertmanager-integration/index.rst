@@ -7,6 +7,7 @@ Prometheus & AlertManager
    :hidden:
    :maxdepth: 1
 
+   customize-labels-priorities
    alert-manager
    outofcluster-prometheus
    azure-managed-prometheus
@@ -14,12 +15,12 @@ Prometheus & AlertManager
    coralogix_managed_prometheus
    google-managed-prometheus
    victoria-metrics
-   grafana-alert-manager
-   grafana-cloud-mimir
+   grafana-self-hosted
+   grafana-cloud
    embedded-prometheus
 
 
-Connect Robusta to your Prometheus setup to get enriched alerts with logs, events, and metrics.
+Send Prometheus alerts to Robusta to enrich them with correlated logs, events, and metrics.
 
 **Already using Robusta's embedded Prometheus?** No setup needed - skip this page.
 
@@ -64,14 +65,14 @@ Connect Robusta to your Prometheus setup to get enriched alerts with logs, event
         :link: victoria-metrics
         :link-type: doc
 
-    .. grid-item-card:: Grafana Alerts
+    .. grid-item-card:: Grafana - Self-Hosted
         :class-card: sd-bg-light sd-bg-text-light
-        :link: grafana-alert-manager
+        :link: grafana-self-hosted
         :link-type: doc
 
-    .. grid-item-card:: Grafana Cloud (Mimir)
+    .. grid-item-card:: Grafana Cloud
         :class-card: sd-bg-light sd-bg-text-light
-        :link: grafana-cloud-mimir
+        :link: grafana-cloud
         :link-type: doc
 
     .. grid-item-card:: Install Prometheus with Robusta

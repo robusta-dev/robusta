@@ -109,10 +109,15 @@ redirects = {
     "how-it-works/privacy-and-security.html": "/master/setup-robusta/privacy-and-security.html",
     "how-it-works/index.html": "/master/playbook-reference/what-are-playbooks.html",
     "playbook-reference/examples.html": "/master/playbook-reference/prometheus-examples/index.html",
-    "tutorials/playbook-track-changes.html": "/master/playbook-reference/kubernetes-examples/playbook-failed-liveness.html",
-    "tutorials/playbook-job-failure.html": "/master/playbook-reference/kubernetes-examples/playbook-job-failure.html",
-    "tutorials/playbook-failed-liveness.html": "/master/playbook-reference/kubernetes-examples/playbook-failed-liveness.html",
-    "tutorials/playbook-track-secrets.html": "/master/playbook-reference/kubernetes-examples//playbook-track-secrets.html",
+    "tutorials/playbook-track-changes.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "tutorials/playbook-job-failure.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "tutorials/playbook-failed-liveness.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "tutorials/playbook-track-secrets.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "playbook-reference/kubernetes-examples/playbook-failed-liveness.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "playbook-reference/kubernetes-examples/playbook-job-failure.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "playbook-reference/kubernetes-examples/playbook-track-changes.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "playbook-reference/kubernetes-examples/playbook-track-secrets.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
+    "playbook-reference/kubernetes-examples/track-kubernetes-changes.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",
     "tutorials/alert-remediation.html": "/master/playbook-reference/prometheus-examples/alert-remediation.html",
     "tutorials/alert-custom-enrichment.html": "/master/playbook-reference/prometheus-examples/alert-custom-enrichment.html",
     "catalog/sinks/slack.html": "/master/configuration/sinks/slack.html",
@@ -201,7 +206,14 @@ redirects = {
     "user-guide/robusta-cli.html": "/master/setup-robusta/installation/index.html",
     "advanced/index.html": "/master/setup-robusta/installation/index.html",
     "configuration/exporting/exporting-data.html": "/master/configuration/exporting/send-alerts-api.html",
-    "configuration/alertmanager-integration/troubleshooting-alertmanager.html": "/master/configuration/exporting/send-alerts-api.html"
+    "configuration/alertmanager-integration/troubleshooting-alertmanager.html": "/master/configuration/exporting/send-alerts-api.html",
+    "configuration/alertmanager-integration/grafana-alert-manager.html": "/master/configuration/alertmanager-integration/grafana-self-hosted.html",
+    "configuration/alertmanager-integration/grafana-cloud-mimir.html": "/master/configuration/alertmanager-integration/grafana-cloud.html",
+    "playbook-reference/what-are-playbooks.html": "/master/playbook-reference/overview.html",
+    "how-it-works/alert-builtin-enrichment.html": "/master/playbook-reference/builtin-alert-enrichment.html",
+    "setup-robusta/installation/extend-prometheus-installation.html": "/master/setup-robusta/installation/standalone-installation.html",
+    "playbook-reference/defining-playbooks/index.html": "/master/playbook-reference/index.html",
+    "configuration/alertmanager-integration/alert-custom-prometheus.html": "/master/configuration/alertmanager-integration/embedded-prometheus.html#creating-custom-prometheus-alerts"
 } 
 
 

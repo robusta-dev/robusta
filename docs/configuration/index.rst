@@ -1,62 +1,100 @@
 :hide-toc:
 
-Alert Sources
-=============
+Send Alerts to Robusta
+=======================
 
 Connect your monitoring system to Robusta, to enrich alerts and apply automation rules.
 
-**Choose your setup:**
+Prometheus & AlertManager
+--------------------------
 
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`pulse;1em;` Prometheus & AlertManager
+    .. grid-item-card:: :octicon:`pulse;1em;` AlertManager - external
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/index
+        :link: alertmanager-integration/outofcluster-prometheus
         :link-type: doc
 
-        Any Prometheus-compatible stack
-
-    .. grid-item-card:: :octicon:`bell;1em;` Nagios
+    .. grid-item-card:: :octicon:`pulse;1em;` AlertManager - in-cluster
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/nagios
+        :link: alertmanager-integration/alert-manager
         :link-type: doc
 
-        Forward Nagios alerts by webhook
-
-    .. grid-item-card:: :octicon:`bell;1em;` NewRelic
+    .. grid-item-card:: :octicon:`pulse;1em;` AWS Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/newrelic
+        :link: alertmanager-integration/eks-managed-prometheus
         :link-type: doc
 
-        Forward NewRelic alerts by webhook
-
-    .. grid-item-card:: :octicon:`bell;1em;` SolarWinds
+    .. grid-item-card:: :octicon:`pulse;1em;` Azure Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/solarwinds
+        :link: alertmanager-integration/azure-managed-prometheus
         :link-type: doc
 
-        Forward SolarWinds alerts by webhook
+    .. grid-item-card:: :octicon:`pulse;1em;` Coralogix
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/coralogix_managed_prometheus
+        :link-type: doc
 
-    .. grid-item-card:: :octicon:`bell;1em;` Dynatrace
+    .. grid-item-card:: :octicon:`pulse;1em;` Dynatrace
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/dynatrace
         :link-type: doc
 
-        Forward Dynatrace alerts by webhook
+    .. grid-item-card:: :octicon:`pulse;1em;` Embedded Prometheus Stack
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/embedded-prometheus
+        :link-type: doc
 
-    .. grid-item-card:: :octicon:`bell;1em;` Pagerduty
+    .. grid-item-card:: :octicon:`pulse;1em;` Google Managed Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/google-managed-prometheus
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` Grafana - Self-Hosted
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/grafana-self-hosted
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` Grafana Cloud
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/grafana-cloud
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` Nagios
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/nagios
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` New Relic
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/newrelic
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` PagerDuty
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/pagerduty-alerting
         :link-type: doc
 
-        Forward PagerDuty incidents and alerts by webhook
-
-    .. grid-item-card:: :octicon:`bell;1em;` LaunchDarkly
+    .. grid-item-card:: :octicon:`pulse;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/launchdarkly
+        :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-        Forward LaunchDarkly changes by webhook
-        .. 
-**Have alerts elsewhere?** Send alerts via the generic :doc:`HTTP webhook endpoint <exporting/custom-webhooks>`.
+    .. grid-item-card:: :octicon:`pulse;1em;` VictoriaMetrics
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/victoria-metrics
+        :link-type: doc
+
+.. grid:: 1 1 2 3
+    :gutter: 3
+
+    .. grid-item-card:: :octicon:`tools;1em;` Customize Labels & Priorities
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/customize-labels-priorities
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`plug;1em;` Other - Custom Webhooks
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: exporting/custom-webhooks
+        :link-type: doc

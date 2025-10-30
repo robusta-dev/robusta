@@ -2,18 +2,8 @@
 
 .. _install-barebones:
 
-Use HolmesGPT without Prometheus
-####################################
-
-*Estimated time: 5 minutes*
-
-Robusta's AI Agent works with many monitoring tools beyond Prometheus - including Datadog, New Relic, PagerDuty, and more. This installation method configures Robusta AI to analyze alerts and incidents from multiple data sources for comprehensive AI-powered investigation and automation capabilities.
-
-.. note::
-
-   This installation method is most relevant for Robusta SaaS users who want to integrate with existing monitoring tools. The AI Agent can analyze alerts from multiple sources and provide intelligent investigation across your entire observability stack.
-   
-   If you're looking for standalone open source monitoring, you should install Robusta with Prometheus using the :ref:`all-in-one installation <install-with-prometheus>` instead.
+Install Robusta
+###############
 
 Prerequisites
 ---------------------
@@ -28,10 +18,8 @@ Prerequisites
 
 .. include:: ./_helm_install_no_prometheus.inc.rst
 
-.. include:: ./_see_robusta_in_action.rst
-
 
 Next Steps
 ---------------------------------
 
-* :ref:`Track Failed Kubernetes Jobs`
+:doc:`Investigate your alerts with AI </configuration/holmesgpt/main-features>`

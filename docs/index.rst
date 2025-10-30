@@ -2,54 +2,80 @@
 
 .. toctree::
    :maxdepth: 1
-   :caption: 📖 Overview
+   :caption: Overview
    :hidden:
 
    self
    how-it-works/architecture
    how-it-works/oss-vs-saas
    how-it-works/usage-faq
-   how-it-works/alert-builtin-enrichment
 
 .. toctree::
    :maxdepth: 4
-   :caption: 🚀 Installation
+   :caption: Installation
    :hidden:
 
    setup-robusta/index
 
 .. toctree::
    :maxdepth: 4
-   :caption: 🚨 Alert Sources
+   :caption: AI Analysis
    :hidden:
 
-   Overview <configuration/index>
-   Prometheus & AlertManager <configuration/alertmanager-integration/index>
-   New Relic <configuration/alertmanager-integration/newrelic>
-   SolarWinds <configuration/alertmanager-integration/solarwinds>
-   PagerDuty <configuration/alertmanager-integration/pagerduty-alerting>
-   Dynatrace <configuration/alertmanager-integration/dynatrace>
-   LaunchDarkly <configuration/alertmanager-integration/launchdarkly>
-   Nagios <configuration/alertmanager-integration/nagios>
-   Custom Webhooks <configuration/exporting/custom-webhooks>
+   configuration/holmesgpt/main-features
+   configuration/holmesgpt/getting-started
+   HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
 
 .. toctree::
    :maxdepth: 4
-   :caption: 📊 Metric Providers
+   :caption: Send Alerts
+   :hidden:
+
+   Overview <configuration/index>
+   AlertManager - external <configuration/alertmanager-integration/outofcluster-prometheus>
+   AlertManager - in-cluster <configuration/alertmanager-integration/alert-manager>
+   AWS Managed Prometheus <configuration/alertmanager-integration/eks-managed-prometheus>
+   Azure Managed Prometheus <configuration/alertmanager-integration/azure-managed-prometheus>
+   Coralogix <configuration/alertmanager-integration/coralogix_managed_prometheus>
+   Dynatrace <configuration/alertmanager-integration/dynatrace>
+   Embedded Prometheus Stack <configuration/alertmanager-integration/embedded-prometheus>
+   Google Managed Prometheus <configuration/alertmanager-integration/google-managed-prometheus>
+   Grafana - Self-Hosted <configuration/alertmanager-integration/grafana-self-hosted>
+   Grafana Cloud <configuration/alertmanager-integration/grafana-cloud>
+   Nagios <configuration/alertmanager-integration/nagios>
+   New Relic <configuration/alertmanager-integration/newrelic>
+   PagerDuty <configuration/alertmanager-integration/pagerduty-alerting>
+   SolarWinds <configuration/alertmanager-integration/solarwinds>
+   VictoriaMetrics <configuration/alertmanager-integration/victoria-metrics>
+   Customize Labels & Priorities <configuration/alertmanager-integration/customize-labels-priorities>
+   Other - Custom Webhooks <configuration/exporting/custom-webhooks>
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Send Changes
+   :hidden:
+
+   track-changes/kubernetes-changes
+   LaunchDarkly <configuration/alertmanager-integration/launchdarkly>
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Connect Metrics
    :hidden:
 
    General Settings <configuration/metric-providers>
-   In-cluster Prometheus <configuration/metric-providers-in-cluster>
-   External Prometheus <configuration/metric-providers-external>
+   Prometheus - in-cluster <configuration/metric-providers-in-cluster>
+   Prometheus - external <configuration/metric-providers-external>
    Azure Managed <configuration/metric-providers-azure>
    AWS Managed <configuration/metric-providers-aws>
    Google Managed <configuration/metric-providers-google>
    Coralogix <configuration/metric-providers-coralogix>
    VictoriaMetrics <configuration/metric-providers-victoria>
+   Grafana Cloud (Mimir) <configuration/metric-providers-grafana-cloud>
 
 .. toctree::
    :maxdepth: 4
-   :caption: 🔔 Notification Sinks
+   :caption: Notification Sinks
    :hidden:
 
    Overview <notification-routing/configuring-sinks>
@@ -80,7 +106,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: 🔀 Alert Routing
+   :caption: Alert Routing
    :hidden:
 
    Overview <notification-routing/index>
@@ -99,26 +125,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: ⚙️ Automation
-   :hidden:
-
-   playbook-reference/index
-   configuration/alertmanager-integration/alert-custom-prometheus
-   Cost Savings - KRR <configuration/resource-recommender>
-   K8s Misconfigurations - Popeye <playbook-reference/actions/scans>
-
-.. toctree::
-   :maxdepth: 4
-   :caption: 🤖 AI Analysis
-   :hidden:
-
-   configuration/holmesgpt/main-features
-   configuration/holmesgpt/getting-started
-   HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
-
-.. toctree::
-   :maxdepth: 4
-   :caption: 💼 Robusta Pro Features
+   :caption: Robusta Pro Features
    :hidden:
 
    configuration/exporting/robusta-pro-features
@@ -132,7 +139,18 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: ❓ Help
+   :caption: Advanced - Playbooks
+   :hidden:
+
+   playbook-reference/index
+   Builtin Alert Enrichment <playbook-reference/builtin-alert-enrichment>
+   Custom Alert Enrichment <playbook-reference/prometheus-examples/index>
+   Kubernetes Change Notifications <playbook-reference/kubernetes-examples/kubernetes-change-notifications>
+   Cost Savings - KRR <configuration/resource-recommender>
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Help
    :hidden:
 
    help
@@ -142,29 +160,30 @@
 Welcome to Robusta
 ====================
 
-Robusta transforms basic Prometheus alerts into actionable insights with full Kubernetes context, and magical automation.
+Robusta is an SRE agent that transforms alerts into actionable insights using LLMs combined with a rules (playbooks) engine.
 
-.. grid:: 1 1 1 2
-    :margin: 0
-    :padding: 0
-    :gutter: 3
+Robusta is available in open-source and commercial versions:
 
-    .. grid-item::
+.. list-table::
+   :widths: 30 35 35
+   :header-rows: 1
 
-        **How Robusta Improves Alerts:**
+   * - **Version**
+     - **Cloud Environments**
+     - **Alert Sources**
+   * - `Robusta Open Source <https://github.com/robusta-dev/robusta>`_
+     - Kubernetes
+     - Prometheus
+   * - `Robusta Pro <https://home.robusta.dev>`_
+     - Kubernetes and non-Kubernetes environments
+     - Prometheus, DataDog, NewRelic, and more
 
-        * **Self-Healing** - Define auto-remediation rules for faster fixes
-        * **Smart Grouping** - Reduce notification spam
-        * **AI Investigation** - Kickstart alert investigation with AI
-        * **Alert Enrichment** - Pod logs, events and more alongside alerts
+**Key Features:**
 
-
-        Connect to your existing Prometheus or install our all-in-one bundle (based on kube-prometheus-stack). Need to go beyond Kubernetes? `Try Robusta Pro <https://home.robusta.dev>`_.
-
-    .. grid-item::
-
-        .. image:: /images/prometheus-alert-with-robusta.png
-            :width: 400px
+* **Smart Grouping** - Reduce notification spam
+* **AI Investigation** - Find the root cause with AI
+* **Alert Enrichment** - Correlate alerts with logs, k8s events, and more
+* **Auto-Remediation** - Define self-healing rules for faster fixes
 
 Ready to get started?
 ---------------------
