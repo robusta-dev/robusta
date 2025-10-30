@@ -556,13 +556,8 @@ class SupabaseDal(AccountResourceFetcher):
                 "name or service not known",
                 "nodename nor servname provided"
             ]):
-                message = (
-                    f"\n{e.__class__.__name__}: {e}\nCannot connect to Robusta SaaS <{self.url}>. "
-                    f"\nThis is often due to DNS issues or Firewall policies. "
-                    f"\nPlease run the following command in your cluster and verify it does not print 'Could not resolve host': "
-                    f"\ncurl -I {self.url}\n"
-                )
-                raise SupabaseDnsException(message) from e
+                dns_exc = SupabaseDnsException(e, self.url)
+                raise dns_exc from e
             raise
 
     def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
