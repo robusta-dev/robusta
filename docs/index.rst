@@ -52,7 +52,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Send Changes
+   :caption: Track Config Changes
    :hidden:
 
    track-changes/kubernetes-changes

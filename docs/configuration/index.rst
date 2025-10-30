@@ -36,11 +36,6 @@ Prometheus & AlertManager
         :link: alertmanager-integration/coralogix_managed_prometheus
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`pulse;1em;` Dynatrace
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/dynatrace
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`pulse;1em;` Embedded Prometheus Stack
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/embedded-prometheus
@@ -59,6 +54,22 @@ Prometheus & AlertManager
     .. grid-item-card:: :octicon:`pulse;1em;` Grafana Cloud
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/grafana-cloud
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` VictoriaMetrics
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/victoria-metrics
+        :link-type: doc
+
+Other
+------
+
+.. grid:: 1 1 2 3
+    :gutter: 3
+
+    .. grid-item-card:: :octicon:`pulse;1em;` Dynatrace
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/dynatrace
         :link-type: doc
 
     .. grid-item-card:: :octicon:`pulse;1em;` Nagios
@@ -81,10 +92,8 @@ Prometheus & AlertManager
         :link: alertmanager-integration/solarwinds
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`pulse;1em;` VictoriaMetrics
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/victoria-metrics
-        :link-type: doc
+Advanced
+---------
 
 .. grid:: 1 1 2 3
     :gutter: 3

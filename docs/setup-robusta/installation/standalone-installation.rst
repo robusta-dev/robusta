@@ -22,4 +22,5 @@ Prerequisites
 Next Steps
 ---------------------------------
 
-:doc:`Investigate your alerts with AI </configuration/holmesgpt/main-features>`
+1. :doc:`Send alerts to Robusta </configuration/index>`
+2. :doc:`Investigate your alerts with AI </configuration/holmesgpt/main-features>`
