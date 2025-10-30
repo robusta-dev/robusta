@@ -28,15 +28,16 @@ To enable CRD monitoring, add the ``customClusterRoleRules`` section to your Rob
 
 .. code-block:: yaml
 
-    customClusterRoleRules:
-      - apiGroups:
-          - "*"
-        resources:
-          - "*"
-        verbs:
-          - "list"
-          - "get"
-          - "watch"
+    runner:
+      customClusterRoleRules:
+        - apiGroups:
+            - "*"
+          resources:
+            - "*"
+          verbs:
+            - "list"
+            - "get"
+            - "watch"
 
 .. warning::
     The above configuration grants read access to all resources. For production environments, it's recommended to limit access to specific CRDs only.
@@ -50,7 +51,8 @@ For better security, specify only the CRDs you need to monitor:
 
 .. code-block:: yaml
 
-    customClusterRoleRules:
+    runner:
+      customClusterRoleRules:
       - apiGroups:
           - "cert-manager.io"
         resources:
@@ -98,14 +100,15 @@ Using Holmes to Generate Configuration
 
     I want to add read only cluster roles for all the crds in my cluster.
     This is the format for adding one:
-    customClusterRoleRules:
-      - apiGroups:
-          - "storage.k8s.io"
-        resources:
-          - "storageclasses"
-        verbs:
-          - "list"
-          - "get"
+    runner:
+      customClusterRoleRules:
+        - apiGroups:
+            - "storage.k8s.io"
+          resources:
+            - "storageclasses"
+          verbs:
+            - "list"
+            - "get"
     Prepare my config
 
 3. Holmes will analyze your cluster and generate a complete configuration including all CRDs

@@ -131,7 +131,7 @@ Lists all Custom Resource Definitions available in the cluster.
 
 #### Response
 - Returns a **JsonBlock** with detailed CRD information
-- Also returns a **TableBlock** with summary (Kind, API Version, Scope, Plural)
+- Also returns a **TableBlock** with summary (Kind, API Version, Scope, Plural, Created At)
 
 #### Example Usage
 ```yaml
@@ -148,6 +148,7 @@ action: fetch_crds
     "kind": "Certificate",
     "plural": "certificates",
     "scope": "Namespaced",
+    "createdAt": "2024-03-15T10:23:45Z",
     "additionalPrinterColumns": [
       {
         "name": "READY",
@@ -171,6 +172,7 @@ action: fetch_crds
     "kind": "Prometheus",
     "plural": "prometheuses",
     "scope": "Namespaced",
+    "createdAt": "2024-02-10T14:52:18Z",
     "additionalPrinterColumns": [
       {
         "name": "VERSION",
@@ -188,11 +190,11 @@ action: fetch_crds
 ```
 
 **Table Summary:**
-| Kind | API Version | Scope | Plural |
-|------|------------|-------|--------|
-| Certificate | cert-manager.io/v1 | Namespaced | certificates |
-| Prometheus | monitoring.coreos.com/v1 | Namespaced | prometheuses |
-| ServiceMonitor | monitoring.coreos.com/v1 | Namespaced | servicemonitors |
+| Kind | API Version | Scope | Plural | Created At |
+|------|------------|-------|--------|------------|
+| Certificate | cert-manager.io/v1 | Namespaced | certificates | 2024-03-15T10:23:45Z |
+| Prometheus | monitoring.coreos.com/v1 | Namespaced | prometheuses | 2024-02-10T14:52:18Z |
+| ServiceMonitor | monitoring.coreos.com/v1 | Namespaced | servicemonitors | 2024-02-10T14:53:01Z |
 
 ---
 

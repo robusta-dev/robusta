@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import subprocess
 from typing import Optional, List
 
@@ -179,7 +180,7 @@ def fetch_resource_events(event: ExecutionBaseEvent, params: ResourceParams):
 def fetch_crds(event: ExecutionBaseEvent):
     """
     Fetch all custom resource definitions.
-    Returns a JsonBlock with apiVersion, kind, scope, and additionalPrinterColumns for each CRD.
+    Returns a JsonBlock with apiVersion, kind, scope, createdAt, and additionalPrinterColumns for each CRD.
     """
     finding = Finding(
         title="Custom Resource Definitions",
@@ -195,6 +196,7 @@ def fetch_crds(event: ExecutionBaseEvent):
 
         crd_list = []
         for item in items:
+            metadata = item.get("metadata", {})
             spec = item.get("spec", {})
             versions = spec.get("versions", [])
 
@@ -222,6 +224,7 @@ def fetch_crds(event: ExecutionBaseEvent):
                 "kind": spec.get("names", {}).get("kind", ""),
                 "plural": spec.get("names", {}).get("plural", ""),
                 "scope": spec.get("scope", ""),
+                "createdAt": metadata.get("creationTimestamp", ""),
                 "additionalPrinterColumns": additional_columns
             }
             crd_list.append(crd_info)
@@ -281,19 +284,66 @@ def fetch_cr_instances(event: ExecutionBaseEvent, params: CRInstancesParams):
                 for field in params.fields:
                     # Support nested field paths using dot notation. Remove leading dot if present (JSONPath style)
                     clean_field = field.lstrip('.')
-                    field_parts = clean_field.split(".")
-                    value = item
 
-                    try:
-                        for part in field_parts:
-                            if isinstance(value, dict):
-                                value = value.get(part, None)
+                    # Check if this is a JSONPath filter pattern like "status.conditions[?(@.type == 'Reconciled')].status"
+                    # or "spec.containers[?(@.name == 'main')].image"
+                    # Pattern: (path).(array)[?(@.field == 'value')](.afterField)
+                    filter_pattern = r"^((?:.*?\.)?)([^.\[]+)\[\?\(@\.(\w+)\s*==\s*['\"]([^'\"]+)['\"]\)\](?:\.(.+))?$"
+                    match = re.match(filter_pattern, clean_field)
+
+                    if match:
+                        path_to_array = match.group(1).rstrip('.')  # e.g., "status" or "" (empty for root-level)
+                        array_name = match.group(2)                  # e.g., "conditions", "containers", "volumes"
+                        filter_field = match.group(3)                # e.g., "type", "name", "id"
+                        filter_value = match.group(4)                # e.g., "Reconciled", "main", "data"
+                        field_after = match.group(5)                 # e.g., "status", "image", None
+
+                        try:
+                            value = item
+                            if path_to_array:
+                                for part in path_to_array.split("."):
+                                    if isinstance(value, dict):
+                                        value = value.get(part, None)
+                                    else:
+                                        value = None
+                                        break
+
+                            if value and isinstance(value, dict):
+                                array_items = value.get(array_name, [])
+                            else:
+                                array_items = None
+
+                            if array_items and isinstance(array_items, list):
+                                for array_item in array_items:
+                                    if isinstance(array_item, dict) and array_item.get(filter_field) == filter_value:
+                                        if field_after:
+                                            value = array_item.get(field_after)
+                                        else:
+                                            value = array_item
+                                        break
+                                else:
+                                    value = None
                             else:
                                 value = None
-                                break
-                        instance_info[field] = value
-                    except (KeyError, TypeError):
-                        instance_info[field] = None
+
+                            instance_info[field] = value
+                        except (KeyError, TypeError, AttributeError):
+                            instance_info[field] = None
+                    else:
+                        # Regular dot notation path
+                        field_parts = clean_field.split(".")
+                        value = item
+
+                        try:
+                            for part in field_parts:
+                                if isinstance(value, dict):
+                                    value = value.get(part, None)
+                                else:
+                                    value = None
+                                    break
+                            instance_info[field] = value
+                        except (KeyError, TypeError):
+                            instance_info[field] = None
 
             instance_list.append(instance_info)
 
