@@ -213,7 +213,9 @@ redirects = {
     "how-it-works/alert-builtin-enrichment.html": "/master/playbook-reference/builtin-alert-enrichment.html",
     "setup-robusta/installation/extend-prometheus-installation.html": "/master/setup-robusta/installation/standalone-installation.html",
     "playbook-reference/defining-playbooks/index.html": "/master/playbook-reference/index.html",
-    "configuration/alertmanager-integration/alert-custom-prometheus.html": "/master/configuration/alertmanager-integration/embedded-prometheus.html#creating-custom-prometheus-alerts"
+    "configuration/alertmanager-integration/alert-custom-prometheus.html": "/master/configuration/alertmanager-integration/embedded-prometheus.html#creating-custom-prometheus-alerts",
+    "configuration/alertmanager-integration/index.html": "/master/configuration/index.html",
+    "notification-routing/notification-routing-examples.html": "/master/notification-routing/index.html"
 } 
 
 

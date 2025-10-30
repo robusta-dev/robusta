@@ -1,12 +1,11 @@
 Prometheus and AlertManager
 #############################
 
-Robusta can :ref:`improve your existing Prometheus alerts <Enhanced Prometheus Alerts>`. It can also execute
-:ref:`Remediation Actions <Automatic Remediation>` in response to alerts.
+Robusta can improve your existing Prometheus alerts. It can also execute automated remediation actions in response to alerts.
 
 Prerequisites
 ---------------
-AlertManager must be connected to Robusta. Refer to :ref:`Integrating AlertManager and Prometheus`.
+AlertManager must be connected to Robusta. Refer to the :doc:`Send Alerts </configuration/index>` documentation.
 
 Triggers
 -----------
