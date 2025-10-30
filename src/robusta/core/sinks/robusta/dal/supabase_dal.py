@@ -557,7 +557,7 @@ class SupabaseDal(AccountResourceFetcher):
                 "nodename nor servname provided"
             ]):
                 message = (
-                    f"\n{e}\nCannot connect to Robusta SaaS <{self.url}>. "
+                    f"\n{e.__class__.__name__}: {e}\nCannot connect to Robusta SaaS <{self.url}>. "
                     f"\nThis is often due to DNS issues or Firewall policies. "
                     f"\nPlease run the following command in your cluster and verify it does not print 'Could not resolve host': "
                     f"\ncurl -I {self.url}\n"
