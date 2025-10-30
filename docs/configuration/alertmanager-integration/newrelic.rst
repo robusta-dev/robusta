@@ -64,7 +64,7 @@ Webhook Payload Template (JSON)
 
 Paste this into the **Template** field for the webhook action. Replace ``ACCOUNT_ID_HERE`` with your actual account ID.
 
-.. code-block:: json
+.. code-block:: text
 
     {
       "account_id": "ACCOUNT_ID_HERE",

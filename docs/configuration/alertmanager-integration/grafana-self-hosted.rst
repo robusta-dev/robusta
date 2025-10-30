@@ -1,5 +1,5 @@
-Grafana Alerts
-**************
+Grafana - Self-Hosted
+*********************
 
 Grafana can send alerts to the Robusta timeline for visualization and AI investigation.
 
@@ -9,17 +9,14 @@ Grafana can send alerts to the Robusta timeline for visualization and AI investi
 
 .. note::
 
-    **Using Grafana Cloud with Mimir?** For complete integration including metrics querying and Holmes configuration, see :doc:`grafana-cloud-mimir`.
+    **Using Grafana Cloud?** See the :doc:`Grafana Cloud <grafana-cloud>` guide.
 
-This guide covers sending alerts from Grafana Alerting to the Robusta timeline.
-For metrics integration with self-hosted Grafana, refer to :ref:`metrics-integration docs for Prometheus <Integrating with Prometheus>`.
-For Grafana Cloud metrics integration, see :doc:`grafana-cloud-mimir`.
-
-
-Send Alerts to Robusta's Timeline
+Option 1: Send Alerts to Robusta's Timeline
 ===========================================
 
-This integration lets you send Grafana alerts to Robusta's Timeline. To configure it:
+Send Grafana alerts to Robusta's Timeline for visualization and AI investigation.
+
+To configure it:
 
 1. Get your Robusta ``account_id`` from your ``generated_values.yaml`` file. It appears under the ``globalConfig`` section.
 
@@ -86,20 +83,21 @@ That's it!
 
 You can now see your Grafana alerts in the Robusta Timeline, and use AI to analyze it.
 
+Correlating Alerts with Kubernetes Resources
+----------------------------------------------
 
-Kubernetes Alerts
-=================================
-In case your alerts are from a Kubernetes cluster monitored by Robusta, and your alerts has a ``cluster`` label, make sure it matches the ``cluster_name`` that appears in Robusta ``generated_values.yaml``.
+To enable Robusta to correlate your Grafana alerts with the specific Kubernetes resources they're related to (pods, deployments, etc.), make sure the ``cluster`` label in your alerts matches ``clusterName`` in Robusta's ``generated_values.yaml``.
 
-**This is optional - you can send any alert to the Robusta timeline!**
+.. note::
 
+    This is only required for Kubernetes alerts. You can send any alert to the Robusta timeline, including non-Kubernetes alerts.
 
-Send Alerts to Robusta for enrichments
-===================================================================
+Option 2: Inline Alert Enrichment and Routing
+===========================================
 
-You can use Robusta to enrich alerts with extra context, and to route it to other systems as well.
+Use Robusta to enrich alerts inline with extra context and route them to :doc:`other systems </configuration/sinks/index>` (Slack, Microsoft Teams, etc.). Learn more about :doc:`alert routing </notification-routing/index>`.
 
-If you'd like to do that, this integration is for you.
+This is an alternative to Option 1, where alerts are only sent to Robusta's Timeline without inline enrichment or routing to other destinations.
 
 To configure it:
 
@@ -140,57 +138,3 @@ If successful, you will receive a notification in the Robusta UI, Slack or any o
   :align: center
 
 6. Finally, click "Save contact point" to complete the Robusta integration.
-
-
-Configure Silencing
-=================================================
-
-Modify and add the following config to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
-
-.. code-block:: yaml
-
-    globalConfig: # this line should already exist
-        # add the lines below
-        grafana_url: "https://<grafana url>.grafana.net"
-        # Create alert silencing when using Grafana alerts
-        grafana_api_key: <YOUR GRAFANA EDITOR API KEY>
-        alertmanager_flavor: grafana # (1)
-
-        # alertmanager_url: "https://alertmanager<url>.grafana.net"
-        # prometheus_url: "https://prometheus<url>.grafana.net/api/prom"
-
-        # Add any labels that are relevant to the specific cluster (optional)
-        # prometheus_additional_labels:
-        #   cluster: 'CLUSTER_NAME_HERE'
-
-        # If using a multi-tenant prometheus or alertmanager, pass the org id to all queries
-        # prometheus_additional_headers:
-        #   X-Scope-OrgID: <org id>
-        # alertmanager_additional_headers:
-        #   X-Scope-OrgID: <org id>
-        
-.. code-annotations::
-    1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
-
-.. note::
-
-  The Grafana API key must have the ``Editor`` role in order to create silences.
-
-
-You can optionally set up authentication, SSL verification, and other parameters described below.
-
-Verify it Works
-^^^^^^^^^^^^^^^^^
-Open any application in the Robusta UI. If CPU and memory graphs are shown, everything is working.
-
-Alternatively, trigger a `demo OOMKill alert <https://github.com/robusta-dev/kubernetes-demos/?tab=readme-ov-file#simple-scenarios>`_ and confirm that Robusta sends a Slack/Teams message with a memory graph. This indicates proper configuration.
-
-
-Optional Settings
-=============================
-
-For authentication and SSL configuration when querying metrics from Grafana's backend Prometheus, see the relevant metric provider documentation:
-
-- :doc:`/configuration/metric-providers-in-cluster` for in-cluster Prometheus
-- :doc:`/configuration/metric-providers-external` for external Prometheus
-- Or the appropriate cloud provider metric documentation

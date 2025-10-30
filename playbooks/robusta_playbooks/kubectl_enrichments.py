@@ -19,7 +19,7 @@ IMAGE: str = os.getenv("KUBECTL_IMAGE_OVERRIDE", f"bitnami/kubectl:latest")
 
 class KubectlParams(PodRunningParams):
     """
-    :var kubectl_command: The full kubectl command to run, formatted as a shell command string.
+    :var command: The full kubectl command to run, formatted as a shell command string.
     :var description: A description of the command ran.
     :var timeout: The maximum time (in seconds) to wait for the kubectl command to complete. Default is 3600 seconds.
     """

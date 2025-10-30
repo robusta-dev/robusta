@@ -2,11 +2,11 @@
 
 .. _install-all-in-one:
 
-Monitor Kubernetes from Scratch
+Install Robusta + Prometheus
 ####################################
 *Estimated time: 5 minutes*
 
-Setup Kubernetes monitoring from scratch. Install Robusta, Prometheus, and Grafana on Kubernetes using Helm. This is the recommended way to monitor your cluster, with an all-in-one package.
+Setup Kubernetes monitoring from scratch. Install Robusta, Prometheus, and Grafana on Kubernetes using Helm. This is the recommended setup for users that are setting up Kubernetes monitoring from scratch.
 
 Prerequisites
 ---------------------
@@ -21,10 +21,7 @@ Prerequisites
 
 .. include:: ./_helm_install_with_prometheus.inc.rst
 
-.. include:: ./_see_robusta_in_action.rst
-
 Next Steps
 ---------------------------------
 
-* :ref:`See how Robusta improves Prometheus <builtin-alert-enrichment>`
-* :ref:`Learn about AI-powered alert analysis <AI Analysis>`
+:doc:`Investigate your alerts with AI </configuration/holmesgpt/main-features>`

@@ -1,11 +1,11 @@
-External Prometheus
-**************************************
+AlertManager - external
+************************
 
 Follow this guide to connect Robusta to a central Prometheus (e.g. Thanos/Mimir), running outside the cluster monitored by Robusta.
 
 .. note::
 
-    **Using Grafana Cloud?** For Grafana Cloud with Mimir, see the dedicated guide: :doc:`grafana-cloud-mimir`
+    **Using Grafana Cloud?** For Grafana Cloud with Mimir, see the dedicated guide: :doc:`grafana-cloud`
 
 You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
