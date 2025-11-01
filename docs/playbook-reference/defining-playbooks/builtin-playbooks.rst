@@ -25,7 +25,7 @@ The following default playbook handles all Prometheus alerts that Robusta receiv
 
 There are additional enrichments for specific alerts. For example:
 
-To define additional playbooks for your own alerts, refer to the :ref:`Enhanced Prometheus Alerts` tutorial.
+To define additional playbooks for your own alerts, refer to the :doc:`Custom Alert Enrichment </playbook-reference/prometheus-examples/index>` guide.
 
 Default Prometheus Silencing
 --------------------------------
@@ -34,4 +34,4 @@ Robusta uses *silencer* actions to flag false positive alerts and prevent them f
 
 Silencers are just regular actions that call a special silencing API in their code.
 
-To define your own silencers, refer to the :ref:`Silencing Prometheus Alerts` tutorial.
+To define your own silencers, refer to the playbook actions documentation.

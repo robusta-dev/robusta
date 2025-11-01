@@ -5,7 +5,7 @@ Playbook Basics
 
 A playbook is an automation rule for detecting, investigating, or fixing problems in your cluster.
 
-For a gentle introduction, see :ref:`What are Playbooks?<how-it-works-index>`
+For a gentle introduction, see :doc:`Playbook Overview </playbook-reference/overview>`
 
 Overview
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

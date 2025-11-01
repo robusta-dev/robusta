@@ -1,7 +1,7 @@
 Route By Alert Name
 =============================
 
-By default, Robusta notifications are sent to all :ref:`sinks <Sinks Reference>`.
+By default, Robusta notifications are sent to all :ref:`sinks <sinks-reference>`.
 
 In this guide, you'll learn to route alerts by their name:
 
@@ -11,7 +11,7 @@ In this guide, you'll learn to route alerts by their name:
 Prerequisites
 ----------------
 
-All least one existing :ref:`sink <Sinks Reference>` must be configured. Below, we'll assume it's a Slack sink.
+All least one existing :ref:`sink <sinks-reference>` must be configured. Below, we'll assume it's a Slack sink.
 
 Setting Up Routing
 ----------------------

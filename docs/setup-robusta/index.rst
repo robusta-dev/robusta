@@ -15,6 +15,7 @@
 
    multi-cluster
    upgrade
+   tuning-performance
    configuration-secrets
    robusta-runner-metrics
    supported-clusters

@@ -11,7 +11,7 @@ AI Analysis
 
 Automatically investigate and resolve issues with AI-powered analysis.
 
-:doc:`AI Analysis (HolmesGPT) <../holmesgpt/index>`
+:doc:`AI Analysis (HolmesGPT) <../holmesgpt/main-features>`
     Automatically analyze Kubernetes alerts, logs, and metrics. Get potential root causes and remediation suggestions.
 
 Custom Alert Ingestion
@@ -22,11 +22,17 @@ Send alerts to Robusta from any monitoring system using HTTP webhooks.
 :doc:`Custom Webhooks <custom-webhooks>`
     Send alerts from any system that supports HTTP webhooks, including custom monitoring solutions.
 
-:doc:`Nagios Integration <../alertmanager-integration/nagios>`
-    Forward alerts from Nagios to Robusta for enrichment and automation.
+:doc:`New Relic Integration <../alertmanager-integration/newrelic>`
+    Forward alerts from New Relic to Robusta via webhooks.
+
+:doc:`LaunchDarkly Integration <../alertmanager-integration/launchdarkly>`
+    Forward feature flag changes from LaunchDarkly to Robusta via webhooks.
 
 :doc:`SolarWinds Integration <../alertmanager-integration/solarwinds>`
     Configure SolarWinds to send alert webhooks directly to Robusta.
+
+:doc:`Nagios Integration <../alertmanager-integration/nagios>`
+    Forward alerts from Nagios to Robusta for enrichment and automation.
 
 Data Export and Reporting APIs
 -------------------------------

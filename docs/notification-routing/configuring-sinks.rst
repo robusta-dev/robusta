@@ -5,8 +5,6 @@ Defining Sinks
 
 Robusta can send notifications to various destinations, called sinks.
 
-For a list of all sinks, refer to :ref:`Sinks Reference`.
-
 A Simple Sink Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value.
@@ -86,7 +84,7 @@ Description of each option:
 |                  | explicitly named this sink (if scope is set, it will    |                                                          |                                               |
 |                  | still filter those notifications)                       |                                                          |                                               |
 +------------------+---------------------------------------------------------+----------------------------------------------------------+-----------------------------------------------+
-| *sink specific*  | Parameters specific to the sink type, like api_key for  | -                                                        | :ref:`sink-specific docs <Sinks Reference>`   |
+| *sink specific*  | Parameters specific to the sink type, like api_key for  | -                                                        | :ref:`sink-specific docs <sinks-reference>`   |
 | *parameters*     | Slack and webhook_url for MSTeams                       |                                                          |                                               |
 +------------------+---------------------------------------------------------+----------------------------------------------------------+-----------------------------------------------+
 
@@ -109,5 +107,5 @@ In order to enable that, add the below to ``globalConfig`` in your ``generated_v
 Learn More
 ^^^^^^^^^^^^
 
-* 🔔 :ref:`All Sinks <Sinks Reference>`
+* 🔔 :ref:`All Sinks <sinks-reference>`
 * ↳ :ref:`Routing (scopes) <sink-scope-matching>`

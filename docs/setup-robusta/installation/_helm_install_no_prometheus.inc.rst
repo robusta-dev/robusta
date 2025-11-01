@@ -44,7 +44,7 @@ On some clusters this can take a while, so don't panic if it appears stuck:
     .. tab-item:: GKE Autopilot
         :name: install-gke-autopilot
 
-        Due to Autopilot restrictions, some components are disabled for Robusta's bundled Prometheus. Don't worry, everything will still work.
+        Due to Autopilot restrictions, some components are disabled. Don't worry, everything will still work.
 
         .. code-block:: bash
             :name: cb-helm-install-gke-autopilot

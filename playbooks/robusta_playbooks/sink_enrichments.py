@@ -25,7 +25,7 @@ class SlackCallbackParams(ActionParams):
 
 class OpsGenieAckParams(SlackCallbackParams):
     """
-    :var alertmanager_url: Alternative Alert Manager url to send requests.
+    :var alert_fingerprint: The fingerprint of the alert to acknowledge.
     """
 
     alert_fingerprint: str

@@ -70,3 +70,10 @@ Supported Providers
         :link-type: doc
 
         VictoriaMetrics time-series database
+
+    .. grid-item-card:: :octicon:`organization;1em;` Grafana Cloud (Mimir)
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: metric-providers-grafana-cloud
+        :link-type: doc
+
+        Grafana Cloud managed Prometheus (Mimir)

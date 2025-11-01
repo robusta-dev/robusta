@@ -4,7 +4,7 @@ Deploying Behind Proxies
 Robusta requires internet access in the following cases:
 
 * Robusta SaaS is enabled
-* Robusta is configured to send notifications to services such as Slack (via :ref:`sinks <Sinks Reference>`)
+* Robusta is configured to send notifications to services such as Slack (via :ref:`sinks <sinks-reference>`)
 
 If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions below to ensure Robusta and HolmesGPT has the necessary access.
 
