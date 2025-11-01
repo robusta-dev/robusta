@@ -43,6 +43,7 @@ from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, Regis
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.file_system_watcher import FileSystemWatcher
+from robusta.core.exceptions import SupabaseDnsException
 
 
 class ConfigLoader:
@@ -271,10 +272,12 @@ class ConfigLoader:
                     str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")
                 ).hexdigest()
 
-            except Exception:
+            except Exception as e:
+                print_exception = not isinstance(e, SupabaseDnsException) # Don't show trace for Robusta SaaS DNS-related exception to avoid hiding the error in noisy logs
+                
                 logging.error(
                     "Error (re)loading playbooks/related resources, exiting.",
-                    exc_info=True,
+                    exc_info=print_exception,
                 )
                 # Kill the whole process group (which means this process and all of its descendant
                 # processes). The rest of the runner shutdown happens in robusta.runner.process_setup.
