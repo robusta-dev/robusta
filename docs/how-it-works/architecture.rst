@@ -28,7 +28,7 @@ Data Flow
 5. **Routing**: Enriched alerts are routed to configured sinks (Slack, Teams, etc.) based on routing rules
 
 Extended Architecture
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 **AI Analysis with HolmesGPT**
   Robusta's AI engine automatically investigates alerts by analyzing logs, events, and cluster state to provide root cause analysis and remediation suggestions. See :ref:`AI Analysis <AI Analysis>` for configuration details.

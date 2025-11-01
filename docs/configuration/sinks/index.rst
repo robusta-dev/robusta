@@ -2,41 +2,11 @@
 
 :hide-toc:
 
-Sink Reference
+All Sinks
 ==================
 
-.. toctree::
-   :hidden:
-   :maxdepth: 1
 
-   slack
-   ms-teams
-   RobustaUI
-   mail
-   telegram
-   discord
-   DataDog
-   mattermost
-   Opsgenie
-   PagerDuty
-   VictorOps
-   YandexMessenger
-   jira
-   webhook
-   file
-   webex
-   kafka
-   rocketchat
-   google_chat
-   pushover
-   ServiceNow
-   zulip
-   sinks-development
-
-
-Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
-
-By default, Robusta sends all notifications to all sinks.
+Robusta can send notifications to various destinations, known as sinks.
 
 **Related Topics:**
 

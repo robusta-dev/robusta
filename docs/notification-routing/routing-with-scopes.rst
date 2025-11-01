@@ -324,7 +324,7 @@ Here is the complete list of attributes that can be used in ``include`` / ``excl
 +---------------------+-----------------------------------------------------------+------------------------------------------+
 | ``annotations``     | Same as Kubernetes selectors: a comma-separated list of   | Can refer to both Kubernetes resource    |
 |                     | ``key=val`` pairs with AND between them. e.g.             | annotations and Prometheus alert         |
-|                     | ``app.kubernetes.io/name=prometheus``. Supports regex in  |        annotations. Prometheus values    |
+|                     | ``app.kubernetes.io/name=prometheus``. Supports regex in  | annotations. Prometheus values           |
 |                     | the value.                                                | are prioritized when both exist.         |
 +---------------------+-----------------------------------------------------------+------------------------------------------+
 | ``namespace_labels``| Labels on the Kubernetes namespace containing this object.| Same matching syntax as ``labels``. For  |

@@ -6,7 +6,7 @@ If Robusta doesn't support the sink you need, consider implementing your own.
 What Are Robusta Sinks?
 --------------------------
 
-:ref:`Sinks <Sinks Reference>` are the destinations to which Robusta sends data. For example, when sending Robusta messages
+:ref:`Sinks <sinks-reference>` are the destinations to which Robusta sends data. For example, when sending Robusta messages
 to Slack, Robusta uses a Slack sink.
 
 Internally, Robusta generates
