@@ -92,6 +92,11 @@ lightActions:
 - holmes_chat
 - holmes_workload_chat
 - list_pods
+- kubectl_describe
+- fetch_resource_yaml
+- fetch_resource_events
+- fetch_crds
+- fetch_cr_instances
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false

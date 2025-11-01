@@ -141,3 +141,5 @@ SENTRY_ENABLED = SEND_ADDITIONAL_TELEMETRY and SENTRY_DSN
 # enable custom CRDs supported by robusta "["StrimziPodSet", "Cluster"]"
 CUSTOM_CRD = json.loads(os.environ.get("CUSTOM_CRD", "[]"))
 SET_KRR_SECURITY_CONTEXT = load_bool("SET_KRR_SECURITY_CONTEXT", False)
+
+KUBECTL_CMD_TIMEOUT_SEC=int(os.environ.get("KUBECTL_CMD_TIMEOUT_SEC", 180))

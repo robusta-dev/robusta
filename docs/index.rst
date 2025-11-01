@@ -130,6 +130,7 @@
 
    configuration/exporting/robusta-pro-features
    setup-robusta/alertsui
+   setup-robusta/crds
    configuration/exporting/send-alerts-api
    configuration/exporting/configuration-changes-api
    configuration/exporting/alert-export-api
