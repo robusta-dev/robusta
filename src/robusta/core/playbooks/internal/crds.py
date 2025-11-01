@@ -4,12 +4,14 @@ import re
 import subprocess
 from typing import Optional, List
 
+from core.reporting.consts import SlackAnnotations
+from robusta.core.playbooks.common import get_resource_events_table
 from robusta.core.model.env_vars import KUBECTL_CMD_TIMEOUT_SEC
 from robusta.core.model.base_params import ActionParams
 from robusta.core.playbooks.actions_registry import action
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.reporting.blocks import FileBlock, JsonBlock, TableBlock, MarkdownBlock
-from robusta.core.reporting.base import Finding
+from robusta.core.reporting.base import Finding, EnrichmentType
 from robusta.utils.error_codes import ActionException, ErrorCodes
 
 
@@ -126,47 +128,20 @@ def fetch_resource_events(event: ExecutionBaseEvent, params: ResourceParams):
     )
 
     try:
-        cmd = ["kubectl", "get", "events",
-               f"--field-selector=involvedObject.name={params.name},involvedObject.kind={params.kind}",
-               "-o", "json"]
-        if params.namespace:
-            cmd.extend(["-n", params.namespace])
-
-        output = run_kubectl_command(cmd)
-
-        events_data = json.loads(output)
-        items = events_data.get("items", [])
-
-        if not items:
-            finding.add_enrichment([MarkdownBlock(f"No events found for {params.kind}/{params.name}")])
-        else:
-            headers = ["Type", "Reason", "Age", "From", "Message"]
-            rows = []
-
-            for item in items:
-                event_type = item.get("type", "Unknown")
-                reason = item.get("reason", "Unknown")
-
-                last_timestamp = item.get("lastTimestamp") or item.get("eventTime", "")
-                age = last_timestamp.split("T")[0] if last_timestamp else "Unknown"
-
-                source = item.get("source", {})
-                from_str = source.get("component", "Unknown")
-                if source.get("host"):
-                    from_str += f" ({source.get('host')})"
-
-                message = item.get("message", "No message")
-
-                rows.append([event_type, reason, age, from_str, message])
-
-            rows.reverse()
-
-            table_block = TableBlock(
-                rows=rows,
-                headers=headers
+        events_table = get_resource_events_table(
+            "Resource Events",
+            params.kind,
+            params.name,
+            params.namespace,
+        )
+        if events_table:
+            finding.add_enrichment(
+                [events_table],
+                {SlackAnnotations.ATTACHMENT: True},
+                enrichment_type=EnrichmentType.k8s_events,
+                title="Resource Events",
             )
 
-            finding.add_enrichment([table_block])
 
         event.add_finding(finding)
 

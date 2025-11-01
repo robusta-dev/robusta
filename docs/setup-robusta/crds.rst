@@ -24,30 +24,7 @@ Configuration
 Basic Configuration
 ^^^^^^^^^^^^^^^^^^^
 
-To enable CRD monitoring, add the ``customClusterRoleRules`` section to your Robusta Helm values:
-
-.. code-block:: yaml
-
-    runner:
-      customClusterRoleRules:
-        - apiGroups:
-            - "*"
-          resources:
-            - "*"
-          verbs:
-            - "list"
-            - "get"
-            - "watch"
-
-.. warning::
-    The above configuration grants read access to all resources. For production environments, it's recommended to limit access to specific CRDs only.
-
-Specific CRD Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For better security, specify only the CRDs you need to monitor:
-
-**Example 1: Monitoring Cert-Manager Resources**
+Specify read permissions for the CRDs you need to monitor:
 
 .. code-block:: yaml
 
