@@ -4,13 +4,13 @@ import re
 import subprocess
 from typing import Optional, List
 
-from core.reporting.consts import SlackAnnotations
+from robusta.core.reporting.consts import SlackAnnotations
 from robusta.core.playbooks.common import get_resource_events_table
 from robusta.core.model.env_vars import KUBECTL_CMD_TIMEOUT_SEC
 from robusta.core.model.base_params import ActionParams
 from robusta.core.playbooks.actions_registry import action
 from robusta.core.model.events import ExecutionBaseEvent
-from robusta.core.reporting.blocks import FileBlock, JsonBlock, TableBlock, MarkdownBlock
+from robusta.core.reporting.blocks import FileBlock, JsonBlock
 from robusta.core.reporting.base import Finding, EnrichmentType
 from robusta.utils.error_codes import ActionException, ErrorCodes
 
@@ -74,10 +74,10 @@ def kubectl_describe(event: ExecutionBaseEvent, params: ResourceParams):
         finding.add_enrichment([file_block])
         event.add_finding(finding)
 
-    except Exception:
+    except Exception as e:
         msg = f"Error running kubectl_describe for {params}"
         logging.exception(msg)
-        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg)
+        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg) from e
 
 @action
 def fetch_resource_yaml(event: ExecutionBaseEvent, params: ResourceParams):
@@ -109,10 +109,10 @@ def fetch_resource_yaml(event: ExecutionBaseEvent, params: ResourceParams):
         finding.add_enrichment([file_block])
         event.add_finding(finding)
 
-    except Exception:
+    except Exception as e:
         msg = f"Error running fetch_resource_yaml for {params}"
         logging.exception(msg)
-        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg)
+        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg) from e
 
 
 
@@ -145,10 +145,10 @@ def fetch_resource_events(event: ExecutionBaseEvent, params: ResourceParams):
 
         event.add_finding(finding)
 
-    except Exception:
+    except Exception as e:
         msg = f"Error running fetch_resource_events for {params}"
         logging.exception(msg)
-        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg)
+        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg) from e
 
 
 @action
@@ -216,7 +216,7 @@ def fetch_crds(event: ExecutionBaseEvent):
     except Exception as e:
         msg = "Error running fetch_crds"
         logging.exception(msg)
-        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg)
+        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg) from e
 
 
 class CRInstancesParams(ActionParams):
@@ -329,7 +329,7 @@ def fetch_cr_instances(event: ExecutionBaseEvent, params: CRInstancesParams):
         finding.add_enrichment([json_block])
         event.add_finding(finding)
 
-    except Exception:
+    except Exception as e:
         msg = f"Error running fetch_cr_instances for {params}"
         logging.exception(msg)
-        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg)
+        raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, msg) from e

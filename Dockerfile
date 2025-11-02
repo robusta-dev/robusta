@@ -11,7 +11,7 @@ RUN apt-get update \
 RUN mkdir /app
 WORKDIR /app
 
-RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key -o /app/Release.key
+RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key -o /app/Release.key
 
 ENV ENV_TYPE=DEV
 
