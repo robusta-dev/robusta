@@ -44,7 +44,7 @@ Step 2: Define the Robusta Contact
 
 Insert the following contact definition into your Nagios configuration to register Robusta as a notification target. Be sure to replace the placeholders for `_account_id` and `_robusta_api_token` with your actual values.
 
-.. code-block:: nagios
+.. code-block:: text
 
     define contact {
         contact_name                    robusta
@@ -65,7 +65,7 @@ Step 3: Add Robusta to a Contact Group
 
 Ensure Robusta is part of a contact group or explicitly included in your alert definitions:
 
-.. code-block:: nagios
+.. code-block:: text
 
     define contactgroup {
         contactgroup_name               all_contacts
@@ -144,7 +144,7 @@ Step 5: Define Robusta Notification Commands
 
 Before proceeding, if your Nagios setup monitors multiple clusters, you can optionally set the `cluster_name` variable per host using custom `_cluster_name` properties:
 
-.. code-block:: nagios
+.. code-block:: text
 
     define host {
         host_name       order-management
@@ -164,7 +164,7 @@ Before proceeding, if your Nagios setup monitors multiple clusters, you can opti
 
 Now, define the notification commands and replace `PATH_TO_SCRIPT_HERE` with the actual path to your Bash script (`notify-robusta.sh`).
 
-.. code-block:: nagios
+.. code-block:: text
 
     define command {
         command_name    notify-service-by-robusta

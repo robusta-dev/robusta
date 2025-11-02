@@ -9,9 +9,7 @@ These triggers work even when Prometheus is not connected to Robusta. They're tr
 
 .. details:: Related Tutorials
 
-    * :ref:`Track Failed Kubernetes Jobs`
-    * :ref:`Track Failed Liveness Probes`
-    * :ref:`Track Kubernetes Changes`
+    * :doc:`Kubernetes Change Notifications </playbook-reference/kubernetes-examples/kubernetes-change-notifications>`
 
 
 Crashing Pod Triggers
@@ -81,7 +79,7 @@ The following triggers are available for crashing Pods:
         * If A `name` is defined without a `namespace` than all containers with that name prefix will be ignored for this trigger.
         * If A `namespace` is defined without a `name` than all containers in that namespace will be ignored for this trigger.
 
-    An example playbook using :ref:`oomkilled_container_graph_enricher<oomkilled_container_graph_enricher>`:
+    An example playbook using ``oomkilled_container_graph_enricher``:
 
     .. code-block:: yaml
 

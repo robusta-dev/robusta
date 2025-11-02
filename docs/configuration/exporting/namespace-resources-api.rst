@@ -95,7 +95,7 @@ Success Response
 
 If the request is successful, the API returns the following structure:
 
-.. code-block:: json
+.. code-block:: text
 
     {
         "cluster": "your-cluster-name",

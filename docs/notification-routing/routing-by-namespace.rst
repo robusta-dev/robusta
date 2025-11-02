@@ -6,7 +6,7 @@ You can route alerts based on the Kubernetes namespace they relate to. This is i
 Prerequisites
 ----------------
 
-* At least one existing :ref:`sink <Sinks Reference>`, such as Slack, Microsoft Teams, Discord, etc.
+* At least one existing :ref:`sink <sinks-reference>`, such as Slack, Microsoft Teams, Discord, etc.
 
 Setting Up Routing
 ----------------------

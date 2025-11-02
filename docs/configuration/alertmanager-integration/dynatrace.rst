@@ -35,13 +35,13 @@ Step 2: Create a Dynatrace Problems Webhook
 
 5. Set the **Custom payload** to the Dynatrace macro:
 
-   .. code-block:: json
+   .. code-block:: text
 
       {ProblemDetailsJSONv2}
 
 6. Add the following **HTTP headers**:
 
-   .. code-block:: http
+   .. code-block:: text
 
       Authorization: Bearer <api-key>
       account-id: <account_id>

@@ -20,7 +20,7 @@ Integration Methods
 
 There are two main ways to send alerts to Robusta:
 
-1. **Pre-built Integrations**: Use our existing integrations for AlertManager, Nagios, SolarWinds, and other monitoring systems. See :doc:`Alert Sources <../index>`.
+1. **Pre-built Integrations**: Use our existing integrations for AlertManager, Nagios, SolarWinds, and other monitoring systems. See :doc:`Send Alerts <../index>`.
 
 2. **Programmatic API**: Send alerts directly using our REST API (detailed below).
 

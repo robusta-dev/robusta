@@ -18,7 +18,7 @@ Since AWS Managed Prometheus doesn't have a built-in AlertManager, you'll need t
 
 1. Set up Amazon Managed Grafana with your AMP workspace
 2. Configure Grafana alerts to send to Robusta
-3. See :doc:`grafana-alert-manager` for detailed Grafana alerting setup
+3. See :doc:`grafana-self-hosted` for detailed Grafana alerting setup
 
 Configure Metric Querying
 =========================
