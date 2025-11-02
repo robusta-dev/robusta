@@ -58,7 +58,7 @@ In LaunchDarkly:
    Other resource types other than **FLAG** are not verified to work though they might function without additional configuration.
 
 Alternative: Using Headers Instead of URL Parameters
---------------------------------------------------
+-----------------------------------------------------
 
 Including API keys in URLs can expose them in logs, browser history, and monitoring tools. A more secure approach is to send the key in the request headers whenever possible.
 
@@ -67,7 +67,7 @@ If you’re using a third-party service that supports custom headers, configure 
 - **URL**: ``https://api.robusta.dev/integrations/generic/launchdarkly?account_id=YOUR_ACCOUNT_ID_HERE``
 - **Headers**:
 
-   .. code-block:: http
+   .. code-block:: text
 
       Authorization: Bearer <api-key>
 
@@ -117,7 +117,7 @@ Troubleshooting
 For additional support, check the Robusta logs for any LaunchDarkly webhook processing errors.
 
 Holmes Configuration
--------------------
+--------------------
 
 To enable Holmes to pull LaunchDarkly changes into the AI assistant, add the following configuration to your ``generated_values.yaml`` file and upgrade the Robusta Helm chart:
 

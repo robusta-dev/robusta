@@ -122,6 +122,8 @@ These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.template_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.button_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.stack_overflow_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.default_enricher
