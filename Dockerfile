@@ -8,10 +8,12 @@ RUN apt-get update \
     && pip3 install --no-cache-dir --upgrade pip \
     && rm -rf /var/lib/apt/lists/*
 
-ENV ENV_TYPE=DEV
-
 RUN mkdir /app
 WORKDIR /app
+
+RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key -o /app/Release.key
+
+ENV ENV_TYPE=DEV
 
 # Create and activate virtual environment
 RUN python -m venv /app/venv --upgrade-deps && \
@@ -67,7 +69,7 @@ WORKDIR /app
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
-    && apt-get install -y --no-install-recommends git ssh curl libcairo2 \
+    && apt-get install -y --no-install-recommends git ssh curl libcairo2 apt-transport-https gnupg2 \
     && apt-get install -y --no-install-recommends libexpat1 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -83,6 +85,15 @@ COPY --from=builder /app/venv /venv
 COPY --from=builder /etc/robusta/playbooks/defaults /etc/robusta/playbooks/defaults
 # Copy virtual environment and application files from the build stage
 COPY --from=builder /app /app
+
+# Set up kubectl
+COPY --from=builder /app/Release.key /tmp/Release.key
+RUN cat /tmp/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
+    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
+    && apt-get update \
+    && apt-get install -y kubectl \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm /tmp/Release.key
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
