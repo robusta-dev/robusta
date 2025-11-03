@@ -60,12 +60,12 @@ SESSION_TOKENS_TABLE = "AuthTokens"
 
 logging.info("Patching supabase_request_builder.pre_select")
 original_pre_select = supabase_request_builder.pre_select
-def pre_select_patched(*args, **kwargs):
-    args: QueryArgs = original_pre_select(*args, **kwargs)
-    if not args.json:
-        args = QueryArgs(args.method, args.params, args.headers, None)
+def pre_select_patched(*args, **kwargs) -> QueryArgs:
+    query_args: QueryArgs = original_pre_select(*args, **kwargs)
+    if not query_args.json:
+        query_args = QueryArgs(query_args.method, query_args.params, query_args.headers, None)
 
-    return args
+    return query_args
 supabase_request_builder.pre_select = pre_select_patched
 
 
