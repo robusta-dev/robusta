@@ -10,7 +10,7 @@ from uuid import uuid4
 from cachetools import TTLCache
 import requests
 from postgrest._sync.request_builder import SyncQueryRequestBuilder
-from postgrest.base_request_builder import BaseFilterRequestBuilder
+from postgrest.base_request_builder import BaseFilterRequestBuilder, QueryArgs
 from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
@@ -37,6 +37,8 @@ from robusta.core.sinks.robusta.rrm.types import (
     AccountResourceStatusType,
     ResourceKind,
 )
+from postgrest._sync import request_builder as supabase_request_builder
+
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -54,6 +56,18 @@ ACCOUNT_RESOURCE_TABLE = "AccountResource"
 ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
 OPENSHIFT_GROUPS_TABLE = "OpenshiftGroups"
 SESSION_TOKENS_TABLE = "AuthTokens"
+
+
+logging.info("Patching supabase_request_builder.pre_select")
+original_pre_select = supabase_request_builder.pre_select
+def pre_select_patched(*args, **kwargs) -> QueryArgs:
+    query_args: QueryArgs = original_pre_select(*args, **kwargs)
+    if not query_args.json:
+        query_args = QueryArgs(query_args.method, query_args.params, query_args.headers, None)
+
+    return query_args
+supabase_request_builder.pre_select = pre_select_patched
+
 
 class SupabaseDal(AccountResourceFetcher):
     def __init__(
