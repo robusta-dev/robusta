@@ -144,8 +144,14 @@
    :hidden:
 
    playbook-reference/index
-   Enrich Alerts <playbook-reference/builtin-alert-enrichment>
-   Kubernetes Change Notifications <playbook-reference/kubernetes-examples/kubernetes-change-notifications>
+   Playbook Notifications <playbook-reference/defining-playbooks/creating-notifications>
+   Alert Enrichment <playbook-reference/builtin-alert-enrichment>
+   Automatic Remediation <playbook-reference/automatic-remediation-examples/index>
+   Silencer Playbooks <playbook-reference/defining-playbooks/silencer-playbooks>
+   Triggers Reference <playbook-reference/triggers/index>
+   Actions Reference <playbook-reference/actions/index>
+   Log Based Alerting <playbook-reference/logs-triggers/index>
+   K8s Change Notification <playbook-reference/kubernetes-examples/kubernetes-change-notifications>
    Cost Savings - KRR <configuration/resource-recommender>
 
 .. toctree::

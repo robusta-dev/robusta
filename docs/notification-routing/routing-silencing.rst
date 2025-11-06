@@ -35,4 +35,5 @@ node that just restarted.
 Further Reading
 -----------------
 
+* Learn more about :ref:`Silencer Playbooks <Silencer Playbooks>`
 * View all :ref:`Prometheus Silencer <Prometheus Silencers>` actions

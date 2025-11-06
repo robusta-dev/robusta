@@ -1,5 +1,7 @@
 :hide-toc:
 
+.. _Triggers Reference:
+
 Triggers Reference
 ===================
 

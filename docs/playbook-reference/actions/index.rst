@@ -1,5 +1,7 @@
 :hide-toc:
 
+.. _Actions Reference:
+
 Actions Reference
 ==================
 

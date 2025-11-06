@@ -1,6 +1,6 @@
 .. _builtin-alert-enrichment:
 
-Enrich Alerts
+Alert Enrichment
 ########################################
 
 Ever feel overwhelmed by alerts that lack context? Robusta enriches alerts automatically and lets you create custom enrichment rules.

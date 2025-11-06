@@ -1,5 +1,7 @@
 :hide-toc:
 
+.. _Getting Support:
+
 Getting Support
 ================
 

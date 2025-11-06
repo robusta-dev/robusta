@@ -1,3 +1,5 @@
+.. _Loading External Actions:
+
 Loading External Actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
