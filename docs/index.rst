@@ -148,11 +148,11 @@
    Alert Enrichment <playbook-reference/builtin-alert-enrichment>
    Automatic Remediation <playbook-reference/automatic-remediation-examples/index>
    Silencer Playbooks <playbook-reference/defining-playbooks/silencer-playbooks>
-   Triggers Reference <playbook-reference/triggers/index>
-   Actions Reference <playbook-reference/actions/index>
    Log Based Alerting <playbook-reference/logs-triggers/index>
    K8s Change Notification <playbook-reference/kubernetes-examples/kubernetes-change-notifications>
    Cost Savings - KRR <configuration/resource-recommender>
+   Triggers Reference <playbook-reference/triggers/index>
+   Actions Reference <playbook-reference/actions/index>
 
 .. toctree::
    :maxdepth: 4
