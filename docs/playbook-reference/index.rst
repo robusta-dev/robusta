@@ -319,7 +319,7 @@ Then run a Helm upgrade by passing the new file using the ``-f`` flag.
 
 .. code-block:: yaml
 
-    helm ugprade --install robusta -f generated_values.yaml -f app_a_playbooks.yaml
+    helm upgrade --install robusta -f generated_values.yaml -f app_a_playbooks.yaml
 
 Global Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
