@@ -1,13 +1,13 @@
 Cost Savings (KRR)
 ************************************************************
 
-Robustas `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool for optimizing resource allocation in Kubernetes clusters.
-It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory. This reduces costs and improves performance.
+`KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool that optimizes resource allocation in Kubernetes clusters.
+It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory, reducing costs and improving performance.
 
-By optionally integrating KRR with Robusta you can:
+Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Because KRR is so popular, it has dedicated documentation here. You can:
 
-1. Get weekly KRR scan reports in Slack via Robusta OSS (disabled by default, see below to configure)
-2. View KRR scans from all your clusters in the Robusta UI (enabled by default for UI users)
+1. Send weekly scan reports to Slack or other sinks via Robusta OSS (disabled by default, configure below)
+2. View scans from all your clusters in the Robusta UI (enabled by default for UI users)
 
 
 Sending Weekly KRR Scan Reports to Slack

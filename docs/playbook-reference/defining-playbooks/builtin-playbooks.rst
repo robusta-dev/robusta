@@ -25,7 +25,7 @@ The following default playbook handles all Prometheus alerts that Robusta receiv
 
 There are additional enrichments for specific alerts. For example:
 
-To define additional playbooks for your own alerts, refer to the :doc:`Custom Alert Enrichment </playbook-reference/prometheus-examples/index>` guide.
+To define additional playbooks for your own alerts, refer to the :doc:`Enrich Alerts </playbook-reference/builtin-alert-enrichment>` guide.
 
 Default Prometheus Silencing
 --------------------------------

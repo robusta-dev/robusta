@@ -1,3 +1,5 @@
+.. _Loading Custom Actions into Robusta:
+
 Loading Custom Actions into Robusta
 ####################################
 

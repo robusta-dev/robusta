@@ -1,4 +1,4 @@
-Kubernetes Change Notifications
+Change Tracking Playbooks
 ################################
 
 You can configure Robusta to send push notifications when Kubernetes resources change or become unhealthy. This is done by listening to API Server changes with `kubewatch <https://github.com/robusta-dev/kubewatch/>`_ and then filtering the stream of events in a Robusta playbook.

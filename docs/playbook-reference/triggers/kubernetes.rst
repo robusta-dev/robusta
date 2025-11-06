@@ -9,7 +9,7 @@ These triggers work even when Prometheus is not connected to Robusta. They're tr
 
 .. details:: Related Tutorials
 
-    * :doc:`Kubernetes Change Notifications </playbook-reference/kubernetes-examples/kubernetes-change-notifications>`
+    * :doc:`Change Tracking Playbooks </playbook-reference/kubernetes-examples/kubernetes-change-notifications>`
 
 
 Crashing Pod Triggers

@@ -18,6 +18,7 @@ Please consider sharing your custom actions with the community.
    my-first-custom-action
    playbook-repositories
    loading-custom-actions
+   Loading External Actions <../../defining-playbooks/external-playbook-repositories>
    overriding-builtin-actions
    findings-api
    triggers-and-events

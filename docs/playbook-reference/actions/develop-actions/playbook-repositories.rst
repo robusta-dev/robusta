@@ -1,3 +1,5 @@
+.. _Creating Playbook Repositories:
+
 Creating Playbook Repositories
 ################################
 
