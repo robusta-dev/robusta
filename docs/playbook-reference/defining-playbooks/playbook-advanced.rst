@@ -3,7 +3,7 @@
 Advanced Playbook Techniques
 ################################
 
-This guide assumes you already know :ref:`playbook basics <Playbook Basics>` and how to :ref:`create notifications <Creating Notifications>`. It explains
+This guide assumes you already know :ref:`playbook basics <Playbook Basics>` and how to :ref:`create notifications <Playbook Notifications>`. It explains
 implementation details and common techniques.
 
 Using Filters to Restrict Triggers

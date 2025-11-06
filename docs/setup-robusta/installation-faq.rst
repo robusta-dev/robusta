@@ -64,6 +64,6 @@ It's being planned, speak to us on Slack.
 
 Does Robusta replace monitoring tools?
 ============================================================
-Robusta's :ref:`all-in-one package <Install Robusta + Prometheus>` is a complete monitoring and observability solution.
+Robusta's :ref:`all-in-one package <install-all-in-one>` is a complete monitoring and observability solution.
 
 Alternatively, you can keep your existing tools and add-on robusta.

@@ -6,6 +6,11 @@ Playbooks are deterministic rules for responding to alerts and unhealthy conditi
 
 Playbooks are recommended for advanced use cases. Most users should start with :doc:`AI Analysis </configuration/holmesgpt/main-features>` of alerts first, which requires far less configuration.
 
+Quick Start
+---------------------
+
+New to playbooks? Start with the :doc:`Playbook Basics </playbook-reference/defining-playbooks/playbook-basics>` guide to learn how to create your first playbook.
+
 How Playbooks Work
 ---------------------
 

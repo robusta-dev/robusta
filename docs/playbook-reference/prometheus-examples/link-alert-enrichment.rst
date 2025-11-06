@@ -8,7 +8,7 @@ This guide demonstrates how to link Prometheus alerts with external links to you
 Implementation
 -----------------
 
-In this example, we add links to the alert ``KubeContainerCPURequestAlert`` that we created in a :ref:`previous tutorial <Create Custom Prometheus Alerts>`.
+In this example, we'll add links to a Prometheus alert. We're using ``KubeContainerCPURequestAlert`` as an example, but you can apply this to any alert.
 
 Below there are three alternatives ways to enrich the alert with links. Apply the YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
 

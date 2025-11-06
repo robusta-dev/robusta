@@ -144,8 +144,7 @@
    :hidden:
 
    playbook-reference/index
-   Builtin Alert Enrichment <playbook-reference/builtin-alert-enrichment>
-   Custom Alert Enrichment <playbook-reference/prometheus-examples/index>
+   Enrich Alerts <playbook-reference/builtin-alert-enrichment>
    Kubernetes Change Notifications <playbook-reference/kubernetes-examples/kubernetes-change-notifications>
    Cost Savings - KRR <configuration/resource-recommender>
 

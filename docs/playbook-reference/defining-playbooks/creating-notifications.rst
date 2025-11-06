@@ -1,4 +1,4 @@
-Creating Notifications
+Playbook Notifications
 ######################
 
 Playbooks can generate notifications to *let a human know* about something in your cluster.

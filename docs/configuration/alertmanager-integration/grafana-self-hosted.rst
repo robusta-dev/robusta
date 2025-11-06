@@ -93,7 +93,7 @@ To enable Robusta to correlate your Grafana alerts with the specific Kubernetes 
     This is only required for Kubernetes alerts. You can send any alert to the Robusta timeline, including non-Kubernetes alerts.
 
 Option 2: Inline Alert Enrichment and Routing
-===========================================
+==============================================
 
 Use Robusta to enrich alerts inline with extra context and route them to :doc:`other systems </configuration/sinks/index>` (Slack, Microsoft Teams, etc.). Learn more about :doc:`alert routing </notification-routing/index>`.
 
