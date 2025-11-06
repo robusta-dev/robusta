@@ -147,9 +147,9 @@
    Playbook Notifications <playbook-reference/defining-playbooks/creating-notifications>
    Alert Enrichment <playbook-reference/builtin-alert-enrichment>
    Automatic Remediation <playbook-reference/automatic-remediation-examples/index>
+   Change Tracking Playbooks <playbook-reference/kubernetes-examples/kubernetes-change-notifications>
    Silencer Playbooks <playbook-reference/defining-playbooks/silencer-playbooks>
    Log Based Alerting <playbook-reference/logs-triggers/index>
-   K8s Change Notification <playbook-reference/kubernetes-examples/kubernetes-change-notifications>
    Cost Savings - KRR <configuration/resource-recommender>
    Triggers Reference <playbook-reference/triggers/index>
    Actions Reference <playbook-reference/actions/index>

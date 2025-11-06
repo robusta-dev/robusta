@@ -142,6 +142,8 @@ Instead of Robusta AI, you can use your own OpenAI, Azure, or AWS Bedrock accoun
                     name: holmes-secrets
                     key: awsSecretAccessKey
 
+.. _Reading the Robusta UI Token from a secret in HolmesGPT:
+
 Using Existing Secrets
 ----------------------
 

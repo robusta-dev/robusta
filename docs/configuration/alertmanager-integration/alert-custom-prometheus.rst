@@ -8,11 +8,10 @@ Create Custom Prometheus Alerts
 You can define new alerts in two ways using Robusta:
 
 1. Prometheus Alerts - Using PromQL
-2. Robusta Playbooks - Using :ref:`customPlaybooks YAML <What are Playbooks?>`
+2. Robusta Playbooks - Using :ref:`customPlaybooks YAML <Playbook Basics>`
 
 These methods are not mutually exclusive. Robusta playbooks can respond to Prometheus alerts, or they can generate
-alerts themselves by listening directly to the Kubernetes APIServer. To better understand the trade-offs, refer to
-:ref:`Should I generate alerts with Robusta or with Prometheus? <robusta-or-prometheus-alerts>`
+alerts themselves by listening directly to the Kubernetes APIServer.
 
 In this tutorial, we use the first method to generate a custom Prometheus alert using PromQL. In the next tutorial,
 we define a custom Robusta playbook that enhances the alert and makes it better.
@@ -109,4 +108,4 @@ Next Steps
 
 Learn how to enrich Prometheus alerts with more context, so that you can respond faster:
 
-* :ref:`Prometheus Alert Enrichment`
+* :ref:`Alert Enrichment <builtin-alert-enrichment>`

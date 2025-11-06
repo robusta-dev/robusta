@@ -9,7 +9,7 @@ A Simple Sink Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value.
 
-For example, lets add a :ref:`Microsoft Teams Sink <MS Teams sink>`:
+For example, lets add a :ref:`Microsoft Teams Sink <MS Teams>`:
 
 .. code-block:: yaml
 

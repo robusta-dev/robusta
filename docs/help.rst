@@ -250,7 +250,7 @@ Holmes
 
         It's often because the ``Robusta UI Token`` is pulled from a secret, and Holmes cannot read it.
 
-        See :ref:`Reading the Robusta UI Token from a secret in HolmesGPT` to configure Holmes to read the ``token``
+        See :ref:`Using Existing Secrets <Reading the Robusta UI Token from a secret in HolmesGPT>` to configure Holmes to read the ``token``
 
 Phase 4: Integration Issues
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

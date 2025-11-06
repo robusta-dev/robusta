@@ -68,7 +68,7 @@ Popular Sinks
 
     .. grid-item-card:: PagerDuty
         :class-card: sd-bg-light sd-bg-text-light
-        :link: ../configuration/sinks/pagerduty
+        :link: ../configuration/sinks/PagerDuty
         :link-type: doc
 
     .. grid-item-card:: View All Sinks

@@ -5,4 +5,4 @@ When using Robusta SaaS, Robusta automatically tracks all Kubernetes changes and
 
 This provides context about recent changes when investigating issues, helping you quickly identify if a deployment, configuration update, or other change caused a problem.
 
-Looking to get push notifications (e.g. Slack or other sinks) when Kubernetes resources change? See the :doc:`K8s Change Notification </playbook-reference/kubernetes-examples/kubernetes-change-notifications>` guide in the Advanced section.
+Looking to get push notifications (e.g. Slack or other sinks) when Kubernetes resources change? See the :doc:`Change Tracking Playbooks </playbook-reference/kubernetes-examples/kubernetes-change-notifications>` guide in the Advanced section.
