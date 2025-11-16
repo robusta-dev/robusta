@@ -75,6 +75,8 @@ pyjwt = "^2.4.0"
 urllib3 = "^1.26.20"
 httpx = "0.27.2"
 postgrest = "0.16.8"
+# Pin to fix cve https://github.com/robusta-dev/robusta/security/dependabot/85
+h2 = "^4.3.0" 
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
