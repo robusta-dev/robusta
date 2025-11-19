@@ -123,7 +123,7 @@ class ModelConversion:
             {
                 "type": "markdown",
                 "metadata": metadata,
-                "data": Transformer.to_github_markdown(block.holmes_result.analysis),
+                "data": Transformer.to_github_markdown(block.holmes_result.analysis, single_asterisks_is_bold=False),
             }
         )
         ModelConversion.append_to_structured_files(block.holmes_result.files, structured_data)
@@ -146,7 +146,7 @@ class ModelConversion:
             {
                 "type": "markdown",
                 "metadata": {"type": "ai_investigation_result"},
-                "data": Transformer.to_github_markdown(block.holmes_result.analysis),
+                "data": Transformer.to_github_markdown(block.holmes_result.analysis, single_asterisks_is_bold=False),
             }
         )
         ModelConversion.append_to_structured_data_tool_calls(block.holmes_result.tool_calls, structured_data)
@@ -154,7 +154,7 @@ class ModelConversion:
             transformed_sections = {}
             for section_title, section_content in block.holmes_result.sections.items():
                 if section_content:
-                    transformed_sections[section_title] = Transformer.to_github_markdown(section_content)
+                    transformed_sections[section_title] = Transformer.to_github_markdown(section_content, single_asterisks_is_bold=False)
 
             structured_data.append(
                 {
