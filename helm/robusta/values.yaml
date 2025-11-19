@@ -34,6 +34,11 @@ globalConfig:
   signing_key: ""
   custom_annotations: []
   custom_severity_map: {}
+  
+  # Custom group name for PrometheusRule alerts managed by Robusta UI
+  prometheus_rule_group_name: "kubernetes-apps"
+  # Custom labels to add to PrometheusRule metadata for alert selection
+  prometheus_rule_custom_labels: {}
 
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []

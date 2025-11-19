@@ -260,7 +260,7 @@ By default, Robusta has a default set of ``playbooks`` configured. These are use
 
 You can disable any of the ``default playbooks``, or change the configuration of a given ``playbook``.
 
-In order to disable a default playbook, add the playbook name to the ``disabledPlayooks`` helm value (Playbook name is in the ``name`` attribute of each playbook)
+In order to disable a default playbook, add the playbook name to the ``disabledPlaybooks`` helm value (Playbook name is in the ``name`` attribute of each playbook)
 
 For example, to disable the ``ImagePullBackOff`` playbook, use:
 

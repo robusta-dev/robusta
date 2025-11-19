@@ -95,7 +95,7 @@ class RobustaSink(SinkBase, EventHandler):
         self.__prometheus_discovery_util = PrometheusDiscoveryUtils(
             discovery_period_sec=self.__discovery_period_sec, registry=registry
         )
-        self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
+        self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id, registry=registry)
         self.__pods_running_count: int = 0
 
         self.registry.subscribe("scan_updated", self)
