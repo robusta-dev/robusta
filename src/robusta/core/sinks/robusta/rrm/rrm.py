@@ -13,15 +13,20 @@ from robusta.core.sinks.robusta.rrm.types import ResourceKind, AccountResourceSt
 
 # robusta resource management
 class RRM:
-    def __init__(self, dal: AccountResourceFetcher, cluster: str, account_id: str):
+    def __init__(self, dal: AccountResourceFetcher, cluster: str, account_id: str, registry):
         self.dal = dal
         self.cluster = cluster
         self.__sleep = RRM_PERIOD_SEC
         self.__latest_revision: Optional[datetime] = None
+        global_config = registry.get_global_config()
+        custom_labels = global_config.get("prometheus_rule_custom_labels", {})
+        group_name = global_config.get("prometheus_rule_group_name")
         self.__resource_handler_map: Dict[ResourceKind, BaseResourceHandler] = {
             ResourceKind.PrometheusAlert: PrometheusAlertResourceHandler(
                 cluster=self.cluster,
-                resource_kind=ResourceKind.PrometheusAlert
+                resource_kind=ResourceKind.PrometheusAlert,
+                custom_labels=custom_labels,
+                group_name=group_name
             )
         }
 
