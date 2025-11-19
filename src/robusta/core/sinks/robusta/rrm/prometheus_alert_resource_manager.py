@@ -19,7 +19,7 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
         self,
         cluster: str,
         resource_kind: ResourceKind,
-        custom_labels: Optional[Dict] = None,
+        custom_labels: Dict[str, str],
         group_name: Optional[str] = None,
     ):
         super().__init__(resource_kind, cluster)
@@ -33,7 +33,7 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
         self.__plural = "prometheusrules"
         self.__group = "monitoring.coreos.com"
         self.__group_name = group_name or "kubernetes-apps"
-        self.__custom_labels = custom_labels or {}
+        self.__custom_labels = custom_labels
         self.__version = "v1"
         self.__k8_apiVersion = f"{self.__group}/{self.__version}"
         self.__kind = "PrometheusRule"
@@ -105,6 +105,14 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                     existing_cr_obj["spec"]["groups"] = [{}]
 
                 existing_cr_obj["spec"]["groups"][0]["rules"] = rules
+                # Update group name and labels- if helm chart is upgraded with new group name, it will be updated here
+                existing_cr_obj["spec"]["groups"][0]["name"] = self.__group_name
+                if existing_cr_obj.get("metadata"):
+                    existing_cr_obj["metadata"] = {}
+                labels = existing_cr_obj["metadata"].get("labels", {})
+                # Merge custom labels (existing custom labels are preserved, new ones are added/updated)
+                labels.update(self.__custom_labels)
+                existing_cr_obj["metadata"]["labels"] = labels
 
                 # If a custom object with the given name already exists then replace the existing custom object with
                 # the updated one.
