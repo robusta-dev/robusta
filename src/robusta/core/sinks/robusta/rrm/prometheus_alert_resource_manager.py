@@ -105,10 +105,12 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                     existing_cr_obj["spec"]["groups"] = [{}]
 
                 existing_cr_obj["spec"]["groups"][0]["rules"] = rules
-                # Update group name and labels- if helm chart is upgraded with new group name, it will be updated here
+                # Update group name and labels - if helm chart is upgraded with new group name, it will be updated here
                 existing_cr_obj["spec"]["groups"][0]["name"] = self.__group_name
-                if existing_cr_obj.get("metadata"):
+                # Ensure metadata exists and preserve the name
+                if not existing_cr_obj.get("metadata"):
                     existing_cr_obj["metadata"] = {}
+                    
                 labels = existing_cr_obj["metadata"].get("labels", {})
                 # Merge custom labels (existing custom labels are preserved, new ones are added/updated)
                 labels.update(self.__custom_labels)
