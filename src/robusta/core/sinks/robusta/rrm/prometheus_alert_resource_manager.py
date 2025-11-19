@@ -75,19 +75,22 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
 
         return result
 
-    def __get_snapshot_body(self, name: str, rules: List[dict]):
+    def __get_labels(self) -> Dict:
         labels = {
             "release": RELEASE_NAME,
             "role": "alert-rules",
             self.__identification_label: self.__identification_label_value,
         }
         labels.update(self.__custom_labels)
+        return labels
+
+    def __get_snapshot_body(self, name: str, rules: List[dict]):
         return {
             "apiVersion": self.__k8_apiVersion,
             "kind": self.__kind,
             "metadata": {
                 "name": name,
-                "labels": labels,
+                "labels": self.__get_labels(),
             },
             "spec": {"groups": [{"name": self.__group_name, "rules": rules}]},
         }
@@ -105,16 +108,12 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                     existing_cr_obj["spec"]["groups"] = [{}]
 
                 existing_cr_obj["spec"]["groups"][0]["rules"] = rules
-                # Update group name and labels - if helm chart is upgraded with new group name, it will be updated here
+                # Update group name and labels - if helm chart is upgraded with new group name + labels, it will be updated here
                 existing_cr_obj["spec"]["groups"][0]["name"] = self.__group_name
-                # Ensure metadata exists and preserve the name
                 if not existing_cr_obj.get("metadata"):
                     existing_cr_obj["metadata"] = {}
-                    
-                labels = existing_cr_obj["metadata"].get("labels", {})
-                # Merge custom labels (existing custom labels are preserved, new ones are added/updated)
-                labels.update(self.__custom_labels)
-                existing_cr_obj["metadata"]["labels"] = labels
+                # Overwrite labels - if helm chart is upgraded with new custom labels, existing labels will be updated
+                existing_cr_obj["metadata"]["labels"] = self.__get_labels()
 
                 # If a custom object with the given name already exists then replace the existing custom object with
                 # the updated one.
