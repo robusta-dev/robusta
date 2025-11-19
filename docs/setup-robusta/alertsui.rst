@@ -66,6 +66,29 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 
       Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
+      
+Customizing PrometheusRule Labels and Group Name
+**************************************************
+
+When you create alerts in the Robusta Alerts UI, they are synced to your cluster as PrometheusRule CRDs. You can customize the labels and group name that are applied to these UI-created rules.
+
+Add the following to your ``globalConfig`` section in ``generated_values.yaml``:
+
+.. code-block:: yaml
+
+   globalConfig:
+     # Custom group name for PrometheusRule alerts created from the Robusta Alerts UI
+     prometheus_rule_group_name: "robusta-rule-group"
+     
+     # Custom labels to add to PrometheusRule metadata for rules created from the UI
+     prometheus_rule_custom_labels:
+       my_label: "my_value"
+
+Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. note::
+   These settings only apply to PrometheusRules created from the Robusta Alerts UI.
+
 
 Disabling the Feature
 ---------------------------------
