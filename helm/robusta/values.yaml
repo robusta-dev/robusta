@@ -657,6 +657,7 @@ kubewatch:
       readOnlyRootFilesystem: false
       runAsUser: 1000
     pod: {}
+  createServiceAccount: true
   customServiceAccount: "" # to override the kubewatch service account
   serviceMonitor:
     path: /metrics
