@@ -82,7 +82,7 @@ jobs:
         run: ./skaffold build --profile release --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
 
       - name: Save artifact with tags of built containers
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: container-ids
           path: container-ids.json
@@ -105,7 +105,7 @@ jobs:
           poetry publish --build -u __token__ -p ${{ secrets.PYPI_PROJECT_TOKEN }}
 
       - name: Save artifact with helm chart
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: helm-chart
           path: helm/robusta/
