@@ -662,6 +662,7 @@ kubewatch:
       readOnlyRootFilesystem: false
       runAsUser: 1000
     pod: {}
+  createServiceAccount: true
   customServiceAccount: "" # to override the kubewatch service account
   serviceMonitor:
     path: /metrics
@@ -702,6 +703,7 @@ runner:
   sentry_dsn: https://4f1a66f025c60830fec303a094dcdf94@o1120648.ingest.sentry.io/6156573
   sendAdditionalTelemetry: false
   certificate: "" # base64 encoded
+  createServiceAccount: true
   customServiceAccount: "" # to override the runner service account
   resources:
     requests:
