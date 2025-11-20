@@ -68,6 +68,10 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
         {{- end }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
+        ports:
+          - name: http
+            containerPort: 5000
+            protocol: TCP
         {{- with .Values.runner.securityContext.container }}
         securityContext:
         {{- if $.Values.runner.hardenedFs }}
@@ -168,6 +172,14 @@ spec:
           {{- with .Values.runner.extraVolumeMounts }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
+        {{- if and .Values.runner.livenessProbe .Values.runner.livenessProbe.enabled }}
+        livenessProbe:
+          {{- toYaml (omit .Values.runner.livenessProbe "enabled") | nindent 10 }}
+        {{- end }}
+        {{- if and .Values.runner.readinessProbe .Values.runner.readinessProbe.enabled }}
+        readinessProbe:
+          {{- toYaml (omit .Values.runner.readinessProbe "enabled") | nindent 10 }}
+        {{- end }}
         lifecycle:
           preStop:
             exec:
