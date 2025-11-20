@@ -112,7 +112,7 @@ class Transformer:
         return links
 
     @staticmethod
-    def to_github_markdown(markdown_data: str, add_angular_brackets: bool = True) -> str:
+    def to_github_markdown(markdown_data: str, add_angular_brackets: bool = True, single_asterisks_is_bold: bool = True) -> str:
         """Transform all occurrences of slack markdown, <URL|LINK TEXT>, to github markdown [LINK TEXT](URL)."""
         # some markdown parsers doesn't support angular brackets on links
         OPENING_ANGULAR = "<" if add_angular_brackets else ""
@@ -126,7 +126,11 @@ class Transformer:
                 parsed_url = parsed_url._replace(path=urllib.parse.quote_plus(parsed_url.path, safe="/"))
                 replacement = f"[{splits[1]}]({OPENING_ANGULAR}{parsed_url.geturl()}{CLOSING_ANGULAR})"
                 markdown_data = markdown_data.replace(match, replacement)
-        return re.sub(r"\*([^\*]*)\*", r"**\1**", markdown_data)
+
+        if single_asterisks_is_bold:
+            return re.sub(r"\*([^\*]*)\*", r"**\1**", markdown_data)
+        else:
+            return markdown_data
 
     @classmethod
     def __markdown_to_html(cls, mrkdwn_text: str, html_class: str = None) -> str:
