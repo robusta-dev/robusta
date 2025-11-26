@@ -471,7 +471,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                 ]
 
             except Exception:
-                logging.exception(f"Failed to convert tools to images")
+                logging.exception("Failed to convert tools to images")
 
         finding = Finding(
             title="AI Ask Chat",
