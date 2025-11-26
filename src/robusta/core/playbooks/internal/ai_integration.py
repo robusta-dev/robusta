@@ -582,6 +582,10 @@ def stream_and_render_graphs(url, holmes_req, event):
                 logging.info(stream_event)
                 event_lines = stream_event.splitlines()
                 event_type = parse_sse_event_type(event_lines[0])
+
+                if event_type == "ai_answer_end":
+                    stream_event = re.sub(r"<<.*?>>", "", stream_event).strip()
+
                 if event_type != "tool_calling_result":
                     event.ws(data=stream_event)
                     continue
