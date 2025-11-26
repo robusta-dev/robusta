@@ -456,25 +456,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                         r"<<.*?>>", "", holmes_result.analysis
                     ).strip()
                     json_content = json.loads(tool.result["data"])
-                    query_result = PrometheusQueryResult(
-                        data=json_content.get("data", {})
-                    )
-                    try:
-                        output_type_str = json_content.get("output_type", "Plain")
-                        output_type = ChartValuesFormat[output_type_str]
-                    except KeyError:
-                        output_type = (
-                            ChartValuesFormat.Plain
-                        )  # fallback in case of an invalid string
-
-                    chart = build_chart_from_prometheus_result(
-                        query_result,
-                        json_content.get("description", "graph"),
-                        values_format=output_type,
-                    )
-
-                    contents = convert_svg_to_png(chart.render())
-                    name = json_content.get("description", "graph").replace(" ", "_")
+                    contents, name = get_png_from_graph_tool(json_content)
                     holmes_result.files.append(FileBlock(f"{name}.png", contents))
 
                 holmes_result.tool_calls = [
