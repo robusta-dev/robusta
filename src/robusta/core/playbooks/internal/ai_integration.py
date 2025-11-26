@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import re
@@ -601,7 +602,8 @@ def stream_and_render_graphs(url, holmes_req, event):
                 try:
                     tool_data = json.loads(tool_res["result"]["data"])
                     content, name = get_png_from_graph_tool(tool_data)
-                    tool_res["result"]["data"] = content
+                    tool_res["result"]["data"] = base64.b64encode(content).decode("utf-8")
+                    tool_res["result_type"] = "png"
                     event.ws(data=create_sse_message(event_type, tool_res))
                 except Exception:
                     logging.exception("Failed to convert graph tool to png %s,", event_lines[1])
