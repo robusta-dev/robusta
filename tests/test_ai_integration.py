@@ -1,7 +1,7 @@
 import base64
 import json
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from robusta.core.model.base_params import HolmesChatParams
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.internal.ai_integration import holmes_chat
@@ -170,24 +170,22 @@ def test_holmes_chat_streaming_with_sse_events(
     assert mock_event.ws.call_count == len(sse_events)
 
     # events should stay the same
-    mock_event.ws.call_args_list[0][1]["data"] = sse_events[0]
-    mock_event.ws.call_args_list[1][1]["data"] = sse_events[1]
+    assert mock_event.ws.call_args_list[0][1]["data"] == sse_events[0]
+    assert mock_event.ws.call_args_list[1][1]["data"] == sse_events[1]
     # graph tools change
     datadog_output = mock_event.ws.call_args_list[2][1]["data"]
-    event_type, data = parse_sse_message(datadog_output)
+    _, data = parse_sse_message(datadog_output)
     decoded = base64.b64decode(data["result"]["data"])
     assert decoded[:8] == b"\x89PNG\r\n\x1a\n", "Not a valid PNG"
 
     prom_output = mock_event.ws.call_args_list[3][1]["data"]
-    event_type, data = parse_sse_message(prom_output)
+    _, data = parse_sse_message(prom_output)
     decoded = base64.b64decode(data["result"]["data"])
     assert decoded[:8] == b"\x89PNG\r\n\x1a\n", "Not a valid PNG"
     # answer << >> parts is gone.
-    mock_event.ws.call_args_list[4] = (
-        create_sse_message(
-            StreamEvents.ANSWER_END.value,
-            {
-                "analysis": "some analysis... add the rest of analysis",
-            },
-        ),
+    assert mock_event.ws.call_args_list[4][1]["data"] == create_sse_message(
+        StreamEvents.ANSWER_END.value,
+        {
+            "analysis": "some analysis... add the  rest of analysis",
+        },
     )
