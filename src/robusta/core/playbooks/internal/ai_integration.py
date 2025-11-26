@@ -570,10 +570,10 @@ def stream_and_render_graphs(url, holmes_req, event):
                 event_lines = stream_event.splitlines()
                 event_type = parse_sse_event_type(event_lines[0])
 
-                if event_type == StreamEvents.ANSWER_END:
+                if event_type == StreamEvents.ANSWER_END.value:
                     stream_event = re.sub(r"<<.*?>>", "", stream_event).strip()
 
-                if event_type != StreamEvents.TOOL_RESULT:
+                if event_type != StreamEvents.TOOL_RESULT.value:
                     event.ws(data=stream_event)
                     continue
 
