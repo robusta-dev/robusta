@@ -36,7 +36,8 @@ Common Configuration (for both webhooks)
 Firing Alerts Webhook
 ---------------------
 
-5. For the firing alerts webhook, in Edit body add:
+5. Configure this webhook to trigger on **firing** alerts (when alerts are triggered/started).
+6. For the firing alerts webhook, in Edit body add:
 
 .. code-block:: json
 
@@ -71,14 +72,15 @@ Firing Alerts Webhook
       ]
     }
 
-6. Click the 'Test Config' button and check your robusta sink for a "Test configuration" alert.
-7. Click Save
+7. Click the 'Test Config' button and check your robusta sink for a "Test configuration" alert.
+8. Click Save
 
 Resolved Alerts Webhook
 -----------------------
 
-8. Create a second webhook following steps 1-4 above with the same URL and headers.
-9. For the resolved alerts webhook, in Edit body add:
+9. Create a second webhook following steps 1-4 above with the same URL and headers.
+10. Configure this webhook to trigger on **resolved** alerts (when alerts are resolved/ended).
+11. For the resolved alerts webhook, in Edit body add:
 
 .. code-block:: json
 
@@ -111,8 +113,8 @@ Resolved Alerts Webhook
       ]
     }
 
-10. Click the 'Test Config' button and check your robusta sink for a "Test configuration" alert.
-11. Click Save
+12. Click the 'Test Config' button and check your robusta sink for a "Test configuration" alert.
+13. Click Save
 
 .. note::
    Make sure to update the ``cluster_name`` value in both webhook bodies to match your cluster name. Both "cluster" or "cluster_name" labels are also supported.
