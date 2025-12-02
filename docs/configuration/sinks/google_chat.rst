@@ -27,3 +27,7 @@ Configuring the Google Chat sink in Robusta
 
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. note::
+
+   To secure your webhook URL using Kubernetes Secrets, see :ref:`Managing Secrets`.
