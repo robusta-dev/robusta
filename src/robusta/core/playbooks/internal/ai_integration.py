@@ -569,8 +569,13 @@ def stream_and_render_graphs(url, holmes_req, event):
         ):  # Avoid streaming chunks from holmes. send them as they arrive.
             if stream_event:
                 event_lines = stream_event.splitlines()
-                event_type = parse_sse_event_type(event_lines[0])
+                # extra saftey check before proccessing event.
+                if len(event_lines) < 2:
+                    event.ws(data=stream_event)
+                    continue
 
+                event_type = parse_sse_event_type(event_lines[0])
+                # removes all embedded tool calls in this case as its not supported. 
                 if event_type == StreamEvents.ANSWER_END.value:
                     stream_event = re.sub(r"<<.*?>>", "", stream_event)
 
