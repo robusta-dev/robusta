@@ -588,9 +588,9 @@ def stream_and_render_graphs(url, holmes_req, event):
                     event.ws(data=stream_event)
                     continue
 
-                try:
+                try:  # convert graph tool to png.
                     tool_data = json.loads(tool_res["result"]["data"])
-                    content, name = get_png_from_graph_tool(tool_data)
+                    content, _ = get_png_from_graph_tool(tool_data)
                     tool_res["result"]["data"] = base64.b64encode(content).decode(
                         "utf-8"
                     )
