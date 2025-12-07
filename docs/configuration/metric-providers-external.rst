@@ -55,6 +55,17 @@ Authentication
         prometheus_auth: "Bearer YOUR_TOKEN_HERE"
         alertmanager_auth: "Bearer YOUR_TOKEN_HERE"
 
+On some clusters, the pod service account token is used for Prometheus/Alertmanager authentication.
+To use this token add the following env var to the ``runner``:
+
+.. code-block:: yaml
+
+    runner:
+      additional_env_vars:
+        - name: PROMETHEUS_CLUSTER_TOKEN_AUTH
+          value: "true"
+
+
 **Basic Authentication**:
 
 .. code-block:: yaml
