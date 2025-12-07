@@ -52,7 +52,7 @@ This will output something like:
 Basic Configuration
 ^^^^^^^^^^^^^^^^^^^
 
-Specify read permissions for the CRDs you need to monitor:
+Specify read permissions for the CRDs you need to monitor. You can list specific resources or use ``"*"`` to monitor all resources in an API group:
 
 .. code-block:: yaml
 
@@ -65,6 +65,20 @@ Specify read permissions for the CRDs you need to monitor:
           - "certificaterequests"
           - "issuers"
           - "clusterissuers"
+        verbs:
+          - "list"
+          - "get"
+
+Or to monitor all resources in an API group:
+
+.. code-block:: yaml
+
+    runner:
+      customClusterRoleRules:
+      - apiGroups:
+          - "cert-manager.io"
+        resources:
+          - "*"
         verbs:
           - "list"
           - "get"
