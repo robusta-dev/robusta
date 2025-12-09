@@ -92,6 +92,16 @@ If Prometheus and/or AlertManager require authentication, add the following:
 
 These settings may be configured independently.
 
+On some clusters, the pod service account token is used for Prometheus/Alertmanager authentication.
+To use this token add the following env var to the ``runner``:
+
+.. code-block:: yaml
+
+    runner:
+      additional_env_vars:
+        - name: PROMETHEUS_CLUSTER_TOKEN_AUTH
+          value: "true"
+
 SSL Verification
 ^^^^^^^^^^^^^^^^
 

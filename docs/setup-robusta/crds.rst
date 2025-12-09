@@ -13,6 +13,11 @@ The CRDs monitoring feature enables you to view and manage Custom Resource Defin
 * Full YAML manifests
 * Detailed resource descriptions
 
+.. image:: /images/crd_demo.png
+   :width: 800
+   :align: center
+   :alt: CRDs monitoring in Robusta UI
+
 Prerequisites
 -------------
 
@@ -21,10 +26,33 @@ To enable CRD monitoring, the Robusta agent needs appropriate permissions to rea
 Configuration
 -------------
 
+Finding CRD Names and API Groups
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Get the CRD names and API groups to use in the configuration below:
+
+.. code-block:: bash
+
+    kubectl get crd \
+      -o custom-columns=NAME:.spec.names.plural,API_GROUP:.spec.group
+
+This will output something like:
+
+.. code-block:: text
+
+    NAME                      API_GROUP
+    alertmanagerconfigs       monitoring.coreos.com
+    alertmanagers             monitoring.coreos.com
+    imagejobs                 eraser.sh
+    imagelists                eraser.sh
+    nodenetworkconfigs        acn.azure.com
+    overlayextensionconfigs   acn.azure.com
+    ...
+
 Basic Configuration
 ^^^^^^^^^^^^^^^^^^^
 
-Specify read permissions for the CRDs you need to monitor:
+Specify read permissions for the CRDs you need to monitor. You can list specific resources or use ``"*"`` to monitor all resources in an API group:
 
 .. code-block:: yaml
 
@@ -40,11 +68,17 @@ Specify read permissions for the CRDs you need to monitor:
         verbs:
           - "list"
           - "get"
+
+Or to monitor all resources in an API group:
+
+.. code-block:: yaml
+
+    runner:
+      customClusterRoleRules:
       - apiGroups:
-          - "acme.cert-manager.io"
+          - "cert-manager.io"
         resources:
-          - "challenges"
-          - "orders"
+          - "*"
         verbs:
           - "list"
           - "get"
