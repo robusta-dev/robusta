@@ -85,6 +85,8 @@ COPY --from=builder /app/venv /venv
 COPY --from=builder /etc/robusta/playbooks/defaults /etc/robusta/playbooks/defaults
 # Copy virtual environment and application files from the build stage
 COPY --from=builder /app /app
+# remove duplicated /app/venv - already copied to /venv
+RUN rm -rf /app/venv
 
 # Set up kubectl
 COPY --from=builder /app/Release.key /tmp/Release.key
