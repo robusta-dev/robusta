@@ -110,16 +110,7 @@ enableServiceMonitors: true
 monitorHelmReleases: true
 argoRollouts: false
 
-# CRD permissions for common Kubernetes operators and tools
-crdPermissions:
-  argo: true
-  flux: true
-  kafka: true
-  keda: true
-  crossplane: true
-  istio: true
-  gatewayApi: true
-  velero: true
+
 
 # scale alerts processing.
 # Used to support clusters with high load of alerts. When used, the runner will consume more memory
@@ -748,6 +739,16 @@ runner:
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
   setKRRSecurityContext: false
+# CRD permissions for common Kubernetes operators and tools
+  crdPermissions:
+    argo: true
+    flux: true
+    kafka: true
+    keda: true
+    crossplane: true
+    istio: true
+    gatewayApi: true
+    velero: true
 
 kube-prometheus-stack:
   alertmanager:
