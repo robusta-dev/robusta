@@ -749,6 +749,7 @@ runner:
     istio: true
     gatewayApi: true
     velero: true
+    externalSecrets: true
 
 kube-prometheus-stack:
   alertmanager:

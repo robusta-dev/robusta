@@ -92,14 +92,15 @@ Robusta includes read-only permissions for common Kubernetes operators and tools
 
     runner:
       crdPermissions:
-        argo: true        # Argo CD, Argo Workflows, Argo Rollouts
-        flux: true        # Flux CD (GitOps toolkit)
-        kafka: true       # Strimzi Kafka
-        keda: true        # KEDA autoscaler
-        crossplane: true  # Crossplane
-        istio: true       # Istio service mesh
-        gatewayApi: true  # Kubernetes Gateway API
-        velero: true      # Velero backup/restore
+        argo: true             # Argo CD, Argo Workflows, Argo Rollouts
+        flux: true             # Flux CD (GitOps toolkit)
+        kafka: true            # Strimzi Kafka
+        keda: true             # KEDA autoscaler
+        crossplane: true       # Crossplane
+        istio: true            # Istio service mesh
+        gatewayApi: true       # Kubernetes Gateway API
+        velero: true           # Velero backup/restore
+        externalSecrets: true  # External Secrets Operator
 
 
 Applying the Configuration
