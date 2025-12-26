@@ -21,7 +21,7 @@ class Chart(BaseModel):
 class Info(BaseModel):
     first_deployed: datetime
     last_deployed: datetime
-    deleted: str
+    deleted: str = ""
     description: Optional[str]
     status: str
     notes: Optional[str]
