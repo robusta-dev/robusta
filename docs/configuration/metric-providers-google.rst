@@ -1,36 +1,25 @@
 Google Managed Prometheus
 =========================
 
-.. warning::
-
-   Due to updates in the Google Managed Prometheus API, these instructions may be outdated.
-   Please contact our team for support on Slack (https://bit.ly/robusta-slack) or by email (support@robusta.dev).
-   We're working on updating the documentation.
-
-Configure Robusta to use Google Cloud's Managed Service for Prometheus.
+Configure Robusta to work with Google Cloud’s Managed Prometheus service.
 
 Prerequisites
 -------------
 
-Before configuring Robusta, ensure you have:
+Before setting up Robusta, make sure you have:
 
-1. Google Managed Prometheus configured with:
-   
-   - `Prometheus Frontend <https://cloud.google.com/stackdriver/docs/managed-prometheus/query#ui-prometheus>`_
-   - `Node Exporter <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/node_exporter>`_
-   - `Kubelet/cAdvisor scraping <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_
-   - `Kube State Metrics <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_
+* Google Managed Prometheus enabled
+* A Prometheus Frontend endpoint accessible from your cluster
+  (If you don’t already have one, you can create it following the instructions `here <https://docs.cloud.google.com/stackdriver/docs/managed-prometheus/query-api-ui#ui-prometheus>`_)
 
 Quick Start
 -----------
 
-Add the following to your ``generated_values.yaml``:
+Add the following configuration to your `generated_values.yaml` file:
 
 .. code-block:: yaml
-
     globalConfig:
         prometheus_url: "http://frontend.default.svc.cluster.local:9090"
-        alertmanager_url: "http://alertmanager.gmp-system.svc.cluster.local:9093"
         check_prometheus_flags: false  # Required for Google Managed Prometheus
 
 Then :ref:`update Robusta <Simple Upgrade>`.
