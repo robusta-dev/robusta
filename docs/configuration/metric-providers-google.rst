@@ -18,8 +18,13 @@ Quick Start
 Add the following configuration to your `generated_values.yaml` file:
 
 .. code-block:: yaml
+   
     globalConfig:
-        prometheus_url: "http://frontend.default.svc.cluster.local:9090"
+        # Set this to the URL of your Prometheus Frontend endpoint
+        prometheus_url: http://my-prometheus-frontend:9090
+
+        # Example (Google Managed Prometheus in-cluster frontend):
+        # prometheus_url: http://frontend.default.svc.cluster.local:9090
         check_prometheus_flags: false  # Required for Google Managed Prometheus
 
 Then :ref:`update Robusta <Simple Upgrade>`.
