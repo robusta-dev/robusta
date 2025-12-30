@@ -10,7 +10,7 @@ Before setting up Robusta, make sure you have:
 
 * Google Managed Prometheus enabled
 * A Prometheus Frontend endpoint accessible from your cluster
-  (If you don’t already have one, you can create it following the instructions `here <https://docs.cloud.google.com/stackdriver/docs/managed-prometheus/query-api-ui#ui-prometheus>`_)
+  (If you don’t already have one, you can create it following the instructions `here <https://docs.cloud.google.com/stackdriver/docs/managed-prometheus/query-api-ui#ui-prometheus>`_).
 
 Quick Start
 -----------
@@ -18,11 +18,10 @@ Quick Start
 Add the following configuration to your ``generated_values.yaml`` file:
 
 .. code-block:: yaml
-   
+
     globalConfig:
         # Set this to the URL of your Prometheus Frontend endpoint
         prometheus_url: http://my-prometheus-frontend:9090
-
         # Example (Google Managed Prometheus in-cluster frontend):
         # prometheus_url: http://frontend.default.svc.cluster.local:9090
         check_prometheus_flags: false  # Required for Google Managed Prometheus
