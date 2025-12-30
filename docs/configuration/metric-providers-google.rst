@@ -15,7 +15,7 @@ Before setting up Robusta, make sure you have:
 Quick Start
 -----------
 
-Add the following configuration to your `generated_values.yaml` file:
+Add the following configuration to your ``generated_values.yaml`` file:
 
 .. code-block:: yaml
    
