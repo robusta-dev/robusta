@@ -17,7 +17,7 @@ multi_line_output = 3
 include_trailing_comma = true
 
 [tool.poetry.dependencies]
-python = "^3.9, <3.12"
+python = ">=3.10, <3.12"
 setuptools = "^80.9.0"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
@@ -59,20 +59,20 @@ humanize = "^3.13.1"
 cryptography = "^43.0.1"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
-prometrix = "^0.2.5"
+prometrix = "0.2.9"
 hikaru-model-26 = "^1.1.1"
 apprise = "1.6.0"
 rocketchat-api = "^1.30.0"
 pydash = "8.0.0"
 # The following are added to speed up poetry dependency resolution
-botocore = "1.31.72"
-boto3 = "1.28.72"
+botocore = "^1.42.19"
+boto3 = "^1.42.19"
 prometheus-api-client = "0.5.4"
 requests = "^2.32.3"
 certifi = "^2023.7.22"
 regex = "2024.5.15"
 pyjwt = "^2.4.0"
-urllib3 = "^1.26.20"
+urllib3 = "^2.6.2"
 httpx = "0.27.2"
 postgrest = "0.16.8"
 # Pin to fix cve https://github.com/robusta-dev/robusta/security/dependabot/85
