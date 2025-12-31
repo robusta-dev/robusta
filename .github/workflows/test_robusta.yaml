@@ -37,7 +37,7 @@ jobs:
           # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
           pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
           # robusta-cli is a separate project now, it needs to be installed for gen-config
-          pip install robusta-cli
+          pip install git+https://github.com/robusta-dev/robusta-cli.git
 
       # build robusta docker images for tests which run in-cluster on KIND
       - run: |-

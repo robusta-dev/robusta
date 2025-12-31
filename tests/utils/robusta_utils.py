@@ -83,7 +83,6 @@ class RobustaController:
                 output_path,
                 "--robusta-api-key=",
                 "--no-enable-prometheus-stack",
-                "--disable-cloud-routing",
                 "--no-enable-crash-report",
                 "--msteams-webhook=",
             ],
