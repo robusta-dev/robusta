@@ -19,6 +19,10 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+.. note::
+
+   To secure your webhook URL using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 **Example Output:**
 
 .. admonition:: This example is sending Robusta notifications to ntfy.sh, push notification service
