@@ -187,6 +187,7 @@ class ToolApprovalDecision(BaseModel):
 
     tool_call_id: str
     approved: bool
+    save_prefixes: Optional[List[str]] = None  # Prefixes to remember for session
 
 
 class HolmesChatParams(HolmesParams):
