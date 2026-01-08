@@ -132,12 +132,24 @@ class Scheduler:
             return (job.state.exec_count >= job.scheduling_params.repeat) and job.scheduling_params.repeat != -1
 
     def __calc_job_delay_for_next_run(self, job: ScheduledJob):
-        if not isinstance(job.scheduling_params, CronScheduleRepeat):  # calc initial delay only for non-cron triggers
+        # For cron schedules, calculate delay from current time to next occurrence
+        # Don't use last_exec_time_sec as it can be stale and cause negative delays
+        if isinstance(job.scheduling_params, CronScheduleRepeat):
+            now = time.time()
+            next_delay = croniter(job.scheduling_params.cron_expression, now).get_next() - now
+
+            # Only apply initial delay for brand new jobs (deployment race condition protection)
             if job.state.job_status == JobStatus.NEW:
-                if isinstance(job.scheduling_params, DynamicDelayRepeat):
-                    return job.scheduling_params.delay_periods[0]
-                else:
-                    return INITIAL_SCHEDULE_DELAY_SEC
+                return max(next_delay, INITIAL_SCHEDULE_DELAY_SEC)
+
+            return next_delay
+
+        # For other scheduling types, use the original logic
+        if job.state.job_status == JobStatus.NEW:
+            if isinstance(job.scheduling_params, DynamicDelayRepeat):
+                return job.scheduling_params.delay_periods[0]
+            else:
+                return INITIAL_SCHEDULE_DELAY_SEC
 
         if isinstance(job.scheduling_params, DynamicDelayRepeat):
             next_delay_idx = min(job.state.exec_count, len(job.scheduling_params.delay_periods) - 1)
