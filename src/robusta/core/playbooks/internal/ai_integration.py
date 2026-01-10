@@ -418,15 +418,10 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
     cluster_name = event.get_context().cluster_name
 
     try:
-        holmes_req = HolmesChatRequest(
-            ask=params.ask,
-            conversation_history=params.conversation_history,
-            model=params.model,
-            stream=params.stream,
-            additional_system_prompt=params.additional_system_prompt,
-            enable_tool_approval=params.enable_tool_approval,
-            tool_decisions=params.tool_decisions,
-        )
+        # Pass through all parameters to Holmes, excluding fields used only by this action
+        # This allows Holmes clients/servers to add new parameters without requiring updates here
+        params_dict = params.dict(exclude={"holmes_url", "render_graph_images"})
+        holmes_req = HolmesChatRequest(**params_dict)
         url = f"{holmes_url}/api/chat"
         if params.stream:
             if params.render_graph_images:
