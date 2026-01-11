@@ -36,6 +36,14 @@ class HolmesConversationRequest(BaseModel):
 
 
 class HolmesChatRequest(BaseModel):
+    """
+    Request model for Holmes chat API.
+
+    This class allows extra fields to be passed through to Holmes.
+    Any additional parameters received will be forwarded to the Holmes server,
+    allowing client/server upgrades without requiring changes to this middleware.
+    """
+
     ask: str
     conversation_history: Optional[List[dict]] = None
     model: Optional[str] = None
@@ -43,6 +51,9 @@ class HolmesChatRequest(BaseModel):
     enable_tool_approval: bool = Field(default=False)
     tool_decisions: Optional[List[ToolApprovalDecision]] = None
     additional_system_prompt: Optional[str] = None
+
+    class Config:
+        extra = "allow"
 
 
 class HolmesIssueChatRequest(HolmesChatRequest):
