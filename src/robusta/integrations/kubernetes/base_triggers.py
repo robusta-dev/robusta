@@ -18,6 +18,26 @@ from robusta.integrations.kubernetes.model_not_found_exception import ModelNotFo
 from robusta.utils.common import duplicate_without_fields, is_matching_diff
 from robusta.utils.scope import BaseScopeMatcher, ScopeParams
 
+
+class GenericKubernetesObject:
+    """Wrapper for unsupported Kubernetes resources that provides basic metadata access."""
+    
+    def __init__(self, raw_data: Dict[str, Any]):
+        self._raw_data = raw_data
+        self.kind = raw_data.get('kind', 'Unknown')
+        # Create a simple metadata object for compatibility
+        metadata_data = raw_data.get('metadata', {})
+        self.metadata = type('Metadata', (), {
+            'name': metadata_data.get('name'),
+            'namespace': metadata_data.get('namespace'),
+            'labels': metadata_data.get('labels', {}),
+            'annotations': metadata_data.get('annotations', {}),
+        })()
+
+    def __getattr__(self, name):
+        """Fallback to raw data for any missing attributes."""
+        return self._raw_data.get(name)
+
 OBJ = "obj"
 OLD_OBJ = "old_obj"
 
@@ -219,13 +239,20 @@ class K8sBaseTrigger(BaseTrigger):
 
     @classmethod
     def __parse_kubernetes_objs(cls, k8s_payload: IncomingK8sEventPayload):
-        model_class = get_api_version(k8s_payload.apiVersion).get(k8s_payload.kind)
+        api_version_models = get_api_version(k8s_payload.apiVersion)
+        model_class = None
+        if api_version_models:
+            model_class = api_version_models.get(k8s_payload.kind)
+        
         if model_class is None:
             msg = (
-                f"classes for kind {k8s_payload.kind} cannot be found. skipping. description {k8s_payload.description}"
+                f"classes for kind {k8s_payload.kind} cannot be found. using generic model. description {k8s_payload.description}"
             )
-            logging.error(msg)
-            raise ModelNotFoundException(msg)
+            logging.warning(msg)
+            # For unsupported kinds, we'll create a generic wrapper object from the raw data
+            obj = GenericKubernetesObject(k8s_payload.obj)
+            old_obj = GenericKubernetesObject(k8s_payload.oldObj) if k8s_payload.oldObj is not None else None
+            return obj, old_obj
 
         obj = cls.__load_hikaru_obj(k8s_payload.obj, model_class)
 
@@ -247,9 +274,9 @@ class K8sBaseTrigger(BaseTrigger):
         event_class = KIND_TO_EVENT_CLASS.get(event.k8s_payload.kind.lower())
         if event_class is None:
             logging.info(
-                f"classes for kind {event.k8s_payload.kind} cannot be found. skipping. description {event.k8s_payload.description}"
+                f"classes for kind {event.k8s_payload.kind} cannot be found. using KubernetesAnyChangeEvent. description {event.k8s_payload.description}"
             )
-            return None
+            event_class = KubernetesAnyChangeEvent
         if build_context and OBJ in build_context.keys() and OLD_OBJ in build_context.keys():
             obj = build_context.get(OBJ)
             old_obj = build_context.get(OLD_OBJ)
@@ -272,6 +299,9 @@ class K8sBaseTrigger(BaseTrigger):
 
         Sets appropriate fields related to filtered object data on the execution_event in
         order for them to be accessible downstream in playbooks."""
+
+        if not isinstance(execution_event, GenericKubernetesObject):
+            return True
 
         if not isinstance(execution_event, KubernetesAnyChangeEvent):
             # The whole code below only makes sense for change events.
