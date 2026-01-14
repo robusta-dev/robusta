@@ -14,7 +14,6 @@ from robusta.core.reporting import (
     TableBlock,
     EmptyFileBlock,
 )
-from robusta.core.reporting.utils import is_image
 from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
 from robusta.integrations.msteams.msteams_msg import MsTeamsMsg
 
@@ -62,7 +61,7 @@ class MsTeamsSender:
         account_id: str,
         webhook_override: str,
         prefer_redirect_to_platform: bool,
-        send_svg: bool = False,
+        send_files: bool = True,
     ):
         """Send a finding to MS Teams via webhook.
 
@@ -74,8 +73,8 @@ class MsTeamsSender:
             account_id: The Robusta account ID.
             webhook_override: Optional webhook URL override pattern.
             prefer_redirect_to_platform: Whether to prefer platform links over Prometheus.
-            send_svg: Whether to include image files. When False (default), images are
-                filtered out to avoid exceeding MS Teams payload size limits.
+            send_files: Whether to include file attachments. When False, all files
+                are filtered out to avoid exceeding MS Teams 28KB payload limit.
         """
         webhook_url = MsTeamsWebhookUrlTransformer.template(
             webhook_override=webhook_override, default_webhook_url=webhook_url, annotations=finding.subject.annotations
@@ -86,10 +85,9 @@ class MsTeamsSender:
         for enrichment in finding.enrichments:
             files_blocks, other_blocks = cls.__split_block_to_files_and_all_the_rest(enrichment)
 
-            # Filter out image files when send_svg is False to avoid payload size issues
-            # This matches behavior of other sinks (Slack, Discord, Jira, etc.)
-            if not send_svg:
-                files_blocks = [b for b in files_blocks if not is_image(b.filename)]
+            # Filter out all files when send_files is False to avoid 28KB payload limit
+            if not send_files:
+                files_blocks = []
 
             for block in other_blocks:
                 cls.__to_ms_teams(block, msg)

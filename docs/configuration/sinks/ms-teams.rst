@@ -95,13 +95,13 @@ For example:
         webhook_url: teams-incoming-webhook
         prefer_redirect_to_platform: false
 
-Disabling Images
+Disabling File Attachments
 -------------------------------------------------------------------
 
 MS Teams Power Automate workflow webhooks have a strict 28KB payload size limit.
-Alerts with embedded graphs or images may exceed this limit.
+Alerts with embedded files (graphs, images, logs) may exceed this limit.
 
-To disable image embedding and reduce payload size, set ``send_svg: false``:
+To disable file attachments and reduce payload size, set ``send_files: false``:
 
 .. code-block:: yaml
 
@@ -109,10 +109,10 @@ To disable image embedding and reduce payload size, set ``send_svg: false``:
      - ms_teams_sink:
         name: main_ms_teams_sink
         webhook_url: teams-incoming-webhook
-        send_svg: false  # Disables image embedding to reduce payload size
+        send_files: false  # Disables all file attachments to reduce payload size
 
 .. note::
 
-    When ``send_svg`` is false (the default), image files such as memory graphs
+    When ``send_files`` is false, all file attachments (images, logs, etc.)
     will not be included in the MS Teams message. Text-based content will still
     be sent normally.

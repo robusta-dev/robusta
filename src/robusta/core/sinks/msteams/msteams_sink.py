@@ -12,6 +12,12 @@ class MsTeamsSink(SinkBase):
         self.sink_config = sink_config.ms_teams_sink
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
+        """Write a finding to the MS Teams channel via webhook.
+
+        Args:
+            finding: The finding to send to MS Teams.
+            platform_enabled: Whether the Robusta platform is enabled for enhanced links.
+        """
         MsTeamsSender.send_finding_to_ms_teams(
             self.webhook_url,
             finding,
@@ -20,5 +26,5 @@ class MsTeamsSink(SinkBase):
             self.account_id,
             self.webhook_override,
             self.sink_config.prefer_redirect_to_platform,
-            self.sink_config.send_svg,
+            self.sink_config.send_files,
         )
