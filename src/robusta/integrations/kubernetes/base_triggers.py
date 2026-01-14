@@ -300,9 +300,6 @@ class K8sBaseTrigger(BaseTrigger):
         Sets appropriate fields related to filtered object data on the execution_event in
         order for them to be accessible downstream in playbooks."""
 
-        if not isinstance(execution_event, GenericKubernetesObject):
-            return True
-
         if not isinstance(execution_event, KubernetesAnyChangeEvent):
             # The whole code below only makes sense for change events.
             return True
@@ -315,6 +312,17 @@ class K8sBaseTrigger(BaseTrigger):
 
         result = True
         filtered_diffs = []
+        
+        # For GenericKubernetesObject, we can't use the duplicate_without_fields method
+        # so we just set the filtered objects to be the same as the originals
+        if isinstance(execution_event.obj, GenericKubernetesObject):
+            obj_filtered = execution_event.obj
+            old_obj_filtered = execution_event.old_obj
+            execution_event.obj_filtered = obj_filtered
+            execution_event.old_obj_filtered = old_obj_filtered
+            execution_event.filtered_diffs = []
+            return True
+        
         obj_filtered = duplicate_without_fields(execution_event.obj, self.change_filters.ignore)
         old_obj_filtered = duplicate_without_fields(execution_event.old_obj, self.change_filters.ignore)
 
