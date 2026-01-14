@@ -318,7 +318,8 @@ spec:
   targetLabels:
     - target
 {{ end }}
-{{ if .Values.runner.sentry_dsn }}
+{{- $sentryDsn := include "robusta.sentryDsn" . -}}
+{{- if $sentryDsn }}
 ---
 apiVersion: v1
 kind: Secret
@@ -327,5 +328,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:
-  SENTRY_DSN: {{ .Values.runner.sentry_dsn }}
-{{ end }}
+  SENTRY_DSN: {{ $sentryDsn }}
+{{- end }}
+
