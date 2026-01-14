@@ -64,6 +64,19 @@ class MsTeamsSender:
         prefer_redirect_to_platform: bool,
         send_svg: bool = False,
     ):
+        """Send a finding to MS Teams via webhook.
+
+        Args:
+            webhook_url: The MS Teams webhook URL.
+            finding: The finding to send.
+            platform_enabled: Whether the Robusta platform is enabled.
+            cluster_name: The name of the cluster.
+            account_id: The Robusta account ID.
+            webhook_override: Optional webhook URL override pattern.
+            prefer_redirect_to_platform: Whether to prefer platform links over Prometheus.
+            send_svg: Whether to include image files. When False (default), images are
+                filtered out to avoid exceeding MS Teams payload size limits.
+        """
         webhook_url = MsTeamsWebhookUrlTransformer.template(
             webhook_override=webhook_override, default_webhook_url=webhook_url, annotations=finding.subject.annotations
         )
