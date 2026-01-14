@@ -29,7 +29,7 @@ from robusta.core.model.env_vars import (
     WEBSOCKET_TCP_KEEPALIVE_COUNT,
     WEBSOCKET_TCP_KEEPALIVE_ENABLED,
     WEBSOCKET_TCP_KEEPALIVE_IDLE,
-    WEBSOCKET_TCP_KEEPALIVE_INTERVAL, WEBSOCKET_APP_KEEPALIVE_ENABLED,
+    WEBSOCKET_TCP_KEEPALIVE_INTERVAL,
 )
 from robusta.core.playbooks.playbook_utils import to_safe_str
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -142,6 +142,11 @@ class ActionRequestReceiver:
             logging.info(
                 f"TCP keepalive enabled: idle={WEBSOCKET_TCP_KEEPALIVE_IDLE}s, "
                 f"interval={WEBSOCKET_TCP_KEEPALIVE_INTERVAL}s, count={WEBSOCKET_TCP_KEEPALIVE_COUNT}"
+            )
+        if WEBSOCKET_PING_TIMEOUT:
+            logging.info(
+                f"Websocket keepalive enabled: timeout={WEBSOCKET_PING_TIMEOUT}s, "
+                f"interval={WEBSOCKET_PING_INTERVAL}s"
             )
         while self.active:
             # Handles WEBSOCKET_PING_INTERVAL == 0
