@@ -208,7 +208,11 @@ class ActionRequestReceiver:
 
         if sync_response:
             http_code = 200 if response.get("success") else 500
+            logging.debug(
+                f"Sending results for `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {http_code}")
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
+            logging.debug(
+                f"After Sending results for `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {http_code}")
 
     def __exec_external_stream_request(self, action_request: ExternalActionRequest, validate_timestamp: bool):
         logging.debug(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
@@ -225,7 +229,11 @@ class ActionRequestReceiver:
                                                             action_request.body.action_params,
                                                             lambda data: self.__stream_response(request_id=action_request.request_id, data=data))
         res = "" if res.get("success") else f"event: error\ndata: {json.dumps(res)}\n\n"
+
+        logging.debug(f"Stream Sending result `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {res}")
         self.__close_stream_response(action_request.request_id, res)
+        logging.debug(
+            f"After Stream Sending result `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {res}")
 
     def _process_action(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
         self._executor.submit(self._process_action_sync, action, validate_timestamp)
@@ -284,12 +292,18 @@ class ActionRequestReceiver:
             return
 
         if isinstance(incoming_event, SlackActionsMessage):
+            logging.debug(
+                f"on_message got Slack callback: {len(incoming_event.actions)} action(s) from "
+                f"user={incoming_event.user.username if incoming_event.user else 'unknown'}"
+            )
             # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
             # which container the actual action details we need to run.
             # This wrapper format is part of the slack API, and cannot be changed by us.
             for slack_action_request in incoming_event.actions:
                 self._process_action(slack_action_request.value, validate_timestamp=False)
         else:
+            logging.debug(
+                f"on_message got external action request: `{incoming_event.body.action_name}` {to_safe_str(incoming_event.body.action_params)}")
             self._process_action(incoming_event, validate_timestamp=True)
 
     @staticmethod
