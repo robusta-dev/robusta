@@ -137,7 +137,7 @@ Returns the user-provided value if set, otherwise returns the default SaaS DSN i
 {{- if .Values.runner.sentry_dsn -}}
 {{ .Values.runner.sentry_dsn }}
 {{- else if eq (include "robusta.isSaasEnvironment" .) "true" -}}
-https://ef39ee62c3a14ef6992adc7be49f68e5@o1120648.ingest.sentry.io/6402199
+https://18ac614b2d7fbbb3c7a7789b946506e1@o4510692373299200.ingest.de.sentry.io/4510707940982864
 {{- else -}}
 ""
 {{- end -}}
