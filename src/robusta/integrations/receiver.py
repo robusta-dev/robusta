@@ -143,10 +143,10 @@ class ActionRequestReceiver:
                 f"TCP keepalive enabled: idle={WEBSOCKET_TCP_KEEPALIVE_IDLE}s, "
                 f"interval={WEBSOCKET_TCP_KEEPALIVE_INTERVAL}s, count={WEBSOCKET_TCP_KEEPALIVE_COUNT}"
             )
-        if WEBSOCKET_PING_TIMEOUT:
+        if WEBSOCKET_PING_INTERVAL:
             logging.info(
-                f"Websocket keepalive enabled: timeout={WEBSOCKET_PING_TIMEOUT}s, "
-                f"interval={WEBSOCKET_PING_INTERVAL}s"
+                f"Websocket keepalive enabled: interval={WEBSOCKET_PING_INTERVAL}s, "
+                f"timeout={WEBSOCKET_PING_TIMEOUT}s"
             )
         while self.active:
             # Handles WEBSOCKET_PING_INTERVAL == 0
@@ -220,7 +220,7 @@ class ActionRequestReceiver:
                 f"After Sending results for `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {http_code}")
 
     def __exec_external_stream_request(self, action_request: ExternalActionRequest, validate_timestamp: bool):
-        logging.debug(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+        logging.debug(f"Stream Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
 
         validation_response = self.__validate_request(action_request, validate_timestamp)
         if validation_response.http_code != 200:
