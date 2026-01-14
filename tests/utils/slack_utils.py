@@ -23,7 +23,7 @@ class SlackChannel:
         messages = results["messages"]
         return messages[0]["text"]
 
-    def get_message_by_ts(self, ts: str) -> str:
+    def get_message_by_ts(self, ts: str) -> str | None:
         """Get message by timestamp - avoids race conditions unlike get_latest_message()."""
         results = self.client.conversations_history(
             channel=self.channel_id,
