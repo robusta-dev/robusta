@@ -20,4 +20,5 @@ class MsTeamsSink(SinkBase):
             self.account_id,
             self.webhook_override,
             self.sink_config.prefer_redirect_to_platform,
+            self.sink_config.send_svg,
         )

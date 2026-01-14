@@ -14,6 +14,7 @@ from robusta.core.reporting import (
     TableBlock,
     EmptyFileBlock,
 )
+from robusta.core.reporting.utils import is_image
 from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
 from robusta.integrations.msteams.msteams_msg import MsTeamsMsg
 
@@ -61,6 +62,7 @@ class MsTeamsSender:
         account_id: str,
         webhook_override: str,
         prefer_redirect_to_platform: bool,
+        send_svg: bool = False,
     ):
         webhook_url = MsTeamsWebhookUrlTransformer.template(
             webhook_override=webhook_override, default_webhook_url=webhook_url, annotations=finding.subject.annotations
@@ -70,6 +72,12 @@ class MsTeamsSender:
 
         for enrichment in finding.enrichments:
             files_blocks, other_blocks = cls.__split_block_to_files_and_all_the_rest(enrichment)
+
+            # Filter out image files when send_svg is False to avoid payload size issues
+            # This matches behavior of other sinks (Slack, Discord, Jira, etc.)
+            if not send_svg:
+                files_blocks = [b for b in files_blocks if not is_image(b.filename)]
+
             for block in other_blocks:
                 cls.__to_ms_teams(block, msg)
 
