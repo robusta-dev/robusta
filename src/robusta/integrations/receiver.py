@@ -4,6 +4,8 @@ import hmac
 import json
 import logging
 import os
+import socket
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
@@ -24,6 +26,10 @@ from robusta.core.model.env_vars import (
     SENTRY_ENABLED,
     WEBSOCKET_PING_INTERVAL,
     WEBSOCKET_PING_TIMEOUT,
+    WEBSOCKET_TCP_KEEPALIVE_COUNT,
+    WEBSOCKET_TCP_KEEPALIVE_ENABLED,
+    WEBSOCKET_TCP_KEEPALIVE_IDLE,
+    WEBSOCKET_TCP_KEEPALIVE_INTERVAL, WEBSOCKET_APP_KEEPALIVE_ENABLED,
 )
 from robusta.core.playbooks.playbook_utils import to_safe_str
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -40,6 +46,22 @@ WEBSOCKET_RELAY_ADDRESS = os.environ.get("WEBSOCKET_RELAY_ADDRESS", "wss://relay
 RECEIVER_ENABLE_WEBSOCKET_TRACING = json.loads(os.environ.get("RECEIVER_ENABLE_WEBSOCKET_TRACING", "False").lower())
 INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3))
 WEBSOCKET_THREADPOOL_SIZE = int(os.environ.get("WEBSOCKET_THREADPOOL_SIZE", 10))
+
+
+def _get_tcp_keepalive_options() -> tuple:
+    """Build TCP keepalive socket options tuple for run_forever(sockopt=...)."""
+    # TCP_KEEPIDLE is Linux-only; macOS uses TCP_KEEPALIVE (0x10) for the same purpose
+    if sys.platform == "darwin":
+        tcp_keepalive_idle = 0x10
+    else:
+        tcp_keepalive_idle = socket.TCP_KEEPIDLE
+
+    return (
+        (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+        (socket.IPPROTO_TCP, tcp_keepalive_idle, WEBSOCKET_TCP_KEEPALIVE_IDLE),
+        (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, WEBSOCKET_TCP_KEEPALIVE_INTERVAL),
+        (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, WEBSOCKET_TCP_KEEPALIVE_COUNT),
+    )
 
 
 class ValidationResponse(BaseModel):
@@ -114,11 +136,22 @@ class ActionRequestReceiver:
 
     def run_forever(self):
         logging.info("starting relay receiver")
+        sockopt = None
+        if WEBSOCKET_TCP_KEEPALIVE_ENABLED:
+            sockopt = _get_tcp_keepalive_options()
+            logging.info(
+                f"TCP keepalive enabled: idle={WEBSOCKET_TCP_KEEPALIVE_IDLE}s, "
+                f"interval={WEBSOCKET_TCP_KEEPALIVE_INTERVAL}s, count={WEBSOCKET_TCP_KEEPALIVE_COUNT}"
+            )
         while self.active:
+            # Handles WEBSOCKET_PING_INTERVAL == 0
+            ping_timeout = WEBSOCKET_PING_TIMEOUT if WEBSOCKET_PING_INTERVAL else None
+            logging.info("relay websocket starting")
             self.ws.run_forever(
                 ping_interval=WEBSOCKET_PING_INTERVAL,
                 ping_payload="p",
-                ping_timeout=WEBSOCKET_PING_TIMEOUT,
+                ping_timeout=ping_timeout,
+                sockopt=sockopt,
             )
             logging.info("relay websocket closed")
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
