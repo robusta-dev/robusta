@@ -23,8 +23,8 @@ def test_send_to_slack(slack_channel: SlackChannel):
     finding = Finding(title=msg, aggregation_key=msg)
     finding.add_enrichment([MarkdownBlock("testing")])
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
-    slack_sender.send_finding_to_slack(finding, slack_params, False)
-    assert slack_channel.get_latest_message() == msg
+    ts = slack_sender.send_finding_to_slack(finding, slack_params, False)
+    assert slack_channel.get_message_by_ts(ts) == msg
 
 
 def test_long_slack_messages(slack_channel: SlackChannel):
