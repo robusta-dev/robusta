@@ -36,8 +36,8 @@ Apply the following Secret in the GMP namespace (default ``gmp-public``). Replac
              - url: 'https://api.robusta.dev/integrations/generic/alertmanager'
                http_config:
                  authorization:
-                   # Replace with "<ACCOUNT_ID> <SIGNING_KEY>"
-                   credentials: '<ACCOUNT_ID> <SIGNING_KEY>'
+                   # Replace <ACCOUNT_ID> <SIGNING_KEY>, with your account_id and signing_key
+                   credentials: 'Bearer <ACCOUNT_ID> <SIGNING_KEY>'
                send_resolved: true
 
        route:
