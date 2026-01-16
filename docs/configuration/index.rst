@@ -46,6 +46,11 @@ Prometheus & AlertManager
         :link: alertmanager-integration/google-managed-prometheus
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`pulse;1em;` Google Managed Alertmanager
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/google-managed-alertmanager
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`pulse;1em;` Grafana - Self-Hosted
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/grafana-self-hosted
