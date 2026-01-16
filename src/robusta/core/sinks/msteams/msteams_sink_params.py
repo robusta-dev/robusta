@@ -10,6 +10,7 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 class MsTeamsSinkParams(SinkBaseParams):
     webhook_url: str
     webhook_override: Optional[str] = None
+    send_files: Optional[bool] = None  # Auto-detect: False for Power Automate, True for legacy
 
     @classmethod
     def _get_sink_type(cls):
