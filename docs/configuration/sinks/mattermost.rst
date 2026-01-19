@@ -83,6 +83,10 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+.. note::
+
+   To secure your bot token using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 You should now get playbooks results in Mattermost!
 
 

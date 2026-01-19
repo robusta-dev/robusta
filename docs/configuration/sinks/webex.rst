@@ -63,4 +63,8 @@ Now we're ready to configure the webex sink.
             bot_access_token: <YOUR BOT ACCESS TOKEN>
             room_id: <YOUR ROOM ID>
 
+.. note::
+
+   To secure your bot access token using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 You should now get playbooks results in Webex!

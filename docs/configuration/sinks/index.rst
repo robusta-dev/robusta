@@ -13,6 +13,11 @@ Robusta can send notifications to various destinations, known as sinks.
 * :ref:`sinks-overview`
 * :ref:`sink-scope-matching`
 
+.. tip::
+
+   To secure API keys and tokens in sink configurations, use Kubernetes Secrets with the
+   ``{{ env.VARIABLE_NAME }}`` syntax. See :ref:`Managing Secrets` for details and examples.
+
 Available sinks
 ^^^^^^^^^^^^^^^^^^^^^
 Click a sink for setup instructions.

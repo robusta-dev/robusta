@@ -54,4 +54,8 @@ Save the file and run
 
    helm upgrade robusta robusta/robusta -f generated_values.yaml
 
+.. note::
+
+   To secure your bot API key using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 You should now get alerts in Zulip!

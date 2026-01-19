@@ -24,6 +24,28 @@ Configuring the MS Teams sink
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
+Securing Webhook URLs with Environment Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Webhook URLs can contain sensitive information. Store them securely using Kubernetes Secrets:
+
+.. code-block:: yaml
+
+   runner:
+     additional_env_vars:
+       - name: MSTEAMS_WEBHOOK
+         valueFrom:
+           secretKeyRef:
+             name: robusta-secrets
+             key: msteams_webhook
+
+   sinksConfig:
+     - ms_teams_sink:
+         name: main_ms_teams_sink
+         webhook_url: "{{ env.MSTEAMS_WEBHOOK }}"
+
+For more details, see :ref:`Managing Secrets`.
+
 Obtaining a webhook URL
 -----------------------------------
 

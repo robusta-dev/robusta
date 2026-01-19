@@ -193,3 +193,7 @@ Troubleshooting
     We highly recommend using quotes around "mailto" to ensure special characters are handled correctly.
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. note::
+
+   To secure your email credentials and AWS credentials using Kubernetes Secrets, see :ref:`Managing Secrets`.
