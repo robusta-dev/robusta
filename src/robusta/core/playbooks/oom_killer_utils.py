@@ -73,7 +73,7 @@ def start_log_enrichment(
 
     if not log_data:
         log_block = EmptyFileBlock(filename=f"{pod.metadata.name}.log",
-                                   remarks=f"Logs unavailable for container: {container}")
+                                   remarks=f"No logs were written by container: {container}")
         logging.info(
             f"could not fetch logs from container: {container}"
         )
