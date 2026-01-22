@@ -40,6 +40,7 @@
    Dynatrace <configuration/alertmanager-integration/dynatrace>
    Embedded Prometheus Stack <configuration/alertmanager-integration/embedded-prometheus>
    Google Managed Prometheus <configuration/alertmanager-integration/google-managed-prometheus>
+   GCP Cloud Monitoring <configuration/alertmanager-integration/gcp-monitoring>
    Grafana - Self-Hosted <configuration/alertmanager-integration/grafana-self-hosted>
    Grafana Cloud <configuration/alertmanager-integration/grafana-cloud>
    Nagios <configuration/alertmanager-integration/nagios>

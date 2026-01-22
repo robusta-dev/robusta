@@ -77,6 +77,11 @@ Other
         :link: alertmanager-integration/dynatrace
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`pulse;1em;` GCP Cloud Monitoring
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/gcp-monitoring
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`pulse;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/nagios
