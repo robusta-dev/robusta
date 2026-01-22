@@ -4,6 +4,9 @@ GCP Cloud Monitoring Integration with Robusta
 .. note::
     This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
 
+.. note::
+    Every alert must carry a ``cluster`` or ``cluster_name`` label. Set it to the Robusta ``cluster_name`` configured for the target cluster, or use ``external`` when the alerts do not belong to a specific runner.
+
 This guide explains how to forward **GCP Cloud Monitoring alerts** to Robusta via a managed notification channel webhook.
 
 Requirements
@@ -45,7 +48,12 @@ Step 3: Use the Webhook in Alerting Policies
 1. Navigate to **Monitoring -> Alerting -> Policies**.
 2. Create a new alerting policy or edit an existing one.
 3. In the **Notifications** section, select the **RobustaWebhook** notification channel.
-4. Save the alerting policy.
+4. **Add a cluster label** (required): In the policy's **Documentation** section, add a custom label:
+
+   - **Key**: ``cluster_name``
+   - **Value**: Your Robusta cluster name (e.g., ``my-gcp-cluster``) or ``external`` for non-Kubernetes alerts
+
+5. Save the alerting policy.
 
 Validation
 ----------
