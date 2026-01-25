@@ -82,6 +82,15 @@ WEBSOCKET_PING_INTERVAL = int(os.environ.get("WEBSOCKET_PING_INTERVAL", 120))
 # Timeout for the ping response, before killing the connection. Must be smaller than the interval
 WEBSOCKET_PING_TIMEOUT = int(os.environ.get("WEBSOCKET_PING_TIMEOUT", 30))
 
+# TCP keepalive configuration (disabled by default)
+WEBSOCKET_TCP_KEEPALIVE_ENABLED = os.environ.get("WEBSOCKET_TCP_KEEPALIVE_ENABLED", "false").lower() == "true"
+# Time in seconds before sending the first keepalive probe (Linux: TCP_KEEPIDLE, macOS: TCP_KEEPALIVE)
+WEBSOCKET_TCP_KEEPALIVE_IDLE = int(os.environ.get("WEBSOCKET_TCP_KEEPALIVE_IDLE", 2))
+# Interval in seconds between keepalive probes
+WEBSOCKET_TCP_KEEPALIVE_INTERVAL = int(os.environ.get("WEBSOCKET_TCP_KEEPALIVE_INTERVAL", 2))
+# Number of failed probes before connection is considered dead
+WEBSOCKET_TCP_KEEPALIVE_COUNT = int(os.environ.get("WEBSOCKET_TCP_KEEPALIVE_COUNT", 5))
+
 TRACE_INCOMING_REQUESTS = load_bool("TRACE_INCOMING_REQUESTS", False)
 TRACE_INCOMING_ALERTS = load_bool("TRACE_INCOMING_ALERTS", False)
 
