@@ -297,7 +297,7 @@ class DiscordSender:
         actions: list[str] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
             actions.append(
-                "[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
+                f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
             )
             if finding.add_silence_url:
                 actions.append(
