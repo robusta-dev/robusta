@@ -94,3 +94,34 @@ For example:
         name: main_ms_teams_sink
         webhook_url: teams-incoming-webhook
         prefer_redirect_to_platform: false
+
+File Attachments
+-------------------------------------------------------------------
+
+MS Teams Power Automate workflow webhooks have a strict 28KB payload size limit.
+Robusta automatically detects Power Automate URLs and disables file attachments
+to avoid exceeding this limit.
+
+**Auto-detection behavior:**
+
+- Power Automate URLs (``*.api.powerplatform.com``): files disabled by default
+- Legacy webhook URLs (``*.webhook.office.com``): files enabled by default
+
+**Override auto-detection:**
+
+You can explicitly control file attachments using the ``send_files`` parameter:
+
+.. code-block:: yaml
+
+     sinksConfig:
+     - ms_teams_sink:
+        name: main_ms_teams_sink
+        webhook_url: teams-incoming-webhook
+        send_files: true   # Force enable files (override auto-detection)
+        # send_files: false  # Force disable files
+
+.. note::
+
+    When ``send_files`` is false (or auto-detected as false for Power Automate),
+    all file attachments (images, logs, graphs, etc.) will not be included in
+    the MS Teams message. Text-based content will still be sent normally.

@@ -46,6 +46,11 @@ Prometheus & AlertManager
         :link: alertmanager-integration/google-managed-prometheus
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`pulse;1em;` Google Managed Alertmanager
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/google-managed-alertmanager
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`pulse;1em;` Grafana - Self-Hosted
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/grafana-self-hosted
@@ -70,6 +75,11 @@ Other
     .. grid-item-card:: :octicon:`pulse;1em;` Dynatrace
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/dynatrace
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` GCP Cloud Monitoring
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/gcp-monitoring
         :link-type: doc
 
     .. grid-item-card:: :octicon:`pulse;1em;` Nagios

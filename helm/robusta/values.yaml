@@ -699,7 +699,7 @@ runner:
   imagePullPolicy: IfNotPresent
   revisionHistoryLimit: 10
   log_level: INFO
-  sentry_dsn: https://4f1a66f025c60830fec303a094dcdf94@o1120648.ingest.sentry.io/6156573
+  sentry_dsn: ""
   sendAdditionalTelemetry: false
   certificate: "" # base64 encoded
   createServiceAccount: true
