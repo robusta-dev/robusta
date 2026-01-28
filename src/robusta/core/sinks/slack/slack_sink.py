@@ -113,19 +113,13 @@ class SlackSink(SinkBase):
                     blocks[i] = {
                         "type": "section",
                         "block_id": block_id,
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": message_string
-                        }
+                        "text": {"type": "mrkdwn", "text": message_string},
                     }
                     break
 
             # Call the shorter update function
             return self.slack_sender.update_slack_message(
-                channel=channel_id,
-                ts=message_ts,
-                blocks=blocks,
-                text=message_string
+                channel=channel_id, ts=message_ts, blocks=blocks, text=message_string
             )
 
         except Exception as e:
