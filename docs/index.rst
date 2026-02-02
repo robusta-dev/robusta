@@ -25,6 +25,7 @@
    configuration/holmesgpt/main-features
    configuration/holmesgpt/getting-started
    HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
+   Holmes Chat API <configuration/holmesgpt/holmes-chat-api>
 
 .. toctree::
    :maxdepth: 4
@@ -139,6 +140,7 @@
    configuration/exporting/alert-statistics-api
    configuration/exporting/namespace-resources-api
    configuration/exporting/rbac-api
+   configuration/exporting/prometheus-query-api
 
 .. toctree::
    :maxdepth: 4
