@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import mimetypes
 import urllib.parse
@@ -47,13 +48,29 @@ class ServiceNowSender(HTMLBaseSender):
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
+        correlation_id = self._get_correlation_id(finding)
 
-        # Part one: create the incident
+        if status == FindingStatus.RESOLVED:
+            if not self.params.send_resolved:
+                logging.debug("Alert resolved but send_resolved is disabled, skipping")
+                return
+            existing_incident = self._find_incident_by_correlation_id(correlation_id)
+            if existing_incident:
+                self._resolve_incident(existing_incident["sys_id"])
+                return
+            logging.warning(f"Resolved alert received but no existing incident found for correlation_id={correlation_id}")
+            return
+
+        existing_incident = self._find_incident_by_correlation_id(correlation_id)
+        if existing_incident:
+            logging.debug(f"Incident already exists for correlation_id={correlation_id}, skipping creation")
+            return
+
         transformer, message = self.format_message(finding, platform_enabled)
         header = self.format_header(finding, status)
-        wsdl_url = f"https://{self.params.instance}.service-now.com/incident.do?WSDL"
 
         payload = self.params_to_payload(header, message, self.params.caller_id, finding.severity)
+        payload["correlation_id"] = correlation_id
         url = f"https://{self.params.instance}.service-now.com/api/now/v1/table/incident"
         response = requests.post(url, auth=self.auth, headers={"Content-Type": "application/json"}, json=payload)
         if response.status_code != 201:
@@ -63,10 +80,7 @@ class ServiceNowSender(HTMLBaseSender):
             return
         incident_sys_id = response.json()["result"]["sys_id"]
 
-        # Part two: upload attachments and link them to the incident
         for file_block in transformer.file_blocks:
-            # FIXME the mime-type guessing here is fragile, but we don't store
-            # mime types within FileBlocks, unfortunately.
             if file_block.is_text_file():
                 mime_type = "text/plain"
             else:
@@ -87,6 +101,40 @@ class ServiceNowSender(HTMLBaseSender):
                 logging.error(
                     f"ServiceNow attachment creation failure: status {response.status_code}, response body {response.text}"
                 )
+
+    def _get_correlation_id(self, finding: Finding) -> str:
+        if finding.fingerprint:
+            return finding.fingerprint
+        parts = [
+            self.cluster_name,
+            finding.subject.namespace or "",
+            finding.subject.name or "",
+            finding.starts_at.isoformat() if finding.starts_at else "",
+        ]
+        hash_input = "|".join(parts)
+        return f"robusta-{hashlib.sha256(hash_input.encode()).hexdigest()[:32]}"
+
+    def _find_incident_by_correlation_id(self, correlation_id: str) -> Dict:
+        url = (
+            f"https://{self.params.instance}.service-now.com/api/now/v1/table/incident?"
+            f"sysparm_query=correlation_id={urllib.parse.quote(correlation_id, safe='')}"
+            f"&sysparm_limit=1"
+        )
+        response = requests.get(url, auth=self.auth, headers={"Content-Type": "application/json"})
+        if response.status_code != 200:
+            logging.error(f"ServiceNow incident query failure: status {response.status_code}, response body {response.text}")
+            return {}
+        results = response.json().get("result", [])
+        return results[0] if results else {}
+
+    def _resolve_incident(self, sys_id: str):
+        url = f"https://{self.params.instance}.service-now.com/api/now/v1/table/incident/{sys_id}"
+        payload = {"state": self.params.resolved_state}
+        response = requests.patch(url, auth=self.auth, headers={"Content-Type": "application/json"}, json=payload)
+        if response.status_code != 200:
+            logging.error(f"ServiceNow incident update failure: status {response.status_code}, response body {response.text}")
+        else:
+            logging.info(f"ServiceNow incident {sys_id} resolved")
 
     def format_message(self, finding: Finding, platform_enabled: bool) -> Tuple[HTMLTransformer, str]:
         blocks: List[BaseBlock] = []

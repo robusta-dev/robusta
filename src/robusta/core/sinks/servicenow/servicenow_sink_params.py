@@ -10,7 +10,9 @@ class ServiceNowSinkParams(SinkBaseParams):
     instance: str
     username: str
     password: SecretStr
-    caller_id: Optional[str]
+    caller_id: Optional[str] = None
+    send_resolved: bool = True
+    resolved_state: int = 6
 
     @classmethod
     def _get_sink_type(cls):
