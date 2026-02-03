@@ -14,6 +14,9 @@ Automatically investigate and resolve issues with AI-powered analysis.
 :doc:`AI Analysis (HolmesGPT) <../holmesgpt/main-features>`
     Automatically analyze Kubernetes alerts, logs, and metrics. Get potential root causes and remediation suggestions.
 
+:doc:`Holmes Chat API <../holmesgpt/holmes-chat-api>`
+    Programmatically send questions to Holmes AI for root cause analysis via REST API.
+
 Custom Alert Ingestion
 -----------------------
 

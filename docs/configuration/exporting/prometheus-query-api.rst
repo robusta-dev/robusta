@@ -79,7 +79,7 @@ Include an API key in the Authorization header:
 
     Authorization: Bearer <API_KEY>
 
-The API key must have **Read Metrics** permission.
+The API key must have **Read Metrics** permission. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Metrics" permission.
 
 Example Request
 ---------------

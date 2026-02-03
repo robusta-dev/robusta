@@ -44,8 +44,8 @@ Request Body
      - No
    * - ``ask``
      - string
-     - The question to ask Holmes. Default: ``"Why is this alert firing?"``
-     - No
+     - The question to ask Holmes.
+     - Yes
    * - ``payload``
      - object
      - Alert payload or context data for Holmes to analyze (e.g., Prometheus alert labels).
@@ -132,6 +132,35 @@ Response Fields
    * - ``analysis``
      - string
      - Holmes AI analysis in markdown format. Contains investigation findings, root cause analysis, and remediation steps.
+
+Handling the Markdown Response
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``analysis`` field contains markdown text with escaped newlines (``\n``). To render it properly:
+
+**Python:**
+
+.. code-block:: python
+
+    import json
+
+    response_data = json.loads(response.text)
+    markdown_text = response_data["analysis"]  # Already unescaped by json.loads
+    print(markdown_text)  # Renders with proper line breaks
+
+**JavaScript:**
+
+.. code-block:: javascript
+
+    const data = JSON.parse(responseText);
+    const markdownText = data.analysis;  // Already unescaped by JSON.parse
+    // Use a markdown renderer like marked.js or react-markdown
+
+**Bash (using jq):**
+
+.. code-block:: bash
+
+    curl ... | jq -r '.analysis'  # -r outputs raw string with actual newlines
 
 Error Responses
 ^^^^^^^^^^^^^^^
