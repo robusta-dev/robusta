@@ -25,6 +25,7 @@
    configuration/holmesgpt/main-features
    configuration/holmesgpt/getting-started
    HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
+   Holmes Chat API <configuration/holmesgpt/holmes-chat-api>
 
 .. toctree::
    :maxdepth: 4
@@ -40,6 +41,8 @@
    Dynatrace <configuration/alertmanager-integration/dynatrace>
    Embedded Prometheus Stack <configuration/alertmanager-integration/embedded-prometheus>
    Google Managed Prometheus <configuration/alertmanager-integration/google-managed-prometheus>
+   GCP Cloud Monitoring <configuration/alertmanager-integration/gcp-monitoring>
+   Google Managed Alertmanager <configuration/alertmanager-integration/google-managed-alertmanager>
    Grafana - Self-Hosted <configuration/alertmanager-integration/grafana-self-hosted>
    Grafana Cloud <configuration/alertmanager-integration/grafana-cloud>
    Nagios <configuration/alertmanager-integration/nagios>
@@ -137,6 +140,7 @@
    configuration/exporting/alert-statistics-api
    configuration/exporting/namespace-resources-api
    configuration/exporting/rbac-api
+   configuration/exporting/prometheus-query-api
 
 .. toctree::
    :maxdepth: 4

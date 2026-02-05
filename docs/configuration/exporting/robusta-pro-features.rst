@@ -14,6 +14,9 @@ Automatically investigate and resolve issues with AI-powered analysis.
 :doc:`AI Analysis (HolmesGPT) <../holmesgpt/main-features>`
     Automatically analyze Kubernetes alerts, logs, and metrics. Get potential root causes and remediation suggestions.
 
+:doc:`Holmes Chat API <../holmesgpt/holmes-chat-api>`
+    Programmatically send questions to Holmes AI for root cause analysis via REST API.
+
 Custom Alert Ingestion
 -----------------------
 
@@ -49,6 +52,7 @@ Features include:
 * :doc:`Send Alerts API <send-alerts-api>`: Send alerts programmatically from external systems or via integrations
 * :doc:`Configuration Changes API <configuration-changes-api>`: Track configuration changes in your environment
 * :doc:`RBAC Configuration API <rbac-api>`: Programmatically manage role-based access control configurations
+* :doc:`Prometheus Query API <prometheus-query-api>`: Run PromQL queries against Prometheus in your connected clusters
 
 Additional Pro Features
 -----------------------

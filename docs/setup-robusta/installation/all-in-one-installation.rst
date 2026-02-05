@@ -19,6 +19,15 @@ Prerequisites
    :header_update_levels:
    :file: setup-robusta/installation/_generate_config.jinja
 
+Enable Prometheus Stack
+------------------------------
+
+Add the following to your ``generated_values.yaml`` file:
+
+.. code-block:: yaml
+
+    enablePrometheusStack: true
+
 .. include:: ./_helm_install_with_prometheus.inc.rst
 
 Next Steps

@@ -187,11 +187,16 @@ class ToolApprovalDecision(BaseModel):
 
     tool_call_id: str
     approved: bool
+    save_prefixes: Optional[List[str]] = None  # Prefixes to remember for session
 
 
 class HolmesChatParams(HolmesParams):
     """
     :var ask: User's prompt for holmes
+
+    This class allows extra fields to be passed through to Holmes.
+    Any additional parameters received will be forwarded to the Holmes server,
+    allowing client/server upgrades without requiring changes to this middleware.
     """
 
     ask: str
@@ -201,6 +206,9 @@ class HolmesChatParams(HolmesParams):
     enable_tool_approval: bool = Field(default=False)
     tool_decisions: Optional[List[ToolApprovalDecision]] = None
     additional_system_prompt: Optional[str] = None
+
+    class Config:
+        extra = "allow"
 
 
 class HolmesIssueChatParams(HolmesChatParams):
@@ -222,44 +230,6 @@ class HolmesConversationParams(HolmesParams):
     conversation_type: ConversationType
     include_tool_calls: bool = True
     include_tool_call_results: bool = True
-
-
-class HolmesWorkloadHealthParams(HolmesParams):
-    """
-    :var ask: Override question to ask holmes
-    :var resource: The resource related to this investigation. A resource has a `name` and `kind`, and may have `namespace` and `node`
-    :var alert_history: fetch historical alert data on the resource
-    :var alert_history_since_hours: Timespan of historic data to use in hours. 24 by default.
-    :var stored_instrucitons: Use remote instructions specified for the workload.
-    :var instructions: List of extra instructions to supply.
-    :var silent_healthy: Does not create findings in the case of healthy workload.
-
-    :example ask: What are all the issues in my cluster right now?
-    """
-
-    ask: Optional[str]
-    resource: Optional[ResourceInfo] = ResourceInfo()
-    alert_history: bool = True
-    alert_history_since_hours: float = 24
-    stored_instrucitons: bool = True
-    instructions: List[str] = []
-    include_tool_calls: bool = True
-    include_tool_call_results: bool = True
-    silent_healthy: bool = False
-
-
-class HolmesWorkloadHealthChatParams(HolmesParams):
-    """
-    :var ask: User's prompt for holmes
-    :var workload_health_result: Result from the workload health check
-    :var resource: The resource related to the initial investigation
-    :var conversation_history: List of previous user prompts and responses.
-    """
-
-    ask: str
-    workload_health_result: HolmesInvestigationResult
-    resource: ResourceInfo
-    conversation_history: Optional[list[dict]] = None
 
 
 class NamespacedResourcesParams(ActionParams):

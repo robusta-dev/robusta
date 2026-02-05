@@ -110,3 +110,34 @@ active_playbooks:
 
 {{- end }}
 {{ end }}
+
+{{/*
+Determine if this is a Robusta SaaS environment.
+Returns "true" if ROBUSTA_UI_DOMAIN is not set OR ends with ".robusta.dev"
+*/}}
+{{- define "robusta.isSaasEnvironment" -}}
+{{- $robustaUiDomain := "" -}}
+{{- range .Values.runner.additional_env_vars -}}
+  {{- if eq .name "ROBUSTA_UI_DOMAIN" -}}
+    {{- $robustaUiDomain = .value -}}
+  {{- end -}}
+{{- end -}}
+{{- if or (eq $robustaUiDomain "") (hasSuffix ".robusta.dev" $robustaUiDomain) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Determine the Sentry DSN value.
+Returns the user-provided value if set, otherwise returns the default SaaS DSN if in a SaaS environment, otherwise returns empty string.
+*/}}
+{{- define "robusta.sentryDsn" -}}
+{{- if .Values.runner.sentry_dsn -}}
+{{ .Values.runner.sentry_dsn }}
+{{- else if eq (include "robusta.isSaasEnvironment" .) "true" -}}
+https://18ac614b2d7fbbb3c7a7789b946506e1@o4510692373299200.ingest.de.sentry.io/4510707940982864
+{{- else -}}
+{{- end -}}
+{{- end -}}

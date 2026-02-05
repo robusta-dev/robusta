@@ -9,6 +9,10 @@ Google Managed Prometheus Alerts
 
 This guide shows how to send alerts from `Google Managed Prometheus <https://cloud.google.com/stackdriver/docs/managed-prometheus>`_ to Robusta.
 
+.. note::
+
+   **Using Google Managed Alertmanager?** For Google Managed Prometheus (GMP) managed Alertmanager, see the dedicated guide: :doc:`google-managed-alertmanager`
+
 For configuring metric querying from Google Managed Prometheus, see :doc:`/configuration/metric-providers-google`.
 
 Prerequisites
