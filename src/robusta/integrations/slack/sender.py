@@ -230,7 +230,7 @@ class SlackSender:
                             "elements": [
                                 {
                                     "type": "text",
-                                    "text": str(header),
+                                    "text": str(header) or " ",
                                     "style": {"bold": True},
                                 }
                             ],
@@ -254,7 +254,7 @@ class SlackSender:
                                 "elements": [
                                     {
                                         "type": "text",
-                                        "text": column,
+                                        "text": column or " ",
                                     }
                                 ],
                             }
