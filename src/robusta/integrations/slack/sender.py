@@ -203,6 +203,20 @@ class SlackSender:
 
         column_count = len(block.headers)
 
+        if len(column_count) == 2:
+            table_rows: List[str] = []
+            for row in block.rows:
+                if "-------" in str(row[1]):  # special care for table subheader
+                    subheader: str = row[0]
+                    table_rows.append(f"--- {subheader.capitalize()} ---")
+                    continue
+
+                table_rows.append(f"● {row[0]} `{row[1]}`")
+
+            table_str = "\n".join(table_rows)
+            table_str = f"{block.table_name} \n{table_str}"
+            return self.__to_slack_markdown(MarkdownBlock(table_str))
+
         rows = []
         # Build header row with bold text
         header_blocks = []
