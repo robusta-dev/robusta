@@ -182,23 +182,79 @@ class SlackSender:
             }
         ]
 
-    def __to_slack_table(self, block: TableBlock):
-        # temp workaround untill new blocks will be added to support these.
-        if len(block.headers) == 2:
-            table_rows: List[str] = []
-            for row in block.rows:
-                if "-------" in str(row[1]):  # special care for table subheader
-                    subheader: str = row[0]
-                    table_rows.append(f"--- {subheader.capitalize()} ---")
-                    continue
+    @staticmethod
+    def __normalize_row_columns(row: list, column_count: int) -> List[str]:
+        """Normalize a row to have exactly column_count columns."""
+        if column_count <= 0:
+            return []
+        columns = [str(c) for c in row]
+        if len(columns) == column_count:
+            return columns
+        elif len(columns) < column_count:
+            return columns + [""] * (column_count - len(columns))
+        else:
+            return columns[: column_count - 1] + [
+                " | ".join(columns[column_count - 1 :])
+            ]
 
-                table_rows.append(f"● {row[0]} `{row[1]}`")
+    def __to_slack_table(self, block: TableBlock) -> List[SlackBlock]:
+        if not block.headers:
+            return self.__to_slack_markdown(block.to_markdown())
 
-            table_str = "\n".join(table_rows)
-            table_str = f"{block.table_name} \n{table_str}"
-            return self.__to_slack_markdown(MarkdownBlock(table_str))
+        column_count = len(block.headers)
 
-        return self.__to_slack_markdown(block.to_markdown())
+        rows = []
+        # Build header row with bold text
+        header_blocks = []
+        for header in block.headers:
+            header_blocks.append(
+                {
+                    "type": "rich_text",
+                    "elements": [
+                        {
+                            "type": "rich_text_section",
+                            "elements": [
+                                {
+                                    "type": "text",
+                                    "text": str(header),
+                                    "style": {"bold": True},
+                                }
+                            ],
+                        }
+                    ],
+                },
+            )
+        rows.append(header_blocks)
+
+        # Build data rows
+        for row in block.render_rows():
+            columns = self.__normalize_row_columns(row, column_count)
+            row_blocks = []
+            for column in columns:
+                row_blocks.append(
+                    {
+                        "type": "rich_text",
+                        "elements": [
+                            {
+                                "type": "rich_text_section",
+                                "elements": [
+                                    {
+                                        "type": "text",
+                                        "text": column,
+                                    }
+                                ],
+                            }
+                        ],
+                    },
+                )
+            rows.append(row_blocks)
+
+        return [
+            {
+                "type": "table",
+                "rows": rows,
+            }
+        ]
 
     def __to_slack(self, block: BaseBlock, sink_name: str) -> List[SlackBlock]:
         if isinstance(block, MarkdownBlock):
