@@ -203,7 +203,7 @@ class SlackSender:
 
         column_count = len(block.headers)
 
-        if len(column_count) == 2:
+        if column_count == 2:
             table_rows: List[str] = []
             for row in block.rows:
                 if "-------" in str(row[1]):  # special care for table subheader
