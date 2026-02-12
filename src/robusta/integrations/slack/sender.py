@@ -195,7 +195,7 @@ class SlackSender:
                 table_rows.append(f"● {row[0]} `{row[1]}`")
 
             table_str = "\n".join(table_rows)
-            table_str = f"{block.table_name} \n{table_str}"
+            table_str = f"{block.table_name} \n```\n{table_str}\n```"
             return self.__to_slack_markdown(MarkdownBlock(table_str))
 
         return self.__to_slack_markdown(block.to_markdown())
