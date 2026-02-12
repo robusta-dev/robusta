@@ -184,7 +184,7 @@ class SlackSender:
 
     def __to_slack_table(self, block: TableBlock):
         # temp workaround untill new blocks will be added to support these.
-        if len(block.headers) == 2:
+        if len(block.headers) == 1:
             table_rows: List[str] = []
             for row in block.rows:
                 if "-------" in str(row[1]):  # special care for table subheader
@@ -195,7 +195,7 @@ class SlackSender:
                 table_rows.append(f"● {row[0]} `{row[1]}`")
 
             table_str = "\n".join(table_rows)
-            table_str = f"{block.table_name} \n```\n{table_str}\n```"
+            table_str = f"{block.table_name} \n{table_str}"
             return self.__to_slack_markdown(MarkdownBlock(table_str))
 
         return self.__to_slack_markdown(block.to_markdown())
