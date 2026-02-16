@@ -57,15 +57,16 @@ If you are using a third-party AlertManager and want to give it separate credent
 .. note::
     This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
 
-1. In the Robusta UI, go to **Settings → API Keys**.
-2. Click **New API Key**, select **Alerts: Write** permissions, and **Save**.
-3. Copy the generated API key.
-4. Find your ``account_id``:
+1. Verify that all alerts contain a label named ``cluster_name`` or ``cluster``, matching the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary to identify which robusta-runner should receive alerts.
+2. In the Robusta UI, go to **Settings → API Keys**.
+3. Click **New API Key**, select **Alerts: Write** permissions, and **Save**.
+4. Copy the generated API key.
+5. Find your ``account_id``:
 
    - In your **generated_values.yaml** file (from installation), or
    - In the Robusta UI under **Settings → Workspace**.
 
-5. Edit the configuration for your AlertManager, using the API key in place of the signing key:
+6. Edit the configuration for your AlertManager, using the API key in place of the signing key:
 
 .. admonition:: alertmanager.yaml
 
