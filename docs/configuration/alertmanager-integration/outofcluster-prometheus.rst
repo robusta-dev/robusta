@@ -49,6 +49,52 @@ This integration lets your central Prometheus send alerts to Robusta, as if they
 
 .. include:: ./_testing_integration.rst
 
+Send Alerts to Robusta with API Key
+======================================
+
+If you are using a third-party AlertManager and want to give it separate credentials (instead of using the signing key from ``generated_values.yaml``), you can create a dedicated API key in the Robusta UI.
+
+.. note::
+    This feature is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
+
+1. In the Robusta UI, go to **Settings → API Keys**.
+2. Click **New API Key**, select **Alerts: Write** permissions, and **Save**.
+3. Copy the generated API key.
+4. Find your ``account_id``:
+
+   - In your **generated_values.yaml** file (from installation), or
+   - In the Robusta UI under **Settings → Workspace**.
+
+5. Edit the configuration for your AlertManager, using the API key in place of the signing key:
+
+.. admonition:: alertmanager.yaml
+
+    .. code-block:: yaml
+
+        receivers:
+          - name: 'robusta'
+            webhook_configs:
+              - url: 'https://api.robusta.dev/integrations/generic/alertmanager'
+                http_config:
+                  authorization:
+                    # Replace <ACCOUNT_ID> with your Robusta account ID
+                    # Replace <API_KEY> with the API key you created above
+                    credentials: '<ACCOUNT_ID> <API_KEY>'
+                send_resolved: true
+
+        route:
+          routes:
+          - receiver: 'robusta'
+            group_by: [ '...' ]
+            group_wait: 1s
+            group_interval: 1s
+            matchers:
+              - severity =~ ".*"
+            repeat_interval: 4h
+            continue: true
+
+.. include:: ./_testing_integration.rst
+
 .. include:: ./_pull_integration.rst
 
 Filtering Prometheus Queries by Cluster
