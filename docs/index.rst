@@ -42,7 +42,7 @@
    configuration/exporting/prometheus-query-api
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
    :caption: Other Features
    :hidden:
 

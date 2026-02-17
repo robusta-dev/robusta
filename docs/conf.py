@@ -293,8 +293,8 @@ html_theme_options = {
     "icon": {
         "repo": "fontawesome/brands/github",
     },
-    "repo_url": "https://github.com/robusta-dev/robusta",
-    "repo_name": "Robusta",
+    "repo_url": "https://github.com/robusta-dev/holmesGPT",
+    "repo_name": "HolmesGPT",
     "repo_type": "github",
     "edit_uri": "tree/master/docs",
     "palette": [
@@ -330,7 +330,7 @@ html_theme_options = {
     "social": [
         {
             "icon": "fontawesome/brands/github",
-            "link": "https://github.com/robusta-dev/robusta",
+            "link": "https://github.com/robusta-dev/holmesGPT",
         },
         {
             "icon": "fontawesome/brands/slack",
