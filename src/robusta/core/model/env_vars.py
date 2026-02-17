@@ -136,8 +136,6 @@ POD_WAIT_RETRIES_SECONDS = int(os.environ.get("POD_WAIT_RETRIES_SECONDS", 5))
 
 HOLMES_ENABLED = load_bool("HOLMES_ENABLED", False)
 HOLMES_ASK_SLACK_BUTTON_ENABLED = load_bool("HOLMES_ASK_SLACK_BUTTON_ENABLED", True)
-# Max size in bytes for individual Holmes tool call results stored in findings (0 = no limit)
-HOLMES_TOOL_RESULT_MAX_SIZE = int(os.environ.get("HOLMES_TOOL_RESULT_MAX_SIZE", 50000))
 
 # simple calculated values (not direct environment vars)
 SENTRY_ENABLED = SEND_ADDITIONAL_TELEMETRY and SENTRY_DSN

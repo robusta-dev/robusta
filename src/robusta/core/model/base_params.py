@@ -137,14 +137,6 @@ class HolmesInvestigationResult(BaseModel):
     result: str
     tools: Optional[List[HolmesToolsResult]] = []
 
-    def truncate_tool_outputs(self, max_size: int) -> None:
-        """Truncate tool outputs in-place to reduce memory when re-sending to Holmes."""
-        if not self.tools or max_size <= 0:
-            return
-        for tool in self.tools:
-            if len(tool.output) > max_size:
-                tool.output = tool.output[:max_size] + f"\n... [truncated from {len(tool.output)} to {max_size} bytes]"
-
 
 class HolmesConversationHistory(BaseModel):
     """

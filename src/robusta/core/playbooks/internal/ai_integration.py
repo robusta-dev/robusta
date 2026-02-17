@@ -14,7 +14,6 @@ from robusta.core.model.base_params import (
     HolmesIssueChatParams,
     ResourceInfo,
 )
-from robusta.core.model.env_vars import HOLMES_TOOL_RESULT_MAX_SIZE
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import action
 from robusta.core.playbooks.prometheus_enrichment_utils import (
@@ -128,7 +127,6 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             result.raise_for_status()
 
             holmes_result = HolmesResult(**result.json())
-            holmes_result.truncate_tool_results()
             title_suffix = (
                 f" on {params.resource.name}"
                 if params.resource
@@ -199,12 +197,6 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
     conversation_title = build_conversation_title(params)
 
     try:
-        # Truncate tool outputs in the conversation context before re-sending
-        params.context.investigation_result.truncate_tool_outputs(HOLMES_TOOL_RESULT_MAX_SIZE)
-        if params.context.conversation_history:
-            for history_entry in params.context.conversation_history:
-                history_entry.answer.truncate_tool_outputs(HOLMES_TOOL_RESULT_MAX_SIZE)
-
         holmes_req = HolmesConversationRequest(
             user_prompt=params.ask,
             source=getattr(params.context, "source", "unknown source")
@@ -219,7 +211,6 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
         result = requests.post(f"{holmes_url}/api/conversation", data=holmes_req.json())
         result.raise_for_status()
         holmes_result = HolmesConversationResult(**result.json())
-        holmes_result.truncate_tool_results()
 
         params_resource_kind = params.resource.kind or ""
         finding = Finding(
@@ -265,8 +256,6 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
     conversation_title = build_conversation_title(params)
     params_resource_kind = params.resource.kind or ""
     try:
-        # Truncate tool outputs before re-sending to Holmes to reduce request size
-        params.context.investigation_result.truncate_tool_outputs(HOLMES_TOOL_RESULT_MAX_SIZE)
         holmes_req = HolmesIssueChatRequest(
             ask=params.ask,
             conversation_history=params.conversation_history,
@@ -278,7 +267,6 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
         result.raise_for_status()
 
         holmes_result = HolmesChatResult(**result.json())
-        holmes_result.truncate_tool_results()
 
         finding = Finding(
             title=f"AI Analysis of {conversation_title}",
@@ -373,9 +361,6 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
 
             except Exception:
                 logging.exception("Failed to convert tools to images")
-
-        # Truncate after graph rendering so charts can use full data
-        holmes_result.truncate_tool_results()
 
         finding = Finding(
             title="AI Ask Chat",
