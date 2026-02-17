@@ -19,7 +19,7 @@ Deployment Options
 
 **Which should I choose?**
 
-Most teams use the **SaaS** option for the :doc:`complete feature set <../configuration/exporting/robusta-pro-features>` without infrastructure overhead. The open source HolmesGPT works well on its own if you only need AI-powered investigation and routing to external notification channels.
+Most teams use the **SaaS** option for the :doc:`complete feature set <../configuration/exporting/robusta-pro-features>` without infrastructure overhead.
 
 Pricing
 ^^^^^^^^^^^^
