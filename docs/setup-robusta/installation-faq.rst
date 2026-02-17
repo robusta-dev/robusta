@@ -54,16 +54,3 @@ Does Robusta support Thanos/Cortex/Mimir/VictoriaMetrics?
 ============================================================
 Any Prometheus-compatible solution is fine. Just follow instructions in the :doc:`Send Alerts </configuration/index>` documentation.
 
-Can I use Robusta with DataDog?
-============================================================
-Yes, we have a :ref:`DataDog integration <DataDog>` available. Try it out.
-
-Is NewRelic supported?
-=======================
-It's being planned, speak to us on Slack.
-
-Does Robusta replace monitoring tools?
-============================================================
-Robusta's :ref:`all-in-one package <install-all-in-one>` is a complete monitoring and observability solution.
-
-Alternatively, you can keep your existing tools and add-on robusta.
