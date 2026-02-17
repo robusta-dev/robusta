@@ -3,6 +3,23 @@
 Notifications & Routing Overview
 =================================
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   routing-with-scopes
+   notification-grouping
+   routing-silencing
+   routing-by-namespace
+   routing-by-severity
+   routing-by-time
+   routing-by-type
+   routing-exclusion
+   routing-to-multiple-slack-channels
+   excluding-resolved
+   disable-oomkill-notifications
+   implementing-monitoring-shifts
+
 Robusta can send notifications to various destinations and route them intelligently based on alert type, namespace, severity, and more.
 
 Key Concepts

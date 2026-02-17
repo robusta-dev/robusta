@@ -4,6 +4,18 @@
 Playbooks Basics
 ##################
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   builtin-alert-enrichment
+   defining-playbooks/index
+   triggers/index
+   actions/index
+   automatic-remediation-examples/index
+   logs-triggers/index
+   kubernetes-examples/kubernetes-change-notifications
+
 Playbooks are deterministic rules for responding to alerts and unhealthy conditions in a Kubernetes cluster.
 
 Playbooks are recommended for advanced use cases. Most users should start with :doc:`AI Analysis </configuration/holmesgpt/main-features>` of alerts first, which requires far less configuration.

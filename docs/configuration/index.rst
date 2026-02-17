@@ -26,6 +26,7 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
    alertmanager-integration/newrelic
    alertmanager-integration/pagerduty-alerting
    alertmanager-integration/solarwinds
+   alertmanager-integration/launchdarkly
    alertmanager-integration/customize-labels-priorities
    exporting/custom-webhooks
 
@@ -124,6 +125,11 @@ Other
     .. grid-item-card:: :octicon:`pulse;1em;` SolarWinds
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/solarwinds
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` LaunchDarkly
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: alertmanager-integration/launchdarkly
         :link-type: doc
 
 Advanced

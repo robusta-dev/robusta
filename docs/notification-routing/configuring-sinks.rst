@@ -5,6 +5,34 @@
 Defining Sinks
 ==========================
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   ../configuration/sinks/slack
+   ../configuration/sinks/ms-teams
+   ../configuration/sinks/RobustaUI
+   ../configuration/sinks/telegram
+   ../configuration/sinks/discord
+   ../configuration/sinks/DataDog
+   ../configuration/sinks/mattermost
+   ../configuration/sinks/Opsgenie
+   ../configuration/sinks/PagerDuty
+   ../configuration/sinks/VictorOps
+   ../configuration/sinks/YandexMessenger
+   ../configuration/sinks/jira
+   ../configuration/sinks/webhook
+   ../configuration/sinks/file
+   ../configuration/sinks/webex
+   ../configuration/sinks/kafka
+   ../configuration/sinks/rocketchat
+   ../configuration/sinks/mail
+   ../configuration/sinks/google_chat
+   ../configuration/sinks/pushover
+   ../configuration/sinks/ServiceNow
+   ../configuration/sinks/zulip
+   ../configuration/sinks/sinks-development
+
 Robusta can send notifications to various destinations, called sinks.
 
 A Simple Sink Configuration
