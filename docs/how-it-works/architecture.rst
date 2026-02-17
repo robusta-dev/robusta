@@ -9,18 +9,6 @@ Robusta uses `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_, an open so
 
 |
 
-How It Works
-^^^^^^^^^^^^^
-
-When an alert fires, HolmesGPT automatically investigates it:
-
-1. The in-cluster Agent receives the alert from Prometheus AlertManager (or other sources)
-2. HolmesGPT pulls context from your data sources — logs, metrics, events, traces, and more
-3. It correlates the evidence using LLMs to identify the root cause
-4. The investigation results are sent to the Robusta Platform and your notification channels
-
-All of this happens automatically — no manual triage required.
-
 Agent (In-Cluster)
 ^^^^^^^^^^^^^^^^^^^
 
