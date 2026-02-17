@@ -9,6 +9,7 @@ Defining Sinks
    :maxdepth: 1
    :hidden:
 
+   All Sinks <../configuration/sinks/index>
    ../configuration/sinks/slack
    ../configuration/sinks/ms-teams
    ../configuration/sinks/RobustaUI

@@ -8,6 +8,7 @@ Learn how to define Robusta playbooks.
 .. toctree::
    :maxdepth: 1
 
+   builtin-playbooks
    creating-notifications
    silencer-playbooks
 
