@@ -22,7 +22,7 @@ The Agent keeps your data secure — it fetches data from your data sources dire
 Robusta Platform
 ^^^^^^^^^^^^^^^^^
 
-The Robusta Platform provides a centralized web UI for managing alerts and investigations across clusters. It is available as **SaaS** (hosted by Robusta) or **self-hosted** (for enterprise deployments).
+The Robusta Platform is a centralized place to control your SRE agents and chat with them. It is available as **SaaS** (hosted by Robusta) or **self-hosted** (for enterprise deployments).
 
 The Platform receives investigation results from HolmesGPT and provides:
 
