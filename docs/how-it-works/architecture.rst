@@ -14,7 +14,7 @@ Agent (In-Cluster)
 
 The Robusta Agent runs inside your Kubernetes cluster. It includes HolmesGPT and is responsible for:
 
-- Fetching data from external data sources (Prometheus, Datadog, AWS, Grafana, Jira, and more)
+- Fetching data from external `data sources <https://holmesgpt.dev/data-sources/>`_
 - Optional: for customers troubleshooting issues on Kubernetes itself, track new deploys and changes to Kubernetes and query Kubernetes events
 
 The Agent keeps your data secure — it fetches data from your data sources directly, so there is no direct connection from the Robusta Platform to your data sources.
@@ -34,9 +34,7 @@ The Platform receives investigation results from HolmesGPT and provides:
 Data Sources
 ^^^^^^^^^^^^^
 
-HolmesGPT integrates with a wide range of data sources in your environment to gather evidence during investigations:
-
-- Prometheus, Datadog, AWS, Grafana, Jira, and more
+HolmesGPT integrates with a wide range of `data sources <https://holmesgpt.dev/data-sources/>`_ in your environment to gather evidence during investigations.
 
 All data source connections are made by the Agent within your environment. The Robusta Platform never connects to your data sources directly.
 
@@ -51,7 +49,7 @@ Security & Networking
 Next Steps
 ^^^^^^^^^^
 
-:ref:`Ready to install Robusta? Get started. <install>`
+`Ready to install Robusta? Get started. <https://platform.robusta.dev/signup>`_
 
 .. _Robusta Classic:
 
@@ -62,4 +60,4 @@ A Note on Robusta Classic
 
 You may see references to "Robusta Classic" in parts of this documentation. Robusta Classic is the original open source alert engine that provides deterministic, rule-based enrichment using configurable playbooks — automatically attaching pod logs, resource state, and related events to alerts before routing them to Slack, Teams, PagerDuty, and :doc:`other notification channels <../configuration/configuring-sinks>`.
 
-Robusta Classic is still included in the Agent and runs alongside HolmesGPT.
+Robusta Classic can be installed as part of the Agent and runs alongside HolmesGPT, if you like.

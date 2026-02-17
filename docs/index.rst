@@ -66,7 +66,7 @@
 Welcome to Robusta
 ====================
 
-Robusta is an AI-powered SRE agent that automatically investigates alerts and finds root causes. It is built on `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_, an open source AI agent that pulls evidence from your existing data sources — Prometheus, Datadog, AWS, Grafana, Jira, and more — and uses LLMs to pinpoint what went wrong.
+Robusta is an AI-powered SRE agent that automatically investigates alerts and finds root causes. It is built on `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_, an open source AI agent that pulls evidence from your existing `data sources <https://holmesgpt.dev/data-sources/>`_ and uses LLMs to pinpoint what went wrong.
 
 **How it works:**
 
