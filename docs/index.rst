@@ -18,7 +18,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: AI Analysis
+   :caption: SRE Agent
    :hidden:
 
    configuration/holmesgpt/main-features

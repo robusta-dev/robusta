@@ -18,7 +18,7 @@ Playbooks Basics
 
 Playbooks are deterministic rules for responding to alerts and unhealthy conditions in a Kubernetes cluster.
 
-Playbooks are recommended for advanced use cases. Most users should start with :doc:`AI Analysis </configuration/holmesgpt/main-features>` of alerts first, which requires far less configuration.
+Playbooks are recommended for advanced use cases. Most users should start with :doc:`SRE Agent </configuration/holmesgpt/main-features>` of alerts first, which requires far less configuration.
 
 How Playbooks Work
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
