@@ -14,8 +14,8 @@ Agent (In-Cluster)
 
 The Robusta Agent runs inside your Kubernetes cluster. It includes HolmesGPT and is responsible for:
 
-- Fetching data from external data sources (Prometheus, Grafana, New Relic, AWS, Jira, ServiceNow, and more)
-- Monitoring Kubernetes resource changes and gathering logs and events
+- Fetching data from external data sources (Prometheus, Datadog, AWS, Grafana, Jira, and more)
+- Optional: for customers troubleshooting issues on Kubernetes itself, track new deploys and changes to Kubernetes and query Kubernetes events
 
 The Agent keeps your data secure — it fetches data from your data sources directly, so there is no direct connection from the Robusta Platform to your data sources.
 
@@ -37,9 +37,7 @@ Data Sources
 
 HolmesGPT integrates with a wide range of data sources in your environment to gather evidence during investigations:
 
-- **Monitoring**: Prometheus, Grafana, New Relic, AWS CloudWatch, NPAW, Conviva
-- **ITSM & Ticketing**: Jira, ServiceNow
-- **And more**: Data source integrations are extensible
+- Prometheus, Datadog, AWS, Grafana, Jira, and more
 
 All data source connections are made by the Agent within your environment. The Robusta Platform never connects to your data sources directly.
 
