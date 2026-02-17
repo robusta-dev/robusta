@@ -24,31 +24,15 @@
    configuration/holmesgpt/main-features
    configuration/holmesgpt/getting-started
    HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
+
+.. toctree::
+   :maxdepth: 4
+   :caption: HTTP APIs
+   :hidden:
+
+   Overview <configuration/exporting/robusta-pro-features>
    Holmes Chat API <configuration/holmesgpt/holmes-chat-api>
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Connect Metrics
-   :hidden:
-
-   General Settings <configuration/metric-providers>
-   Prometheus - in-cluster <configuration/metric-providers-in-cluster>
-   Prometheus - external <configuration/metric-providers-external>
-   Azure Managed <configuration/metric-providers-azure>
-   AWS Managed <configuration/metric-providers-aws>
-   Google Managed <configuration/metric-providers-google>
-   Coralogix <configuration/metric-providers-coralogix>
-   VictoriaMetrics <configuration/metric-providers-victoria>
-   Grafana Cloud (Mimir) <configuration/metric-providers-grafana-cloud>
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Robusta Pro Features
-   :hidden:
-
-   configuration/exporting/robusta-pro-features
    setup-robusta/alertsui
-   setup-robusta/crds
    configuration/exporting/send-alerts-api
    configuration/exporting/configuration-changes-api
    configuration/exporting/alert-export-api
@@ -64,8 +48,10 @@
 
    Managed Prometheus Alerts <configuration/index>
    Track Config Changes <track-changes/kubernetes-changes>
+   Connect Metrics <configuration/metric-providers>
    Notification Sinks <notification-routing/configuring-sinks>
    Alert Routing <notification-routing/index>
+   CRDs Monitoring <setup-robusta/crds>
    Playbooks <playbook-reference/index>
 
 .. toctree::

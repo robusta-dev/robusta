@@ -1,5 +1,17 @@
 :hide-toc:
 
+.. toctree::
+   :hidden:
+
+   metric-providers-in-cluster
+   metric-providers-external
+   metric-providers-azure
+   metric-providers-aws
+   metric-providers-google
+   metric-providers-coralogix
+   metric-providers-victoria
+   metric-providers-grafana-cloud
+
 General Settings
 ================
 
