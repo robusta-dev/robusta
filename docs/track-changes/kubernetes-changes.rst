@@ -1,8 +1,3 @@
-.. toctree::
-   :hidden:
-
-   ../configuration/alertmanager-integration/launchdarkly
-
 Kubernetes Changes
 ==================
 

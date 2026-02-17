@@ -1,32 +1,6 @@
 .. _sinks-overview:
 
-.. toctree::
-   :hidden:
 
-   ../configuration/sinks/index
-   ../configuration/sinks/slack
-   ../configuration/sinks/ms-teams
-   ../configuration/sinks/RobustaUI
-   ../configuration/sinks/mail
-   ../configuration/sinks/telegram
-   ../configuration/sinks/discord
-   ../configuration/sinks/DataDog
-   ../configuration/sinks/mattermost
-   ../configuration/sinks/Opsgenie
-   ../configuration/sinks/PagerDuty
-   ../configuration/sinks/VictorOps
-   ../configuration/sinks/YandexMessenger
-   ../configuration/sinks/jira
-   ../configuration/sinks/webhook
-   ../configuration/sinks/file
-   ../configuration/sinks/webex
-   ../configuration/sinks/kafka
-   ../configuration/sinks/rocketchat
-   ../configuration/sinks/google_chat
-   ../configuration/sinks/pushover
-   ../configuration/sinks/ServiceNow
-   ../configuration/sinks/zulip
-   ../configuration/sinks/sinks-development
 
 Defining Sinks
 ==========================

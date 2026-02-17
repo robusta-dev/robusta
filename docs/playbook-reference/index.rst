@@ -1,19 +1,6 @@
 .. _customPlaybooks:
 .. _Playbook Basics:
 
-.. toctree::
-   :hidden:
-
-   defining-playbooks/creating-notifications
-   builtin-alert-enrichment
-   automatic-remediation-examples/index
-   kubernetes-examples/kubernetes-change-notifications
-   defining-playbooks/silencer-playbooks
-   logs-triggers/index
-   ../configuration/resource-recommender
-   triggers/index
-   actions/index
-
 Playbooks Basics
 ##################
 
