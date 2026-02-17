@@ -29,7 +29,7 @@ The Platform receives investigation results from HolmesGPT and provides:
 - AI-powered root cause analysis results for every alert
 - Centralized alert management and triage
 - Historical alert analysis and timelines
-- Notification routing to Slack, Microsoft Teams, and other channels
+- HolmesGPT Slack and Teams bot — tag the AI agent like a teammate to investigate issues on demand
 - :doc:`Additional pro features <../configuration/exporting/robusta-pro-features>`
 
 Data Sources
