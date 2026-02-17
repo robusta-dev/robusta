@@ -48,7 +48,7 @@ Apply the following Secret in the GMP namespace (default ``gmp-public``). Replac
          repeat_interval: 4h
 
 Ensure alerts include ``cluster_name``
-*************************************
+**************************************
 
 Use an ``OperatorConfig`` to add external labels to both collection and rule evaluation so every alert contains the required ``cluster_name`` label.
 
