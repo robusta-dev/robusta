@@ -78,7 +78,7 @@ Robusta is available as **open source**, **SaaS**, or **self-hosted**. See :doc:
 Ready to get started?
 ---------------------
 
-.. button-ref:: ../setup-robusta/installation/index
+.. button-link:: https://platform.robusta.dev/signup
     :color: primary
     :outline:
 
