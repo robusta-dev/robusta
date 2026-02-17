@@ -22,7 +22,7 @@ Ask for help, or just say hi!
 
    .. grid-item-card:: :octicon:`mark-github;1em;` Github Issue
       :class-card: sd-bg-light sd-bg-text-light
-      :link: https://github.com/robusta-dev/robusta/issues
+      :link: https://github.com/robusta-dev/holmesgpt/issues
 
 --------------------------------
 Commercial Support

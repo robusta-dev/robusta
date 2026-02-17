@@ -64,27 +64,7 @@ If you store the Robusta UI token in a Kubernetes secret (instead of directly in
             name: my-robusta-secrets  # Your existing secret
             key: ui-token             # Your existing key
 
-Common Issues
--------------
-
-**Not seeing the "Ask HolmesGPT" button?**
-   - Ensure ``enableHolmesGPT: true`` is set
-   - Check HolmesGPT pod is running: ``kubectl get pods -n robusta | grep holmes``
-   - Verify AI provider credentials are correct
-
-**Getting rate limit errors?**
-   - Azure: Increase token limit in Azure Portal (minimum 450K)
-   - OpenAI: Check your API quota and billing
-   - Consider using Robusta AI for unlimited investigations
-
-**Analysis seems incomplete?**
-   - Enable additional data sources in `HolmesGPT data sources <https://holmesgpt.dev/data-sources/builtin-toolsets/?tab=robusta-helm-chart>`_
-   - Ensure Prometheus is configured for metrics analysis
-   - Check that pod logs are accessible
-
 Next Steps
 ----------
 
-* :doc:`main-features` - See what HolmesGPT can do
 * `Configure Data Sources <https://holmesgpt.dev/data-sources/builtin-toolsets/?tab=robusta-helm-chart>`_ - Add more context for better analysis
-* `Helm Configuration Reference <https://holmesgpt.dev/reference/helm-configuration/?tab=robusta-helm-chart>`_ - Advanced HolmesGPT Helm settings

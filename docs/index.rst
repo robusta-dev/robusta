@@ -46,7 +46,7 @@
    :caption: Other Features
    :hidden:
 
-   Managed Prometheus Alerts <configuration/index>
+   Send Alerts to Robusta <configuration/index>
    Track Config Changes <track-changes/kubernetes-changes>
    Connect Metrics <configuration/metric-providers>
    Notification Sinks <notification-routing/configuring-sinks>
@@ -60,8 +60,6 @@
    :hidden:
 
    help
-   contributing
-   community-tutorials
 
 Welcome to Robusta
 ====================

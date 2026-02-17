@@ -1,8 +1,11 @@
 <div id="top"></div>
 
 <div align="center">
-  <h1 align="center">Robusta - Better Prometheus Notifications for Kubernetes</h1>
-  <h2 align="center">Better grouping, enrichment, and remediation of your existing alerts</h2>
+  <h1 align="center">Robusta Classic - Prometheus Alert Enrichment for Kubernetes</h1>
+  <h2 align="center">Rule-based grouping, enrichment, and remediation of your existing alerts</h2>
+  <p align="center">
+    <a href="https://github.com/robusta-dev/holmesgpt"><strong>Looking for HolmesGPT (AI-powered investigation)? Go here ↗</strong></a>
+  </p>
   <p align="center">
     <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
     <a href="#-installing-robusta"><strong>Installation</strong></a> |
@@ -11,6 +14,8 @@
     <a href="https://bit.ly/robusta-slack"><strong>Slack Community ↗</strong></a>
   </p>
 </div>
+
+> **Note:** This repository contains **Robusta Classic** — the rule-based alert enrichment engine. For AI-powered root cause analysis, see [HolmesGPT](https://github.com/robusta-dev/holmesgpt). Both can be installed together as part of the [Robusta platform](https://platform.robusta.dev/signup).
 
 ## What Can Robusta Do?
 
