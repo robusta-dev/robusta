@@ -6,7 +6,8 @@
    :hidden:
 
    self
-   how-it-works/index
+   how-it-works/architecture
+   how-it-works/oss-vs-saas
 
 .. toctree::
    :maxdepth: 4
