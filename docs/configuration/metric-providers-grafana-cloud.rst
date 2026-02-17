@@ -80,7 +80,7 @@ Make sure ``clusterName`` in Robusta Helm's values matches the ``cluster`` label
 HolmesGPT Configuration
 -----------------------
 
-Give HolmesGPT - Robusta's AI Agent - read access to metrics. See the `Grafana Cloud (Mimir) Configuration <https://holmesgpt.dev/data-sources/builtin-toolsets/prometheus/?h=prometheus#grafana-cloud-mimir-configuration>`_ guide.
+Give HolmesGPT - Robusta's AI Agent - read access to metrics. See the `Grafana Cloud (Mimir) Configuration <https://holmesgpt.dev/data-sources/builtin-toolsets/prometheus/?tab=robusta-helm-chart#grafana-cloud-mimir-configuration>`_ guide.
 
 Next Steps
 ----------
