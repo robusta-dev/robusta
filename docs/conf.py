@@ -109,7 +109,7 @@ redirects = {
     "tutorials/routing-silencing.html": "/master/notification-routing/routing-silencing.html",
     "configuration/configuring-sinks.html": "/master/notification-routing/configuring-sinks.html",
     "how-it-works/privacy-and-security.html": "/master/setup-robusta/privacy-and-security.html",
-    "how-it-works/index.html": "/master/playbook-reference/what-are-playbooks.html",
+    # "how-it-works/index.html": "/master/playbook-reference/what-are-playbooks.html",  # removed: now a real page
     "playbook-reference/examples.html": "/master/playbook-reference/builtin-alert-enrichment.html",
     "playbook-reference/prometheus-examples/index.html": "/master/playbook-reference/builtin-alert-enrichment.html",
     "tutorials/playbook-track-changes.html": "/master/playbook-reference/kubernetes-examples/kubernetes-change-notifications.html",

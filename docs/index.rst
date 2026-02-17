@@ -1,13 +1,12 @@
 :hide-toc:
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
    :caption: Overview
    :hidden:
 
    self
-   how-it-works/architecture
-   how-it-works/oss-vs-saas
+   how-it-works/index
 
 .. toctree::
    :maxdepth: 4
