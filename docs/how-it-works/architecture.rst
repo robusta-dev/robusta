@@ -1,54 +1,69 @@
 Architecture
 ==================
 
-Robusta follows a modular architecture designed to integrate seamlessly with your existing Kubernetes observability stack. The system consists of core components that run in-cluster and optional components for enhanced functionality.
+Robusta's architecture is built around three main components: an **in-cluster Agent**, the **Robusta Platform** (SaaS or self-hosted), and integrations with your existing **data sources** and **notification channels**.
 
-Core Components
-^^^^^^^^^^^^^^^
-
-Robusta's core architecture runs entirely within your Kubernetes cluster:
-
-**robusta-forwarder**
-  A lightweight deployment that connects to the Kubernetes APIServer to monitor cluster events and resource changes. It forwards relevant events to the runner component for processing. This component ensures Robusta stays up-to-date with your cluster state in real-time.
-
-**robusta-runner** 
-  The main processing engine that receives events from the forwarder, evaluates playbook rules, executes enrichment actions, and sends notifications to configured destinations. It contains the business logic for alert correlation, data enrichment, and routing decisions.
-
-.. image:: ../images/arch-1/arch-1.png
-   :width: 600
+.. image:: ../images/architecture-overview.png
+   :width: 800
    :align: center
 
-Data Flow
-^^^^^^^^^
+|
 
-1. **Event Collection**: The forwarder monitors Kubernetes APIServer for resource changes and forwards them to the runner
-2. **Alert Processing**: Prometheus AlertManager webhooks are received by the runner for alert enrichment
-3. **Playbook Execution**: The runner evaluates configured playbooks and triggers appropriate actions
-4. **Enrichment**: Additional context is gathered (logs, metrics, resource states) and attached to alerts
-5. **Routing**: Enriched alerts are routed to configured sinks (Slack, Teams, etc.) based on routing rules
+Agent (In-Cluster)
+^^^^^^^^^^^^^^^^^^^
 
-Extended Architecture
-^^^^^^^^^^^^^^^^^^^^^
+The Robusta Agent runs inside your Kubernetes cluster. It is responsible for:
 
-**AI Analysis with HolmesGPT**
-  Robusta's AI engine automatically investigates alerts by analyzing logs, events, and cluster state to provide root cause analysis and remediation suggestions. See :ref:`AI Analysis <AI Analysis>` for configuration details.
+- Collecting alerts from Prometheus AlertManager and other sources
+- Monitoring Kubernetes resource changes via the API server
+- Gathering logs and events from your workloads
+- Fetching data from external data sources (Prometheus, Grafana, New Relic, AWS, Jira, ServiceNow, and more)
+- Running deterministic alert enrichment playbooks (see :ref:`Robusta Classic <Robusta Classic>` below)
+- Running AI-powered root cause analysis with `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_
 
-**Prometheus Integration**
-  Robusta can work with your existing Prometheus setup or be installed with a :ref:`bundled Prometheus stack <embedded Prometheus stack>` powered by ``kube-prometheus-stack``. The integration enables automatic alert enrichment and correlation.
+The Agent keeps your data secure — it fetches data from your data sources directly, so there is no direct connection from the Robusta Platform to your data sources.
 
-**Centralized Management**
-  The Robusta `SaaS platform <http://home.robusta.dev/?from=docs>`_ provides centralized alert management, historical analysis, and cross-cluster visibility. Self-hosted options are available for enterprise deployments.
+Robusta Platform
+^^^^^^^^^^^^^^^^^
 
-**CLI Tooling**
-  The ``robusta`` CLI simplifies installation and configuration management by auto-generating Helm values and providing cluster diagnostics.
+The Robusta Platform provides a centralized web UI for managing alerts across clusters. It is available as **SaaS** (hosted by Robusta) or **self-hosted** (for enterprise deployments).
+
+The Platform receives enriched alerts from the Agent and provides:
+
+- Centralized alert management and triage across multiple clusters
+- Historical alert analysis and timelines
+- AI-powered root cause investigation results from HolmesGPT
+- Notification routing to Slack, Microsoft Teams, and other channels
+- :doc:`Additional pro features <../configuration/exporting/robusta-pro-features>`
+
+Data Sources
+^^^^^^^^^^^^^
+
+The Agent integrates with a wide range of data sources in your environment to gather context for alert investigation:
+
+- **Monitoring**: Prometheus, Grafana, New Relic, AWS CloudWatch, NPAW, Conviva
+- **ITSM & Ticketing**: Jira, ServiceNow
+- **And more**: The Agent's data source integrations are extensible
+
+All data source connections are made by the Agent within your environment. The Robusta Platform never connects to your data sources directly.
+
+Notification Channels
+^^^^^^^^^^^^^^^^^^^^^^
+
+Enriched alerts and investigation results are routed to your preferred notification channels:
+
+- Slack
+- Microsoft Teams
+- PagerDuty
+- And :doc:`many more sinks <../configuration/configuring-sinks>`
 
 Security & Networking
 ^^^^^^^^^^^^^^^^^^^^^
 
-* All core components run within your cluster with configurable RBAC permissions.
-* External integrations use secure webhook endpoints with optional authentication.
-* SaaS connectivity is outbound-only with no inbound access required.
-* All data remains in your cluster unless explicitly sent to configured sinks e.g. Slack, Robusta UI.
+- The Agent runs entirely within your cluster with configurable RBAC permissions
+- Data sources are accessed only by the in-cluster Agent, never by the Platform
+- SaaS connectivity is outbound-only — no inbound access is required
+- All data remains in your cluster unless explicitly sent to configured sinks or the Robusta Platform
 
 Next Steps
 ^^^^^^^^^^
