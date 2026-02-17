@@ -9,8 +9,7 @@ Prerequisites
 .. raw:: html
 
    <div style="margin: 20px 0; padding: 15px; background-color: #fff3e0; border-left: 4px solid #ff9800;">
-   ✓ Robusta SaaS account (free or paid)<br>
-   ✓ Robusta UI sink enabled<br>
+   ✓ <a href="https://platform.robusta.dev/signup">Robusta SaaS account</a> (free or paid)<br>
    ✓ Robusta version 0.22.0 or higher
    </div>
 
