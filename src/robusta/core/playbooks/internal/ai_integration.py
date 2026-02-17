@@ -159,9 +159,8 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
             event.add_finding(finding)
 
     except Exception as e:
-        context_keys = list(params.context.keys()) if params.context else []
         logging.exception(
-            f"Failed to get holmes analysis for {investigation__title} context_keys={context_keys} subject={subject}",
+            f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}",
             exc_info=True,
         )
         handle_holmes_error(e)
