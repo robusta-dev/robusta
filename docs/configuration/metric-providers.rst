@@ -5,6 +5,19 @@ General Settings
 
 Connect Robusta to your metrics backend to enable advanced features like alert enrichment with historical data, metric queries, and alert silencing. Metric provider integration is optional but highly recommended.
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   metric-providers-in-cluster
+   metric-providers-external
+   metric-providers-azure
+   metric-providers-aws
+   metric-providers-google
+   metric-providers-coralogix
+   metric-providers-victoria
+   metric-providers-grafana-cloud
+
 
 Why Configure a Metric Provider?
 --------------------------------
