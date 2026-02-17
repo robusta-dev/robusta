@@ -1,7 +1,7 @@
 Architecture
 ==================
 
-Robusta's architecture is built around three main components: an **in-cluster Agent**, the **Robusta Platform** (SaaS or self-hosted), and integrations with your existing **data sources** and **notification channels**.
+Robusta uses `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_, an open source AI agent, to automatically investigate and root-cause Kubernetes alerts. HolmesGPT runs as part of the **in-cluster Agent**, connects to your existing **data sources**, and reports findings through the **Robusta Platform** (SaaS or self-hosted).
 
 .. image:: ../images/architecture-overview.png
    :width: 800
@@ -9,48 +9,58 @@ Robusta's architecture is built around three main components: an **in-cluster Ag
 
 |
 
+How It Works
+^^^^^^^^^^^^^
+
+When an alert fires, HolmesGPT automatically investigates it:
+
+1. The in-cluster Agent receives the alert from Prometheus AlertManager (or other sources)
+2. HolmesGPT pulls context from your data sources — logs, metrics, events, traces, and more
+3. It correlates the evidence using LLMs to identify the root cause
+4. The investigation results are sent to the Robusta Platform and your notification channels
+
+All of this happens automatically — no manual triage required.
+
 Agent (In-Cluster)
 ^^^^^^^^^^^^^^^^^^^
 
-The Robusta Agent runs inside your Kubernetes cluster. It is responsible for:
+The Robusta Agent runs inside your Kubernetes cluster. It includes HolmesGPT and is responsible for:
 
-- Collecting alerts from Prometheus AlertManager and other sources
-- Monitoring Kubernetes resource changes via the API server
-- Gathering logs and events from your workloads
+- Receiving alerts from Prometheus AlertManager and other sources
+- Running HolmesGPT to automatically investigate each alert
 - Fetching data from external data sources (Prometheus, Grafana, New Relic, AWS, Jira, ServiceNow, and more)
-- Running deterministic alert enrichment playbooks (see :ref:`Robusta Classic <Robusta Classic>` below)
-- Running AI-powered root cause analysis with `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_
+- Monitoring Kubernetes resource changes and gathering logs and events
 
 The Agent keeps your data secure — it fetches data from your data sources directly, so there is no direct connection from the Robusta Platform to your data sources.
 
 Robusta Platform
 ^^^^^^^^^^^^^^^^^
 
-The Robusta Platform provides a centralized web UI for managing alerts across clusters. It is available as **SaaS** (hosted by Robusta) or **self-hosted** (for enterprise deployments).
+The Robusta Platform provides a centralized web UI for managing alerts and investigations across clusters. It is available as **SaaS** (hosted by Robusta) or **self-hosted** (for enterprise deployments).
 
-The Platform receives enriched alerts from the Agent and provides:
+The Platform receives investigation results from HolmesGPT and provides:
 
+- AI-powered root cause analysis results for every alert
 - Centralized alert management and triage across multiple clusters
 - Historical alert analysis and timelines
-- AI-powered root cause investigation results from HolmesGPT
 - Notification routing to Slack, Microsoft Teams, and other channels
 - :doc:`Additional pro features <../configuration/exporting/robusta-pro-features>`
 
 Data Sources
 ^^^^^^^^^^^^^
 
-The Agent integrates with a wide range of data sources in your environment to gather context for alert investigation:
+HolmesGPT integrates with a wide range of data sources in your environment to gather evidence during investigations:
 
 - **Monitoring**: Prometheus, Grafana, New Relic, AWS CloudWatch, NPAW, Conviva
 - **ITSM & Ticketing**: Jira, ServiceNow
-- **And more**: The Agent's data source integrations are extensible
+- **And more**: Data source integrations are extensible
 
 All data source connections are made by the Agent within your environment. The Robusta Platform never connects to your data sources directly.
 
 Notification Channels
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Enriched alerts and investigation results are routed to your preferred notification channels:
+Investigation results and enriched alerts are routed to your preferred notification channels:
 
 - Slack
 - Microsoft Teams
