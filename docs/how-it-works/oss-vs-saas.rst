@@ -29,8 +29,14 @@ The Robusta Platform UI is `free to get started <https://home.robusta.dev/pricin
 
 Contact support@robusta.dev for questions.
 
+Robusta Classic
+^^^^^^^^^^^^^^^^
+
+Before HolmesGPT, Robusta's open source engine focused on rule-based automation — enriching alerts with extra context (logs, pod status, resource graphs) and routing them to Slack, Teams, and other sinks using configurable playbooks. This is sometimes referred to as **Robusta Classic**.
+
+All of these capabilities still work and are fully supported. HolmesGPT builds on top of them by adding AI-powered root cause analysis. If you are already running Robusta Classic, upgrading to HolmesGPT is a configuration change — no migration required.
+
 Learn More
 ^^^^^^^^^^^^
 - `HolmesGPT on GitHub <https://github.com/robusta-dev/holmesGPT>`_ - AI-powered root cause analysis for Kubernetes
-- :doc:`Robusta Pro Features <../configuration/exporting/robusta-pro-features>` - Detailed breakdown of SaaS and enterprise features
 - `Pricing Plans <https://home.robusta.dev/pricing>`_ - Compare pricing options and start a free trial
