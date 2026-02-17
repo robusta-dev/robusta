@@ -56,7 +56,7 @@ extensions = [
     "sphinx_reredirects",
 ]
 
-suppress_warnings = ["autosectionlabel.*", "toc.excluded", "toc.not_readable"]
+suppress_warnings = ["autosectionlabel.*"]
 
 # sphinx redirects from old docs
 
