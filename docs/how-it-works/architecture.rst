@@ -14,8 +14,6 @@ Agent (In-Cluster)
 
 The Robusta Agent runs inside your Kubernetes cluster. It includes HolmesGPT and is responsible for:
 
-- Receiving alerts from Prometheus AlertManager and other sources
-- Running HolmesGPT to automatically investigate each alert
 - Fetching data from external data sources (Prometheus, Grafana, New Relic, AWS, Jira, ServiceNow, and more)
 - Monitoring Kubernetes resource changes and gathering logs and events
 
@@ -45,16 +43,6 @@ HolmesGPT integrates with a wide range of data sources in your environment to ga
 
 All data source connections are made by the Agent within your environment. The Robusta Platform never connects to your data sources directly.
 
-Notification Channels
-^^^^^^^^^^^^^^^^^^^^^^
-
-Investigation results and enriched alerts are routed to your preferred notification channels:
-
-- Slack
-- Microsoft Teams
-- PagerDuty
-- And :doc:`many more sinks <../configuration/configuring-sinks>`
-
 Security & Networking
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -67,3 +55,14 @@ Next Steps
 ^^^^^^^^^^
 
 :ref:`Ready to install Robusta? Get started. <install>`
+
+.. _Robusta Classic:
+
+----
+
+A Note on Robusta Classic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You may see references to "Robusta Classic" in parts of this documentation. Robusta Classic is the original open source alert engine that provides deterministic, rule-based enrichment using configurable playbooks — automatically attaching pod logs, resource state, and related events to alerts before routing them to Slack, Teams, PagerDuty, and :doc:`other notification channels <../configuration/configuring-sinks>`.
+
+Robusta Classic is still included in the Agent and runs alongside HolmesGPT.
