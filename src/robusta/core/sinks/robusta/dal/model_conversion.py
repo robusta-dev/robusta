@@ -131,7 +131,7 @@ class ModelConversion:
 
         conversation_history_block = FileBlock(
             f"conversation_history-{datetime.now()}.txt",
-            json.dumps(block.holmes_result.conversation_history, indent=2).encode(),
+            json.dumps(block.holmes_result.conversation_history, separators=(",", ":")).encode(),
         )
         conversation_history_block.zip()
         conversation_history_obj = ModelConversion.get_file_object(conversation_history_block)
