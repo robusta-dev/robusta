@@ -13,7 +13,7 @@ HolmesGPT is MIT-licensed and can be used standalone or as part of the Robusta p
 Deployment Options
 ^^^^^^^^^^^^^^^^^^^
 
-- **Open Source Only**: Run HolmesGPT on its own. Investigation results are sent directly to Slack, Teams, or other sinks. No web UI.
+- **Open Source Only**: Run HolmesGPT on its own. No web UI. CLI interface and HTTP API on OSS.
 - **SaaS**: HolmesGPT + Robusta's hosted web UI with :doc:`additional features <../configuration/exporting/robusta-pro-features>` including centralized alert management, multi-cluster visibility, and historical timelines.
 - **Self-Hosted**: HolmesGPT + on-premise web UI for organizations that require dedicated infrastructure (enterprise plans).
 
