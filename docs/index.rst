@@ -8,7 +8,6 @@
    self
    how-it-works/architecture
    how-it-works/oss-vs-saas
-   how-it-works/usage-faq
 
 .. toctree::
    :maxdepth: 4
@@ -170,35 +169,19 @@
 Welcome to Robusta
 ====================
 
-Robusta is an SRE agent that transforms alerts into actionable insights using LLMs combined with a rules (playbooks) engine.
+Robusta is an AI-powered SRE agent that automatically investigates alerts and finds root causes. It is built on `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_, an open source AI agent that pulls evidence from your existing data sources — Prometheus, Datadog, AWS, Grafana, Jira, and more — and uses LLMs to pinpoint what went wrong.
 
-Robusta is available in open-source and commercial versions:
+**How it works:**
 
-.. list-table::
-   :widths: 30 35 35
-   :header-rows: 1
+* **Automatic investigation** — every alert is analyzed with AI-powered root cause analysis
+* **Your data sources** — HolmesGPT connects to your existing monitoring, ITSM, and cloud tools to gather evidence
+* **Chat with your agent** — tag HolmesGPT in Slack or Teams to investigate issues on demand
+* **Centralized control** — the `Robusta Platform <https://home.robusta.dev>`_ gives you a single place to manage your SRE agents, triage alerts, and review investigation timelines
 
-   * - **Version**
-     - **Cloud Environments**
-     - **Alert Sources**
-   * - `Robusta Open Source <https://github.com/robusta-dev/robusta>`_
-     - Kubernetes
-     - Prometheus
-   * - `Robusta Pro <https://home.robusta.dev>`_
-     - Kubernetes and non-Kubernetes environments
-     - Prometheus, DataDog, NewRelic, and more
-
-**Key Features:**
-
-* **Smart Grouping** - Reduce notification spam
-* **AI Investigation** - Find the root cause with AI
-* **Alert Enrichment** - Correlate alerts with logs, k8s events, and more
-* **Auto-Remediation** - Define self-healing rules for faster fixes
+Robusta is available as **open source**, **SaaS**, or **self-hosted**. See :doc:`how-it-works/oss-vs-saas` for details.
 
 Ready to get started?
 ---------------------
-
-Join hundreds of teams already running Robusta in production.
 
 .. button-ref:: ../setup-robusta/installation/index
     :color: primary
