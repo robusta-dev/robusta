@@ -27,7 +27,7 @@ The Robusta Platform provides a centralized web UI for managing alerts and inves
 The Platform receives investigation results from HolmesGPT and provides:
 
 - AI-powered root cause analysis results for every alert
-- Centralized alert management and triage across multiple clusters
+- Centralized alert management and triage
 - Historical alert analysis and timelines
 - Notification routing to Slack, Microsoft Teams, and other channels
 - :doc:`Additional pro features <../configuration/exporting/robusta-pro-features>`
