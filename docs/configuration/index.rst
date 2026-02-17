@@ -1,5 +1,28 @@
 :hide-toc:
 
+.. toctree::
+   :hidden:
+
+   alertmanager-integration/outofcluster-prometheus
+   alertmanager-integration/alert-manager
+   alertmanager-integration/eks-managed-prometheus
+   alertmanager-integration/azure-managed-prometheus
+   alertmanager-integration/coralogix_managed_prometheus
+   alertmanager-integration/dynatrace
+   alertmanager-integration/embedded-prometheus
+   alertmanager-integration/google-managed-prometheus
+   alertmanager-integration/gcp-monitoring
+   alertmanager-integration/google-managed-alertmanager
+   alertmanager-integration/grafana-self-hosted
+   alertmanager-integration/grafana-cloud
+   alertmanager-integration/nagios
+   alertmanager-integration/newrelic
+   alertmanager-integration/pagerduty-alerting
+   alertmanager-integration/solarwinds
+   alertmanager-integration/victoria-metrics
+   alertmanager-integration/customize-labels-priorities
+   exporting/custom-webhooks
+
 Send Alerts to Robusta
 =======================
 

@@ -1,5 +1,21 @@
 :hide-toc:
 
+.. toctree::
+   :hidden:
+
+   routing-with-scopes
+   notification-grouping
+   routing-by-time
+   routing-by-namespace
+   routing-by-type
+   implementing-monitoring-shifts
+   routing-to-multiple-slack-channels
+   routing-exclusion
+   routing-by-severity
+   excluding-resolved
+   disable-oomkill-notifications
+   routing-silencing
+
 Notifications & Routing Overview
 =================================
 
