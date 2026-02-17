@@ -19,11 +19,11 @@ Deployment Options
 
 **Which should I choose?**
 
-Most teams use the **SaaS** option for the :doc:`complete feature set <../configuration/exporting/robusta-pro-features>` without infrastructure overhead.
+Most teams use the **SaaS** option for the complete feature set without infrastructure overhead.
 
 Pricing
 ^^^^^^^^^^^^
-HolmesGPT is and always will be free. It is MIT licensed.
+HolmesGPT is and always will be free. It is a CNCF sandbox project.
 
 The Robusta Platform UI is `free to get started <https://home.robusta.dev/pricing>`_ on our SaaS. If you want to self-host the UI, you'll need an enterprise plan.
 
@@ -34,7 +34,7 @@ Robusta Classic
 
 Before HolmesGPT, Robusta's open source engine focused on rule-based automation — enriching alerts with extra context (logs, pod status, resource graphs) and routing them to Slack, Teams, and other sinks using configurable playbooks. This is sometimes referred to as **Robusta Classic**.
 
-All of these capabilities still work and are fully supported. HolmesGPT builds on top of them by adding AI-powered root cause analysis. If you are already running Robusta Classic, upgrading to HolmesGPT is a configuration change — no migration required.
+If you are running Robusta Classic, upgrading to HolmesGPT is a configuration change — no migration required.
 
 Learn More
 ^^^^^^^^^^^^
