@@ -24,6 +24,10 @@ automountServiceAccountToken: true
 enableHolmesGPT: false
 
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
+# NOTE: If using external Prometheus with auth and HolmesGPT, you must also configure
+# holmes.toolsets.prometheus/metrics.config.headers.Authorization with the same credentials.
+# See https://docs.robusta.dev/master/setup-robusta/configuration-secrets.html for how to
+# avoid duplicating secrets using Kubernetes Secrets and environment variables.
 globalConfig:
   check_prometheus_flags: true
   grafana_url: ""

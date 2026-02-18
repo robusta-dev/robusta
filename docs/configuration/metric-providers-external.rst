@@ -76,6 +76,30 @@ To use this token add the following env var to the ``runner``:
         prometheus_auth: "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
         alertmanager_auth: "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
 
+.. _holmes-prometheus-auth:
+
+Authentication with HolmesGPT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have HolmesGPT enabled (``enableHolmesGPT: true``), Holmes runs as a separate deployment and needs its own Prometheus authentication configuration. You must configure auth for both the runner (via ``globalConfig``) and Holmes (via ``holmes.toolsets``):
+
+.. code-block:: yaml
+
+    globalConfig:
+        prometheus_url: "https://prometheus.example.com:9090"
+        prometheus_auth: "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+
+    holmes:
+      toolsets:
+        prometheus/metrics:
+          enabled: true
+          config:
+            prometheus_url: "https://prometheus.example.com:9090"
+            headers:
+              Authorization: "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+
+To avoid duplicating the secret in plain text, use a Kubernetes Secret and environment variables. See :ref:`Sharing Prometheus Auth Between Runner and Holmes <Managing Secrets>` for a step-by-step guide.
+
 Multi-cluster Setup
 -------------------
 
