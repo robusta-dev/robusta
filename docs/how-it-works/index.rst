@@ -20,9 +20,17 @@ Overview
 
         Compare deployment options: open source HolmesGPT, SaaS, and self-hosted.
 
+    .. grid-item-card:: :octicon:`globe;1em;` Network Connectivity
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: network-connectivity
+        :link-type: doc
+
+        Ports, protocols, domains, and network policy guidelines for Robusta and HolmesGPT.
+
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    Architecture <architecture>
    Open Source vs SaaS <oss-vs-saas>
+   Network Connectivity <network-connectivity>

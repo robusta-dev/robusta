@@ -46,6 +46,8 @@ Security & Networking
 - SaaS connectivity is outbound-only — no inbound access is required
 - All data remains in your cluster unless explicitly sent to configured sinks or the Robusta Platform
 
+For a detailed breakdown of ports, protocols, required domains, and network policy guidelines, see :doc:`network-connectivity`.
+
 Next Steps
 ^^^^^^^^^^
 
