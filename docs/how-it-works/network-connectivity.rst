@@ -72,8 +72,8 @@ Outbound
      - 443
      - Required for each configured sink. Outbound HTTPS to the sink provider's API.
    * - HolmesGPT service
-     - 80 → 5050
-     - Required when HolmesGPT is enabled. In-cluster traffic to the ``holmes`` service.
+     - Discovered dynamically
+     - Required when HolmesGPT is enabled. In-cluster traffic to the ``holmes`` ClusterIP service. The runner discovers the Holmes service and port via Kubernetes service discovery (label ``app=holmes``).
    * - Git repositories
      - 22 / 443
      - Optional. Used when custom playbook repos are configured via SSH or HTTPS.
@@ -124,7 +124,7 @@ The forwarder makes outbound HTTP calls to the runner service (port 80) and to t
 HolmesGPT
 ^^^^^^^^^^
 
-HolmesGPT runs as a separate ``Deployment`` with its own ``ClusterIP`` service.
+HolmesGPT runs as a separate ``Deployment`` with its own ``ClusterIP`` service. It is deployed via a subchart (``holmesgpt``), and its service port is discovered dynamically by the Robusta runner using Kubernetes service discovery (label ``app=holmes``).
 
 Inbound (Cluster-Internal)
 --------------------------
@@ -138,9 +138,11 @@ Inbound (Cluster-Internal)
      - Protocol
      - Purpose
    * - Holmes API
-     - 80 → 5050
+     - Defined by Holmes subchart
      - HTTP
-     - Receives investigation requests from the Robusta runner. Endpoints include ``/api/investigate``, ``/api/chat``, ``/api/issue_chat``, and health probes (``/healthz``, ``/readyz``).
+     - Receives investigation requests from the Robusta runner. Endpoints used include ``/api/investigate``, ``/api/stream/investigate``, ``/api/chat``, ``/api/issue_chat``, ``/api/conversation``, and ``/api/model``.
+
+The runner discovers the Holmes service URL automatically. You can also set it explicitly via the ``holmes_url`` configuration option.
 
 Outbound
 --------
@@ -160,10 +162,7 @@ Outbound
      - Required. HolmesGPT reads pod logs, events, resource YAML, and other cluster data during investigations.
    * - Prometheus
      - 9090 (default)
-     - Required when the ``prometheus/metrics`` toolset is enabled (default). In-cluster traffic.
-   * - MCP addon services
-     - 8000
-     - Optional. In-cluster traffic to MCP sidecar services for AWS, Azure, GCP, GitHub, or MariaDB integrations.
+     - Optional. Used when HolmesGPT queries Prometheus for metric data during investigations. In-cluster traffic.
 
 .. _llm-provider-domains:
 
@@ -188,34 +187,6 @@ Allow outbound HTTPS (port 443) to the domain for your chosen provider:
      - ``<region>-aiplatform.googleapis.com``
 
 If you use a custom or self-hosted LLM endpoint, allow access to that endpoint instead.
-
-.. _mcp-addon-networking:
-
-MCP Addon Services (Optional)
-------------------------------
-
-When Holmes MCP addons are enabled (e.g., ``mcpAddons.aws.enabled: true``), each addon runs as a separate deployment with a ``ClusterIP`` service on port 8000. Holmes communicates with these addons over in-cluster HTTP.
-
-The addons themselves make outbound calls to cloud provider APIs:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 20 80
-
-   * - Addon
-     - Outbound Destinations
-   * - AWS
-     - AWS service endpoints (IAM, CloudWatch, etc.) in your configured region
-   * - Azure
-     - Azure Resource Manager and related APIs
-   * - GCP
-     - Google Cloud APIs (``*.googleapis.com``)
-   * - GitHub
-     - ``api.github.com`` (or your GitHub Enterprise host)
-   * - MariaDB
-     - Your database host on the configured port (default 3306)
-
-Some MCP addons include optional ``NetworkPolicy`` resources in their Helm templates. These can be enabled per addon (e.g., ``mcpAddons.aws.networkPolicy.enabled: true``) and restrict ingress to only the Holmes pod on port 8000.
 
 .. _network-policies:
 
@@ -247,10 +218,7 @@ Ingress Rules
      - 5000/TCP
    * - ``holmes``
      - ``robusta-runner`` pods
-     - 5050/TCP
-   * - ``holmes`` MCP addons
-     - ``holmes`` pods
-     - 8000/TCP
+     - Holmes service target port (see Holmes subchart values)
    * - ``robusta-forwarder``
      - Prometheus (for scraping ``/metrics``)
      - 2112/TCP
@@ -265,13 +233,11 @@ Egress Rules
    * - Source Pod
      - Allow To
    * - ``robusta-runner``
-     - Kubernetes API (443), Prometheus (9090), AlertManager (9093), Grafana (3000), Holmes service (80), Robusta SaaS domains (443), configured sinks (443), DNS (53)
+     - Kubernetes API (443), Prometheus (9090), AlertManager (9093), Grafana (3000), Holmes service, Robusta SaaS domains (443), configured sinks (443), DNS (53)
    * - ``holmes``
-     - Kubernetes API (443), LLM provider (443), Prometheus (9090), MCP addon services (8000), DNS (53)
+     - Kubernetes API (443), LLM provider (443), Prometheus (9090), DNS (53)
    * - ``robusta-forwarder``
      - Kubernetes API (443), Runner service (80), DNS (53)
-   * - MCP addons
-     - Respective cloud provider APIs (443), DNS (53)
 
 .. tip::
 
@@ -306,13 +272,13 @@ The following example allows the Robusta runner to reach Holmes, the Kubernetes 
         - ports:
             - port: 443
               protocol: TCP
-        # Holmes service
+        # Holmes service (adjust port to match your Holmes subchart values)
         - to:
             - podSelector:
                 matchLabels:
                   app: holmes
           ports:
-            - port: 5050
+            - port: 8080
               protocol: TCP
         # Prometheus (adjust selector to match your Prometheus)
         - ports:
