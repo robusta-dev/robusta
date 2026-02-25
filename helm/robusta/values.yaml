@@ -106,7 +106,7 @@ enablePrometheusStack: false
 enabledManagedConfiguration: false
 enableServiceMonitors: true
 monitorHelmReleases: true
-argoRollouts: false
+argoRollouts: true
 
 
 

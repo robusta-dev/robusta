@@ -124,10 +124,8 @@ spec:
           - name: IS_OPENSHIFT
             value: "True"
           {{- end }}
-          {{- if .Values.argoRollouts }}
           - name: ARGO_ROLLOUTS
-            value: "True"
-          {{- end }}
+            value: {{ ternary "True" "False" .Values.argoRollouts | quote }}
           {{- if .Values.runner.customCRD }}
           - name: CUSTOM_CRD
             value: {{ .Values.runner.customCRD | toJson | squote }}
