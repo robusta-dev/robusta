@@ -17,6 +17,9 @@ from robusta.core.model.base_params import HolmesParams
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import (
     CLUSTER_STATUS_PERIOD_SEC,
+    DISABLE_DISCOVERY,
+    DISABLE_FINDINGS_PERSISTENCE,
+    DISABLE_RESOURCE_WATCH_PERSISTENCE,
     DISCOVERY_CHECK_THRESHOLD_SEC,
     DISCOVERY_PERIOD_SEC,
     DISCOVERY_WATCHDOG_CHECK_SEC,
@@ -86,6 +89,13 @@ class RobustaSink(SinkBase, EventHandler):
             self.cluster_name,
             self.signing_key,
         )
+
+        if DISABLE_FINDINGS_PERSISTENCE:
+            logging.info("DISABLE_FINDINGS_PERSISTENCE is set - findings will not be persisted to the platform database")
+        if DISABLE_DISCOVERY:
+            logging.info("DISABLE_DISCOVERY is set - resource discovery will not run")
+        if DISABLE_RESOURCE_WATCH_PERSISTENCE:
+            logging.info("DISABLE_RESOURCE_WATCH_PERSISTENCE is set - real-time resource watch writes are disabled")
 
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
@@ -228,6 +238,8 @@ class RobustaSink(SinkBase, EventHandler):
         new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Node],
         operation: K8sOperationType,
     ):
+        if DISABLE_RESOURCE_WATCH_PERSISTENCE:
+            return
         try:
             if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
                 self.__publish_single_service(Discovery.create_service_info_from_hikaru(new_resource), operation)
@@ -244,6 +256,8 @@ class RobustaSink(SinkBase, EventHandler):
             )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
+        if DISABLE_FINDINGS_PERSISTENCE:
+            return
         self.dal.persist_finding(finding)
 
     def __publish_single_service(self, new_service: ServiceInfo, operation: K8sOperationType):
@@ -626,18 +640,21 @@ class RobustaSink(SinkBase, EventHandler):
 
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
-        get_history = self.__should_run_history()
+        get_history = self.__should_run_history() if not DISABLE_DISCOVERY else False
         self.last_namespace_discovery = 0
         while self.__active:
             start_t = time.time()
             self.__periodic_cluster_status()
-            discovery_results = self.__discover_resources()
 
-            if get_history:
-                self.__get_events_history()
-                get_history = False
-            if discovery_results and discovery_results.helm_releases:
-                self.__send_helm_release_events(release_data=discovery_results.helm_releases)
+            if not DISABLE_DISCOVERY:
+                discovery_results = self.__discover_resources()
+
+                if get_history:
+                    self.__get_events_history()
+                    get_history = False
+                if discovery_results and discovery_results.helm_releases:
+                    self.__send_helm_release_events(release_data=discovery_results.helm_releases)
+
             duration = round(time.time() - start_t)
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)
 
