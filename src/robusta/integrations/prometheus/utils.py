@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from cachetools import TTLCache
 from prometrix import (
@@ -15,7 +15,7 @@ from prometrix.connect.custom_connect import CustomPrometheusConnect
 from robusta.core.exceptions import NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
-from robusta.utils.service_discovery import find_service_url
+from robusta.utils.service_discovery import DiscoveredServiceUrl, find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
 AZURE_METADATA_ENDPOINT = os.environ.get(
@@ -33,15 +33,37 @@ AWS_ASSUME_ROLE = os.environ.get("AWS_ASSUME_ROLE")
 VICTORIA_METRICS_CONFIGURED = os.environ.get("VICTORIA_METRICS_CONFIGURED", "false").lower() == "true"
 
 
+def _unpack_discovery_result(
+    discovery_result: Optional[DiscoveredServiceUrl],
+) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
+    if not discovery_result:
+        return None, None
+    return discovery_result.url, discovery_result.headers
+
+
+def _merge_discovered_headers(
+    discovered_headers: Optional[Dict[str, str]], additional_headers: Optional[Dict[str, str]]
+) -> Optional[Dict[str, str]]:
+    headers: Dict[str, str] = {}
+    if discovered_headers:
+        headers.update(discovered_headers)
+    if additional_headers:
+        headers.update(additional_headers)
+    return headers or None
+
+
 def generate_prometheus_config(prometheus_params: PrometheusParams) -> PrometheusConfig:
     is_victoria_metrics = VICTORIA_METRICS_CONFIGURED
-    url: Optional[str] = (
-        prometheus_params.prometheus_url
-        if prometheus_params.prometheus_url
-        else PrometheusDiscovery.find_prometheus_url()
-    )
+    discovered_headers: Optional[Dict[str, str]] = None
+    url: Optional[str] = None
+
+    if prometheus_params.prometheus_url:
+        url = prometheus_params.prometheus_url
+    else:
+        url, discovered_headers = _unpack_discovery_result(PrometheusDiscovery.find_prometheus_url())
+
     if not url:
-        url = PrometheusDiscovery.find_vm_url()
+        url, discovered_headers = _unpack_discovery_result(PrometheusDiscovery.find_vm_url())
         is_victoria_metrics = is_victoria_metrics is not None
     if not url:
         raise NoPrometheusUrlFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
@@ -54,8 +76,9 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
     if prometheus_params.prometheus_auth:
         baseconfig["prometheus_auth"] = prometheus_params.prometheus_auth.get_secret_value()
         
-    if prometheus_params.prometheus_additional_headers:
-        baseconfig["headers"] = prometheus_params.prometheus_additional_headers
+    merged_headers = _merge_discovered_headers(discovered_headers, prometheus_params.prometheus_additional_headers)
+    if merged_headers:
+        baseconfig["headers"] = merged_headers
 
     # aws config
     if AWS_REGION:
@@ -113,7 +136,7 @@ class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=5, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
-    def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
+    def find_url(cls, selectors: List[str], error_msg: str) -> Optional[DiscoveredServiceUrl]:
         """
         Try to autodiscover the url of an in-cluster service
         """
@@ -134,7 +157,7 @@ class ServiceDiscovery:
 
 class PrometheusDiscovery(ServiceDiscovery):
     @classmethod
-    def find_prometheus_url(cls) -> Optional[str]:
+    def find_prometheus_url(cls) -> Optional[DiscoveredServiceUrl]:
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
@@ -167,7 +190,7 @@ class PrometheusDiscovery(ServiceDiscovery):
 
 class AlertManagerDiscovery(ServiceDiscovery):
     @classmethod
-    def find_alert_manager_url(cls) -> Optional[str]:
+    def find_alert_manager_url(cls) -> Optional[DiscoveredServiceUrl]:
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-alertmanager",
@@ -188,9 +211,9 @@ class HolmesDiscovery(ServiceDiscovery):
     MODEL_NAME_URL = "/api/model"
 
     @classmethod
-    def find_holmes_url(cls, holmes_url: Optional[str] = None) -> Optional[str]:
+    def find_holmes_url(cls, holmes_url: Optional[str] = None) -> Optional[DiscoveredServiceUrl]:
         if holmes_url:
-            return holmes_url
+            return DiscoveredServiceUrl(url=holmes_url)
 
         return super().find_url(
             selectors=["app=holmes"],
