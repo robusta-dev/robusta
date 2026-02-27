@@ -296,4 +296,4 @@ class Transformer:
             write_section_header(pdf, section_name)
             write_table(pdf, rows)
 
-        return FileBlock(f"{title}.pdf", pdf.output("", "S"))
+        return FileBlock(f"{title}.pdf", pdf.output())
