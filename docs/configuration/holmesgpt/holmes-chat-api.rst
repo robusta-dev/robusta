@@ -198,3 +198,339 @@ If ``cluster_id`` is not provided in the request, Holmes will attempt to determi
 3. If only one cluster is connected to the account, use that cluster.
 
 If none of these methods succeed and multiple clusters are connected, the API will return an error listing the available clusters.
+
+
+Streaming (SSE) Mode
+---------------------
+
+The same endpoint supports streaming responses via `Server-Sent Events (SSE) <https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events>`_.
+Instead of waiting for the full analysis, you receive a real-time stream of events as Holmes investigates — including tool calls, intermediate AI messages, and the final answer.
+
+To enable streaming, set ``stream`` to ``true`` in the request body. All other parameters remain the same.
+
+Example Streaming Request
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    curl -N -X POST 'https://api.robusta.dev/api/holmes/ACCOUNT_ID/chat' \
+    --header 'Content-Type: application/json' \
+    --header 'Authorization: Bearer API-KEY' \
+    --data '{
+        "cluster_id": "my-cluster",
+        "ask": "Which pods are failing in the cluster?",
+        "stream": true,
+        "payload": {
+            "alertname": "KubeContainerWaiting",
+            "container": "frontend",
+            "namespace": "production",
+            "pod": "frontend-59fbcd7965-drx6w"
+        }
+    }'
+
+.. note::
+    The ``-N`` flag disables output buffering in curl, which is important for seeing events as they arrive.
+
+Streaming Response Format
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The response has ``Content-Type: text/event-stream`` and uses the standard SSE wire format. Each event consists of an ``event`` line specifying the type, a ``data`` line containing a JSON payload, and a blank line:
+
+.. code-block:: text
+
+    event: <event_type>
+    data: <json_payload>
+
+Events are delivered in order as the investigation progresses. A typical stream looks like this:
+
+.. code-block:: text
+
+    event: start_tool_calling
+    data: {"tool_call_id": "call_1", "tool_name": "kubectl_find_resource", "description": "Looking up failing pods"}
+
+    event: tool_calling_result
+    data: {"tool_call_id": "call_1", "name": "kubectl_find_resource", "result": {"status": "success", "data": "..."}}
+
+    event: ai_message
+    data: {"content": "I found a pod stuck in ContainerCreating state. Let me investigate further."}
+
+    event: start_tool_calling
+    data: {"tool_call_id": "call_2", "tool_name": "kubectl_describe_resource", "description": "Describing pod frontend-59fbcd7965-drx6w"}
+
+    event: tool_calling_result
+    data: {"tool_call_id": "call_2", "name": "kubectl_describe_resource", "result": {"status": "success", "data": "..."}}
+
+    event: token_count
+    data: {"input_tokens": 1520, "output_tokens": 305}
+
+    event: ai_answer_end
+    data: {"analysis": "## Investigation Summary\n\nThe pod `frontend-59fbcd7965-drx6w` is stuck ..."}
+
+SSE Event Types
+^^^^^^^^^^^^^^^
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+
+   * - Event Type
+     - Description
+   * - ``start_tool_calling``
+     - Holmes has started executing a tool (e.g., a ``kubectl`` command). Useful for showing progress indicators.
+   * - ``tool_calling_result``
+     - A tool call has completed. Contains the result or error information.
+   * - ``ai_message``
+     - An intermediate text message from the AI while it is still investigating. These are partial thoughts, not the final answer.
+   * - ``ai_answer_end``
+     - The final analysis. The ``analysis`` field contains the same markdown text you would receive from the non-streaming endpoint. **This is a terminal event** — no more events follow.
+   * - ``error``
+     - An error occurred during the investigation. **This is a terminal event.**
+   * - ``token_count``
+     - Token usage statistics for the request.
+   * - ``approval_required``
+     - Holmes needs user approval before executing a potentially dangerous tool. See :ref:`approval-required-event` below.
+
+Event Payloads
+^^^^^^^^^^^^^^
+
+``start_tool_calling``
+""""""""""""""""""""""
+
+Emitted when Holmes begins executing a tool.
+
+.. code-block:: json
+
+    {
+        "tool_call_id": "call_abc123",
+        "tool_name": "kubectl_find_resource",
+        "description": "kubectl get pods -n production"
+    }
+
+.. list-table::
+   :widths: 20 10 70
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``tool_call_id``
+     - string
+     - Unique identifier for this tool call. Use it to correlate with the corresponding ``tool_calling_result``.
+   * - ``tool_name``
+     - string
+     - Name of the tool being executed.
+   * - ``description``
+     - string
+     - Human-readable description of what the tool is doing.
+
+``tool_calling_result``
+"""""""""""""""""""""""
+
+Emitted when a tool call completes.
+
+.. code-block:: json
+
+    {
+        "tool_call_id": "call_abc123",
+        "name": "kubectl_find_resource",
+        "result": {
+            "status": "success",
+            "data": "NAME                        READY   STATUS    RESTARTS   AGE\nfrontend-59fbcd7965-drx6w   0/1     ContainerCreating   0   12m"
+        }
+    }
+
+.. list-table::
+   :widths: 20 10 70
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``tool_call_id``
+     - string
+     - Matches the ``tool_call_id`` from the corresponding ``start_tool_calling`` event.
+   * - ``name``
+     - string
+     - Name of the tool that was called.
+   * - ``result``
+     - object
+     - Result object with a ``status`` field (``"success"``, ``"error"``, ``"no_data"``, or ``"approval_required"``) and either a ``data`` field (on success) or an ``error`` field (on failure).
+   * - ``result_type``
+     - string
+     - Optional. ``"txt"`` (default) or ``"png"`` for image results.
+
+``ai_message``
+""""""""""""""
+
+Emitted when the AI produces intermediate text during its investigation.
+
+.. code-block:: json
+
+    {
+        "content": "I found a pod stuck in ContainerCreating state. Let me check the events."
+    }
+
+.. list-table::
+   :widths: 20 10 70
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``content``
+     - string
+     - The text content of the AI's intermediate message.
+
+``ai_answer_end``
+"""""""""""""""""
+
+Emitted once when the investigation is complete. This is a **terminal event** — the stream ends after this.
+
+.. code-block:: json
+
+    {
+        "analysis": "## Investigation Summary\n\n**Root Cause**: Missing Secret ..."
+    }
+
+.. list-table::
+   :widths: 20 10 70
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``analysis``
+     - string
+     - The complete analysis in markdown format. Identical to the ``analysis`` field in the non-streaming response.
+
+``error``
+"""""""""
+
+Emitted when an error occurs. This is a **terminal event** — the stream ends after this.
+
+.. code-block:: json
+
+    {
+        "msg": "Failed to connect to cluster",
+        "error_code": "CLUSTER_ERROR"
+    }
+
+.. list-table::
+   :widths: 20 10 70
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``msg``
+     - string
+     - Human-readable error message.
+   * - ``error_code``
+     - string
+     - Optional error code identifier.
+
+``token_count``
+"""""""""""""""
+
+Emitted with token usage statistics.
+
+.. code-block:: json
+
+    {
+        "input_tokens": 1520,
+        "output_tokens": 305
+    }
+
+.. list-table::
+   :widths: 20 10 70
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``input_tokens``
+     - integer
+     - Number of input tokens consumed.
+   * - ``output_tokens``
+     - integer
+     - Number of output tokens generated.
+
+.. _approval-required-event:
+
+``approval_required``
+"""""""""""""""""""""
+
+Emitted when Holmes needs explicit user approval before executing a tool. This is a **terminal event** — the stream pauses until approval is granted.
+
+.. code-block:: json
+
+    {
+        "conversation_history": [
+            {
+                "role": "assistant",
+                "content": "I need to run a command that modifies resources.",
+                "tool_calls": [
+                    {
+                        "id": "call_xyz789",
+                        "pending_approval": true,
+                        "function": {
+                            "name": "kubectl_exec",
+                            "arguments": "{\"command\": \"kubectl delete pod test-pod -n default\"}"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+
+.. list-table::
+   :widths: 25 10 65
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Description
+   * - ``conversation_history``
+     - array
+     - The full conversation history including the pending tool call. Assistant messages contain a ``tool_calls`` array where entries with ``"pending_approval": true`` are the tools awaiting approval.
+
+Consuming the Stream
+^^^^^^^^^^^^^^^^^^^^
+
+**Python (using requests):**
+
+.. code-block:: python
+
+    import requests
+    import json
+
+    response = requests.post(
+        "https://api.robusta.dev/api/holmes/ACCOUNT_ID/chat",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer API-KEY",
+        },
+        json={
+            "ask": "Which pods are failing on cluster prod-us?",
+            "stream": True,
+        },
+        stream=True,
+    )
+
+    event_type = None
+    for line in response.iter_lines(decode_unicode=True):
+        if not line:
+            continue
+        if line.startswith("event: "):
+            event_type = line[7:]
+        elif line.startswith("data: ") and event_type:
+            data = json.loads(line[6:])
+            if event_type == "ai_answer_end":
+                print("Final analysis:", data["analysis"])
+            elif event_type == "ai_message":
+                print("AI:", data["content"])
+            elif event_type == "start_tool_calling":
+                print(f"Running tool: {data['tool_name']}")
+            elif event_type == "error":
+                print(f"Error: {data['msg']}")
+            event_type = None
