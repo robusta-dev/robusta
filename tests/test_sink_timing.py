@@ -6,7 +6,7 @@ from freezegun import freeze_time
 from robusta.core.reporting import Finding
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_base_params import ActivityParams
-from robusta.core.sinks.timing import TimeSlice
+from robusta.core.sinks.timing import MuteDateInterval, TimeSlice
 
 
 class TestTimeSlice:
@@ -39,6 +39,40 @@ class TestTimeSlice:
             TimeSlice([], [time], "UTC")
 
 
+class TestMuteDateInterval:
+    def test_unknown_timezone(self):
+        with pytest.raises(ValueError):
+            MuteDateInterval("01-01 00:00", "01-02 00:00", "Mars/Cydonia")
+
+    @pytest.mark.parametrize(
+        "start_date,end_date,timezone,expected_muted",
+        [
+            # 2012-01-01 13:45 UTC - currently muted (within range)
+            ("01-01 00:00", "01-01 23:59", "UTC", True),
+            # Currently muted (multi-day range)
+            ("12-31 00:00", "01-02 10:00", "UTC", True),
+            # Not muted (range in February)
+            ("02-01 00:00", "02-28 23:59", "UTC", False),
+            # Not muted (same day but hours don't match - before current time)
+            ("01-01 00:00", "01-01 13:00", "UTC", False),
+            # Muted (same day, hours match)
+            ("01-01 13:00", "01-01 14:00", "UTC", True),
+            # Year-boundary wrap: Dec 20 to Jan 5 should mute on Jan 1
+            ("12-20 00:00", "01-05 23:59", "UTC", True),
+            # Year-boundary wrap: March to Feb wraps around, Jan 1 IS inside that range
+            ("03-01 00:00", "02-15 23:59", "UTC", True),
+            # Not muted: range is Feb 1 to Feb 28, Jan 1 is outside
+            ("02-01 00:00", "02-10 23:59", "UTC", False),
+            # Timezone test: 2012-01-01 13:45 UTC = 2012-01-01 14:45 CET
+            ("01-01 14:00", "01-01 15:00", "CET", True),
+            ("01-01 15:00", "01-01 16:00", "CET", False),
+        ],
+    )
+    def test_is_muted_now(self, start_date, end_date, timezone, expected_muted):
+        with freeze_time("2012-01-01 13:45"):  # UTC time
+            assert MuteDateInterval(start_date, end_date, timezone).is_muted_now() is expected_muted
+
+
 class _TestSinkBase(SinkBase):
     def write_finding(self, finding: Finding, platform_enabled: bool):
         pass
@@ -48,6 +82,10 @@ class _TestSinkBase(SinkBase):
 
     def _build_time_slices_from_params(self, params: ActivityParams):
         # We'll construct time_slices explicitly below in TestSinkBase.test_accepts
+        pass
+
+    def _build_mute_intervals_from_params(self, params):
+        # We'll construct mute_date_intervals explicitly below
         pass
 
 
@@ -63,6 +101,29 @@ class TestSinkBase:
         mock_registry = Mock(get_global_config=lambda: Mock())
         sink = _TestSinkBase(registry=mock_registry, sink_params=Mock())
         sink.time_slices = [TimeSlice(days, time_intervals, "UTC")]
+        sink.mute_date_intervals = []
         mock_finding = Mock(matches=Mock(return_value=True))
         with freeze_time("2012-01-01 13:45"):  # this is UTC time
             assert sink.accepts(mock_finding) is expected_result
+
+    def test_accepts_muted(self):
+        """When a mute interval is active, accepts() should return False."""
+        mock_registry = Mock(get_global_config=lambda: Mock())
+        sink = _TestSinkBase(registry=mock_registry, sink_params=Mock())
+        sink.time_slices = [TimeSlice(["sun"], [("13:30", "14:00")], "UTC")]
+        sink.mute_date_intervals = [MuteDateInterval("01-01 00:00", "01-01 23:59", "UTC")]
+        mock_finding = Mock(matches=Mock(return_value=True))
+        with freeze_time("2012-01-01 13:45"):  # this is UTC time, Sunday
+            # Would normally be accepted (Sunday 13:45 in 13:30-14:00), but muted
+            assert sink.accepts(mock_finding) is False
+
+    def test_accepts_not_muted(self):
+        """When no mute interval is active, accepts() works normally."""
+        mock_registry = Mock(get_global_config=lambda: Mock())
+        sink = _TestSinkBase(registry=mock_registry, sink_params=Mock())
+        sink.time_slices = [TimeSlice(["sun"], [("13:30", "14:00")], "UTC")]
+        sink.mute_date_intervals = [MuteDateInterval("02-01 00:00", "02-28 23:59", "UTC")]
+        mock_finding = Mock(matches=Mock(return_value=True))
+        with freeze_time("2012-01-01 13:45"):  # this is UTC time, Sunday
+            # Mute is for February, so should still accept
+            assert sink.accepts(mock_finding) is True

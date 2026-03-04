@@ -57,6 +57,52 @@ class ActivityParams(BaseModel):
         return intervals
 
 
+DATE_TIME_RE = re.compile(r"^\d{2}-\d{2} \d{2}:\d{2}$")
+
+
+def check_date_time_format(value: str) -> str:
+    if not DATE_TIME_RE.match(value):
+        raise ValueError(f"invalid date-time: {value}. Expected format: MM-DD HH:MM")
+    month, rest = value.split("-", 1)
+    day, time_part = rest.split(" ", 1)
+    hour, minute = time_part.split(":")
+    month, day, hour, minute = int(month), int(day), int(hour), int(minute)
+    if not (1 <= month <= 12):
+        raise ValueError(f"invalid month: {month}")
+    if not (1 <= day <= 31):
+        raise ValueError(f"invalid day: {day}")
+    if not (0 <= hour <= 23):
+        raise ValueError(f"invalid hour: {hour}")
+    if not (0 <= minute <= 59):
+        raise ValueError(f"invalid minute: {minute}")
+    return value
+
+
+class MuteInterval(BaseModel):
+    start_date: str  # MM-DD HH:MM
+    end_date: str    # MM-DD HH:MM
+
+    _validator_start = validator("start_date", allow_reuse=True)(check_date_time_format)
+    _validator_end = validator("end_date", allow_reuse=True)(check_date_time_format)
+
+
+class MuteParams(BaseModel):
+    timezone: str = "UTC"
+    intervals: List[MuteInterval]
+
+    @validator("timezone")
+    def check_timezone(cls, timezone: str):
+        if timezone not in pytz.all_timezones:
+            raise ValueError(f"unknown timezone {timezone}")
+        return timezone
+
+    @validator("intervals")
+    def check_intervals(cls, intervals: List[MuteInterval]):
+        if not intervals:
+            raise ValueError("at least one interval has to be specified for mute_intervals")
+        return intervals
+
+
 class RegularNotificationModeParams(BaseModel):
     # This is mandatory because using the regular mode without setting it
     # would make no sense - all the notifications would just pass through
@@ -108,6 +154,7 @@ class SinkBaseParams(ABC, BaseModel):
     match: dict = {}
     scope: Optional[ScopeParams]
     activity: Optional[ActivityParams]
+    mute_intervals: Optional[MuteParams]
     grouping: Optional[GroupingParams]
     stop: bool = False  # Stop processing if this sink has been matched
 

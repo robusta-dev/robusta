@@ -10,6 +10,21 @@ fullnameOverride: ""
 playbookRepos: {}
 
 # sinks configurations
+# Each sink supports an optional mute_intervals field (parallel to activity) that mutes
+# all notifications during specified date/time ranges. Format: MM-DD HH:MM (no year).
+# Example:
+#   sinksConfig:
+#   - slack_sink:
+#       name: my_slack_sink
+#       slack_channel: my-channel
+#       api_key: xoxb-your-key
+#       mute_intervals:
+#         timezone: UTC
+#         intervals:
+#         - start_date: "12-24 00:00"
+#           end_date: "12-26 23:59"
+#         - start_date: "01-01 00:00"
+#           end_date: "01-01 23:59"
 sinksConfig: []
 
 # global parameters
