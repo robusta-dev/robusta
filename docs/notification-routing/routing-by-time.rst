@@ -35,6 +35,33 @@ As seen above, a sink can be active during multiple ``intervals``. Each interval
 
 Sinks that don't define an ``activity`` field are always active.
 
+Mute Intervals
+--------------
+
+You can also mute a sink during specific date ranges using ``mute_intervals``. Unlike ``activity`` (which defines recurring weekly schedules), ``mute_intervals`` defines exact date ranges with a year — useful for holidays, maintenance windows, or one-off silencing.
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: main_slack_sink
+        slack_channel: robusta-notifications
+        api_key: xoxb-your-slack-key
+        mute_intervals:
+        - start_date: "2025-12-24 00:00"
+          end_date: "2025-12-26 23:59"
+          timezone: CET
+        - start_date: "2026-01-01 00:00"
+          end_date: "2026-01-01 23:59"
+          timezone: US/Eastern
+
+Each interval has:
+
+- ``start_date`` and ``end_date`` in ``YYYY-MM-DD HH:MM`` format.
+- An optional ``timezone`` (defaults to ``UTC``). Each interval can use a different timezone.
+
+When any mute interval is active, the sink will not emit notifications. You can combine ``mute_intervals`` with ``activity`` — the sink must be active according to ``activity`` *and* not muted by any interval.
+
 .. details:: Supported Timezones
 
     .. code-block::
