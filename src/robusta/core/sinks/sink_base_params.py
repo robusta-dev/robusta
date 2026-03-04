@@ -81,26 +81,16 @@ def check_date_time_format(value: str) -> str:
 class MuteInterval(BaseModel):
     start_date: str  # YYYY-MM-DD HH:MM
     end_date: str    # YYYY-MM-DD HH:MM
+    timezone: str = "UTC"
 
     _validator_start = validator("start_date", allow_reuse=True)(check_date_time_format)
     _validator_end = validator("end_date", allow_reuse=True)(check_date_time_format)
-
-
-class MuteParams(BaseModel):
-    timezone: str = "UTC"
-    intervals: List[MuteInterval]
 
     @validator("timezone")
     def check_timezone(cls, timezone: str):
         if timezone not in pytz.all_timezones:
             raise ValueError(f"unknown timezone {timezone}")
         return timezone
-
-    @validator("intervals")
-    def check_intervals(cls, intervals: List[MuteInterval]):
-        if not intervals:
-            raise ValueError("at least one interval has to be specified for mute_intervals")
-        return intervals
 
 
 class RegularNotificationModeParams(BaseModel):
@@ -154,7 +144,7 @@ class SinkBaseParams(ABC, BaseModel):
     match: dict = {}
     scope: Optional[ScopeParams]
     activity: Optional[ActivityParams]
-    mute_intervals: Optional[MuteParams]
+    mute_intervals: Optional[List[MuteInterval]]
     grouping: Optional[GroupingParams]
     stop: bool = False  # Stop processing if this sink has been matched
 

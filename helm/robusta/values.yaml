@@ -19,12 +19,12 @@ playbookRepos: {}
 #       slack_channel: my-channel
 #       api_key: xoxb-your-key
 #       mute_intervals:
+#       - start_date: "2025-12-24 00:00"
+#         end_date: "2025-12-26 23:59"
 #         timezone: UTC
-#         intervals:
-#         - start_date: "2025-12-24 00:00"
-#           end_date: "2025-12-26 23:59"
-#         - start_date: "2026-01-01 00:00"
-#           end_date: "2026-01-01 23:59"
+#       - start_date: "2026-01-01 00:00"
+#         end_date: "2026-01-01 23:59"
+#         timezone: US/Eastern
 sinksConfig: []
 
 # global parameters

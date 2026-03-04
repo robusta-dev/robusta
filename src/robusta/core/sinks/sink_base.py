@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams, MuteParams, SinkBaseParams
+from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams, MuteInterval, SinkBaseParams
 from robusta.core.sinks.timing import MuteDateInterval, TimeSlice, TimeSliceAlways
 
 
@@ -152,13 +152,12 @@ class SinkBase(ABC):
     def _interval_to_time_slice(self, timezone: str, interval: ActivityInterval):
         return TimeSlice(interval.days, [(time.start, time.end) for time in interval.hours], timezone)
 
-    def _build_mute_intervals_from_params(self, params: MuteParams):
-        if params is None:
+    def _build_mute_intervals_from_params(self, params: Optional[List[MuteInterval]]):
+        if not params:
             return []
-        timezone = params.timezone
         return [
-            MuteDateInterval(interval.start_date, interval.end_date, timezone)
-            for interval in params.intervals
+            MuteDateInterval(interval.start_date, interval.end_date, interval.timezone)
+            for interval in params
         ]
 
     def is_global_config_changed(self) -> bool:

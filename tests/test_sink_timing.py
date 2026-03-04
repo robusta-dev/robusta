@@ -42,7 +42,7 @@ class TestTimeSlice:
 class TestMuteDateInterval:
     def test_unknown_timezone(self):
         with pytest.raises(ValueError):
-            MuteDateInterval("01-01 00:00", "01-02 00:00", "Mars/Cydonia")
+            MuteDateInterval("2012-01-01 00:00", "2012-01-02 00:00", "Mars/Cydonia")
 
     @pytest.mark.parametrize(
         "start_date,end_date,timezone,expected_muted",
