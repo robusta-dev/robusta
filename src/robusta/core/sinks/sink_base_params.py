@@ -57,16 +57,16 @@ class ActivityParams(BaseModel):
         return intervals
 
 
-DATE_TIME_RE = re.compile(r"^\d{2}-\d{2} \d{2}:\d{2}$")
+DATE_TIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
 
 
 def check_date_time_format(value: str) -> str:
     if not DATE_TIME_RE.match(value):
-        raise ValueError(f"invalid date-time: {value}. Expected format: MM-DD HH:MM")
-    month, rest = value.split("-", 1)
-    day, time_part = rest.split(" ", 1)
+        raise ValueError(f"invalid date-time: {value}. Expected format: YYYY-MM-DD HH:MM")
+    date_part, time_part = value.split(" ", 1)
+    year, month, day = date_part.split("-")
     hour, minute = time_part.split(":")
-    month, day, hour, minute = int(month), int(day), int(hour), int(minute)
+    year, month, day, hour, minute = int(year), int(month), int(day), int(hour), int(minute)
     if not (1 <= month <= 12):
         raise ValueError(f"invalid month: {month}")
     if not (1 <= day <= 31):
@@ -79,8 +79,8 @@ def check_date_time_format(value: str) -> str:
 
 
 class MuteInterval(BaseModel):
-    start_date: str  # MM-DD HH:MM
-    end_date: str    # MM-DD HH:MM
+    start_date: str  # YYYY-MM-DD HH:MM
+    end_date: str    # YYYY-MM-DD HH:MM
 
     _validator_start = validator("start_date", allow_reuse=True)(check_date_time_format)
     _validator_end = validator("end_date", allow_reuse=True)(check_date_time_format)

@@ -48,24 +48,22 @@ class TestMuteDateInterval:
         "start_date,end_date,timezone,expected_muted",
         [
             # 2012-01-01 13:45 UTC - currently muted (within range)
-            ("01-01 00:00", "01-01 23:59", "UTC", True),
-            # Currently muted (multi-day range)
-            ("12-31 00:00", "01-02 10:00", "UTC", True),
+            ("2012-01-01 00:00", "2012-01-01 23:59", "UTC", True),
+            # Currently muted (multi-day range spanning year boundary)
+            ("2011-12-31 00:00", "2012-01-02 10:00", "UTC", True),
             # Not muted (range in February)
-            ("02-01 00:00", "02-28 23:59", "UTC", False),
-            # Not muted (same day but hours don't match - before current time)
-            ("01-01 00:00", "01-01 13:00", "UTC", False),
+            ("2012-02-01 00:00", "2012-02-28 23:59", "UTC", False),
+            # Not muted (same day but end is before current time)
+            ("2012-01-01 00:00", "2012-01-01 13:00", "UTC", False),
             # Muted (same day, hours match)
-            ("01-01 13:00", "01-01 14:00", "UTC", True),
-            # Year-boundary wrap: Dec 20 to Jan 5 should mute on Jan 1
-            ("12-20 00:00", "01-05 23:59", "UTC", True),
-            # Year-boundary wrap: March to Feb wraps around, Jan 1 IS inside that range
-            ("03-01 00:00", "02-15 23:59", "UTC", True),
-            # Not muted: range is Feb 1 to Feb 28, Jan 1 is outside
-            ("02-01 00:00", "02-10 23:59", "UTC", False),
+            ("2012-01-01 13:00", "2012-01-01 14:00", "UTC", True),
+            # Not muted (range is entirely in the past)
+            ("2011-06-01 00:00", "2011-06-30 23:59", "UTC", False),
+            # Not muted (range is entirely in the future)
+            ("2013-01-01 00:00", "2013-12-31 23:59", "UTC", False),
             # Timezone test: 2012-01-01 13:45 UTC = 2012-01-01 14:45 CET
-            ("01-01 14:00", "01-01 15:00", "CET", True),
-            ("01-01 15:00", "01-01 16:00", "CET", False),
+            ("2012-01-01 14:00", "2012-01-01 15:00", "CET", True),
+            ("2012-01-01 15:00", "2012-01-01 16:00", "CET", False),
         ],
     )
     def test_is_muted_now(self, start_date, end_date, timezone, expected_muted):
@@ -111,7 +109,7 @@ class TestSinkBase:
         mock_registry = Mock(get_global_config=lambda: Mock())
         sink = _TestSinkBase(registry=mock_registry, sink_params=Mock())
         sink.time_slices = [TimeSlice(["sun"], [("13:30", "14:00")], "UTC")]
-        sink.mute_date_intervals = [MuteDateInterval("01-01 00:00", "01-01 23:59", "UTC")]
+        sink.mute_date_intervals = [MuteDateInterval("2012-01-01 00:00", "2012-01-01 23:59", "UTC")]
         mock_finding = Mock(matches=Mock(return_value=True))
         with freeze_time("2012-01-01 13:45"):  # this is UTC time, Sunday
             # Would normally be accepted (Sunday 13:45 in 13:30-14:00), but muted
@@ -122,7 +120,7 @@ class TestSinkBase:
         mock_registry = Mock(get_global_config=lambda: Mock())
         sink = _TestSinkBase(registry=mock_registry, sink_params=Mock())
         sink.time_slices = [TimeSlice(["sun"], [("13:30", "14:00")], "UTC")]
-        sink.mute_date_intervals = [MuteDateInterval("02-01 00:00", "02-28 23:59", "UTC")]
+        sink.mute_date_intervals = [MuteDateInterval("2012-02-01 00:00", "2012-02-28 23:59", "UTC")]
         mock_finding = Mock(matches=Mock(return_value=True))
         with freeze_time("2012-01-01 13:45"):  # this is UTC time, Sunday
             # Mute is for February, so should still accept

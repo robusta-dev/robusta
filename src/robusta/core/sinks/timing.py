@@ -70,36 +70,24 @@ class TimeSliceAlways(TimeSliceBase):
 class MuteDateInterval:
     """Checks if the current date/time falls within a mute interval.
 
-    start_date and end_date are in MM-DD HH:MM format (no year).
-    The interval applies to the current year. If start_date > end_date
-    (e.g. 12-20 to 01-05), it wraps across the year boundary.
+    start_date and end_date are in YYYY-MM-DD HH:MM format.
     """
 
     def __init__(self, start_date: str, end_date: str, timezone: str = "UTC"):
-        self.start_month, self.start_day, self.start_hour, self.start_minute = self._parse(start_date)
-        self.end_month, self.end_day, self.end_hour, self.end_minute = self._parse(end_date)
+        self.start = self._parse(start_date)
+        self.end = self._parse(end_date)
         try:
             self.timezone = pytz.timezone(timezone)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f"Unknown time zone {timezone}")
 
-    def _parse(self, date_str: str) -> Tuple[int, int, int, int]:
+    def _parse(self, date_str: str) -> Tuple[int, int, int, int, int]:
         date_part, time_part = date_str.strip().split(" ")
-        month, day = date_part.split("-")
+        year, month, day = date_part.split("-")
         hour, minute = time_part.split(":")
-        return int(month), int(day), int(hour), int(minute)
-
-    def _to_tuple(self, month: int, day: int, hour: int, minute: int) -> Tuple[int, int, int, int]:
-        return (month, day, hour, minute)
+        return int(year), int(month), int(day), int(hour), int(minute)
 
     def is_muted_now(self) -> bool:
         now = datetime.now(self.timezone)
-        current = self._to_tuple(now.month, now.day, now.hour, now.minute)
-        start = self._to_tuple(self.start_month, self.start_day, self.start_hour, self.start_minute)
-        end = self._to_tuple(self.end_month, self.end_day, self.end_hour, self.end_minute)
-
-        if start <= end:
-            return start <= current <= end
-        else:
-            # Wraps across year boundary (e.g. 12-20 00:00 to 01-05 00:00)
-            return current >= start or current <= end
+        current = (now.year, now.month, now.day, now.hour, now.minute)
+        return self.start <= current <= self.end
