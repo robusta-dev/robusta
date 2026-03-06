@@ -7,6 +7,8 @@
 > **Note:** This repository contains **Robusta Classic** — the rule-based alert enrichment engine. For AI-powered root cause analysis, see [HolmesGPT](https://github.com/robusta-dev/holmesgpt). Both can be installed together as part of the [Robusta platform](https://platform.robusta.dev/signup).
 
 ## What Can Robusta Do?
+[![Python Health](https://img.releaserun.com/badge/health/python.svg)](https://releaserun.com/badges/python/)
+[![Kubernetes Health](https://img.releaserun.com/badge/health/kubernetes.svg)](https://releaserun.com/badges/kubernetes/)
 
 <p align="center">
   <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
