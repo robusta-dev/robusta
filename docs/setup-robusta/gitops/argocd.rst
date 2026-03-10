@@ -75,10 +75,14 @@ Create a ``NEW APP`` in ArgoCD and fill in the following settings.
 ``Source`` settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- **Repository URL:** https://robusta-charts.storage.googleapis.com
+- **Repository URL:** ``https://robusta-charts.storage.googleapis.com``
 - **Chart:** robusta
 - Change the dropdown box from "GIT" to "HELM"
 - **Version:** Choose the latest stable robusta version. (``-alpha`` versions are not recommended.)
+
+.. tip::
+
+    You can also use the OCI registry as the source. Set **Repository URL** to ``ghcr.io/robusta-dev/charts`` and select "HELM" as the source type.
 
 ``Destination`` settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,7 +150,7 @@ Then create an Argo Application which references that values file:
       project: default
       sources:
         - chart: robusta
-          repoURL: https://robusta-charts.storage.googleapis.com
+          repoURL: https://robusta-charts.storage.googleapis.com  # or ghcr.io/robusta-dev/charts for OCI
           targetRevision: <ROBUSTA VERSION - e.g. "0.10.31">
           helm:
             valueFiles:

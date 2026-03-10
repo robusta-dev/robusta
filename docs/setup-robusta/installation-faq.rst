@@ -17,6 +17,12 @@ Yes, using the cli is optional. It auto-generates helm values, but you can also 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
     helm show values robusta/robusta
 
+Or using the OCI registry (no ``helm repo add`` needed):
+
+.. code-block:: bash
+
+    helm show values oci://ghcr.io/robusta-dev/charts/robusta
+
 2. Modify those values to your heart's content. Refer to the :doc:`Send Alerts </configuration/index>` documentation for details.
 
 3. Do a ``helm install``.

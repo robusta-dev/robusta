@@ -61,6 +61,17 @@ Run the following command to add Robusta Helm chart as a Flux HelmRepository.
 
 - **--namespace:** Specified namespace should be present in the cluster.
 
+.. tip::
+
+    You can also use the OCI registry instead:
+
+    .. code-block:: bash
+
+        flux create source helm robusta \
+            --url oci://ghcr.io/robusta-dev/charts \
+            --namespace robusta \
+            --export > robusta-helm.yaml
+
 
 Creating a ``HelmRelease``
 ----------------------------

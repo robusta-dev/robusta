@@ -18,6 +18,14 @@ On some clusters this can take a while, so don't panic if it appears stuck:
             helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
             helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
+        .. tip::
+
+            Robusta charts are also available as OCI artifacts. To install from the OCI registry instead:
+
+            .. code-block:: bash
+
+                helm install robusta oci://ghcr.io/robusta-dev/charts/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+
     .. tab-item:: EKS
         :name: install-eks
 
