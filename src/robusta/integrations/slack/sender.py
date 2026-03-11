@@ -806,9 +806,6 @@ class SlackSender:
             )
             blocks.append(links_block)
 
-            if HOLMES_ENABLED and HOLMES_ASK_SLACK_BUTTON_ENABLED:
-                blocks.append(self.__create_holmes_callback(finding))
-
         if not sink_params.get_custom_template():
             blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
 
