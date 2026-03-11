@@ -41,6 +41,10 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
         The only supported resources for investigation are "Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"
     """
     resource = event.get_resource()
+    if not resource:
+        logging.warning("Cannot run pod issue investigator with no resource")
+        return
+
     if resource.kind not in supported_resources:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Pod investigator is not supported for resource {resource.kind}"
