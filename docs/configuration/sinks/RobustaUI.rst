@@ -42,6 +42,10 @@ Add a new sink to your Helm values (``generated_values.yaml``), under ``sinksCon
 
 Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
+.. note::
+
+   To secure your token using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 Handling Short-Lived Clusters in the UI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
