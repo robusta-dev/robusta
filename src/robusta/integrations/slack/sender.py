@@ -861,6 +861,7 @@ class SlackSender:
         msg_ts: str = None,  # message identifier (for updates)
         investigate_uri: str = None,
         grouping_interval: int = None,  # in seconds
+        channel: str = None,  # pre-resolved channel (when channel_override uses labels/annotations)
     ):
         """Create or update a summary message with tabular information about the amount of events
         fired/resolved and a header describing the event group that this information concerns."""
@@ -927,14 +928,15 @@ class SlackSender:
         for block in blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))
 
-        # For grouped notifications, channel override is supported only with the `cluster` attribute
-        channel = ChannelTransformer.template(
-            sink_params.channel_override,
-            sink_params.slack_channel,
-            self.cluster_name,
-            {},
-            {},
-        )
+        if not channel:
+            # Fallback: resolve channel without labels/annotations (only cluster_name will work)
+            channel = ChannelTransformer.template(
+                sink_params.channel_override,
+                sink_params.slack_channel,
+                self.cluster_name,
+                {},
+                {},
+            )
         if msg_ts is not None:
             method = self.slack_client.chat_update
             kwargs = {"ts": msg_ts}

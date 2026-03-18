@@ -2,6 +2,7 @@ import logging
 
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.base import Finding, FindingStatus
+from robusta.core.sinks.common.channel_transformer import ChannelTransformer
 from robusta.core.sinks.sink_base import NotificationGroup, NotificationSummary, SinkBase
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta.integrations import slack as slack_module
@@ -47,10 +48,26 @@ class SlackSink(SinkBase):
             finding_data["cluster"] = self.cluster_name
             resolved = finding.title.startswith("[RESOLVED]")
 
+            # Resolve the channel for this finding so we can include it in the group key.
+            # This ensures findings routed to different channels (via channel_override with
+            # labels/annotations) are grouped separately per channel.
+            resolved_channel = ChannelTransformer.template(
+                self.params.channel_override,
+                self.params.slack_channel,
+                self.cluster_name,
+                finding.subject.labels,
+                finding.subject.annotations,
+            )
+
             # 1. Notification accounting
             group_key, group_header = self.get_group_key_and_header(
                 finding_data, self.params.grouping.group_by
             )
+            # Include the resolved channel in the group key so that findings destined
+            # for different channels (e.g. due to label-based channel_override) get
+            # separate groups, summary messages, and threads.
+            if self.params.channel_override:
+                group_key = group_key + (resolved_channel,)
 
             if self.grouping_summary_mode:
                 summary_key, _ = self.get_group_key_and_header(
@@ -71,6 +88,7 @@ class SlackSink(SinkBase):
                     msg_ts=notification_summary.message_id,
                     investigate_uri=investigate_uri,
                     grouping_interval=self.params.grouping.interval,
+                    channel=resolved_channel,
                 )
                 notification_summary.message_id = slack_thread_ts
                 should_send_notification = self.params.grouping.notification_mode.summary.threaded
