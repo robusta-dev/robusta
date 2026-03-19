@@ -189,7 +189,7 @@ class AlertExplanationParams(ActionParams):
     :var recommended_resolution: A recommended resolution for the alert
     """
 
-    alert_explanation: str
+    alert_explanation: Optional[str]
     recommended_resolution: Optional[str]
 
 
@@ -198,12 +198,15 @@ def alert_explanation_enricher(alert: PrometheusKubernetesAlert, params: AlertEx
     """
     Enrich the finding an explanation and recommendation of how to resolve the issue
     """
-    blocks = [MarkdownBlock(f"{Emojis.Explain.value} *Alert Explanation:* {params.alert_explanation}")]
+    blocks = []
+    if params.alert_explanation:
+        blocks.append(MarkdownBlock(f"{Emojis.Explain.value} *Alert Explanation:* {params.alert_explanation}"))
     if params.recommended_resolution:
-        resolution_block = MarkdownBlock(
-            f"{Emojis.Recommend.value} *Robusta's Recommendation:* {params.recommended_resolution}"
+        blocks.append(
+            MarkdownBlock(f"{Emojis.Recommend.value} *Robusta's Recommendation:* {params.recommended_resolution}")
         )
-        blocks.append(resolution_block)
+    if not blocks:
+        return
     alert.add_enrichment(
         blocks,
         annotations={SlackAnnotations.UNFURL: False},
