@@ -93,3 +93,20 @@ class HolmesChatResult(BaseModel):
 
 class HolmesChatResultsBlock(BaseBlock):
     holmes_result: Optional[HolmesChatResult]
+
+
+class HolmesValidateToolsetRequest(BaseModel):
+    yaml_config: str = Field(
+        description="Raw YAML string containing the toolset configuration, including the 'holmes:' wrapper."
+    )
+
+
+class HolmesValidateToolsetResult(BaseModel):
+    toolset_name: str
+    status: str = Field(description="Toolset status: 'enabled' or 'failed'")
+    error: Optional[str] = None
+    description: Optional[str] = None
+
+
+class HolmesValidateToolsetResponse(BaseModel):
+    results: List[HolmesValidateToolsetResult]
