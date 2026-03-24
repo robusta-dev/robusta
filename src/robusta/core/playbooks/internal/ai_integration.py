@@ -403,7 +403,7 @@ def holmes_validate_toolset(event: ExecutionBaseEvent, params: HolmesValidateToo
         result = requests.post(url, data=holmes_req.json())
         result.raise_for_status()
         holmes_response = HolmesValidateToolsetResponse(**json.loads(result.text))
-        event.ws(data=json.dumps(holmes_response.dict()))
+        event.response = {"success": True, **holmes_response.dict()}
 
     except Exception as e:
         logging.exception("Failed to validate toolset via Holmes", exc_info=True)

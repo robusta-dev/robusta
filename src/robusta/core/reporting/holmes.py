@@ -103,7 +103,7 @@ class HolmesValidateToolsetRequest(BaseModel):
 
 class HolmesValidateToolsetResult(BaseModel):
     toolset_name: str
-    status: str = Field(description="Toolset status: 'enabled' or 'failed'")
+    status: str = Field(description="Toolset status: 'valid' or 'invalid'")
     error: Optional[str] = None
     description: Optional[str] = None
 
