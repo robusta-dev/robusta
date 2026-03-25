@@ -240,6 +240,12 @@ class HolmesValidateToolsetParams(HolmesParams):
     yaml_config: str
 
 
+class HolmesRefreshToolsetsParams(HolmesParams):
+    """Params for triggering a toolset status refresh via Holmes."""
+
+    pass
+
+
 class NamespacedResourcesParams(ActionParams):
     """
     :var name: Resource name

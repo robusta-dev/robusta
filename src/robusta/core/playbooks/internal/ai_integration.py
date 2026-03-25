@@ -12,6 +12,7 @@ from robusta.core.model.base_params import (
     HolmesChatParams,
     HolmesConversationParams,
     HolmesIssueChatParams,
+    HolmesRefreshToolsetsParams,
     HolmesValidateToolsetParams,
     ResourceInfo,
 )
@@ -407,6 +408,26 @@ def holmes_validate_toolset(event: ExecutionBaseEvent, params: HolmesValidateToo
 
     except Exception as e:
         logging.exception("Failed to validate toolset via Holmes", exc_info=True)
+        handle_holmes_error(e)
+
+
+@action
+def holmes_refresh_toolsets(event: ExecutionBaseEvent, params: HolmesRefreshToolsetsParams):
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(
+            ErrorCodes.HOLMES_DISCOVERY_FAILED,
+            "Robusta couldn't connect to the Holmes client.",
+        )
+
+    try:
+        url = f"{holmes_url}/api/toolsets/refresh"
+        result = requests.post(url)
+        result.raise_for_status()
+        event.response = {"success": True}
+
+    except Exception as e:
+        logging.exception("Failed to refresh toolsets via Holmes", exc_info=True)
         handle_holmes_error(e)
 
 
