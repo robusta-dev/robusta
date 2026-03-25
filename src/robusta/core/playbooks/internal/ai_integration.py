@@ -12,6 +12,8 @@ from robusta.core.model.base_params import (
     HolmesChatParams,
     HolmesConversationParams,
     HolmesIssueChatParams,
+    HolmesRefreshToolsetsParams,
+    HolmesValidateToolsetParams,
     ResourceInfo,
 )
 from robusta.core.model.events import ExecutionBaseEvent
@@ -33,6 +35,8 @@ from robusta.core.reporting.holmes import (
     HolmesRequest,
     HolmesResult,
     HolmesResultsBlock,
+    HolmesValidateToolsetRequest,
+    HolmesValidateToolsetResponse,
 )
 from robusta.core.reporting.utils import convert_svg_to_png
 from robusta.core.stream.utils import (
@@ -382,6 +386,48 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         logging.exception(
             f"Failed to get holmes chat for {cluster_name} cluster", exc_info=True
         )
+        handle_holmes_error(e)
+
+
+@action
+def holmes_validate_toolset(event: ExecutionBaseEvent, params: HolmesValidateToolsetParams):
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(
+            ErrorCodes.HOLMES_DISCOVERY_FAILED,
+            "Robusta couldn't connect to the Holmes client.",
+        )
+
+    try:
+        holmes_req = HolmesValidateToolsetRequest(yaml_config=params.yaml_config)
+        url = f"{holmes_url}/api/toolsets/validate"
+        result = requests.post(url, data=holmes_req.json())
+        result.raise_for_status()
+        holmes_response = HolmesValidateToolsetResponse(**json.loads(result.text))
+        event.response = {"success": True, **holmes_response.dict()}
+
+    except Exception as e:
+        logging.exception("Failed to validate toolset via Holmes", exc_info=True)
+        handle_holmes_error(e)
+
+
+@action
+def holmes_refresh_toolsets(event: ExecutionBaseEvent, params: HolmesRefreshToolsetsParams):
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(
+            ErrorCodes.HOLMES_DISCOVERY_FAILED,
+            "Robusta couldn't connect to the Holmes client.",
+        )
+
+    try:
+        url = f"{holmes_url}/api/toolsets/refresh"
+        result = requests.post(url)
+        result.raise_for_status()
+        event.response = {"success": True}
+
+    except Exception as e:
+        logging.exception("Failed to refresh toolsets via Holmes", exc_info=True)
         handle_holmes_error(e)
 
 
