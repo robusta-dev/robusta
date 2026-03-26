@@ -12,7 +12,6 @@ The workflow follows this systematic process:
 4. **Upstream Research** - Check if newer releases already include fixes
 5. **Patch Implementation** - Apply fixes via dependency upgrades or Dockerfile changes
 6. **Validation** - Verify CVE fixes and ensure application functionality
-etails
 
 ## Step-by-Step Process
 
