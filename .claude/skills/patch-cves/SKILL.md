@@ -29,8 +29,9 @@ docker scout cves robusta:latest
 pip-audit
 safety check
 
-# Check for known vulnerabilities in pyproject.toml dependencies
+# Validate pyproject.toml metadata and lockfile consistency (does not perform vulnerability scanning)
 poetry check
+# For CVE scanning of Python dependencies, use pip-audit, safety, or poetry-audit-plugin
 ```
 
 **What to extract:**
@@ -110,16 +111,15 @@ echo "Build successful"
 ```bash
 # Run basic smoke tests
 pytest tests/ -v
-
+```
 
 ✓ **Dependency Check**
 ```bash
 # Verify no new vulnerabilities introduced
 docker scout cves robusta:test --no-cache
 
-# Check Python dependencies still resolve correctly
-poetry check
-poetry lock --check
+# Validate pyproject.toml metadata and lockfile consistency
+poetry check --lock
 ```
 
 ### 6. Documentation
