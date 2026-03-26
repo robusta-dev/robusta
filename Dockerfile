@@ -41,6 +41,9 @@ RUN poetry install --without dev --extras "all"
 COPY playbooks/ /etc/robusta/playbooks/defaults
 RUN pip install --no-cache-dir /etc/robusta/playbooks/defaults
 
+# Patching CVE-2026-24049 (High): wheel path traversal vulnerability
+RUN pip install --no-cache-dir "wheel>=0.46.2"
+
 # Fixes k8s library bug - see https://github.com/kubernetes-client/python/issues/1867#issuecomment-1353813412
 RUN find /app/venv/lib/python*/site-packages/kubernetes/client/rest.py -type f -exec sed -i 's:^\(.*logger.*\)$:#\1:' {} \;
 
@@ -66,11 +69,12 @@ WORKDIR /app
 
 # Install necessary packages for the runtime environment
 # We're installing here libexpat1, to upgrade the package to include a fix to 3 high CVEs. CVE-2024-45491,CVE-2024-45490,CVE-2024-45492
+# Patching glibc for CVE-2026-0861, CVE-2026-0915, CVE-2025-15281
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
     && apt-get install -y --no-install-recommends git ssh curl libcairo2 apt-transport-https gnupg2 \
-    && apt-get install -y --no-install-recommends libexpat1 \
+    && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -81,12 +85,19 @@ RUN git config --global core.symlinks false
 RUN rm -rf /usr/local/lib/python3.11/ensurepip/_bundled/setuptools-65.5.0-py3-none-any.whl
 RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
 
+# Patching CVE-2026-24049 (High): wheel path traversal vulnerability
+RUN pip3 install --no-cache-dir "wheel>=0.46.2" \
+    && rm -rf /usr/local/lib/python3.11/site-packages/setuptools/_vendor/wheel* \
+    && rm -rf /usr/local/lib/python3.11/site-packages/setuptools/_vendor/wheel-0.45.1.dist-info
+
 COPY --from=builder /app/venv /venv
 COPY --from=builder /etc/robusta/playbooks/defaults /etc/robusta/playbooks/defaults
 # Copy virtual environment and application files from the build stage
 COPY --from=builder /app /app
 # remove duplicated /app/venv - already copied to /venv
 RUN rm -rf /app/venv
+# Remove vendored wheel 0.45.1 from setuptools in venv (CVE-2026-24049)
+RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel*
 
 # Set up kubectl
 COPY --from=builder /app/Release.key /tmp/Release.key

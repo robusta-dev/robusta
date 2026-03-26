@@ -28,7 +28,7 @@ supabase = "2.5.1"
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.23.0" }
 Flask = { version = "^3.0.0", optional = true }
-werkzeug = { version = ">=3.0.6", optional = true }
+werkzeug = { version = ">=3.1.6", optional = true }
 jinja2 = { version = ">=3.1.5", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
@@ -71,12 +71,14 @@ prometheus-api-client = "0.5.4"
 requests = "^2.32.3"
 certifi = "^2023.7.22"
 regex = "2024.5.15"
-pyjwt = "^2.4.0"
-urllib3 = "^2.6.2"
+pyjwt = "^2.12.0"
+urllib3 = "^2.6.3"
 httpx = "0.27.2"
 postgrest = "0.16.8"
 # Pin to fix cve https://github.com/robusta-dev/robusta/security/dependabot/85
-h2 = "^4.3.0" 
+h2 = "^4.3.0"
+# Pin to fix CVE-2026-30922 (transitive via google-auth)
+pyasn1 = ">=0.6.3"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
