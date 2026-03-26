@@ -86,8 +86,8 @@ RUN rm -rf /usr/local/lib/python3.11/ensurepip/_bundled/setuptools-65.5.0-py3-no
 RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
 
 # Patching CVE-2026-24049 (High): wheel path traversal vulnerability
-RUN pip3 install --no-cache-dir "wheel>=0.46.2" \
-    && rm -rf /usr/local/lib/python3.11/site-packages/setuptools/_vendor/wheel* \
+# Patching CVE-2026-23949 (High): jaraco.context path traversal vulnerability (vendored in setuptools)
+RUN pip3 install --no-cache-dir "wheel>=0.46.2" "setuptools>=80.10.1" \
     && rm -rf /usr/local/lib/python3.11/site-packages/setuptools/_vendor/wheel-0.45.1.dist-info
 
 COPY --from=builder /app/venv /venv
