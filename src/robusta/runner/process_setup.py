@@ -5,6 +5,8 @@ import logging
 from functools import lru_cache
 from robusta.core.model.env_vars import RUN_AS_SUBPROCESS
 
+JSON_LOGGING = os.environ.get("ROBUSTA_JSON_LOGGING", "").lower() in ("true", "1", "yes")
+
 
 def process_setup():
     # Cache getLogger calls as we are seeing kubernetes-client locking on logging causing event processing to be extremely delayed
@@ -12,6 +14,14 @@ def process_setup():
     # For more details: https://github.com/kubernetes-client/python/issues/1867
     # Inspiration from Yelp - https://github.com/Yelp/Tron/blob/36337d92fa92bba3da8c5fcc65235697d009eb36/tron/trondaemon.py#L58
     logging.getLogger = lru_cache(maxsize=None)(logging.getLogger)
+
+    if JSON_LOGGING:
+        from pythonjsonlogger import jsonlogger
+        root_logger = logging.getLogger()
+        handler = logging.StreamHandler()
+        formatter = jsonlogger.JsonFormatter()
+        handler.setFormatter(formatter)
+        root_logger.handlers = [handler]
 
     if RUN_AS_SUBPROCESS:
         if os.fork():
