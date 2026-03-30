@@ -281,7 +281,12 @@ class ConfigLoader:
                 )
                 # Kill the whole process group (which means this process and all of its descendant
                 # processes). The rest of the runner shutdown happens in robusta.runner.process_setup.
-                os.killpg(os.getpgid(0), signal.SIGTERM)
+                # os.killpg(os.getpgid(0), signal.SIGTERM)
+                if hasattr(os, "killpg"):
+                    os.killpg(os.getpgid(0), signal.SIGTERM)
+                else:
+                    os.kill(os.getpid(), signal.SIGTERM)
+
 
     @classmethod
     def __prepare_runtime_config(
