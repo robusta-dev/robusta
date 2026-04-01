@@ -28,3 +28,7 @@ Configuring the ServiceNow Sink
 
 
 Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. note::
+
+   To secure your username and password using Kubernetes Secrets, see :ref:`Managing Secrets`.
