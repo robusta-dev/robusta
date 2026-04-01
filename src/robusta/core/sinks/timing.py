@@ -65,3 +65,29 @@ class TimeSlice(TimeSliceBase):
 class TimeSliceAlways(TimeSliceBase):
     def is_active_now(self) -> bool:
         return True
+
+
+class MuteDateInterval:
+    """Checks if the current date/time falls within a mute interval.
+
+    start_date and end_date are in YYYY-MM-DD HH:MM format.
+    """
+
+    def __init__(self, start_date: str, end_date: str, timezone: str = "UTC"):
+        self.start = self._parse(start_date)
+        self.end = self._parse(end_date)
+        try:
+            self.timezone = pytz.timezone(timezone)
+        except pytz.exceptions.UnknownTimeZoneError:
+            raise ValueError(f"Unknown time zone {timezone}")
+
+    def _parse(self, date_str: str) -> Tuple[int, int, int, int, int]:
+        date_part, time_part = date_str.strip().split(" ")
+        year, month, day = date_part.split("-")
+        hour, minute = time_part.split(":")
+        return int(year), int(month), int(day), int(hour), int(minute)
+
+    def is_muted_now(self) -> bool:
+        now = datetime.now(self.timezone)
+        current = (now.year, now.month, now.day, now.hour, now.minute)
+        return self.start <= current <= self.end
