@@ -28,7 +28,7 @@ supabase = "2.5.1"
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.23.0" }
 Flask = { version = "^3.0.0", optional = true }
-werkzeug = { version = ">=3.0.6", optional = true }
+werkzeug = { version = ">=3.1.6", optional = true }
 jinja2 = { version = ">=3.1.5", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
@@ -56,10 +56,10 @@ humanize = "^3.13.1"
 # we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
-cryptography = "^43.0.1"
+cryptography = "^46.0.5"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
-prometrix = "0.2.9"
+prometrix = "0.2.11"
 hikaru-model-26 = "^1.1.1"
 apprise = "1.6.0"
 rocketchat-api = "^1.30.0"
@@ -71,12 +71,14 @@ prometheus-api-client = "0.5.4"
 requests = "^2.32.3"
 certifi = "^2023.7.22"
 regex = "2024.5.15"
-pyjwt = "^2.4.0"
-urllib3 = "^2.6.2"
+pyjwt = "^2.12.0"
+urllib3 = "^2.6.3"
 httpx = "0.27.2"
 postgrest = "0.16.8"
 # Pin to fix cve https://github.com/robusta-dev/robusta/security/dependabot/85
-h2 = "^4.3.0" 
+h2 = "^4.3.0"
+# Pin to fix CVE-2026-30922 (transitive via google-auth)
+pyasn1 = ">=0.6.3"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -91,7 +93,7 @@ witchhazel = "^2018.8.23"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinxcontrib-images = "^0.9.4"
 jsonref = "^0.2"
-Pillow = "^10.3.0"
+Pillow = "^12.1.1"
 sphinxcontrib-mermaid = "^0.7.1"
 cssselect = "^1.1.0"
 tinycss = "^0.4"
