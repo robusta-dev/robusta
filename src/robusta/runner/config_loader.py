@@ -184,11 +184,7 @@ class ConfigLoader:
     @classmethod
     def __import_playbooks_package(cls, actions_registry: ActionsRegistry, package_name: str):
         logging.info(f"Importing actions package {package_name}")
-        # Invalidate caches so that newly added modules (new .py files) are
-        # discoverable by pkgutil.walk_packages via the FileFinder.  Without
-        # this, Python's cached directory listings cause new files installed
-        # since the interpreter started to be invisible to walk_packages,
-        # even though changes to *existing* files are picked up by reload().
+        # Clear stale FileFinder caches so walk_packages discovers new .py files
         importlib.invalidate_caches()
         # Reload is required for modules that are already loaded
         pkg = importlib.reload(importlib.import_module(package_name))
