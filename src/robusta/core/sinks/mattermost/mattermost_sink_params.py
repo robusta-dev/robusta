@@ -14,6 +14,7 @@ class MattermostSinkParams(SinkBaseParams):
     channel: str
     team: Optional[str]
     team_id: Optional[str]
+    user_agent: Optional[str]
 
     @classmethod
     def _get_sink_type(cls):
