@@ -75,6 +75,7 @@ Now we're ready to configure the Mattermost sink.
             token_id: <YOUR BOT TOKEN ID> (the token id visible in bot panel)
             channel: <YOUR CHANNEL NAME> (the channel name you want to send messages to - either display name or channel name divided by hyphen (e.g. channel-name))
             team_id: <YOUR TEAM ID> (OPTIONAL - this is only needed if your mattermost bot is not an admin)
+            user_agent: <YOUR USER AGENT> (OPTIONAL - custom User-Agent header for Mattermost API requests)
 
 Save the file and run
 
