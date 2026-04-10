@@ -614,11 +614,13 @@ image:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
+  enabled: true
   image: ~ # image can be used to override image.registry/imageName
   imageName: kubewatch:v2.13.0
   imagePullPolicy: IfNotPresent
   revisionHistoryLimit: 10
   pprof: True
+  overrideUrl: ""
   resources:
     requests:
       cpu: 10m
@@ -697,6 +699,7 @@ runnerServiceAccount:
 
 # parameters for the robusta runner
 runner:
+  enabled: true
   image: ~  # image can be used to override image.registry/imageName
   imageName: robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
