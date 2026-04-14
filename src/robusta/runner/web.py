@@ -11,7 +11,7 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.clients.robusta_client import fetch_runner_info
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
-    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR, ENABLE_TELEMETRY
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -46,6 +46,8 @@ class Web:
 
     @staticmethod
     def _check_version():
+        if not ENABLE_TELEMETRY:
+            return None
         runner_info = fetch_runner_info()
         if not runner_info or not runner_info.latest_version:
             # we couldn't fetch the latest version.
