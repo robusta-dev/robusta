@@ -184,6 +184,8 @@ class ConfigLoader:
     @classmethod
     def __import_playbooks_package(cls, actions_registry: ActionsRegistry, package_name: str):
         logging.info(f"Importing actions package {package_name}")
+        # Clear stale FileFinder caches so walk_packages discovers new .py files
+        importlib.invalidate_caches()
         # Reload is required for modules that are already loaded
         pkg = importlib.reload(importlib.import_module(package_name))
         playbooks_modules = [name for _, name, _ in pkgutil.walk_packages(path=pkg.__path__)]
