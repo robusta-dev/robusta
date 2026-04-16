@@ -44,6 +44,9 @@ global_config:
   {{- if .Values.clusterZone }}
   cluster_zone: {{ .Values.clusterZone }}
   {{- end }}
+  {{- if and .Values.enableHolmesGPT (not .Values.globalConfig.holmes_url) }}
+  holmes_url: "http://{{ include "robusta.fullname" . }}-holmes.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:80"
+  {{- end }}
   {{- if .Values.globalConfig }}
 {{ toYaml .Values.globalConfig | indent 2 }}
   {{- end }}
