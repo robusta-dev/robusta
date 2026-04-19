@@ -43,6 +43,14 @@
 
 .. toctree::
    :maxdepth: 4
+   :caption: GitHub Actions
+   :hidden:
+
+   Overview <configuration/github-actions/index>
+   HolmesGPT PR Review <configuration/github-actions/holmes-pr-review>
+
+.. toctree::
+   :maxdepth: 4
    :caption: Other Features
    :hidden:
 
