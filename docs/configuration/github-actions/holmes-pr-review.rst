@@ -6,6 +6,12 @@ HolmesGPT PR Review
 
 Use HolmesGPT as a GitHub Action to automatically review pull requests. On every PR open, reopen, or push, the action asks HolmesGPT to review the change and post its review as a comment on the pull request. You control what Holmes checks by editing the prompt — it can flag risky changes, check code against runbooks, cross-reference logs or metrics, or run any investigation available via its :doc:`data sources <../holmesgpt/main-features>`.
 
+Example review posted by HolmesGPT on a pull request:
+
+.. image:: /images/holmes-pr-review-example.png
+  :width: 700
+  :align: center
+
 How It Works
 ------------
 
@@ -45,8 +51,9 @@ Step 3: Add GitHub Secrets
 In your GitHub repository, go to **Settings** → **Secrets and variables** → **Actions** and add the following repository secrets:
 
 .. list-table::
-   :widths: 30 70
+   :widths: 25 75
    :header-rows: 1
+   :width: 100%
 
    * - Secret
      - Value
