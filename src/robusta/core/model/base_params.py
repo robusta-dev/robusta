@@ -232,6 +232,20 @@ class HolmesConversationParams(HolmesParams):
     include_tool_call_results: bool = True
 
 
+class HolmesValidateToolsetParams(HolmesParams):
+    """
+    :var yaml_config: Raw YAML string containing the toolset configuration, including the 'holmes:' wrapper.
+    """
+
+    yaml_config: str
+
+
+class HolmesRefreshToolsetsParams(HolmesParams):
+    """Params for triggering a toolset status refresh via Holmes."""
+
+    pass
+
+
 class NamespacedResourcesParams(ActionParams):
     """
     :var name: Resource name
