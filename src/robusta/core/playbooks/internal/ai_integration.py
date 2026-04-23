@@ -12,6 +12,7 @@ from robusta.core.model.base_params import (
     HolmesChatParams,
     HolmesConversationParams,
     HolmesIssueChatParams,
+    HolmesOAuthParams,
     ResourceInfo,
 )
 from robusta.core.model.events import ExecutionBaseEvent
@@ -382,6 +383,45 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         logging.exception(
             f"Failed to get holmes chat for {cluster_name} cluster", exc_info=True
         )
+        handle_holmes_error(e)
+
+
+@action
+def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
+    """
+    Forwards OAuth callback data to Holmes for token exchange and storage.
+
+    This action is a thin pass-through — the actual OAuth contract is defined
+    in Holmes. Params use extra=allow so Holmes can evolve the contract
+    (e.g. add new fields) without requiring runner changes.
+    """
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(
+            ErrorCodes.HOLMES_DISCOVERY_FAILED,
+            "Robusta couldn't connect to the Holmes client.",
+        )
+
+    try:
+        result = requests.post(
+            f"{holmes_url}/api/oauth/callback",
+            json=params.dict(),
+            timeout=60,
+        )
+        result.raise_for_status()
+        response_data = result.json()
+
+        finding = Finding(
+            title="Holmes OAuth",
+            aggregation_key="HolmesOAuthResult",
+            subject=FindingSubject(subject_type=FindingSubjectType.TYPE_NONE),
+            finding_type=FindingType.AI_ANALYSIS,
+            failure=not response_data.get("success", False),
+        )
+        event.add_finding(finding)
+
+    except Exception as e:
+        logging.exception("Failed to complete Holmes OAuth callback")
         handle_holmes_error(e)
 
 
