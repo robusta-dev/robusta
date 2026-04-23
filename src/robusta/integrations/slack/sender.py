@@ -12,12 +12,14 @@ from dateutil import tz
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from slack_sdk.http_retry import all_builtin_retry_handlers
+from slack_sdk.http_retry.builtin_handlers import RateLimitErrorRetryHandler
 from robusta.core.sinks.slack.templates.template_loader import template_loader
 
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
     HOLMES_ASK_SLACK_BUTTON_ENABLED,
     HOLMES_ENABLED,
+    SLACK_RATE_LIMIT_RETRIES,
     SLACK_REQUEST_TIMEOUT,
     SLACK_TABLE_COLUMNS_LIMIT,
     SLACK_FORWARD_URL,
@@ -57,6 +59,15 @@ MAX_BLOCK_CHARS = 3000
 MENTION_PATTERN = re.compile(r"<[^>]+>")
 
 
+def _build_retry_handlers():
+    handlers = all_builtin_retry_handlers()
+    return [
+        RateLimitErrorRetryHandler(max_retry_count=SLACK_RATE_LIMIT_RETRIES)
+        if isinstance(h, RateLimitErrorRetryHandler) else h
+        for h in handlers
+    ]
+
+
 class SlackSender:
     verified_api_tokens: Set[str] = set()
     channel_name_to_id = {}
@@ -77,7 +88,7 @@ class SlackSender:
             token=slack_token,
             ssl=ssl_context,
             timeout=SLACK_REQUEST_TIMEOUT,
-            retry_handlers=all_builtin_retry_handlers(),
+            retry_handlers=_build_retry_handlers(),
             base_url=SLACK_FORWARD_URL or WebClient.BASE_URL
         )
         if SLACK_FORWARD_URL:
