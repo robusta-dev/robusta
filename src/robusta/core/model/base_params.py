@@ -217,7 +217,7 @@ class HolmesIssueChatParams(HolmesChatParams):
     context: HolmesIssueChatParamsContext
 
 
-class HolmesOAuthParams(HolmesParams):
+class HolmesOAuthParams(BaseModel):
     """
     Forwards OAuth callback data to Holmes.
     Params are intentionally generic (extra=allow) — the actual contract

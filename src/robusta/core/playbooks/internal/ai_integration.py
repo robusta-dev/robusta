@@ -407,6 +407,7 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
         result = requests.post(
             f"{holmes_url}/api/oauth/callback",
             json=params_dict,
+            timeout=60,
         )
         result.raise_for_status()
         response_data = result.json()
