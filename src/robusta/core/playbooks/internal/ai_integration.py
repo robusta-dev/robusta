@@ -403,10 +403,9 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
         )
 
     try:
-        params_dict = params.dict(exclude={"holmes_url", "model"})
         result = requests.post(
             f"{holmes_url}/api/oauth/callback",
-            json=params_dict,
+            json=params.dict(),
             timeout=60,
         )
         result.raise_for_status()
