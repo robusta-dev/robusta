@@ -68,7 +68,7 @@ pydash = "8.0.0"
 botocore = "^1.42.19"
 boto3 = "^1.42.19"
 prometheus-api-client = "0.5.4"
-requests = "^2.33.0"
+requests = "2.33.0"
 certifi = "^2023.7.22"
 regex = "2024.5.15"
 pyjwt = "^2.12.0"
@@ -79,8 +79,8 @@ postgrest = "0.16.8"
 h2 = "^4.3.0"
 # Pin to fix CVE-2026-30922 (transitive via google-auth)
 pyasn1 = ">=0.6.3"
-# Pin to fix CVE-2026-22701 (transitive via virtualenv)
-filelock = ">=3.20.3"
+# Pin to fix CVE-2026-22701 (transitive via virtualenv); cap below 3.26 to avoid <1-month-old releases
+filelock = ">=3.20.3,<3.26"
 # Pin to fix CVE-2026-22702 (transitive via pre-commit)
 virtualenv = ">=20.36.1,<21"
 # Pin to fix CVE-2026-4539 (transitive via Sphinx)
