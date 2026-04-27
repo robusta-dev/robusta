@@ -104,7 +104,7 @@ class ActionRequestReceiver:
 
     def start_receiver(self):
         if WEBSOCKET_RELAY_ADDRESS == "":
-            logging.warning("relay address empty. Not initializing relay")
+            logging.error("relay address empty. Not initializing relay")
             return
 
         self.healthy = True
@@ -120,7 +120,12 @@ class ActionRequestReceiver:
                 ping_payload="p",
                 ping_timeout=WEBSOCKET_PING_TIMEOUT,
             )
-            logging.info("relay websocket closed")
+            if self.active:
+                logging.error(
+                    f"relay websocket closed unexpectedly, reconnecting in {INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC}s"
+                )
+            else:
+                logging.info("relay websocket closed")
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
 
     def stop(self):
@@ -281,7 +286,7 @@ class ActionRequestReceiver:
         if isinstance(error, AttributeError) and "sock" in str(error):
             logging.debug(f"Ignoring websocket-client internal close error: {error!r}")
             return
-        logging.info(f"Relay websocket error: {error}")
+        logging.error(f"Relay websocket error: {error}")
 
 
     def on_open(self, ws):
