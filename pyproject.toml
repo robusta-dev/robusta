@@ -93,7 +93,7 @@ witchhazel = "^2018.8.23"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinxcontrib-images = "^0.9.4"
 jsonref = "^0.2"
-Pillow = "^12.1.1"
+Pillow = "^12.2.0"
 sphinxcontrib-mermaid = "^0.7.1"
 cssselect = "^1.1.0"
 tinycss = "^0.4"
@@ -105,7 +105,7 @@ sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.g
 # As it does not work witn sphynx-immaterial, we need to exclude it from the dev dependencies
 # Please, install it manually if you need to run flake8
 # flake8 = "5.0.4"
-black = "22.3.0"
+black = "26.3.1"
 mypy = "0.991"
 isort = "5.10.1"
 absolufy-imports = "^0.3.1"
@@ -123,7 +123,7 @@ all = ["Flask", "grafana-api", "watchdog", "better-exceptions", "CairoSVG", "tab
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 sphinx-reredirects = "^0.1.1"
 freezegun = "^1.4.0"
-tornado = "^6.5.1"
+tornado = "^6.5.5"
 responses = "^0.25.7"
 
 [build-system]
