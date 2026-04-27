@@ -84,12 +84,21 @@ class ActionRequestReceiver:
         self.healthy = False
         self.robusta_sink = robusta_sink
 
-        self.ws = websocket.WebSocketApp(
-            WEBSOCKET_RELAY_ADDRESS,
-            on_open=self.on_open,
-            on_message=self.on_message,
-            on_error=self.on_error,
+        logging.info(
+            f"Initializing relay receiver (address={WEBSOCKET_RELAY_ADDRESS!r}, "
+            f"account_id={self.account_id!r}, cluster_name={self.cluster_name!r})"
         )
+
+        try:
+            self.ws = websocket.WebSocketApp(
+                WEBSOCKET_RELAY_ADDRESS,
+                on_open=self.on_open,
+                on_message=self.on_message,
+                on_error=self.on_error,
+            )
+        except Exception:
+            logging.exception("Failed to construct relay WebSocketApp; relay will not start")
+            raise
 
         self._executor = ThreadPoolExecutor(max_workers=WEBSOCKET_THREADPOOL_SIZE)
 

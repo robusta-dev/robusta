@@ -88,7 +88,7 @@ class ConfigLoader:
     def __reload_receiver(self) -> None:
         robusta_sinks = self.registry.get_sinks().get_robusta_sinks()
         if not robusta_sinks:
-            logging.info("No robusta sinks found, skipping receiver creation")
+            logging.warning("No robusta sinks found, skipping receiver creation")
             return
         robusta_sink = robusta_sinks[0]
 
