@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams, SinkBaseParams
-from robusta.core.sinks.timing import TimeSlice, TimeSliceAlways
+from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams, MuteInterval, SinkBaseParams
+from robusta.core.sinks.timing import MuteDateInterval, TimeSlice, TimeSliceAlways
 
 
 KeyT = Tuple[str, ...]
@@ -71,6 +71,7 @@ class SinkBase(ABC):
         self.signing_key = global_config.get("signing_key", "")
 
         self.time_slices = self._build_time_slices_from_params(self.params.activity)
+        self.mute_date_intervals = self._build_mute_intervals_from_params(self.params.mute_intervals)
 
         self.grouping_summary_mode = False
         self.grouping_enabled = False
@@ -151,6 +152,14 @@ class SinkBase(ABC):
     def _interval_to_time_slice(self, timezone: str, interval: ActivityInterval):
         return TimeSlice(interval.days, [(time.start, time.end) for time in interval.hours], timezone)
 
+    def _build_mute_intervals_from_params(self, params: Optional[List[MuteInterval]]):
+        if not params:
+            return []
+        return [
+            MuteDateInterval(interval.start_date, interval.end_date, interval.timezone)
+            for interval in params
+        ]
+
     def is_global_config_changed(self) -> bool:
         # registry global config can be updated without these stored values being changed
         global_config = self.registry.get_global_config()
@@ -163,6 +172,8 @@ class SinkBase(ABC):
         pass
 
     def accepts(self, finding: Finding) -> bool:
+        if any(mute.is_muted_now() for mute in self.mute_date_intervals):
+            return False
         return (
             finding.matches(self.params.match, self.params.scope)
             and any(time_slice.is_active_now() for time_slice in self.time_slices)

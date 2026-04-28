@@ -116,6 +116,31 @@ Add the following to your ``values.yaml`` file and upgrade:
           value: "https://api.robusta.dev/slack/"
 
 
+Handling Slack Rate Limits
+-------------------------------------------------------------------
+
+Slack's Web API rate-limits calls to ``chat.postMessage`` (roughly one message per
+second per channel). When the limit is exceeded, Slack returns HTTP ``429 Too Many
+Requests`` with a ``Retry-After`` header (in seconds). Robusta's Slack sink uses
+the official ``slack-sdk`` built-in ``RateLimitErrorRetryHandler``, which transparently
+waits for the duration specified by ``Retry-After`` and retries the request.
+
+If you see the error ``ratelimited`` in the runner logs, or notifications are being
+dropped during alert bursts, you can increase the number of retry attempts with the
+``SLACK_RATE_LIMIT_RETRIES`` environment variable on the runner pod (default: ``3``).
+
+.. code-block:: yaml
+
+    runner:
+        additional_env_vars:
+        - name: SLACK_RATE_LIMIT_RETRIES
+          value: "5"
+
+Higher values make the sink more resilient to sustained rate limiting at the cost
+of longer delays between a notification being generated and being delivered — each
+retry waits for the ``Retry-After`` value returned by Slack (typically a few seconds,
+but can be longer under heavy throttling).
+
 Redirect to Platform
 -------------------------------------------------------------------
 

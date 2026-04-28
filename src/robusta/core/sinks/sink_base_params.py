@@ -57,6 +57,42 @@ class ActivityParams(BaseModel):
         return intervals
 
 
+DATE_TIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
+
+
+def check_date_time_format(value: str) -> str:
+    if not DATE_TIME_RE.match(value):
+        raise ValueError(f"invalid date-time: {value}. Expected format: YYYY-MM-DD HH:MM")
+    date_part, time_part = value.split(" ", 1)
+    year, month, day = date_part.split("-")
+    hour, minute = time_part.split(":")
+    year, month, day, hour, minute = int(year), int(month), int(day), int(hour), int(minute)
+    if not (1 <= month <= 12):
+        raise ValueError(f"invalid month: {month}")
+    if not (1 <= day <= 31):
+        raise ValueError(f"invalid day: {day}")
+    if not (0 <= hour <= 23):
+        raise ValueError(f"invalid hour: {hour}")
+    if not (0 <= minute <= 59):
+        raise ValueError(f"invalid minute: {minute}")
+    return value
+
+
+class MuteInterval(BaseModel):
+    start_date: str  # YYYY-MM-DD HH:MM
+    end_date: str    # YYYY-MM-DD HH:MM
+    timezone: str = "UTC"
+
+    _validator_start = validator("start_date", allow_reuse=True)(check_date_time_format)
+    _validator_end = validator("end_date", allow_reuse=True)(check_date_time_format)
+
+    @validator("timezone")
+    def check_timezone(cls, timezone: str):
+        if timezone not in pytz.all_timezones:
+            raise ValueError(f"unknown timezone {timezone}")
+        return timezone
+
+
 class RegularNotificationModeParams(BaseModel):
     # This is mandatory because using the regular mode without setting it
     # would make no sense - all the notifications would just pass through
@@ -108,6 +144,7 @@ class SinkBaseParams(ABC, BaseModel):
     match: dict = {}
     scope: Optional[ScopeParams]
     activity: Optional[ActivityParams]
+    mute_intervals: Optional[List[MuteInterval]]
     grouping: Optional[GroupingParams]
     stop: bool = False  # Stop processing if this sink has been matched
 
