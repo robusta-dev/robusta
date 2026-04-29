@@ -1,6 +1,6 @@
 import logging
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, SecretStr, validator, Field
 
@@ -233,6 +233,25 @@ class HolmesOAuthParams(ActionParams):
     """
 
     toolset_name: str
+
+    class Config:
+        extra = "allow"
+
+
+class HolmesFeedbackParams(HolmesParams):
+    """
+    Proxies user feedback (thumbs up/down) on a Holmes answer to the Holmes server.
+
+    :var request_id: The id Holmes attached to the original chat answer (from AI_ANSWER_END metadata).
+    :var sentiment: "thumbs_up" or "thumbs_down".
+    :var category: Optional reason category (e.g. "wrong_answer", "not_helpful", "other").
+    :var comment: Optional free-text user comment.
+    """
+
+    request_id: str
+    sentiment: Literal["thumbs_up", "thumbs_down"]
+    category: Optional[str] = None
+    comment: Optional[str] = None
 
     class Config:
         extra = "allow"

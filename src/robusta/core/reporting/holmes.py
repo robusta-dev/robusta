@@ -67,6 +67,23 @@ class HolmesIssueChatRequest(HolmesChatRequest):
     issue_type: str
 
 
+class HolmesFeedbackRequest(BaseModel):
+    """
+    Request model for Holmes feedback API.
+
+    Forwarded unchanged to the Holmes server's POST /api/feedback endpoint,
+    which UPDATEs the HolmesUsageEvents row keyed by request_id.
+    """
+
+    request_id: str
+    sentiment: str
+    category: Optional[str] = None
+    comment: Optional[str] = None
+
+    class Config:
+        extra = "allow"
+
+
 class ToolCallResult(BaseModel):
     tool_name: str
     description: str
