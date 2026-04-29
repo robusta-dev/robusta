@@ -1,5 +1,5 @@
 import logging
-from dataclasses import InitVar, is_dataclass
+from dataclasses import InitVar, dataclass, field, is_dataclass, _FIELD
 from inspect import getmodule, signature
 from typing import Dict, List, Optional, Union, get_type_hints
 
@@ -44,7 +44,41 @@ def create_monkey_patches():
     logging.info("Creating kubernetes ContainerImage monkey patch")
     EventsV1Event.event_time = EventsV1Event.event_time.setter(event_time)
     patch_on_pod_conditions()
+    patch_lifecycle_handler_sleep()
     monkey_patches_applied = True
+
+
+@dataclass
+class SleepAction(HikaruBase):
+    """LifecycleHandler.sleep action, GA in Kubernetes 1.34.
+
+    Hikaru's bundled v1 model (rel_1_26) predates this field, so we add it here
+    to ensure preStop/postStart sleep handlers are parsed and diffed correctly.
+    """
+
+    seconds: int = 0
+
+
+def patch_lifecycle_handler_sleep():
+    from hikaru.model.rel_1_26 import v1 as v1_pkg
+    from hikaru.model.rel_1_26.v1 import LifecycleHandler
+
+    if "sleep" in LifecycleHandler.__dataclass_fields__:
+        return
+
+    LifecycleHandler.__annotations__["sleep"] = Optional[SleepAction]
+    LifecycleHandler.sleep = None
+    sleep_field = field(default=None)
+    sleep_field.name = "sleep"
+    sleep_field.type = Optional[SleepAction]
+    sleep_field._field_type = _FIELD
+    LifecycleHandler.__dataclass_fields__["sleep"] = sleep_field
+
+    v1_pkg.SleepAction = SleepAction
+    v1_pkg.v1.SleepAction = SleepAction
+
+    LifecycleHandler.cached_args = None
+    LifecycleHandler.cached_hints = None
 
 
 def patch_on_pod_conditions():
