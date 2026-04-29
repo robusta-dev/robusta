@@ -14,6 +14,7 @@ from robusta.integrations.kubernetes.base_triggers import (
     DEFAULT_CHANGE_INCLUDE,
     K8sBaseTrigger,
     K8sTriggerChangeFilters,
+    _normalize_lifecycle_sleep,
 )
 
 
@@ -81,3 +82,88 @@ class TestK8sBaseTrigger:
         assert diff.formatted_path == expected_change_path
         assert diff.other_value == old_value
         assert diff.value == expected_diff_new_value
+
+
+class TestNormalizeLifecycleSleep:
+    def _wrap_container(self, lifecycle):
+        return {
+            "spec": {
+                "template": {
+                    "spec": {
+                        "containers": [
+                            {"name": "main", "image": "busybox", "lifecycle": lifecycle}
+                        ]
+                    }
+                }
+            }
+        }
+
+    def test_native_sleep_prestop_is_rewritten_to_exec(self):
+        obj = self._wrap_container({"preStop": {"sleep": {"seconds": 10}}})
+        _normalize_lifecycle_sleep(obj)
+        handler = obj["spec"]["template"]["spec"]["containers"][0]["lifecycle"]["preStop"]
+        assert handler == {"exec": {"command": ["sleep", "10"]}}
+
+    def test_native_sleep_poststart_is_rewritten_to_exec(self):
+        obj = self._wrap_container({"postStart": {"sleep": {"seconds": 5}}})
+        _normalize_lifecycle_sleep(obj)
+        handler = obj["spec"]["template"]["spec"]["containers"][0]["lifecycle"]["postStart"]
+        assert handler == {"exec": {"command": ["sleep", "5"]}}
+
+    def test_existing_exec_handler_is_left_untouched(self):
+        lifecycle = {"preStop": {"exec": {"command": ["sleep", "10"]}}}
+        obj = self._wrap_container(lifecycle)
+        _normalize_lifecycle_sleep(obj)
+        handler = obj["spec"]["template"]["spec"]["containers"][0]["lifecycle"]["preStop"]
+        assert handler == {"exec": {"command": ["sleep", "10"]}}
+
+    def test_migration_from_exec_to_native_sleep_yields_no_diff(self):
+        # The original bug: switching between equivalent forms generated a notification.
+        old_obj = self._wrap_container({"preStop": {"exec": {"command": ["sleep", "10"]}}})
+        new_obj = self._wrap_container({"preStop": {"sleep": {"seconds": 10}}})
+        _normalize_lifecycle_sleep(old_obj)
+        _normalize_lifecycle_sleep(new_obj)
+        assert old_obj == new_obj
+
+    def test_handles_init_containers_and_multiple_containers(self):
+        obj = {
+            "spec": {
+                "template": {
+                    "spec": {
+                        "initContainers": [
+                            {"name": "init", "lifecycle": {"preStop": {"sleep": {"seconds": 2}}}}
+                        ],
+                        "containers": [
+                            {"name": "a", "lifecycle": {"preStop": {"sleep": {"seconds": 3}}}},
+                            {"name": "b", "lifecycle": {"postStart": {"sleep": {"seconds": 4}}}},
+                        ],
+                    }
+                }
+            }
+        }
+        _normalize_lifecycle_sleep(obj)
+        init = obj["spec"]["template"]["spec"]["initContainers"][0]
+        a, b = obj["spec"]["template"]["spec"]["containers"]
+        assert init["lifecycle"]["preStop"] == {"exec": {"command": ["sleep", "2"]}}
+        assert a["lifecycle"]["preStop"] == {"exec": {"command": ["sleep", "3"]}}
+        assert b["lifecycle"]["postStart"] == {"exec": {"command": ["sleep", "4"]}}
+
+    def test_no_op_on_unrelated_objects(self):
+        obj = {"spec": {"replicas": 3, "selector": {"matchLabels": {"app": "x"}}}}
+        snapshot = json.dumps(obj, sort_keys=True)
+        _normalize_lifecycle_sleep(obj)
+        assert json.dumps(obj, sort_keys=True) == snapshot
+
+    def test_invalid_seconds_value_is_left_untouched(self):
+        obj = self._wrap_container({"preStop": {"sleep": {"seconds": "ten"}}})
+        _normalize_lifecycle_sleep(obj)
+        handler = obj["spec"]["template"]["spec"]["containers"][0]["lifecycle"]["preStop"]
+        assert handler == {"sleep": {"seconds": "ten"}}
+
+    def test_exec_takes_precedence_when_both_present(self):
+        obj = self._wrap_container(
+            {"preStop": {"exec": {"command": ["echo", "hi"]}, "sleep": {"seconds": 7}}}
+        )
+        _normalize_lifecycle_sleep(obj)
+        handler = obj["spec"]["template"]["spec"]["containers"][0]["lifecycle"]["preStop"]
+        assert handler == {"exec": {"command": ["echo", "hi"]}, "sleep": {"seconds": 7}}

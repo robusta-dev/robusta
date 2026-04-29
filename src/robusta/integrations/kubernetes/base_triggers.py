@@ -22,6 +22,34 @@ OBJ = "obj"
 OLD_OBJ = "old_obj"
 
 
+def _normalize_lifecycle_sleep(node: Any) -> None:
+    """Recursively rewrite container `lifecycle.{preStop,postStart}.sleep: {seconds: N}`
+    to the functionally equivalent `exec: {command: ["sleep", "N"]}`.
+
+    The hikaru-model-26 LifecycleHandler does not know about the native sleep action, so
+    the field would otherwise be dropped during deserialization. Normalizing both the new
+    and the old object keeps diffs honest when users migrate between the two equivalent
+    forms.
+    """
+    if isinstance(node, dict):
+        for hook in ("preStop", "postStart"):
+            handler = node.get(hook)
+            if (
+                isinstance(handler, dict)
+                and isinstance(handler.get("sleep"), dict)
+                and "exec" not in handler
+            ):
+                seconds = handler["sleep"].get("seconds")
+                if isinstance(seconds, (int, float)) and not isinstance(seconds, bool):
+                    handler.pop("sleep")
+                    handler["exec"] = {"command": ["sleep", str(int(seconds))]}
+        for value in node.values():
+            _normalize_lifecycle_sleep(value)
+    elif isinstance(node, list):
+        for item in node:
+            _normalize_lifecycle_sleep(item)
+
+
 class IncomingK8sEventPayload(BaseModel):
     """
     The format of incoming payloads containing kubernetes events. This is mostly used for deserialization.
@@ -205,6 +233,13 @@ class K8sBaseTrigger(BaseTrigger):
             for rule in rules:
                 if isinstance(rule, dict) and "onPodConditions" not in rule:
                     rule["onPodConditions"] = []
+
+        # Normalize the native LifecycleHandler.sleep field (alpha in K8s 1.29, GA in 1.34)
+        # to the functionally equivalent exec form so it survives hikaru-model-26 parsing.
+        # Without this, the unknown "sleep" field is silently dropped on load and a migration
+        # from `preStop.exec: [sleep, N]` to `preStop.sleep: {seconds: N}` is reported as the
+        # exec handler disappearing into None.
+        _normalize_lifecycle_sleep(obj)
 
     @classmethod
     def __load_hikaru_obj(cls, obj: Dict[Any, Any], model_class: type) -> HikaruBase:
