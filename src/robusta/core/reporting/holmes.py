@@ -51,6 +51,12 @@ class HolmesChatRequest(BaseModel):
     enable_tool_approval: bool = Field(default=False)
     tool_decisions: Optional[List[ToolApprovalDecision]] = None
     additional_system_prompt: Optional[str] = None
+    request_type: Optional[str] = None
+    request_source: Optional[str] = None
+    source_ref: Optional[str] = None
+    conversation_id: Optional[str] = None
+    conversation_source: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
 
     class Config:
         extra = "allow"
