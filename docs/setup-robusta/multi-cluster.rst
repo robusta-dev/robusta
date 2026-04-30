@@ -21,7 +21,7 @@ Installing Robusta on multiple clusters
 
 .. warning::
 
-      Do **not** generate a fresh ``generated_values.yaml`` for each cluster. Each generated config has a unique account ID, and the Robusta UI groups all your clusters by that ID. Reuse the same ``generated_values.yaml`` across clusters so they appear together.
+      Set a unique ``clusterName`` on each cluster (via ``--set clusterName=<YOUR_CLUSTER_NAME>``). The rest of ``generated_values.yaml`` stays the same across all clusters — that's how the Robusta UI groups them under the same account.
 
 Frequently Asked Questions
 ----------------------------
