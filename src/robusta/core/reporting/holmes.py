@@ -56,6 +56,7 @@ class HolmesChatRequest(BaseModel):
     source_ref: Optional[str] = None
     conversation_id: Optional[str] = None
     conversation_source: Optional[str] = None
+    is_internal: Optional[bool] = None
     meta: Optional[Dict[str, Any]] = None
 
     class Config:
