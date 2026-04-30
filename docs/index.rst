@@ -43,7 +43,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Other Features
+   :caption: Robusta Classic
    :hidden:
 
    Send Alerts to Robusta <configuration/index>

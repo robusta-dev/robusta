@@ -20,14 +20,14 @@ Quick Start
 
 **Option 1: Automatic Setup (Recommended)**
 
-When installing Robusta, run ``robusta gen-config`` and follow the prompts. This automatically configures Slack using our `official
+Sign up for a `free Robusta account <https://platform.robusta.dev/signup>`_ and connect Slack during the signup wizard. This automatically configures Slack using our `official
 Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_.
 
 Note: Robusta can only write messages and doesn't require read permissions.
 
 **Option 2: Manual Configuration**
 
-Generate a Slack API key by running ``robusta integrations slack``, then add to your ``generated_values.yaml``:
+Generate a Slack API key on your own, then add it to your ``generated_values.yaml``:
 
 .. code-block:: yaml
 
