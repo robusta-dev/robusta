@@ -27,7 +27,7 @@ Note: Robusta can only write messages and doesn't require read permissions.
 
 **Option 2: Manual Configuration**
 
-Generate a Slack API key on your own, then add it to your ``generated_values.yaml``:
+Generate a Slack API key on your own (see :ref:`Creating Custom Slack Apps` below), then add it to your ``generated_values.yaml``:
 
 .. code-block:: yaml
 
