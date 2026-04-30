@@ -41,9 +41,29 @@ Generate a Slack API key by running ``robusta integrations slack``, then add to 
          channel_override: DYNAMIC SLACK CHANNEL OVERRIDE (Optional)
          investigate_link: true/false # optional, if false no investigate links/buttons will be included in Slack messages
 
-.. warning::
+.. tip::
 
-    If you don't want to put your Slack key in Helm values, you can use a secret. See the :ref:`Managing Secrets <Managing Secrets>` section for more information.
+    **Recommended: Load API keys from Kubernetes Secrets**
+
+    Instead of hardcoding your Slack API key, load it from a Kubernetes Secret:
+
+    .. code-block:: yaml
+
+       runner:
+         additional_env_vars:
+           - name: SLACK_API_KEY
+             valueFrom:
+               secretKeyRef:
+                 name: robusta-slack-secrets
+                 key: api_key
+
+       sinksConfig:
+         - slack_sink:
+             name: main_slack_sink
+             api_key: "{{ env.SLACK_API_KEY }}"
+             slack_channel: alerts
+
+    For complete details, see :ref:`Managing Secrets`.
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>` to apply the new configuration.
 
