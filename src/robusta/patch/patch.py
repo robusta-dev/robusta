@@ -1,5 +1,5 @@
 import logging
-from dataclasses import InitVar, dataclass, field, is_dataclass, _FIELD
+from dataclasses import InitVar, dataclass, field, is_dataclass
 from inspect import getmodule, signature
 from typing import Dict, List, Optional, Union, get_type_hints
 
@@ -71,7 +71,10 @@ def patch_lifecycle_handler_sleep():
     sleep_field = field(default=None)
     sleep_field.name = "sleep"
     sleep_field.type = Optional[SleepAction]
-    sleep_field._field_type = _FIELD
+    # Borrow _field_type from an existing field so dataclasses.fields() picks
+    # this one up, without importing the private dataclasses._FIELD sentinel.
+    existing_field = next(iter(LifecycleHandler.__dataclass_fields__.values()))
+    sleep_field._field_type = existing_field._field_type
     LifecycleHandler.__dataclass_fields__["sleep"] = sleep_field
 
     v1_pkg.SleepAction = SleepAction
