@@ -113,6 +113,7 @@ lightActions:
 - holmes_issue_chat
 - holmes_chat
 - holmes_oauth
+- holmes_feedback
 - list_pods
 - kubectl_describe
 - fetch_resource_yaml
