@@ -53,6 +53,7 @@
    Alert Routing <notification-routing/index>
    CRDs Monitoring <setup-robusta/crds>
    Playbooks <playbook-reference/index>
+   Self-Monitoring <setup-robusta/robusta-runner-metrics>
 
 .. toctree::
    :maxdepth: 4

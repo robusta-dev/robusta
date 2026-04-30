@@ -8,10 +8,7 @@ On rare occasions, in addition to a ``helm upgrade``, some manual steps are requ
 Does my upgrade require manual steps?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You will need to perform a :ref:`Manual Upgrade` when both:
-
-* Robusta's installation fails with a ``com.coreos.monitoring.v1.Prometheus.spec`` error.
-* The embedded Prometheus is enabled (``enablePrometheusStack: true``)
+A :ref:`Manual Upgrade` is only relevant for older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). You'll know you need it if ``helm upgrade`` fails with a ``com.coreos.monitoring.v1.Prometheus.spec`` error.
 
 In all other cases, you can do a :ref:`Simple Upgrade` and no more.
 
@@ -45,19 +42,21 @@ Verify that Robusta is running and there are no errors in the logs:
 
 .. code-block:: bash
 
-    robusta logs
+    kubectl logs -n <NAMESPACE> -l app=robusta-runner
 
 
 Manual Upgrade
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In addition to running ``helm upgrade``, some version updates require additional steps.
+.. note::
+
+    This section only applies to older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). New installs do not need this.
 
 Why are manual upgrades necessary?
 ------------------------------------
 
-Robusta bundles kube-prometheus-stack, which uses `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_.
-Helm can't update CRDs, so we update them ourselves. See the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_ for details.
+Older Robusta Classic versions bundled kube-prometheus-stack, which uses `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_.
+Helm can't update CRDs, so we updated them manually. See the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_ for details.
 
 Manual upgrade instructions
 ----------------------------------
@@ -97,7 +96,7 @@ Manual upgrade instructions
 
 .. code-block:: bash
 
-    robusta logs
+    kubectl logs -n <NAMESPACE> -l app=robusta-runner
 
 Installing pre-releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

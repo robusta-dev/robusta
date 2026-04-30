@@ -17,7 +17,6 @@
    upgrade
    tuning-performance
    configuration-secrets
-   robusta-runner-metrics
    supported-clusters
    openshift
    node-selector
