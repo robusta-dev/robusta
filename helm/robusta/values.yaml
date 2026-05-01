@@ -756,6 +756,13 @@ runner:
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
   setKRRSecurityContext: false
+  #Enabled custom DNS configuration for runner
+  dnsConfig:
+    enabled: false
+    policy: None
+    nameservers: []
+    searches: []
+    options: []
 # CRD permissions for common Kubernetes operators and tools
   crdPermissions:
     argo: true

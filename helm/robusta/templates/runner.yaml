@@ -42,6 +42,23 @@ spec:
       securityContext:
       {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.runner.dnsConfig.enabled }}
+      dnsPolicy: {{ .Values.runner.dnsConfig.policy | quote }}
+        {{- with .Values.runner.dnsConfig.nameservers }}
+        nameservers:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.runner.dnsConfig.searches }}
+        searches:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.runner.dnsConfig.options }}
+        options:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{ else }}
+      dnsPolicy: ClusterFirst
+      {{- end }}
       {{- if .Values.runner.hardenedFs }}
       initContainers:
       - name: setup-venv
