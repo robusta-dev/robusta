@@ -759,7 +759,7 @@ runner:
   #Enabled custom DNS configuration for runner
   dnsConfig:
     enabled: false
-    policy: None
+    policy: ClusterFirst
     nameservers: []
     searches: []
     options: []
