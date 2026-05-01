@@ -44,6 +44,7 @@ spec:
       {{- end }}
       {{- if .Values.runner.dnsConfig.enabled }}
       dnsPolicy: {{ .Values.runner.dnsConfig.policy | quote }}
+      dnsConfig:
         {{- with .Values.runner.dnsConfig.nameservers }}
         nameservers:
           {{- toYaml . | nindent 10 }}
