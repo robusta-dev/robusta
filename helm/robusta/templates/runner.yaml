@@ -1,3 +1,4 @@
+{{- if .Values.runner.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -330,4 +331,4 @@ type: Opaque
 stringData:
   SENTRY_DSN: {{ $sentryDsn }}
 {{- end }}
-
+{{- end }}
