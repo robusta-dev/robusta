@@ -25,7 +25,12 @@ The SaaS Platform is `free to get started <https://home.robusta.dev/pricing>`_, 
 Open Source
 ^^^^^^^^^^^^
 
-`HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — the SRE agent at the core of Robusta — is MIT-licensed and a CNCF sandbox project. Standalone HolmesGPT is CLI- and HTTP-API-only. See `holmesgpt.dev <https://holmesgpt.dev/>`_ for standalone usage.
+`HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — the SRE agent at the core of Robusta — is MIT-licensed and a CNCF sandbox project.
+
+Standalone HolmesGPT:
+
+- CLI only — no web UI
+- HTTP API for programmatic access
 
 The Robusta Platform (SaaS or Self-Hosted) adds on top:
 
