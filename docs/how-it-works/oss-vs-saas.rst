@@ -25,7 +25,13 @@ The SaaS Platform is `free to get started <https://home.robusta.dev/pricing>`_, 
 Open Source
 ^^^^^^^^^^^^
 
-`HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — the SRE agent at the core of Robusta — is MIT-licensed and a CNCF sandbox project. It can be used standalone via CLI or HTTP API, without the Platform UI. See `holmesgpt.dev <https://holmesgpt.dev/>`_ for standalone usage.
+`HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — the SRE agent at the core of Robusta — is MIT-licensed and a CNCF sandbox project. Standalone HolmesGPT is CLI- and HTTP-API-only. See `holmesgpt.dev <https://holmesgpt.dev/>`_ for standalone usage.
+
+The Robusta Platform (SaaS or Self-Hosted) adds on top:
+
+- A web interface for alert triage and investigation history
+- HolmesGPT bots for Slack and Microsoft Teams
+- Automatic alert triage and grouping
 
 Robusta Classic
 ^^^^^^^^^^^^^^^^
@@ -33,8 +39,3 @@ Robusta Classic
 Before HolmesGPT, Robusta's open source engine focused on rule-based automation — enriching alerts with extra context (logs, pod status, resource graphs) and routing them to Slack, Teams, and other sinks using configurable playbooks. This is sometimes referred to as **Robusta Classic**.
 
 If you are running Robusta Classic, upgrading to HolmesGPT is a configuration change — no migration required.
-
-Learn More
-^^^^^^^^^^^^
-- `Pricing Plans <https://home.robusta.dev/pricing>`_ - Compare pricing options and start a free trial
-- `HolmesGPT on GitHub <https://github.com/robusta-dev/holmesGPT>`_
