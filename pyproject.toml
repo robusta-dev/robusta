@@ -56,7 +56,8 @@ humanize = "^3.13.1"
 # we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
-cryptography = "^46.0.5"
+# Pin to fix CVE-2026-39892 (Critical): cryptography buffer overflow with non-contiguous buffers
+cryptography = "^46.0.7"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
 prometrix = "0.2.11"
@@ -69,7 +70,8 @@ botocore = "^1.42.19"
 boto3 = "^1.42.19"
 prometheus-api-client = "0.5.4"
 requests = "^2.32.3"
-certifi = "^2023.7.22"
+# Bump to fix certifi CVE flagged by customer scan; date-versioned, so use >= rather than caret
+certifi = ">=2026.4.22"
 regex = "2024.5.15"
 pyjwt = "^2.12.0"
 urllib3 = "^2.6.3"
