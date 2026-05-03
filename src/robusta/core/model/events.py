@@ -155,6 +155,11 @@ class ExecutionBaseEvent:
                 if aggregation_key:
                     finding.aggregation_key = aggregation_key
 
+    def inject_finding_labels(self, labels: Dict[str, str]):
+        for sink in self.named_sinks:
+            for finding in self.sink_findings[sink]:
+                finding.subject.labels.update(labels)
+
     def extend_description(self, text: str):
         for sink in self.named_sinks:
             for finding in self.sink_findings[sink]:

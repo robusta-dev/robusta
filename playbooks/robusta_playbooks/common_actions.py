@@ -1,9 +1,36 @@
-from collections import defaultdict
-from string import Template
-from typing import Dict, Optional
+import logging
+import re
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel
 
 from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingSeverity, action
 from robusta.utils.parsing import format_event_templated_string
+
+
+class FindingLabelRule(BaseModel):
+    """
+    A single rule that derives a label value from finding subject fields, modelled after Prometheus relabel_config.
+
+    :var source_fields: One or more source fields whose values are concatenated (with ``separator``) to form
+        the input string. Supported fields: ``namespace``, ``name``, ``node``, ``kind``, or dotted paths
+        ``labels.<key>``, ``annotations.<key>``.
+    :var regex: A Python ``re.fullmatch`` pattern tested against the concatenated source value.
+        Capture groups are available as ``$1``, ``$2`` … in ``replacement``.
+    :var target_label: The label key to set on the finding when the regex matches.
+    :var replacement: The value to write to ``target_label``. Use ``$1`` / ``$2`` … for capture groups.
+    :var separator: String used to join multiple source values before matching. Defaults to ``;``.
+    :example source_fields: ["namespace"]
+    :example regex: "infra-.*|kube-system"
+    :example target_label: "team"
+    :example replacement: "infra-team"
+    """
+
+    source_fields: List[str]
+    regex: str
+    target_label: str
+    replacement: str
+    separator: str = ";"
 
 
 class FindingOverrides(ActionParams):
@@ -11,14 +38,24 @@ class FindingOverrides(ActionParams):
     :var title: Overriding finding title. Title can be templated with name/namespace/kind/node of the resource, if applicable
     :var description: Overriding finding description. Description can be templated with name/namespace/kind/node of the resource, if applicable
     :var severity: Overriding finding severity. Allowed values: DEBUG, INFO, LOW, HIGH
+    :var finding_label_rules: A list of rules (modelled after Prometheus ``relabel_config``) that derive label
+        values from finding subject fields and attach them to the finding. Rules are evaluated in order; later
+        rules may overwrite earlier ones. Supported source fields: ``namespace``, ``name``, ``node``, ``kind``,
+        ``labels.<key>``, ``annotations.<key>``.
     :example severity: DEBUG
     :example title: Resource $kind/$namespace/$name is in trouble
+    :example finding_label_rules: |
+        - source_fields: [namespace]
+          regex: 'infra-.*|kube-system'
+          target_label: team
+          replacement: infra-team
     """
 
     title: Optional[str] = None
     description: Optional[str] = None
     severity: Optional[str] = None
     aggregation_key: Optional[str] = None
+    finding_label_rules: Optional[List[FindingLabelRule]] = None
 
 
 @action
@@ -35,10 +72,33 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     subject = event.get_subject()
     title = format_event_templated_string(subject, params.title) if params.title else None
     description = format_event_templated_string(subject, params.description) if params.description else None
-
     aggregation_key = format_event_templated_string(subject, params.aggregation_key) if params.aggregation_key else None
 
     event.override_finding_attributes(title, description, severity, aggregation_key)
+
+    if params.finding_label_rules:
+        source_map: Dict[str, str] = {
+            "namespace": subject.namespace or "",
+            "name": subject.name or "",
+            "node": subject.node or "",
+            "kind": subject.subject_type.value if subject.subject_type else "",
+            **{f"labels.{k}": v for k, v in subject.labels.items()},
+            **{f"annotations.{k}": v for k, v in subject.annotations.items()},
+        }
+
+        labels_to_inject: Dict[str, str] = {}
+        for rule in params.finding_label_rules:
+            source_value = rule.separator.join(source_map.get(src, "") for src in rule.source_fields)
+            m = re.fullmatch(rule.regex, source_value)
+            if m:
+                replacement = rule.replacement
+                for i, group in enumerate(m.groups(), 1):
+                    replacement = replacement.replace(f"${i}", group or "")
+                labels_to_inject[rule.target_label] = replacement
+
+        if labels_to_inject:
+            logging.info(f"[customise_finding] injecting labels into finding: {labels_to_inject}")
+            event.inject_finding_labels(labels_to_inject)
 
 
 class FindingFields(ActionParams):
@@ -52,7 +112,7 @@ class FindingFields(ActionParams):
         |
         Generally, each instance of create_finding in your playbooks should specify a unique Aggregation Key, like "Crashing Pod" or "OOMKill".
         |
-        Aggregation Keys should generally not include Pod names or other strings that change. If you include dynamic data in the Aggregation Key, each unique Aggregation Key will create it’s own grouping.
+        Aggregation Keys should generally not include Pod names or other strings that change. If you include dynamic data in the Aggregation Key, each unique Aggregation Key will create it's own grouping.
     :var description: Finding description. Description can be templated
     :var severity: Finding severity. Allowed values: DEBUG, INFO, LOW, HIGH
 
