@@ -2,10 +2,12 @@ import base64
 import json
 import pytest
 from unittest.mock import Mock, patch
-from robusta.core.model.base_params import HolmesChatParams
+from pydantic import ValidationError
+from robusta.core.model.base_params import HolmesChatParams, HolmesFeedbackParams
 from robusta.core.model.events import ExecutionBaseEvent
-from robusta.core.playbooks.internal.ai_integration import holmes_chat
+from robusta.core.playbooks.internal.ai_integration import holmes_chat, holmes_feedback
 from robusta.core.stream.utils import create_sse_message, StreamEvents
+from robusta.utils.error_codes import ActionException
 
 
 def parse_sse_message(sse_message: str):
@@ -189,3 +191,130 @@ def test_holmes_chat_streaming_with_sse_events(
             "analysis": "some analysis... add the  rest of analysis",
         },
     )
+
+
+class MockFeedbackResponse:
+    """Mock response object for the small synchronous holmes_feedback POST."""
+
+    def __init__(self, status_code=200, body=None):
+        self.status_code = status_code
+        self._body = body if body is not None else {}
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            import requests
+            err = requests.HTTPError(f"{self.status_code} error")
+            err.response = Mock(status_code=self.status_code, text="")
+            raise err
+
+    def json(self):
+        return self._body
+
+
+@patch("robusta.core.playbooks.internal.ai_integration.requests.post")
+def test_holmes_feedback_posts_correct_body(mock_post, mock_event):
+    """Happy path: POSTs the FE body unchanged to {holmes_url}/api/feedback and adds a finding."""
+    mock_post.return_value = MockFeedbackResponse(status_code=200)
+
+    params = HolmesFeedbackParams(
+        request_id="req-abc-123",
+        sentiment="thumbs_down",
+        category="wrong_answer",
+        comment="missed the actual cause",
+        holmes_url="http://test-holmes:8080",
+    )
+
+    holmes_feedback(mock_event, params)
+
+    mock_post.assert_called_once()
+    call_args = mock_post.call_args
+    assert call_args[0][0] == "http://test-holmes:8080/api/feedback"
+
+    body = json.loads(call_args[1]["data"])
+    assert body["request_id"] == "req-abc-123"
+    assert body["sentiment"] == "thumbs_down"
+    assert body["category"] == "wrong_answer"
+    assert body["comment"] == "missed the actual cause"
+    # holmes_url and model are runner-only and must NOT be forwarded
+    assert "holmes_url" not in body
+    assert "model" not in body
+
+    mock_event.add_finding.assert_called_once()
+
+
+@patch("robusta.core.playbooks.internal.ai_integration.requests.post")
+def test_holmes_feedback_minimal_body(mock_post, mock_event):
+    """Optional fields default to None and are still included as null in the JSON body."""
+    mock_post.return_value = MockFeedbackResponse(status_code=200)
+
+    params = HolmesFeedbackParams(
+        request_id="req-xyz",
+        sentiment="thumbs_up",
+        holmes_url="http://test-holmes:8080",
+    )
+
+    holmes_feedback(mock_event, params)
+
+    body = json.loads(mock_post.call_args[1]["data"])
+    assert body["request_id"] == "req-xyz"
+    assert body["sentiment"] == "thumbs_up"
+    assert body["category"] is None
+    assert body["comment"] is None
+
+
+def test_holmes_feedback_missing_request_id_raises():
+    """Pydantic rejects a payload without request_id at param construction."""
+    with pytest.raises(ValidationError):
+        HolmesFeedbackParams(sentiment="thumbs_up", holmes_url="http://test-holmes:8080")
+
+
+def test_holmes_feedback_empty_request_id_raises():
+    """Pydantic rejects an empty-string request_id (min_length=1)."""
+    with pytest.raises(ValidationError):
+        HolmesFeedbackParams(
+            request_id="",
+            sentiment="thumbs_up",
+            holmes_url="http://test-holmes:8080",
+        )
+
+
+def test_holmes_feedback_invalid_sentiment_raises():
+    """Pydantic rejects a sentiment outside the Literal set."""
+    with pytest.raises(ValidationError):
+        HolmesFeedbackParams(
+            request_id="req-1",
+            sentiment="meh",
+            holmes_url="http://test-holmes:8080",
+        )
+
+
+@patch("robusta.core.playbooks.internal.ai_integration.requests.post")
+def test_holmes_feedback_holmes_5xx_raises_action_exception(mock_post, mock_event):
+    """Non-2xx from Holmes is surfaced as an ActionException via handle_holmes_error."""
+    mock_post.return_value = MockFeedbackResponse(status_code=500)
+
+    params = HolmesFeedbackParams(
+        request_id="req-1",
+        sentiment="thumbs_up",
+        holmes_url="http://test-holmes:8080",
+    )
+
+    with pytest.raises(ActionException):
+        holmes_feedback(mock_event, params)
+
+    mock_event.add_finding.assert_not_called()
+
+
+@patch("robusta.core.playbooks.internal.ai_integration.requests.post")
+def test_holmes_feedback_passes_through_200_when_row_missing(mock_post, mock_event):
+    """If Holmes returns 200 even when the row isn't found (network reorder), we accept it."""
+    mock_post.return_value = MockFeedbackResponse(status_code=200, body={"updated": False})
+
+    params = HolmesFeedbackParams(
+        request_id="req-not-yet-stored",
+        sentiment="thumbs_up",
+        holmes_url="http://test-holmes:8080",
+    )
+
+    holmes_feedback(mock_event, params)
+    mock_event.add_finding.assert_called_once()

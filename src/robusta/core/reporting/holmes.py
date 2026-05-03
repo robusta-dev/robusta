@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -51,6 +51,13 @@ class HolmesChatRequest(BaseModel):
     enable_tool_approval: bool = Field(default=False)
     tool_decisions: Optional[List[ToolApprovalDecision]] = None
     additional_system_prompt: Optional[str] = None
+    request_type: Optional[str] = None
+    request_source: Optional[str] = None
+    source_ref: Optional[str] = None
+    conversation_id: Optional[str] = None
+    conversation_source: Optional[str] = None
+    is_internal: Optional[bool] = None
+    meta: Optional[Dict[str, Any]] = None
 
     class Config:
         extra = "allow"
@@ -59,6 +66,23 @@ class HolmesChatRequest(BaseModel):
 class HolmesIssueChatRequest(HolmesChatRequest):
     investigation_result: HolmesInvestigationResult
     issue_type: str
+
+
+class HolmesFeedbackRequest(BaseModel):
+    """
+    Request model for Holmes feedback API.
+
+    Forwarded unchanged to the Holmes server's POST /api/feedback endpoint,
+    which UPDATEs the HolmesUsageEvents row keyed by request_id.
+    """
+
+    request_id: str = Field(..., min_length=1)
+    sentiment: Literal["thumbs_up", "thumbs_down"]
+    category: Optional[str] = None
+    comment: Optional[str] = None
+
+    class Config:
+        extra = "allow"
 
 
 class ToolCallResult(BaseModel):

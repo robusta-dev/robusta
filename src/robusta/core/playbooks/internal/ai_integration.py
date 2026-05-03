@@ -11,6 +11,7 @@ from robusta.core.model.base_params import (
     ChartValuesFormat,
     HolmesChatParams,
     HolmesConversationParams,
+    HolmesFeedbackParams,
     HolmesIssueChatParams,
     HolmesOAuthParams,
     ResourceInfo,
@@ -30,6 +31,7 @@ from robusta.core.reporting.holmes import (
     HolmesChatResultsBlock,
     HolmesConversationRequest,
     HolmesConversationResult,
+    HolmesFeedbackRequest,
     HolmesIssueChatRequest,
     HolmesRequest,
     HolmesResult,
@@ -422,6 +424,49 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
 
     except Exception as e:
         logging.exception("Failed to complete Holmes OAuth callback")
+        handle_holmes_error(e)
+
+
+@action
+def holmes_feedback(event: ExecutionBaseEvent, params: HolmesFeedbackParams):
+    """
+    Proxies user feedback (thumbs up/down) on a Holmes answer to the Holmes server.
+
+    The Holmes server UPDATEs the HolmesUsageEvents row keyed by request_id.
+    Best-effort: if Holmes returns 200 even when the row isn't found yet
+    (network reorder), we pass that through. Validation of request_id presence
+    and sentiment values happens at param construction via pydantic.
+    """
+    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    if not holmes_url:
+        raise ActionException(
+            ErrorCodes.HOLMES_DISCOVERY_FAILED,
+            "Robusta couldn't connect to the Holmes client.",
+        )
+
+    try:
+        params_dict = params.dict(exclude={"holmes_url", "model"})
+        holmes_req = HolmesFeedbackRequest(**params_dict)
+        result = requests.post(
+            f"{holmes_url}/api/feedback",
+            data=holmes_req.json(),
+            timeout=30,
+        )
+        result.raise_for_status()
+
+        finding = Finding(
+            title="Holmes Feedback",
+            aggregation_key="HolmesFeedbackResult",
+            subject=FindingSubject(subject_type=FindingSubjectType.TYPE_NONE),
+            finding_type=FindingType.AI_ANALYSIS,
+            failure=False,
+        )
+        event.add_finding(finding)
+
+    except Exception as e:
+        logging.exception(
+            f"Failed to send Holmes feedback for request_id={params.request_id}"
+        )
         handle_holmes_error(e)
 
 
