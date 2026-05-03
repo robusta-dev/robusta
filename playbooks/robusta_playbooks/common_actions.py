@@ -4,7 +4,17 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
-from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingSeverity, action
+from robusta.api import (
+    ActionParams,
+    EnrichmentType,
+    ExecutionBaseEvent,
+    Finding,
+    FindingSeverity,
+    SlackAnnotations,
+    TableBlock,
+    action,
+)
+from robusta.core.reporting.blocks import TableBlockFormat
 from robusta.utils.parsing import format_event_templated_string
 
 
@@ -99,6 +109,19 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
         if labels_to_inject:
             logging.info(f"[customise_finding] injecting labels into finding: {labels_to_inject}")
             event.inject_finding_labels(labels_to_inject)
+            event.add_enrichment(
+                [
+                    TableBlock(
+                        [[k, v] for (k, v) in labels_to_inject.items()],
+                        ["label", "value"],
+                        table_format=TableBlockFormat.vertical,
+                        table_name="*labels*",
+                    ),
+                ],
+                annotations={SlackAnnotations.ATTACHMENT: True},
+                enrichment_type=EnrichmentType.alert_labels,
+                title="labels",
+            )
 
 
 class FindingFields(ActionParams):
