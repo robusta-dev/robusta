@@ -788,7 +788,7 @@ kube-prometheus-stack:
         - name: 'null'
         - name:  'robusta'
           webhook_configs:
-            - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/alerts'
+            - url: 'http://{{ .Release.Name }}-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/alerts'
               send_resolved: true
     alertmanagerSpec:
       resources:
