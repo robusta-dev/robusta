@@ -268,6 +268,16 @@ def test_holmes_feedback_missing_request_id_raises():
         HolmesFeedbackParams(sentiment="thumbs_up", holmes_url="http://test-holmes:8080")
 
 
+def test_holmes_feedback_empty_request_id_raises():
+    """Pydantic rejects an empty-string request_id (min_length=1)."""
+    with pytest.raises(ValidationError):
+        HolmesFeedbackParams(
+            request_id="",
+            sentiment="thumbs_up",
+            holmes_url="http://test-holmes:8080",
+        )
+
+
 def test_holmes_feedback_invalid_sentiment_raises():
     """Pydantic rejects a sentiment outside the Literal set."""
     with pytest.raises(ValidationError):

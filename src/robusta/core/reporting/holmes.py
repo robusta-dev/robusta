@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -76,8 +76,8 @@ class HolmesFeedbackRequest(BaseModel):
     which UPDATEs the HolmesUsageEvents row keyed by request_id.
     """
 
-    request_id: str
-    sentiment: str
+    request_id: str = Field(..., min_length=1)
+    sentiment: Literal["thumbs_up", "thumbs_down"]
     category: Optional[str] = None
     comment: Optional[str] = None
 

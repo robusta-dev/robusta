@@ -249,7 +249,7 @@ class HolmesFeedbackParams(HolmesParams):
     :var comment: Optional free-text user comment.
     """
 
-    request_id: str
+    request_id: str = Field(..., min_length=1)
     sentiment: Literal["thumbs_up", "thumbs_down"]
     category: Optional[str] = None
     comment: Optional[str] = None
