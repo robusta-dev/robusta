@@ -70,7 +70,7 @@ Robusta is an AI-powered SRE agent that automatically investigates alerts and fi
 **How it works:**
 
 * **Automatic investigation** — every alert is analyzed with AI-powered root cause analysis
-* **Your data sources** — HolmesGPT connects to your existing monitoring, ITSM, and cloud tools to gather evidence
+* **Your data sources** — HolmesGPT connects to your existing monitoring, ITSM, cloud tools, and MCP servers to gather evidence
 * **Chat with your agent** — tag HolmesGPT in Slack or Teams to investigate issues on demand
 * **Centralized control** — the `Robusta Platform <https://home.robusta.dev>`_ gives you a single place to manage your SRE agents, triage alerts, and review investigation timelines
 
