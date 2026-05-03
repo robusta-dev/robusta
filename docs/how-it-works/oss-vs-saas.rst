@@ -4,9 +4,9 @@ Open Source vs SaaS
 HolmesGPT (Open Source)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-At the core of Robusta is `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — an open source, AI-powered agent that automatically investigates Kubernetes alerts and identifies root causes.
+At the core of Robusta is `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — an open source SRE agent that automatically investigates alerts and identifies root causes.
 
-HolmesGPT pulls data from your cluster logs, events, metrics, and external data sources like Prometheus, Grafana, New Relic, and more. It uses LLMs to correlate evidence across sources and produce actionable root cause analysis — turning noisy alerts into clear answers.
+HolmesGPT pulls evidence from your existing data sources — logs, events, metrics, and external tools like Prometheus, Grafana, and New Relic — to produce actionable root cause analysis.
 
 HolmesGPT is MIT-licensed and can be used standalone or as part of the Robusta platform.
 

@@ -1,7 +1,7 @@
 Architecture
 ==================
 
-Robusta uses `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_, an open source AI agent, to automatically investigate and root-cause Kubernetes alerts. HolmesGPT runs as part of the **in-cluster Agent**, connects to your existing **data sources**, and reports findings through the **Robusta Platform** (SaaS or self-hosted).
+Robusta uses `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ to automatically investigate and root-cause alerts. HolmesGPT runs as part of the **in-cluster Agent**, connects to your existing **data sources**, and reports findings through the **Robusta Platform** (SaaS or self-hosted).
 
 .. image:: ../images/architecture-overview.png
    :width: 800
