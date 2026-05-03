@@ -41,7 +41,11 @@ A test installation in OpenShift can use the existing SCC ``anyuid``.
 Optional: Giving Robusta extra debug permissions
 ---------------------------------------------------------
 
-Some lesser used Robusta features require more permissions than the baseline SCC provides.
+.. note::
+
+    This section only applies to Robusta Classic. The privileged SCC below is needed for a few Classic playbooks and is not relevant for HolmesGPT-based investigations.
+
+Some lesser used Robusta Classic features require more permissions than the baseline SCC provides.
 
 In order to support the ``python_debugger``, ``java_debugger`` and ``node_disk_analyzer``
 playbooks, permission to run a far more privileged container needs to be granted to

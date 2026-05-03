@@ -13,16 +13,16 @@ Overview
 
         How Robusta's components work together — the Agent, HolmesGPT, data sources, and the Platform.
 
-    .. grid-item-card:: :octicon:`package;1em;` Open Source vs SaaS
+    .. grid-item-card:: :octicon:`package;1em;` Deployment Options
         :class-card: sd-bg-light sd-bg-text-light
         :link: oss-vs-saas
         :link-type: doc
 
-        Compare deployment options: open source HolmesGPT, SaaS, and self-hosted.
+        SaaS, self-hosted, or open source HolmesGPT.
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    Architecture <architecture>
-   Open Source vs SaaS <oss-vs-saas>
+   Deployment Options <oss-vs-saas>

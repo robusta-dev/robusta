@@ -1,5 +1,5 @@
-Monitoring Large Clusters
-=========================
+Deploying on Large Clusters
+===========================
 
 Memory Allocation on Big Clusters
 ----------------------------------

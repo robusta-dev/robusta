@@ -43,7 +43,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Other Features
+   :caption: Robusta Classic
    :hidden:
 
    Send Alerts to Robusta <configuration/index>
@@ -53,6 +53,7 @@
    Alert Routing <notification-routing/index>
    CRDs Monitoring <setup-robusta/crds>
    Playbooks <playbook-reference/index>
+   Self-Monitoring <setup-robusta/robusta-runner-metrics>
 
 .. toctree::
    :maxdepth: 4
@@ -64,16 +65,16 @@
 Welcome to Robusta
 ====================
 
-Robusta is an AI-powered SRE agent that automatically investigates alerts and finds root causes. It is built on `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_, an open source AI agent that pulls evidence from your existing `data sources <https://holmesgpt.dev/data-sources/?tab=robusta-helm-chart>`_ and uses LLMs to pinpoint what went wrong.
+Robusta is an AI-powered SRE agent that automatically investigates alerts and finds root causes. It is built on `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_.
 
 **How it works:**
 
 * **Automatic investigation** — every alert is analyzed with AI-powered root cause analysis
-* **Your data sources** — HolmesGPT connects to your existing monitoring, ITSM, and cloud tools to gather evidence
+* **Your data sources** — HolmesGPT connects to your existing monitoring, ITSM, cloud tools, and MCP servers to gather evidence
 * **Chat with your agent** — tag HolmesGPT in Slack or Teams to investigate issues on demand
 * **Centralized control** — the `Robusta Platform <https://home.robusta.dev>`_ gives you a single place to manage your SRE agents, triage alerts, and review investigation timelines
 
-Robusta is available as **open source**, **SaaS**, or **self-hosted**. See :doc:`how-it-works/oss-vs-saas` for details.
+Robusta is available as **SaaS**, **self-hosted**, or **open source**. See :doc:`how-it-works/oss-vs-saas` for details.
 
 Ready to get started?
 ---------------------
