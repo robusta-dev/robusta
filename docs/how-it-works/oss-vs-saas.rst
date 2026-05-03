@@ -1,33 +1,36 @@
-Open Source vs SaaS
+Deployment Options
 ################################
 
-HolmesGPT (Open Source)
-^^^^^^^^^^^^^^^^^^^^^^^^
+Robusta is delivered through the **Robusta Platform** — a centralized place to control your SRE agents, triage alerts, and review investigation timelines. The Platform is available as **SaaS** (hosted by Robusta) or **Self-Hosted** (for organizations with dedicated infrastructure requirements).
 
-At the core of Robusta is `HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — an open source SRE agent that automatically investigates alerts and identifies root causes.
+SaaS (Hosted)
+^^^^^^^^^^^^^^
 
-HolmesGPT pulls evidence from your existing data sources — logs, events, metrics, and external tools like Prometheus, Grafana, and New Relic — to produce actionable root cause analysis.
+The hosted Platform runs in Robusta's infrastructure. You install the in-cluster Agent, sign up at `platform.robusta.dev <https://platform.robusta.dev/signup>`_, and your alerts and investigations stream into the hosted UI.
 
-HolmesGPT is MIT-licensed and can be used standalone or as part of the Robusta platform.
+- :doc:`Centralized alert management and triage <../configuration/exporting/robusta-pro-features>`
+- Multi-cluster visibility and historical timelines
+- HolmesGPT Slack and Teams bot
+- No infrastructure to run for the Platform itself
 
-Deployment Options
-^^^^^^^^^^^^^^^^^^^
+Most teams use SaaS — it's the fastest path to the complete feature set.
 
-- **Open Source Only**: Run HolmesGPT on its own. No web UI. CLI interface and HTTP API on OSS.
-- **SaaS**: HolmesGPT + Robusta's hosted web UI with :doc:`additional features <../configuration/exporting/robusta-pro-features>` including centralized alert management, multi-cluster visibility, and historical timelines.
-- **Self-Hosted**: HolmesGPT + on-premise web UI for organizations that require dedicated infrastructure (enterprise plans).
+Self-Hosted
+^^^^^^^^^^^^
 
-**Which should I choose?**
+The same Platform, deployed inside your own infrastructure. Intended for organizations that require dedicated infrastructure (regulatory, data residency, or air-gapped requirements).
 
-Most teams use the **SaaS** option for the complete feature set without infrastructure overhead.
+Self-hosted deployments are available on enterprise plans — contact support@robusta.dev.
 
 Pricing
 ^^^^^^^^^^^^
-HolmesGPT is and always will be free. It is a CNCF sandbox project.
 
-The Robusta Platform UI is `free to get started <https://home.robusta.dev/pricing>`_ on our SaaS. If you want to self-host the UI, you'll need an enterprise plan.
+The SaaS Platform is `free to get started <https://home.robusta.dev/pricing>`_, with paid tiers for larger teams and advanced features. Self-hosted deployments require an enterprise plan.
 
-Contact support@robusta.dev for questions.
+Open Source
+^^^^^^^^^^^^
+
+`HolmesGPT <https://github.com/robusta-dev/holmesGPT>`_ — the SRE agent at the core of Robusta — is MIT-licensed and a CNCF sandbox project. It can be used standalone via CLI or HTTP API, without the Platform UI. See `holmesgpt.dev <https://holmesgpt.dev/>`_ for standalone usage.
 
 Robusta Classic
 ^^^^^^^^^^^^^^^^
@@ -38,5 +41,5 @@ If you are running Robusta Classic, upgrading to HolmesGPT is a configuration ch
 
 Learn More
 ^^^^^^^^^^^^
-- `HolmesGPT on GitHub <https://github.com/robusta-dev/holmesGPT>`_ - AI-powered root cause analysis for Kubernetes
 - `Pricing Plans <https://home.robusta.dev/pricing>`_ - Compare pricing options and start a free trial
+- `HolmesGPT on GitHub <https://github.com/robusta-dev/holmesGPT>`_

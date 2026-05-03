@@ -74,7 +74,7 @@ Robusta is an AI-powered SRE agent that automatically investigates alerts and fi
 * **Chat with your agent** — tag HolmesGPT in Slack or Teams to investigate issues on demand
 * **Centralized control** — the `Robusta Platform <https://home.robusta.dev>`_ gives you a single place to manage your SRE agents, triage alerts, and review investigation timelines
 
-Robusta is available as **open source**, **SaaS**, or **self-hosted**. See :doc:`how-it-works/oss-vs-saas` for details.
+Robusta is available as **SaaS**, **self-hosted**, or **open source**. See :doc:`how-it-works/oss-vs-saas` for details.
 
 Ready to get started?
 ---------------------
