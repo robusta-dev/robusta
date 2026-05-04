@@ -23,14 +23,11 @@
 
    Overview <configuration/exporting/robusta-pro-features>
    Holmes Chat API <configuration/holmesgpt/holmes-chat-api>
-   setup-robusta/alertsui
    configuration/exporting/send-alerts-api
    configuration/exporting/configuration-changes-api
    configuration/exporting/alert-export-api
    configuration/exporting/alert-statistics-api
-   configuration/exporting/namespace-resources-api
    configuration/exporting/rbac-api
-   configuration/exporting/prometheus-query-api
 
 .. toctree::
    :maxdepth: 4
@@ -45,6 +42,9 @@
    CRDs Monitoring <setup-robusta/crds>
    Playbooks <playbook-reference/index>
    Self-Monitoring <setup-robusta/robusta-runner-metrics>
+   Managed Prometheus Alerts <setup-robusta/alertsui>
+   Namespace Resources API <configuration/exporting/namespace-resources-api>
+   Prometheus Query API <configuration/exporting/prometheus-query-api>
 
 .. toctree::
    :maxdepth: 4
