@@ -8,6 +8,8 @@ SaaS (Hosted)
 
 The hosted Platform runs in Robusta's infrastructure. You install the in-cluster Agent, sign up at `platform.robusta.dev <https://platform.robusta.dev/signup>`_, and your alerts and investigations stream into the hosted UI.
 
+The SaaS Platform is **SOC 2 compliant** and available in multiple regions, including the **US**, **EU**, and **Asia Pacific**.
+
 Most teams use SaaS — it's the fastest path to the complete feature set.
 
 Self-Hosted
