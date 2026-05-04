@@ -77,13 +77,13 @@ On some clusters this can take a while, so don't panic if it appears stuck:
     .. tab-item:: Local/Test Cluster
         :name: install-test-clusters
 
-        Test clusters tend to have fewer resources. To lower Robusta's resource requests, set ``isSmallCluster=true``.
+        Test clusters tend to have fewer resources. To lower Robusta's resource requests, set ``clusterSize=small``.
 
         .. code-block:: bash
             :name: cb-helm-install-test-clusters
 
             helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-            helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true --set holmes.resources.requests.memory=512Mi
+            helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set clusterSize=small
             
 Verifying Installation
 ------------------------------
