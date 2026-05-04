@@ -21,7 +21,6 @@
    node-selector
    proxies
    privacy-and-security
-   additional-settings
    installation-faq
    
    
