@@ -15,7 +15,7 @@ Agent (In-Cluster)
 The Robusta Agent runs inside your Kubernetes cluster. It includes HolmesGPT and is responsible for:
 
 - Fetching data from external `data sources <https://holmesgpt.dev/data-sources/?tab=robusta-helm-chart>`_
-- Optional: for customers troubleshooting issues on Kubernetes itself, track new deploys and changes to Kubernetes and query Kubernetes events
+- Optional: tracking Kubernetes deploys, changes, and events for teams troubleshooting Kubernetes itself
 
 The Agent keeps your data secure — it fetches data from your data sources directly, so there is no direct connection from the Robusta Platform to your data sources.
 
