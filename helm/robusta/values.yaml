@@ -124,7 +124,7 @@ lightActions:
 enablePrometheusStack: false
 enabledManagedConfiguration: false
 enableServiceMonitors: true
-monitorHelmReleases: true
+monitorHelmReleases: false
 argoRollouts: false
 
 
