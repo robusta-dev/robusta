@@ -15,9 +15,6 @@ There are two main ways to send alerts to Robusta for Holmes to investigate:
 Send Alerts API
 ---------------
 
-.. note::
-    This API is available with the Robusta SaaS platform and self-hosted commercial plans. It is not available in the open-source version.
-
 Use this endpoint to send alert data to Robusta. You can send up to 1000 alerts in a single request.
 
 .. _send-alerts-api:
