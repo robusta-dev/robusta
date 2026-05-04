@@ -44,7 +44,6 @@ Limiting Robusta's Access in Your Cluster
 
 To reduce the permissions that Robusta needs in your cluster:
 
-1. Set ``monitorHelmReleases: false`` in Robusta's Helm values file. (Monitoring helm releases is an optional feature that requires granting Robusta access to K8s secrets containing helm metadata.)
-2. On OpenShift you can deploy Robusta with a limited SCC - refer to :ref:`OpenShift`
+- On OpenShift you can deploy Robusta with a limited SCC - refer to :ref:`OpenShift`
 
 To further limit Robusta's permissions, :ref:`speak to our team for guidance <Getting Support>`.
