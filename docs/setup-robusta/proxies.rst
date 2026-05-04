@@ -3,24 +3,28 @@ Deploying Behind Proxies
 
 If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions below to ensure Robusta and HolmesGPT has the necessary access.
 
-Configuring Proxy Settings for Robusta
+Configuring Proxy Settings
 ----------------------------------------
 
-Outbound traffic from Robusta is handled by the `robusta-runner` deployment.
+Set the ``HTTP_PROXY`` and ``HTTPS_PROXY`` environment variables in your Helm values:
 
-To configure proxy settings for `robusta-runner`, set the `HTTP_PROXY` and `HTTPS_PROXY` environment variables. You can do so with one of the following Helm values:
+.. code-block:: yaml
 
-* ``runner.additional_env_vars`` - to set one environment variable at a time
-* ``runner.additional_env_froms`` - to set many environment variables at once
+    runner:
+      additional_env_vars:
+        - name: HTTP_PROXY
+          value: "http://your-proxy:port"
+        - name: HTTPS_PROXY
+          value: "http://your-proxy:port"
 
-Configuring Proxy Settings for HolmesGPT
-----------------------------------------
+    holmes:
+      additionalEnvVars:
+        - name: HTTP_PROXY
+          value: "http://your-proxy:port"
+        - name: HTTPS_PROXY
+          value: "http://your-proxy:port"
 
-Set the `HTTP_PROXY` and `HTTPS_PROXY` environment variables. You can do so with the following Helm values:
-
-* ``holmes.additionalEnvVars`` - to set one environment variable at a time
-
-Either Helm value can be used, depending on your preference. See `this GitHub issue for details and an example configuration <https://github.com/robusta-dev/robusta/pull/450>`_.
+To set many variables at once, ``runner.additional_env_froms`` accepts a Kubernetes ``envFrom`` source. See `this GitHub issue <https://github.com/robusta-dev/robusta/pull/450>`_ for details and examples.
 
 Domains Used by Robusta Saas UI
 ---------------------------------
