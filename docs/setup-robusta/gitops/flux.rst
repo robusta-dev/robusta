@@ -24,7 +24,6 @@ Example ``generated_values.yaml``:
 .. code-block:: yaml
 
     clusterName: my_cluster_name # <- This is the line to be added
-    isSmallCluster: false        # <- Optional. Set this on test clusters to lower Robusta's resource usage.
     globalConfig:
       signing_key: xxxxxx
       account_id: xxxxxx
