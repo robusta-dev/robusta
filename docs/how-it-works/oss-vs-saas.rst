@@ -36,9 +36,10 @@ Standalone HolmesGPT:
 
 The Robusta Platform (SaaS or Self-Hosted) adds on top:
 
-- A web interface for alert triage and investigation history
+- A web interface
 - HolmesGPT bots for Slack and Microsoft Teams
 - Automatic alert triage and grouping
+- Background agents that proactively investigate and surface issues
 
 Robusta Classic
 ^^^^^^^^^^^^^^^^
