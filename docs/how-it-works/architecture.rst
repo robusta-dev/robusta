@@ -44,7 +44,6 @@ Security & Networking
 - The Agent runs entirely within your cluster with configurable RBAC permissions
 - Data sources are accessed only by the in-cluster Agent, never by the Platform
 - SaaS connectivity is outbound-only — no inbound access is required
-- All data remains in your cluster unless explicitly sent to configured sinks or the Robusta Platform
 
 Next Steps
 ^^^^^^^^^^
