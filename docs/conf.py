@@ -75,6 +75,7 @@ redirects = {
     "setup-robusta/installation/all-in-one-installation.html": "/master/setup-robusta/installation/index.html",
     "setup-robusta/installation/standalone-installation.html": "/master/setup-robusta/installation/index.html",
     "setup-robusta/installation/dev-setup.html": "/master/help.html",
+    "setup-robusta/supported-clusters.html": "/master/setup-robusta/installation/index.html",
     "tutorials/java-troubleshooting.html": "/master/tutorials/application-troubleshooting-java.html",
     "catalog/sinks/index.html": "/master/configuration/sinks/index.html",
     "tutorials/prometheus-enrichment.html": "/master/tutorials/alert-custom-enrichment.html",

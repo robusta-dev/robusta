@@ -13,7 +13,7 @@ Use Robusta's AI Agent alongside any observability stack — DataDog, NewRelic, 
 Prerequisites
 ---------------------
 
-* A :ref:`supported Kubernetes cluster <Supported Clusters>`
+* A Kubernetes cluster
 * Helm
 
 Sign Up and Install
