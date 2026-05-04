@@ -38,7 +38,4 @@ If you are using Robusta SaaS, ensure that your network allows access to the fol
 Running Robusta in Air-Gapped or Offline Environments
 ------------------------------------------------------------------------------
 
-You can run Robusta entirely offline if the following conditions are met:
-
-* No external sinks are configured (e.g., services on the public internet).
-* The Robusta UI is either disabled or running on-premise.
+Contact support@robusta.dev for self-hosted deployment options that work in air-gapped or offline environments.
