@@ -18,15 +18,6 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: SRE Agent
-   :hidden:
-
-   configuration/holmesgpt/main-features
-   configuration/holmesgpt/getting-started
-   HolmesGPT Docs <configuration/holmesgpt/holmesgpt-docs>
-
-.. toctree::
-   :maxdepth: 4
    :caption: HTTP APIs
    :hidden:
 

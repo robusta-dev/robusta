@@ -47,23 +47,6 @@ Using Your Own AI Provider
 
 Instead of Robusta AI, you can bring your own LLM provider (OpenAI, Azure, AWS Bedrock, Anthropic, and more). See the `AI Providers documentation <https://holmesgpt.dev/ai-providers/?tab=robusta-helm-chart>`_ for setup instructions.
 
-.. _Reading the Robusta UI Token from a secret in HolmesGPT:
-
-Using Existing Secrets
-----------------------
-
-If you store the Robusta UI token in a Kubernetes secret (instead of directly in Helm values), you need to pass it to HolmesGPT:
-
-.. code-block:: yaml
-
-    holmes:
-      additionalEnvVars:
-      - name: ROBUSTA_UI_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: my-robusta-secrets  # Your existing secret
-            key: ui-token             # Your existing key
-
 Next Steps
 ----------
 
