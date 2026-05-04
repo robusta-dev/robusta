@@ -28,10 +28,6 @@ Example ``generated_values.yaml``:
       signing_key: xxxxxx
       account_id: xxxxxx
     sinksConfig:
-    - slack_sink:
-        name: main_slack_sink
-        slack_channel: robusta-staging-alerts
-        api_key: xxxxxx
     - robusta_sink:
         name: robusta_ui_sink
         token: xxxxxx
