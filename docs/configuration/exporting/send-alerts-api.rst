@@ -1,24 +1,12 @@
 Send Alerts API
 ===============
 
-Why Send Your Alerts to Robusta?
----------------------------------
-
-Benefits include:
-
-* Persistent alert history on a filterable timeline
-* Centralized view of alerts from all your monitoring systems (multiple Prometheus instances, cloud services, custom tools)
-* AI investigation of alerts
-* Correlations between alerts and Kubernetes deploys
-* and more!
-
-.. image:: /images/robusta-ui-timeline.png
-   :alt: Prometheus Alert History
+Send alerts to Robusta to have HolmesGPT automatically run an AI-powered root cause analysis on each one. Holmes investigates the alert against your live cluster state, logs, metrics, and connected data sources, then attaches its findings so you can skip the manual triage step.
 
 Integration Methods
 -------------------
 
-There are two main ways to send alerts to Robusta:
+There are two main ways to send alerts to Robusta for Holmes to investigate:
 
 1. **Pre-built Integrations**: Use our existing integrations for AlertManager, Nagios, SolarWinds, and other monitoring systems. See :doc:`Send Alerts <../index>`.
 
