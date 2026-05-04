@@ -7,7 +7,7 @@ Ever feel overwhelmed by alerts that lack context? Robusta enriches alerts autom
 
 .. note::
 
-   **Looking for automatic AI enrichment?** Check out `HolmesGPT <https://holmesgpt.dev/>`_ for zero-configuration AI-powered alert enrichment that automatically investigates alerts and provides root cause analysis.
+   **Looking for automatic AI enrichment?** Check out `Robusta <https://robusta.dev/>`_ for zero-configuration AI-powered alert enrichment that automatically investigates alerts and provides root cause analysis.
 
 Builtin Alert Enrichment
 *********************************
