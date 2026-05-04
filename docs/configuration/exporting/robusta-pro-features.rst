@@ -19,9 +19,7 @@ Data Export and Reporting
 * :doc:`Alert Reporting API <alert-statistics-api>`: Get aggregated statistics and counts for different alert types
 * :doc:`Send Alerts API <send-alerts-api>`: Send alerts programmatically from external systems
 * :doc:`Configuration Changes API <configuration-changes-api>`: Track configuration changes in your environment
-* :doc:`Namespace Resources API <namespace-resources-api>`: Query namespace-level resource information
 * :doc:`RBAC Configuration API <rbac-api>`: Programmatically manage role-based access control configurations
-* :doc:`Prometheus Query API <prometheus-query-api>`: Run PromQL queries against Prometheus in your connected clusters
 
 Getting Started
 ---------------

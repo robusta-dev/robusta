@@ -63,3 +63,20 @@ You can now reference the environment variable elsewhere in your configuration u
     grafana_url: http://grafana.namespace.svc
 
 This setup keeps sensitive values out of your Helm files and version control, while still allowing them to be dynamically injected at runtime.
+
+.. _Reading the Robusta UI Token from a secret in HolmesGPT:
+
+Using an Existing Secret for the Robusta UI Token
+--------------------------------------------------------
+
+If you store the Robusta UI token in a Kubernetes secret (instead of directly in Helm values), you need to pass it to HolmesGPT:
+
+.. code-block:: yaml
+
+    holmes:
+      additionalEnvVars:
+      - name: ROBUSTA_UI_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: my-robusta-secrets  # Your existing secret
+            key: ui-token             # Your existing key

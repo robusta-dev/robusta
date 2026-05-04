@@ -261,7 +261,7 @@ Troubleshooting
 
         **Alerts arriving but missing Kubernetes context?**
 
-        Check :doc:`Alert Label Mapping </setup-robusta/additional-settings>` to customize how Prometheus labels map to Kubernetes resources.
+        Check :doc:`Customize Labels and Priorities </configuration/alertmanager-integration/customize-labels-priorities>` to customize how Prometheus labels map to Kubernetes resources.
 
 Testing Your Integration
 ------------------------
