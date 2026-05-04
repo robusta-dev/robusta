@@ -1,12 +1,12 @@
 Send Alerts API
 ===============
 
-Send alerts to Robusta to have HolmesGPT automatically run an AI-powered root cause analysis on each one. Holmes investigates the alert against your live cluster state, logs, metrics, and connected data sources, then attaches its findings so you can skip the manual triage step.
+Send alerts to Robusta to have HolmesGPT automatically run an AI-powered root cause analysis on each one. HolmesGPT investigates the alert against your live cluster state, logs, metrics, and connected data sources, then attaches its findings to help accelerate triage.
 
 Integration Methods
 -------------------
 
-There are two main ways to send alerts to Robusta for Holmes to investigate:
+There are two main ways to send alerts to Robusta for HolmesGPT to investigate:
 
 1. **Pre-built Integrations**: Use our existing integrations for AlertManager, Nagios, SolarWinds, and other monitoring systems. See :doc:`Send Alerts <../index>`.
 
