@@ -221,6 +221,7 @@ def test_holmes_feedback_posts_correct_body(mock_post, mock_event):
         sentiment="thumbs_down",
         category="wrong_answer",
         comment="missed the actual cause",
+        user_id="u-42",
         holmes_url="http://test-holmes:8080",
     )
 
@@ -238,6 +239,9 @@ def test_holmes_feedback_posts_correct_body(mock_post, mock_event):
     # holmes_url and model are runner-only and must NOT be forwarded
     assert "holmes_url" not in body
     assert "model" not in body
+    # user_id goes on the query string, not the body — Holmes reads it from query_params
+    assert "user_id" not in body
+    assert call_args[1]["params"] == {"user_id": "u-42"}
 
     mock_event.add_finding.assert_called_once()
 
@@ -260,6 +264,8 @@ def test_holmes_feedback_minimal_body(mock_post, mock_event):
     assert body["sentiment"] == "thumbs_up"
     assert body["category"] is None
     assert body["comment"] is None
+    # No user_id supplied → no params kwarg sent (don't forge an empty user_id)
+    assert mock_post.call_args[1]["params"] is None
 
 
 def test_holmes_feedback_missing_request_id_raises():

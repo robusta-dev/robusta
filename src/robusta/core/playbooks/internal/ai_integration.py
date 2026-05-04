@@ -445,11 +445,16 @@ def holmes_feedback(event: ExecutionBaseEvent, params: HolmesFeedbackParams):
         )
 
     try:
+        # Holmes reads user_id from the query string (not the body) on
+        # /api/feedback — see server.py's `query_params.get("user_id")`.
+        # Pull it out of the params and forward as a URL query param.
         params_dict = params.dict(exclude={"holmes_url", "model"})
+        user_id = params_dict.pop("user_id", None)
         holmes_req = HolmesFeedbackRequest(**params_dict)
         result = requests.post(
             f"{holmes_url}/api/feedback",
             data=holmes_req.json(),
+            params={"user_id": user_id} if user_id else None,
             timeout=30,
         )
         result.raise_for_status()

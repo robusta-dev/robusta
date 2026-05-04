@@ -253,6 +253,7 @@ class HolmesFeedbackParams(HolmesParams):
     sentiment: Literal["thumbs_up", "thumbs_down"]
     category: Optional[str] = None
     comment: Optional[str] = None
+    user_id: Optional[str] = None
 
     class Config:
         extra = "allow"
