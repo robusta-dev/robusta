@@ -243,7 +243,8 @@ def test_holmes_feedback_posts_correct_body(mock_post, mock_event):
     assert "user_id" not in body
     assert call_args[1]["params"] == {"user_id": "u-42"}
 
-    mock_event.add_finding.assert_called_once()
+    # No Finding emitted — feedback is fire-and-forget; FE shows toast optimistically
+    mock_event.add_finding.assert_not_called()
 
 
 @patch("robusta.core.playbooks.internal.ai_integration.requests.post")
@@ -323,4 +324,5 @@ def test_holmes_feedback_passes_through_200_when_row_missing(mock_post, mock_eve
     )
 
     holmes_feedback(mock_event, params)
-    mock_event.add_finding.assert_called_once()
+    # 200 with row-missing acknowledgement still flows through silently — no Finding
+    mock_event.add_finding.assert_not_called()

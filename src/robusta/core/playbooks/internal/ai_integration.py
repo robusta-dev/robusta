@@ -64,6 +64,14 @@ def handle_holmes_error(e: Exception) -> NoReturn:
             "Holmes endpoint is currently unreachable.",
         )
     elif isinstance(e, requests.HTTPError):
+        # Log the upstream response body so 4xx/5xx diagnostics aren't lost in
+        # the generic "Holmes internal configuration error" branch below
+        # (e.g. {"detail":"missing user_id"} would otherwise be invisible).
+        if e.response is not None:
+            logging.error(
+                f"Holmes responded {e.response.status_code} on {e.request.method if e.request else '?'} "
+                f"{e.request.url if e.request else '?'}: {e.response.text}"
+            )
         if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
             raise ActionException(
                 ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key."
@@ -458,15 +466,14 @@ def holmes_feedback(event: ExecutionBaseEvent, params: HolmesFeedbackParams):
             timeout=30,
         )
         result.raise_for_status()
-
-        finding = Finding(
-            title="Holmes Feedback",
-            aggregation_key="HolmesFeedbackResult",
-            subject=FindingSubject(subject_type=FindingSubjectType.TYPE_NONE),
-            finding_type=FindingType.AI_ANALYSIS,
-            failure=False,
+        # No Finding emitted — the FE already shows the "Thanks" toast
+        # optimistically and never reads our response. Adding a
+        # subject_type=TYPE_NONE finding for every thumb click would just
+        # generate UI noise.
+        logging.info(
+            f"Holmes feedback recorded request_id={params.request_id} "
+            f"sentiment={params.sentiment}"
         )
-        event.add_finding(finding)
 
     except Exception as e:
         logging.exception(
