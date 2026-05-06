@@ -64,12 +64,9 @@ You can now reference the environment variable elsewhere in your configuration u
 
 This setup keeps sensitive values out of your Helm files and version control, while still allowing them to be dynamically injected at runtime.
 
-.. warning::
-
-   The placeholder must be the **entire** value of the field. Robusta replaces the
-   whole string with the environment variable's value, so ``"Bearer {{ env.TOKEN }}"``
-   becomes just the token — the literal ``Bearer `` prefix is dropped. If you need a
-   prefix or suffix, bake it into the secret itself.
+You can also combine static text with placeholders (e.g. ``"Bearer {{ env.TOKEN }}"``)
+or reference multiple environment variables in the same field
+(e.g. ``"{{ env.USER }}:{{ env.PASSWORD }}"``).
 
 .. note::
 
