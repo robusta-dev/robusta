@@ -1,33 +1,26 @@
-:hide-toc:
-
 :hide-footer:
 
+:tocdepth: 2
+
 .. _install:
+.. _install-barebones:
 
-Installation Guides
-====================
+Install Robusta
+================
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+Use Robusta's AI Agent alongside any observability stack — DataDog, NewRelic, Prometheus, SolarWinds, and more.
 
-   standalone-installation
-   all-in-one-installation
-   dev-setup
+Prerequisites
+---------------------
 
-.. grid:: 1 1 2 2
-    :gutter: 2
+* A Kubernetes cluster
+* Helm
 
-    .. grid-item-card:: Install Robusta
-        :class-card: sd-bg-text-light
-        :link: standalone-installation
-        :link-type: doc
+Sign Up and Install
+---------------------
 
-        Use Robusta's AI Agent alongside any observability stack - DataDog, NewRelic, Prometheus, SolarWinds, and more.
+Sign up `for a free Robusta account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=install-page>`_ and follow the install wizard. It generates a ``generated_values.yaml`` file and provides the Helm install commands tailored to your cluster.
 
-    .. grid-item-card:: Install Robusta + Prometheus
-        :class-card: sd-bg-text-light
-        :link: all-in-one-installation
-        :link-type: doc
+.. note::
 
-        For brand new environments without existing observability. Five minute setup. Great default alerts. 
+    **Save your generated_values.yaml file** — you'll need it to install Robusta on new clusters or upgrade. It contains sensitive values; refer to :ref:`Managing Secrets` for tips on protecting them.
