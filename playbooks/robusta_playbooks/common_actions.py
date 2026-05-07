@@ -99,7 +99,15 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
         labels_to_inject: Dict[str, str] = {}
         for rule in params.finding_label_rules:
             source_value = rule.separator.join(source_map.get(src, "") for src in rule.source_fields)
-            m = re.fullmatch(rule.regex, source_value)
+            try:
+                m = re.fullmatch(rule.regex, source_value)
+            except re.error:
+                logging.warning(
+                    "[customise_finding] invalid finding_label_rules regex %r for target_label %r — skipping",
+                    rule.regex,
+                    rule.target_label,
+                )
+                continue
             if m:
                 replacement = rule.replacement
                 for i, group in enumerate(m.groups(), 1):
@@ -107,7 +115,6 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
                 labels_to_inject[rule.target_label] = replacement
 
         if labels_to_inject:
-            logging.info(f"[customise_finding] injecting labels into finding: {labels_to_inject}")
             event.inject_finding_labels(labels_to_inject)
             event.add_enrichment(
                 [

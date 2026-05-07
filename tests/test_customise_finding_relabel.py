@@ -205,3 +205,12 @@ def test_no_rules_is_noop():
     event = _make_event(subject)
     customise_finding(event, FindingOverrides())
     assert _finding(event).subject.labels["team"] == "original"
+
+
+def test_invalid_regex_is_skipped_and_does_not_crash():
+    subject = FindingSubject(name="pod", namespace="infra-db", labels={"team": "original"})
+    finding = _run(subject, [
+        {"source_fields": ["namespace"], "regex": "infra-[", "target_label": "team", "replacement": "broken"},
+        {"source_fields": ["namespace"], "regex": "infra-.*", "target_label": "team", "replacement": "infra"},
+    ])
+    assert finding.subject.labels["team"] == "infra"
