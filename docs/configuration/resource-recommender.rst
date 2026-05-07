@@ -229,7 +229,7 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
 
 .. code-block:: bash
 
-    curl -X GET "https://api.robusta.dev/api/query/krr/recommendations?account_id=YOUR_ACCOUNT_ID&cluster_id=my-cluster&namespace=default" \
+    curl -X GET "https://api.robusta.dev/api/krr/recommendations?account_id=YOUR_ACCOUNT_ID&cluster_id=my-cluster&namespace=default" \
       -H "Authorization: Bearer YOUR_API_KEY" \
       -H "Content-Type: application/json"
 
