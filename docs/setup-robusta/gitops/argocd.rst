@@ -28,10 +28,6 @@ Example ``generated_values.yaml``:
       signing_key: xxxxxx
       account_id: xxxxxx
     sinksConfig:
-    - slack_sink:
-        name: main_slack_sink
-        slack_channel: robusta-staging-alerts
-        api_key: xxxxxx
     - robusta_sink:
         name: robusta_ui_sink
         token: xxxxxx
@@ -157,46 +153,3 @@ Then create an Argo Application which references that values file:
         - repoURL: "git@github.com:my-user/example-repo.git"
           targetRevision: HEAD
           ref: values
-
-
-Configuring Argo Links
------------------------------------------
-
-For faster Kubernetes troubleshooting, add Robusta links to ArgoCD.
-
-.. image:: /images/argocd_external_urls.png
-
-Add an annotation to each Kubernetes resource with Robusta's URL:
-
-.. code-block::
-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: my-deployment
-      annotations:
-        link.argocd.argoproj.io/external-link: "https://platform.robusta.dev/"
-
-Or link applications to their specific Robusta pages:
-
-.. code-block::
-
-    apiVersion: apps/v1
-    kind: Deployment #workload type
-    metadata:
-      name: my-deployment #workload name
-      annotations:
-        link.argocd.argoproj.io/external-link: "https://platform.robusta.dev/?namespace=%22default%22&type=%22Deployment%22&name=%22some-deployment%22&cluster=%22robusta-cluster-name%22"
-
-.. details:: What is the right Robusta URL for each application?
-
-    It's easiest to open the workload in RobustaUI and copy the URL from the browser.
-
-    You can also build the URL by hand. Edit the above URL, replacing:
-
-    * ``default`` with the workload's namespace
-    * ``Deployment`` with the workload type.  Ex: ``StatefulSets``
-    * ``some-deployment`` with the workload's name. Ex: ``my-deployment``
-    * ``robusta-cluster-name`` with your cluster's name, as defined in the Robusta Helm value ``clusterName``
-
-For more details, refer to the `Argo Documentation on External URLs. <https://argo-cd.readthedocs.io/en/stable/user-guide/external-url/>`_

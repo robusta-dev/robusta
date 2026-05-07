@@ -41,54 +41,12 @@ Issues are organized by installation phase to help you quickly find solutions.
 
    <div style="margin: 20px 0; padding: 15px; background-color: #f0f7ff; border-left: 4px solid #0066cc;">
    <strong>Where are you stuck?</strong><br>
-   • <a href="#phase-1-configuration-generation">Phase 1: Configuration Generation</a> - Issues with robusta gen-config<br>
-   • <a href="#phase-2-helm-installation">Phase 2: Helm Installation</a> - Helm install/upgrade failures<br>
-   • <a href="#phase-3-runtime-issues">Phase 3: Runtime Issues</a> - Alerts not arriving, pods crashing<br>
-   • <a href="#phase-4-integration-issues">Phase 4: Integration Issues</a> - Slack, Prometheus connection problems
+   • <a href="#phase-1-helm-installation">Phase 1: Helm Installation</a> - Helm install/upgrade failures<br>
+   • <a href="#phase-2-runtime-issues">Phase 2: Runtime Issues</a> - Alerts not arriving, pods crashing<br>
+   • <a href="#phase-3-integration-issues">Phase 3: Integration Issues</a> - Slack, Prometheus connection problems
    </div>
 
-Phase 1: Configuration Generation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Issues when running ``robusta gen-config`` or generating initial configuration.
-
-.. details:: command not found: robusta (CLI not in path)
-
-    1. Determine where the Robusta-cli binary file is located
-
-    .. code-block:: bash
-        :name: cb-find-python-cli-loc
-
-        find / -regex '.*/bin/robusta' 2>/dev/null
-
-    2. Add the path you found (e.g ``/opt/homebrew/bin/``) to your PATH. To do so, find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...) and append the following:
-
-    .. code-block:: bash
-        :name: add-path-var
-
-        export PATH="$PATH:<new-path>"
-
-    3. Reopen the terminal or run:
-
-    .. code-block:: bash
-        :name: cb-refresh-terminal
-
-        source <your-shell-config-file>
-
-    .. admonition:: Alternative Solution
-
-      Instead of modifying PATH, run Robusta commands via the python3 binary: ``python3 -m robusta.cli.main gen-config``
-
-.. details:: SSL certificate errors on Mac OS
-
-    This implies a python package with certificates is missing on your system.
-
-    To fix it, run ``/Applications/Python 3.9/Install Certificates.command``
-
-    For more info see:
-    https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
-
-Phase 2: Helm Installation
+Phase 1: Helm Installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Problems when running ``helm install`` command or installing via GitOps.
@@ -128,7 +86,7 @@ Problems when running ``helm install`` command or installing via GitOps.
 
       Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
 
-Phase 3: Runtime Issues
+Phase 2: Runtime Issues
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Issues after installation when pods are running but not working correctly.
@@ -252,7 +210,7 @@ Holmes
 
         See :ref:`Using Existing Secrets <Reading the Robusta UI Token from a secret in HolmesGPT>` to configure Holmes to read the ``token``
 
-Phase 4: Integration Issues
+Phase 3: Integration Issues
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Problems with external service integrations after Robusta is running.
