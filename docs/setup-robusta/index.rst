@@ -17,13 +17,10 @@
    upgrade
    tuning-performance
    configuration-secrets
-   robusta-runner-metrics
-   supported-clusters
    openshift
    node-selector
    proxies
    privacy-and-security
-   additional-settings
    installation-faq
    
    
