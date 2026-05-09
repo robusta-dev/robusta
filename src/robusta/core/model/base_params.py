@@ -188,6 +188,7 @@ class ToolApprovalDecision(BaseModel):
     tool_call_id: str
     approved: bool
     save_prefixes: Optional[List[str]] = None  # Prefixes to remember for session
+    decision: Optional[Dict[str, Any]] = None  # Structured decision data (e.g. OAuth callback params). Parsed by Holmes.
 
 
 class HolmesChatParams(HolmesParams):
@@ -206,6 +207,13 @@ class HolmesChatParams(HolmesParams):
     enable_tool_approval: bool = Field(default=False)
     tool_decisions: Optional[List[ToolApprovalDecision]] = None
     additional_system_prompt: Optional[str] = None
+    request_type: Optional[str] = None
+    request_source: Optional[str] = None
+    source_ref: Optional[str] = None
+    conversation_id: Optional[str] = None
+    conversation_source: Optional[str] = None
+    is_internal: Optional[bool] = None
+    meta: Optional[Dict[str, Any]] = None
 
     class Config:
         extra = "allow"
@@ -214,6 +222,21 @@ class HolmesChatParams(HolmesParams):
 class HolmesIssueChatParams(HolmesChatParams):
     resource: Optional[ResourceInfo] = ResourceInfo()
     context: HolmesIssueChatParamsContext
+
+
+class HolmesOAuthParams(ActionParams):
+    """
+    Forwards OAuth callback data to Holmes.
+    Params are intentionally generic (extra=allow) — the actual contract
+    is defined by Holmes and can evolve without runner changes.
+
+    :var toolset_name: The MCP toolset to authenticate
+    """
+
+    toolset_name: str
+
+    class Config:
+        extra = "allow"
 
 
 class HolmesConversationParams(HolmesParams):

@@ -185,5 +185,5 @@ Next Steps
 ----------
 
 - Configure :doc:`alert routing </notification-routing/index>`
-- Set up :doc:`AI-powered insights </configuration/holmesgpt/getting-started>`
+- `Set up AI-powered insights <https://platform.robusta.dev/signup>`_
 - Learn about :doc:`common configuration options <metric-providers>`
