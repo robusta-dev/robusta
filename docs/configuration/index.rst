@@ -18,11 +18,19 @@ Programmatic Integration
 
         Send alerts programmatically via the legacy ``/api/alerts`` REST endpoint.
 
+    .. grid-item-card:: :octicon:`code;1em;` Configuration Changes API
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: exporting/configuration-changes-api
+        :link-type: doc
+
+        Send configuration changes programmatically via the legacy REST endpoint.
+
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    exporting/send-alerts-api
+   exporting/configuration-changes-api
    alertmanager-integration/outofcluster-prometheus
    alertmanager-integration/alert-manager
    alertmanager-integration/eks-managed-prometheus
