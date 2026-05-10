@@ -17,7 +17,7 @@ Data Export and Reporting
 
 * :doc:`Alert Export API <alert-export-api>`: Export historical alert data with filtering by time range, alert name, and account
 * :doc:`Alert Reporting API <alert-statistics-api>`: Get aggregated statistics and counts for different alert types
-* :doc:`Send Alerts API <send-alerts-api>`: Send alerts programmatically from external systems
+* :doc:`Send Events API <send-events-api>`: Send alerts, incidents, and changes from any monitoring source via a single webhook endpoint
 * :doc:`Configuration Changes API <configuration-changes-api>`: Track configuration changes in your environment
 * :doc:`RBAC Configuration API <rbac-api>`: Programmatically manage role-based access control configurations
 
