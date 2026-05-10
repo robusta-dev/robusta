@@ -208,6 +208,18 @@ class ActionRequestReceiver:
             else:
                 ctx = nullcontext()
             with ctx:
+                if action.body.action_name.startswith("holmes_"):
+                    incoming_params = action.body.action_params or {}
+                    logging.info(
+                        f"receiver dispatching {action.body.action_name} stream={action.stream} "
+                        f"keys={sorted(incoming_params.keys())} "
+                        f"source_ref={incoming_params.get('source_ref')} "
+                        f"request_source={incoming_params.get('request_source')} "
+                        f"request_type={incoming_params.get('request_type')} "
+                        f"conversation_id={incoming_params.get('conversation_id')} "
+                        f"conversation_source={incoming_params.get('conversation_source')} "
+                        f"is_internal={incoming_params.get('is_internal')}"
+                    )
                 if action.stream:
                     self.__exec_external_stream_request(action, validate_timestamp)
                 else:
