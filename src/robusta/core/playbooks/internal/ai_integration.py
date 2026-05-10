@@ -270,12 +270,6 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
         )
-        logging.info(
-            f"holmes_issue_chat forwarding "
-            f"source_ref={params.source_ref} request_source={params.request_source} "
-            f"request_type={params.request_type} conversation_id={params.conversation_id} "
-            f"conversation_source={params.conversation_source} is_internal={params.is_internal}"
-        )
         result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
         result.raise_for_status()
 
@@ -328,12 +322,6 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
         # This allows Holmes clients/servers to add new parameters without requiring updates here
         params_dict = params.dict(exclude={"holmes_url", "render_graph_images"})
         holmes_req = HolmesChatRequest(**params_dict)
-        logging.info(
-            f"holmes_chat forwarding "
-            f"source_ref={params.source_ref} request_source={params.request_source} "
-            f"request_type={params.request_type} conversation_id={params.conversation_id} "
-            f"conversation_source={params.conversation_source} is_internal={params.is_internal}"
-        )
         url = f"{holmes_url}/api/chat"
         if params.stream:
             if params.render_graph_images:
