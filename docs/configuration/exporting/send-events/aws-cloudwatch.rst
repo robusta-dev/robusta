@@ -29,9 +29,11 @@ Recipe
 
        import json
        import os
+       import urllib.error
        import urllib.request
 
        URL = "https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=awscloudwatch&type=alert"
+       TIMEOUT_SECONDS = 5
 
        def lambda_handler(event, context):
            for record in event["Records"]:
@@ -45,7 +47,11 @@ Recipe
                        "Authorization": f"Bearer {os.environ['ROBUSTA_API_KEY']}",
                    },
                )
-               urllib.request.urlopen(req).read()
+               try:
+                   urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS).read()
+               except urllib.error.URLError as exc:
+                   print(f"failed to forward CloudWatch alarm to Robusta: {exc}")
+                   raise
            return {"ok": True}
 
 4. Replace ``<ACCOUNT_ID>`` with your Robusta account ID and deploy.

@@ -44,7 +44,23 @@ Add a webhook service and a template to ``argocd-notifications-cm``:
               "operationState": "{{.app.status.operationState.phase}}"
             }
 
-Subscribe applications to the trigger using the ``notifications.argoproj.io/subscribe.<trigger>.robusta`` annotation.
+Subscribe applications to the trigger using the ``notifications.argoproj.io/subscribe.<trigger>.robusta`` annotation. Replace ``<trigger>`` with the trigger name you want to forward — for example, ``on-sync-failed``:
+
+.. code-block:: yaml
+
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: my-app
+      namespace: argocd
+      annotations:
+        notifications.argoproj.io/subscribe.on-sync-failed.robusta: ""
+        notifications.argoproj.io/subscribe.on-deployed.robusta: ""
+        notifications.argoproj.io/subscribe.on-health-degraded.robusta: ""
+    spec:
+      # ...
+
+The annotation value can be left empty (any non-null value subscribes the receiver) or set to a comma-separated list of recipients if you have configured multiple Robusta receivers.
 
 Verify
 ------

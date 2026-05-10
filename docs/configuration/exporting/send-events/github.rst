@@ -30,6 +30,10 @@ Configure GitHub
 
        https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=github&type=change&token=<ROBUSTA_API_KEY>
 
+   .. warning::
+
+      Tokens embedded in URLs can leak via browser history, server access logs, proxy logs, and HTTP ``Referer`` headers. Prefer header-based authentication when the vendor supports it. When a query-string token is the only option, mitigate exposure by using a dedicated, narrowly scoped API key with the minimum required permissions, rotating it on a regular cadence, and revoking it immediately if a leak is suspected.
+
 5. Choose the events to deliver (``Deployments``, ``Workflow runs``, ``Releases``, etc.) and save.
 
 Verify

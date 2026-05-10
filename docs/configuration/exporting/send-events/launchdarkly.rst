@@ -26,6 +26,10 @@ Configure LaunchDarkly
 3. Optionally restrict the events with a **Policy filter** (for example, only flag updates in production).
 4. LaunchDarkly does not let you add an ``Authorization`` header; instead enable **HMAC signing** (Robusta ignores it) and append ``&token=<ROBUSTA_API_KEY>`` to the URL.
 
+   .. warning::
+
+      Query-parameter tokens can be exposed in proxy and server access logs and in browser history. Prefer HMAC signing where it is supported end-to-end. If you must use a URL token, use a dedicated, narrowly scoped Robusta API key with only the permissions this integration requires, and rotate it on a regular cadence so a leaked URL has a bounded blast radius.
+
 Verify
 ------
 
