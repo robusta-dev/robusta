@@ -36,7 +36,7 @@ The endpoint accepts any JSON payload. The request is parameterized by query str
 
 .. code-block::
 
-    POST https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=<ORIGIN>&type=<TYPE>&labels=<LABELS>
+    POST https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=<ORIGIN>&type=<TYPE>
 
 Robusta stores every payload verbatim, then asynchronously parses it into the Robusta UI timeline. If a per-origin parser is registered for ``origin``, it is used; otherwise a generic JSON parser handles the payload. Parse failures are visible in the **Delivery Log** UI page so you can self-debug.
 
@@ -63,10 +63,6 @@ Query Parameters
      - string
      - One of ``alert``, ``incident``, or ``change``.
      - Yes
-   * - ``labels``
-     - string
-     - Comma-separated list of free-form tags. Forwarded to the parsed event for use in workflows, routing, and AI investigation policies.
-     - No
 
 Authentication
 --------------
@@ -85,7 +81,7 @@ Example Request
 .. code-block:: bash
 
     curl --location --request POST \
-      'https://api.robusta.dev/webhooks?account_id=ACCOUNT_ID&origin=datadog&type=alert&labels=env=prod,team=payments' \
+      'https://api.robusta.dev/webhooks?account_id=ACCOUNT_ID&origin=datadog&type=alert' \
       --header 'Authorization: Bearer API_KEY' \
       --header 'Content-Type: application/json' \
       --data-raw '{ "title": "High error rate", "severity": "high" }'

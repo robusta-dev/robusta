@@ -17,8 +17,6 @@ Webhook URL
 
     https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=alertmanager&type=alert
 
-Append ``&labels=<comma-separated-tags>`` to attach routing tags to every event from this receiver.
-
 Configure AlertManager
 ----------------------
 
