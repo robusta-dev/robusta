@@ -264,12 +264,11 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
     conversation_title = build_conversation_title(params)
     params_resource_kind = params.resource.kind or ""
     try:
+        params_dict = params.dict(exclude={"holmes_url", "render_graph_images", "resource", "context"})
         holmes_req = HolmesIssueChatRequest(
-            ask=params.ask,
-            conversation_history=params.conversation_history,
+            **params_dict,
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
-            model=params.model,
         )
         result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
         result.raise_for_status()
