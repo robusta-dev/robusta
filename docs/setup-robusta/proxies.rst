@@ -31,216 +31,87 @@ To set many variables at once, ``runner.additional_env_froms`` accepts a Kuberne
 Firewall / DNS Allowlist
 ----------------------------------------
 
-When deploying Robusta in a tightly restricted environment, the runner needs outbound access to a number of external endpoints. The lists below are organized by feature so you can allow only what you actually use.
-
-A consolidated wildcard list is provided at the bottom for operators who prefer a minimal allowlist.
+When deploying Robusta in a tightly restricted environment, the runner needs outbound access to a number of external endpoints. The list below is organized by feature so you can allow only what you actually use. Under each wildcard, the specific hosts it expands to are listed indented so you can pick exact hostnames instead of a wildcard if your firewall requires it.
 
 .. note::
-   Traffic is **always initiated outbound from the runner**. No inbound connections to your cluster are required. All endpoints below are reached over HTTPS (TCP/443) unless noted otherwise.
-
-Required: Install & Upgrade Time
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-These endpoints are needed when ``helm install`` / ``helm upgrade`` runs and when the cluster pulls container images. They are not needed at steady-state runtime once images are cached locally.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 35 65
-
-   * - Domain
-     - Purpose
-   * - ``robusta-charts.storage.googleapis.com``
-     - Robusta Helm chart repository (``helm repo add robusta ...``)
-   * - ``docker.io`` / ``registry-1.docker.io`` / ``auth.docker.io`` / ``production.cloudflare.docker.com``
-     - Default registry for ``robustadev/robusta-runner``, ``robustadev/kubewatch``, ``robustadev/grafana-renderer``
-   * - ``us-central1-docker.pkg.dev``
-     - Registry for HolmesGPT MCP server images and some bundled tooling images
-   * - ``quay.io`` (only if you use the bundled ``kube-prometheus-stack`` subchart)
-     - Prometheus / Alertmanager / kube-state-metrics images
-   * - ``ghcr.io`` (only if you use the bundled ``kube-prometheus-stack`` subchart)
-     - Prometheus operator images
-
-If you mirror images to a private registry, override ``image.registry`` (and the per-component ``image:`` fields) in your Helm values and you can drop the public registries from the allowlist.
-
-Required: Robusta SaaS Platform
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Required only if you enable the ``robusta_sink`` (i.e. you are using the Robusta SaaS UI / platform). If you are running Robusta strictly OSS without the platform, none of these are needed.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 40 60
-
-   * - Domain
-     - Purpose
-   * - ``api.robusta.dev``
-     - Platform REST API: cluster registration, runner version checks, action relay, telemetry
-   * - ``relay.robusta.dev``
-     - WebSocket relay (``wss://``) used to deliver platform-initiated actions to the runner. Override with the ``WEBSOCKET_RELAY_ADDRESS`` env var
-   * - ``platform.robusta.dev``
-     - Robusta UI (links rendered into Slack/Teams/email messages)
-   * - ``<your-store-id>.supabase.co``
-     - Cluster data store. The exact subdomain is supplied to the runner in your Robusta token (``store_url``). Common default: ``xvyhpoxfmtpuqqeyqkso.supabase.co``
-   * - ``sp.robusta.dev``
-     - Platform analytics endpoint
-   * - ``docs.robusta.dev``
-     - Documentation links embedded in some notifications (not strictly required for the runner to function)
-
-Optional: Error Reporting
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Used only when ``runner.sendAdditionalTelemetry`` is enabled or a ``runner.sentry_dsn`` / ``holmes.sentryDSN`` is configured. Default DSNs point to ``ingest.de.sentry.io``.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 40 60
-
-   * - Domain
-     - Purpose
-   * - ``*.ingest.sentry.io`` / ``*.ingest.de.sentry.io``
-     - Sentry error reporting. Set ``runner.sentry_dsn: ""`` and ``holmes.sentryDSN: ""`` to disable
-
-Optional: Sink Integrations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Each row applies **only if you enable that specific sink**. Several sinks accept a user-supplied URL (Jira, ServiceNow, Mattermost, RocketChat, Webex, VictorOps, Zulip, generic Webhook, Kafka). For those, allow the host you configured.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 25 75
-
-   * - Sink
-     - Domains
-   * - Slack
-     - ``slack.com``, ``hooks.slack.com``, ``files.slack.com``, ``slack-files.com`` (covered by ``*.slack.com`` plus ``slack-files.com``)
-   * - Microsoft Teams
-     - ``*.webhook.office.com`` (Incoming Webhook), ``*.logic.azure.com`` (Workflows / Power Automate), ``graph.microsoft.com`` (Graph API)
-   * - PagerDuty
-     - ``events.pagerduty.com``, ``api.pagerduty.com`` (and ``bit.ly`` for shortlinks rendered in messages)
-   * - OpsGenie
-     - ``api.opsgenie.com`` (or ``api.eu.opsgenie.com`` if you set ``host: eu``)
-   * - Jira
-     - Your Jira instance (e.g. ``<tenant>.atlassian.net`` or self-hosted hostname)
-   * - ServiceNow
-     - Your ServiceNow instance (``<instance>.service-now.com``)
-   * - Discord
-     - ``discord.com`` (webhook URLs are under ``discord.com/api/webhooks/...``)
-   * - Telegram
-     - ``api.telegram.org`` (override with ``TELEGRAM_BASE_URL`` if using a self-hosted Bot API)
-   * - Datadog
-     - ``api.datadoghq.com`` or your regional endpoint (``api.datadoghq.eu``, ``api.us3.datadoghq.com``, ``api.us5.datadoghq.com``, ``api.ap1.datadoghq.com``)
-   * - Pushover
-     - ``api.pushover.net``
-   * - Incident.io
-     - ``api.incident.io``
-   * - Webex
-     - ``webexapis.com`` (or your Webex webhook host)
-   * - Mattermost
-     - Your Mattermost server hostname
-   * - RocketChat
-     - Your RocketChat server hostname
-   * - VictorOps / Splunk OnCall
-     - ``alert.victorops.com`` (or your configured webhook host)
-   * - Zulip
-     - Your Zulip server hostname
-   * - Yandex Messenger
-     - ``botapi.messenger.yandex.net`` (override with ``YM_API_BASE_URL``)
-   * - Generic Webhook
-     - Your configured destination URL
-   * - Kafka
-     - Your Kafka broker host(s) (TCP/9092 or your configured port; not HTTPS)
-   * - Robusta sink
-     - See "Robusta SaaS Platform" above
-
-Optional: HolmesGPT (AI Investigations)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-HolmesGPT runs as an in-cluster service (the ``holmes`` Deployment), so the runner reaches it on a cluster-internal address (``http://holmes:<port>``) — no external allowlist needed for the runner-to-Holmes traffic itself.
-
-Holmes itself, however, calls out to whatever LLM provider you configure. Allow only the provider(s) you actually use:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 30 70
-
-   * - Provider
-     - Domains
-   * - OpenAI
-     - ``api.openai.com``
-   * - Anthropic
-     - ``api.anthropic.com``
-   * - Azure OpenAI
-     - ``<your-resource>.openai.azure.com``, ``login.microsoftonline.com``
-   * - AWS Bedrock
-     - ``bedrock-runtime.<region>.amazonaws.com``, ``sts.amazonaws.com``
-   * - Google Vertex AI / Gemini
-     - ``*.googleapis.com`` (specifically ``aiplatform.googleapis.com`` and/or ``generativelanguage.googleapis.com``), ``oauth2.googleapis.com``
-   * - Robusta-hosted AI
-     - ``api.robusta.dev`` (already listed above)
-
-Optional: Cloud / Observability Auth
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Only required if you connect the runner to one of these managed observability backends:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 35 65
-
-   * - Domain
-     - Purpose
-   * - ``login.microsoftonline.com``
-     - Azure AD OAuth token endpoint (Azure Managed Prometheus, Azure OpenAI)
-   * - ``prometheus.monitor.azure.com``
-     - Azure Managed Prometheus query endpoint
-   * - ``169.254.169.254`` (link-local, not DNS)
-     - Cloud instance metadata service (Azure / AWS / GCP managed identity). This is in-VPC, not internet, but some egress policies still block it
-
-Wildcard Allowlist (Compact Form)
-----------------------------------------
-
-If you can't enumerate every host above, the following wildcard set covers the typical Robusta + HolmesGPT deployment with the Robusta SaaS UI plus the most common sinks. Trim to fit your enabled features.
+   Traffic is **always initiated outbound from the runner**. No inbound connections to your cluster are required. All endpoints are reached over HTTPS (TCP/443) unless noted otherwise.
 
 .. code-block:: text
 
     # Robusta SaaS platform (required if robusta_sink enabled)
     *.robusta.dev
-    *.supabase.co
+        api.robusta.dev          # platform REST API: cluster registration, action relay, telemetry
+        relay.robusta.dev        # WebSocket relay (wss://); override with WEBSOCKET_RELAY_ADDRESS
+        platform.robusta.dev     # Robusta UI (links rendered into Slack/Teams/email)
+        sp.robusta.dev           # platform analytics
+        docs.robusta.dev         # doc links embedded in notifications (not strictly required)
+    *.supabase.co                # cluster data store; exact subdomain comes from your token's store_url
 
-    # Install / upgrade
-    robusta-charts.storage.googleapis.com
-    *.docker.io
-    us-central1-docker.pkg.dev
-    quay.io
-    ghcr.io
+    # Install / upgrade (only needed during helm install/upgrade and image pulls)
+    robusta-charts.storage.googleapis.com   # Robusta Helm chart repository
+    *.docker.io                             # default registry for robustadev/* images
+        registry-1.docker.io
+        auth.docker.io
+        production.cloudflare.docker.com
+    us-central1-docker.pkg.dev              # HolmesGPT MCP server images and bundled tooling
+    quay.io                                 # only with bundled kube-prometheus-stack subchart
+    ghcr.io                                 # only with bundled kube-prometheus-stack subchart
 
-    # Error reporting (optional)
+    # Error reporting (only if runner.sentry_dsn / holmes.sentryDSN is set; default points to .de.sentry.io)
     *.sentry.io
+        *.ingest.sentry.io
+        *.ingest.de.sentry.io
 
     # Sinks (only those you enable)
     *.slack.com
-    slack-files.com
-    *.office.com
-    *.logic.azure.com
+        slack.com
+        hooks.slack.com
+        files.slack.com
+    slack-files.com                         # Slack file uploads
+    *.office.com                            # Microsoft Teams Incoming Webhook
+    *.logic.azure.com                       # Microsoft Teams Workflows / Power Automate
+    graph.microsoft.com                     # Microsoft Teams Graph API
     *.pagerduty.com
+        events.pagerduty.com
+        api.pagerduty.com
     *.opsgenie.com
-    *.atlassian.net
-    *.service-now.com
+        api.opsgenie.com
+        api.eu.opsgenie.com                 # if host: eu
+    *.atlassian.net                         # Jira (your tenant subdomain)
+    *.service-now.com                       # ServiceNow (your instance subdomain)
     *.datadoghq.com
-    *.datadoghq.eu
-    discord.com
-    api.telegram.org
+        api.datadoghq.com
+        api.us3.datadoghq.com
+        api.us5.datadoghq.com
+        api.ap1.datadoghq.com
+    *.datadoghq.eu                          # Datadog EU region
+    discord.com                             # webhooks under discord.com/api/webhooks/...
+    api.telegram.org                        # override with TELEGRAM_BASE_URL for self-hosted Bot API
     api.pushover.net
     api.incident.io
     webexapis.com
+    alert.victorops.com                     # VictorOps / Splunk OnCall
+    botapi.messenger.yandex.net             # Yandex (override with YM_API_BASE_URL)
+    # Mattermost, RocketChat, Zulip, generic Webhook, Kafka: allow the host you configured
 
     # HolmesGPT LLM providers (only those you use)
-    api.openai.com
-    api.anthropic.com
-    *.openai.azure.com
-    login.microsoftonline.com
-    *.amazonaws.com
-    *.googleapis.com
+    api.openai.com                          # OpenAI
+    api.anthropic.com                       # Anthropic
+    *.openai.azure.com                      # Azure OpenAI (your resource subdomain)
+    login.microsoftonline.com               # Azure AD OAuth (Azure OpenAI / Azure Managed Prometheus)
+    *.amazonaws.com                         # AWS Bedrock
+        bedrock-runtime.<region>.amazonaws.com
+        sts.amazonaws.com
+    *.googleapis.com                        # Google Vertex AI / Gemini
+        aiplatform.googleapis.com
+        generativelanguage.googleapis.com
+        oauth2.googleapis.com
+
+    # Cloud / observability auth (only if you use these managed backends)
+    prometheus.monitor.azure.com            # Azure Managed Prometheus query endpoint
+    169.254.169.254                         # cloud instance metadata (Azure/AWS/GCP managed identity)
+
+If you mirror images to a private registry, override ``image.registry`` (and the per-component ``image:`` fields) in your Helm values and you can drop the public registries from the allowlist.
 
 Verifying the Allowlist
 ----------------------------------------
