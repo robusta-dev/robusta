@@ -5,26 +5,6 @@ Send Alerts to Robusta
 
 Connect your monitoring system to Robusta, to enrich alerts and apply automation rules.
 
-Programmatic Integration
--------------------------
-
-.. grid:: 1 1 2 3
-    :gutter: 3
-
-    .. grid-item-card:: :octicon:`code;1em;` Send Alerts API
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: exporting/send-alerts-api
-        :link-type: doc
-
-        Send alerts programmatically via the legacy ``/api/alerts`` REST endpoint.
-
-    .. grid-item-card:: :octicon:`code;1em;` Configuration Changes API
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: exporting/configuration-changes-api
-        :link-type: doc
-
-        Send configuration changes programmatically via the legacy REST endpoint.
-
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -50,6 +30,26 @@ Programmatic Integration
    alertmanager-integration/solarwinds
    alertmanager-integration/customize-labels-priorities
    exporting/custom-webhooks
+
+Programmatic Integration
+-------------------------
+
+.. grid:: 1 1 2 3
+    :gutter: 3
+
+    .. grid-item-card:: :octicon:`code;1em;` Send Alerts API
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: exporting/send-alerts-api
+        :link-type: doc
+
+        Send alerts programmatically via the legacy ``/api/alerts`` REST endpoint.
+
+    .. grid-item-card:: :octicon:`code;1em;` Configuration Changes API
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: exporting/configuration-changes-api
+        :link-type: doc
+
+        Send configuration changes programmatically via the legacy REST endpoint.
 
 Prometheus & AlertManager
 --------------------------
