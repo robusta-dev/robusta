@@ -18,20 +18,19 @@ Webhook URL
 
     https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>
 
-Splunk's built-in **Webhook** alert action does not support custom headers. Authenticate via the URL:
-
-.. code-block::
-
-    https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
-
 Configure Splunk
 ----------------
 
-1. Open or create a Splunk saved search and choose **Add Actions → Webhook**.
-2. Set the **URL** to the URL above.
-3. Save the search. Splunk will POST the search results to Robusta whenever the alert fires.
+Splunk's built-in **Webhook** alert action does not let you set custom headers, so authenticate via the URL.
 
-For environments where you control the Splunk app, use the **Webhook Alert Action** plugin to send an ``Authorization: Bearer <ROBUSTA_API_KEY>`` header instead of the URL token.
+1. Open or create a Splunk saved search and choose **Add Actions → Webhook**.
+2. Set the **URL** to the webhook URL above with ``&token=<ROBUSTA_API_KEY>`` appended, so authentication travels with the request:
+
+   .. code-block::
+
+       https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
+
+3. Save the search. If your Splunk environment has the **Webhook Alert Action** app installed, you can instead set an ``Authorization: Bearer <ROBUSTA_API_KEY>`` header and use the plain webhook URL without ``&token=…``.
 
 Verify
 ------
