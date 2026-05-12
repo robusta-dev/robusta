@@ -158,17 +158,17 @@ Cloud Provider Monitoring
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`cloud;1em;` GCP Cloud Monitoring
+    .. grid-item-card:: :octicon:`server;1em;` GCP Cloud Monitoring
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/gcp-monitoring
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cloud;1em;` Azure Monitor
+    .. grid-item-card:: :octicon:`server;1em;` Azure Monitor
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/azure-monitor
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cloud;1em;` AWS CloudWatch
+    .. grid-item-card:: :octicon:`server;1em;` AWS CloudWatch
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/aws-cloudwatch
         :link-type: doc
@@ -179,22 +179,22 @@ Incident Management
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`bell;1em;` PagerDuty
+    .. grid-item-card:: :octicon:`pulse;1em;` PagerDuty
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/pagerduty
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`bell;1em;` Opsgenie
+    .. grid-item-card:: :octicon:`pulse;1em;` Opsgenie
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/opsgenie
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`bell;1em;` Rootly
+    .. grid-item-card:: :octicon:`pulse;1em;` Rootly
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/rootly
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`bell;1em;` Incident.io
+    .. grid-item-card:: :octicon:`pulse;1em;` Incident.io
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/incidentio
         :link-type: doc
@@ -205,7 +205,7 @@ Changes & Deployments
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`git-branch;1em;` Argo CD
+    .. grid-item-card:: :octicon:`package;1em;` Argo CD
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/argocd
         :link-type: doc
@@ -215,7 +215,7 @@ Changes & Deployments
         :link: send-events/github
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`flame;1em;` LaunchDarkly
+    .. grid-item-card:: :octicon:`plug;1em;` LaunchDarkly
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/launchdarkly
         :link-type: doc
