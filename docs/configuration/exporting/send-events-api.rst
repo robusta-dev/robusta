@@ -1,7 +1,7 @@
 Send Events API
 ================
 
-Send alerts, incidents, and changes from any monitoring system to Robusta through a single webhook endpoint. HolmesGPT investigates each event against your live cluster state, logs, metrics, and connected data sources, and attaches its findings to help accelerate triage.
+Send alerts from any monitoring system to Robusta through a single webhook endpoint. HolmesGPT investigates each alert against your live cluster state, logs, metrics, and connected data sources, and attaches its findings to help accelerate triage.
 
 This is the recommended ingestion path for new integrations. The legacy :doc:`Send Alerts API </configuration/exporting/send-alerts-api>` remains available for existing customers.
 
@@ -19,12 +19,7 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
    send-events/azure-monitor
    send-events/splunk
    send-events/sentry
-   send-events/launchdarkly
-   send-events/argocd
-   send-events/github
    send-events/opsgenie
-   send-events/rootly
-   send-events/incidentio
    send-events/nagios
    send-events/solarwinds
    send-events/aws-cloudwatch
@@ -36,7 +31,7 @@ The endpoint accepts the default payload structure of the supported origins. The
 
 .. code-block::
 
-    POST https://api.robusta.dev/webhooks?type=<TYPE>&origin=<ORIGIN>&account_id=<ACCOUNT_ID>
+    POST https://api.robusta.dev/webhooks?type=alert&origin=<ORIGIN>&account_id=<ACCOUNT_ID>
 
 Query Parameters
 ----------------
@@ -51,7 +46,7 @@ Query Parameters
      - Required
    * - ``type``
      - string
-     - One of ``alert``, ``incident``, or ``change``.
+     - Must be ``alert``.
      - Yes
    * - ``origin``
      - string
@@ -187,37 +182,6 @@ Incident Management
     .. grid-item-card:: :octicon:`pulse;1em;` Opsgenie
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/opsgenie
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` Rootly
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: send-events/rootly
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` Incident.io
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: send-events/incidentio
-        :link-type: doc
-
-Changes & Deployments
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. grid:: 1 1 2 3
-    :gutter: 3
-
-    .. grid-item-card:: :octicon:`package;1em;` Argo CD
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: send-events/argocd
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`mark-github;1em;` GitHub
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: send-events/github
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`plug;1em;` LaunchDarkly
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: send-events/launchdarkly
         :link-type: doc
 
 Other
