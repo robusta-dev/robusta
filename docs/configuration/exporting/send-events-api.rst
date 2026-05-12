@@ -50,7 +50,7 @@ Query Parameters
      - Yes
    * - ``origin``
      - string
-     - Identifies the monitoring product (for example ``alertmanager``, ``pagerduty``, ``datadog``).
+     - Identifies the monitoring product. Must be one of the supported origins listed under `Integrations`_ below.
      - Yes
    * - ``account_id``
      - string
@@ -200,7 +200,3 @@ Other
         :link: send-events/solarwinds
         :link-type: doc
 
-Other sources
--------------
-
-Any monitoring system that can POST JSON to a URL is supported. Choose a value for ``origin`` that identifies your source, then paste the URL into your vendor's webhook configuration.
