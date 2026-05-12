@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=dynatrace&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=dynatrace&account_id=<ACCOUNT_ID>
 
 Configure Dynatrace
 -------------------
@@ -29,7 +29,7 @@ Configure Dynatrace
 
        Authorization: Bearer <ROBUSTA_API_KEY>
 
-4. Use the default JSON payload template, or customize it. Robusta's generic parser handles arbitrary fields.
+4. Use the default JSON payload template.
 5. Save and assign the integration to your alerting profile.
 
 Verify

@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=nagios&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=nagios&account_id=<ACCOUNT_ID>
 
 Configure Nagios
 ----------------
@@ -53,7 +53,7 @@ Then reference ``$USER20$`` from the notification command:
                 "type": "$NOTIFICATIONTYPE$",
                 "output": "$SERVICEOUTPUT$"
             }' \
-            'https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=nagios&type=alert'
+            'https://api.robusta.dev/webhooks?type=alert&origin=nagios&account_id=<ACCOUNT_ID>'
     }
 
 Define an analogous ``notify-robusta-host`` command, then attach both to a Nagios contact:

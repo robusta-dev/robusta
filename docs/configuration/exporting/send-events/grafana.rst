@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=grafana&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=grafana&account_id=<ACCOUNT_ID>
 
 Configure Grafana
 -----------------

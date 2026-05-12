@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=incidentio&type=incident
+    https://api.robusta.dev/webhooks?type=incident&origin=incidentio&account_id=<ACCOUNT_ID>
 
 Configure Incident.io
 ---------------------

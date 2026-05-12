@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=rootly&type=incident
+    https://api.robusta.dev/webhooks?type=incident&origin=rootly&account_id=<ACCOUNT_ID>
 
 Configure Rootly
 ----------------

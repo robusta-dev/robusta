@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=argocd&type=change
+    https://api.robusta.dev/webhooks?type=change&origin=argocd&account_id=<ACCOUNT_ID>
 
 Configure Argo CD Notifications
 --------------------------------
@@ -26,7 +26,7 @@ Add a webhook service and a template to ``argocd-notifications-cm``:
 .. code-block:: yaml
 
     service.webhook.robusta: |
-      url: https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=argocd&type=change
+      url: https://api.robusta.dev/webhooks?type=change&origin=argocd&account_id=<ACCOUNT_ID>
       headers:
         - name: Authorization
           value: Bearer <ROBUSTA_API_KEY>

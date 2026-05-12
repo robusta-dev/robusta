@@ -1,7 +1,7 @@
 AlertManager
 =============
 
-Forward Prometheus alerts from AlertManager directly to Robusta. Robusta's per-origin parser maps AlertManager labels and annotations onto the timeline; the original payload is preserved for HolmesGPT.
+Forward Prometheus alerts from AlertManager directly to Robusta.
 
 Prerequisites
 -------------
@@ -15,7 +15,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=alertmanager&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=alertmanager&account_id=<ACCOUNT_ID>
 
 Configure AlertManager
 ----------------------
@@ -27,7 +27,7 @@ Add a webhook receiver to ``alertmanager.yml``:
     receivers:
       - name: robusta
         webhook_configs:
-          - url: 'https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=alertmanager&type=alert'
+          - url: 'https://api.robusta.dev/webhooks?type=alert&origin=alertmanager&account_id=<ACCOUNT_ID>'
             send_resolved: true
             http_config:
               authorization:

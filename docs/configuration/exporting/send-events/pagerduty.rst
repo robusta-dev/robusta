@@ -18,13 +18,13 @@ For incidents:
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=pagerduty&type=incident
+    https://api.robusta.dev/webhooks?type=incident&origin=pagerduty&account_id=<ACCOUNT_ID>
 
 For AIOps-forwarded alerts:
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=pagerduty&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=pagerduty&account_id=<ACCOUNT_ID>
 
 Configure PagerDuty
 -------------------

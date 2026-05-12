@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=solarwinds&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=solarwinds&account_id=<ACCOUNT_ID>
 
 Configure SolarWinds
 --------------------
@@ -29,7 +29,7 @@ SolarWinds does not ship a native bearer-token webhook action. Use the **Execute
       -H "Authorization: Bearer <ROBUSTA_API_KEY>" ^
       -H "Content-Type: application/json" ^
       --data "{ \"alertName\": \"${N=Alerting;M=AlertName}\", \"node\": \"${N=SwisEntity;M=Caption}\", \"severity\": \"${N=Alerting;M=Severity}\", \"message\": \"${N=Alerting;M=AlertMessage}\" }" ^
-      "https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=solarwinds&type=alert"
+      "https://api.robusta.dev/webhooks?type=alert&origin=solarwinds&account_id=<ACCOUNT_ID>"
 
 Save the action and attach it to the alerts you want forwarded.
 

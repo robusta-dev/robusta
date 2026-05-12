@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=github&type=change
+    https://api.robusta.dev/webhooks?type=change&origin=github&account_id=<ACCOUNT_ID>
 
 Configure GitHub
 ----------------
@@ -28,7 +28,7 @@ Configure GitHub
 
    .. code-block::
 
-       https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=github&type=change&token=<ROBUSTA_API_KEY>
+       https://api.robusta.dev/webhooks?type=change&origin=github&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
 
    .. warning::
 

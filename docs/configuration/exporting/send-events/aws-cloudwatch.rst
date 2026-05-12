@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=awscloudwatch&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>
 
 Recipe
 ------
@@ -32,7 +32,7 @@ Recipe
        import urllib.error
        import urllib.request
 
-       URL = "https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=awscloudwatch&type=alert"
+       URL = "https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>"
        TIMEOUT_SECONDS = 5
 
        def lambda_handler(event, context):

@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=gcp&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>
 
 Configure GCP
 -------------
@@ -25,9 +25,9 @@ GCP webhook notification channels do not support custom headers in the console, 
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=gcp&type=alert&token=<ROBUSTA_API_KEY>
+    https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
 
-The relay accepts ``token`` as an alternate to the ``Authorization`` header.
+The ``token`` query parameter is accepted as an alternative to the ``Authorization`` header.
 
 1. In the GCP Console, go to **Monitoring → Alerting → Edit Notification Channels**.
 2. Click **Add new** under **Webhooks**.

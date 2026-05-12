@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=azure&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>
 
 Configure Azure
 ---------------
@@ -25,11 +25,11 @@ Action Group webhook receivers do not allow custom headers, so authenticate via 
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=azure&type=alert&token=<ROBUSTA_API_KEY>
+    https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
 
 1. In the Azure Portal, open **Monitor → Action groups** and either create a new group or edit an existing one.
 2. Under **Actions**, add an action of type **Webhook**.
-3. Name it ``Robusta`` and set the **URI** to the URL above. Leave **Enable the common alert schema** on — Robusta's parser is built against it.
+3. Name it ``Robusta`` and set the **URI** to the URL above. Leave **Enable the common alert schema** on.
 4. Save the action group and attach it to the alert rules you want to forward.
 
 Verify

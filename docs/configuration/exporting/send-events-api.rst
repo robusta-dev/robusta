@@ -32,13 +32,11 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
 Overview
 --------
 
-The endpoint accepts any JSON payload. The request is parameterized by query string:
+The endpoint accepts the default payload structure of the supported origins. The request is parameterized by query string:
 
 .. code-block::
 
-    POST https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=<ORIGIN>&type=<TYPE>
-
-Robusta stores every payload verbatim, then asynchronously parses it into the Robusta UI timeline. If a per-origin parser is registered for ``origin``, it is used; otherwise a generic JSON parser handles the payload. Parse failures are visible in the **Delivery Log** UI page so you can self-debug.
+    POST https://api.robusta.dev/webhooks?type=<TYPE>&origin=<ORIGIN>&account_id=<ACCOUNT_ID>
 
 Query Parameters
 ----------------
@@ -51,17 +49,17 @@ Query Parameters
      - Type
      - Description
      - Required
-   * - ``account_id``
-     - string
-     - Your Robusta account ID, found in ``generated_values.yaml``.
-     - Yes
-   * - ``origin``
-     - string
-     - Identifies the monitoring product (for example ``alertmanager``, ``pagerduty``, ``datadog``). Free-form; selects the per-origin parser when one exists.
-     - Yes
    * - ``type``
      - string
      - One of ``alert``, ``incident``, or ``change``.
+     - Yes
+   * - ``origin``
+     - string
+     - Identifies the monitoring product (for example ``alertmanager``, ``pagerduty``, ``datadog``).
+     - Yes
+   * - ``account_id``
+     - string
+     - Your Robusta account ID, found in ``generated_values.yaml``.
      - Yes
 
 Authentication
@@ -81,7 +79,7 @@ Example Request
 .. code-block:: bash
 
     curl --location --request POST \
-      'https://api.robusta.dev/webhooks?account_id=ACCOUNT_ID&origin=datadog&type=alert' \
+      'https://api.robusta.dev/webhooks?type=alert&origin=datadog&account_id=ACCOUNT_ID' \
       --header 'Authorization: Bearer API_KEY' \
       --header 'Content-Type: application/json' \
       --data-raw '{ "title": "High error rate", "severity": "high" }'
@@ -238,12 +236,7 @@ Other
         :link: send-events/solarwinds
         :link-type: doc
 
-Unsupported sources
--------------------
+Other sources
+-------------
 
-Any monitoring system that can POST JSON to a URL works. Pick a free-form ``origin`` value, paste the URL into the vendor's webhook configuration, and Robusta's generic parser will handle the payload. The AI investigator reads the raw payload along with the structured event, so source-specific fields are preserved even without a dedicated parser.
-
-Delivery Log
-------------
-
-Every received payload — parsed, pending, or failed — is visible in the Robusta UI under **Settings → Delivery Log**, scoped to your account and sorted by recency. Use it to confirm that a vendor is reaching Robusta, view the original request body, and inspect parser errors.
+Any monitoring system that can POST JSON to a URL is supported. Choose a value for ``origin`` that identifies your source, then paste the URL into your vendor's webhook configuration.

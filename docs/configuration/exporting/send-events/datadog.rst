@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=datadog&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=datadog&account_id=<ACCOUNT_ID>
 
 Configure Datadog
 -----------------
@@ -29,7 +29,7 @@ Configure Datadog
 
        { "Authorization": "Bearer <ROBUSTA_API_KEY>" }
 
-4. Leave the default payload, or customize it. Robusta's per-origin parser handles the standard Datadog payload shape.
+4. Leave the default payload.
 5. Save. In any monitor, set the **Notify** field to ``@webhook-robusta`` to forward its alerts to Robusta.
 
 Verify

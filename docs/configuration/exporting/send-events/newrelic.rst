@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=newrelic&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=newrelic&account_id=<ACCOUNT_ID>
 
 Configure New Relic
 -------------------
@@ -29,7 +29,7 @@ Configure New Relic
 
        Authorization: Bearer <ROBUSTA_API_KEY>
 
-4. Use the default payload template. Robusta preserves the original ``aggregationKeys`` field as the dedup key.
+4. Use the default payload template.
 5. Create a **Workflow** that routes the desired policy to this destination.
 
 Verify

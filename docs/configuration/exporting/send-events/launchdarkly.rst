@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=launchdarkly&type=change
+    https://api.robusta.dev/webhooks?type=change&origin=launchdarkly&account_id=<ACCOUNT_ID>
 
 Configure LaunchDarkly
 ----------------------

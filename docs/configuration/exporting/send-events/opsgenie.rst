@@ -16,7 +16,7 @@ Webhook URL
 
 .. code-block::
 
-    https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&origin=opsgenie&type=alert
+    https://api.robusta.dev/webhooks?type=alert&origin=opsgenie&account_id=<ACCOUNT_ID>
 
 Configure Opsgenie
 ------------------
