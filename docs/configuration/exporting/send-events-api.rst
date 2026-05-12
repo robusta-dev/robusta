@@ -10,19 +10,19 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
    :hidden:
 
    send-events/alertmanager
-   send-events/pagerduty
-   send-events/datadog
-   send-events/newrelic
-   send-events/dynatrace
-   send-events/grafana
-   send-events/gcp-monitoring
-   send-events/azure-monitor
-   send-events/splunk
-   send-events/sentry
-   send-events/opsgenie
-   send-events/nagios
-   send-events/solarwinds
    send-events/aws-cloudwatch
+   send-events/azure-monitor
+   send-events/datadog
+   send-events/dynatrace
+   send-events/gcp-monitoring
+   send-events/grafana
+   send-events/nagios
+   send-events/newrelic
+   send-events/opsgenie
+   send-events/pagerduty
+   send-events/sentry
+   send-events/solarwinds
+   send-events/splunk
 
 Overview
 --------
