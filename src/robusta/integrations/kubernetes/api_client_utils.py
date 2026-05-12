@@ -286,3 +286,7 @@ def get_all_namespace_data():
 
 def get_namespace_labels(namespace_name: str) -> Dict[str, str]:
     return get_all_namespace_data()[namespace_name].labels
+
+
+def get_namespace_annotations(namespace_name: str) -> Dict[str, str]:
+    return get_all_namespace_data()[namespace_name].annotations
