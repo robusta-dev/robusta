@@ -27,7 +27,7 @@ Each sink consists of a sink class and a config class. Optionally, helpers are u
 
 To implement a new sink you must:
 
-1. :ref:`Build Robusta from source <Build from Source>`
+1. Clone the `Robusta repo <https://github.com/robusta-dev/robusta>`_ and follow the README to build from source
 2. Add a new Python module inside `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_ containing your sink’s source code
 3. Implement a sink config class
 4. Implement a sink class

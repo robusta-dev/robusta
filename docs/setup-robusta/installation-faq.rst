@@ -5,22 +5,6 @@ I have an error installing Robusta
 ================================================
 Please refer to :ref:`Help <Getting Support>` for common errors and solutions.
 
-Can I install Robusta without the cli?
-========================================
-Yes, using the cli is optional. It auto-generates helm values, but you can also handwrite them:
-
-1. Fetch Robusta's default **Helm values**:
-
-.. code-block:: bash
-    :name: cb-helm-repo-add-show-values
-
-    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-    helm show values robusta/robusta
-
-2. Modify those values to your heart's content. Refer to the :doc:`Send Alerts </configuration/index>` documentation for details.
-
-3. Do a ``helm install``.
-
 The helm chart in GitHub doesn't work. Why?
 ========================================================
 It has certain placeholders. For example, ``runner.image`` is set during our release workflow.
@@ -46,11 +30,15 @@ Verify success by checking that Robusta pods are running:
 
     kubectl get pods -n robusta
 
-.. warning::
+Can I run two Robusta instances in the same cluster?
+======================================================
 
-    Make sure you add the ``--namespace`` flag to future ``robusta`` cli commands.
+Yes. Install each instance with a different Helm release name in its own namespace:
 
-Does Robusta support Thanos/Cortex/Mimir/VictoriaMetrics?
-============================================================
-Any Prometheus-compatible solution is fine. Just follow instructions in the :doc:`Send Alerts </configuration/index>` documentation.
+.. code-block:: bash
+   :name: cb-helm-install-robusta-two-instances
 
+    helm install robusta robusta/robusta -f ./generated_values.yaml -n namespace-1 --create-namespace --set clusterName=<YOUR_CLUSTER_NAME>
+    helm install robusta-2 robusta/robusta -f ./generated_values.yaml -n namespace-2 --create-namespace --set clusterName=<YOUR_OTHER_CLUSTER_NAME>
+
+Use a unique ``clusterName`` for each instance so they appear separately in the Robusta UI.
