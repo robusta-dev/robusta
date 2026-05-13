@@ -35,4 +35,4 @@ Configure Datadog
 Verify
 ------
 
-Trigger a test alert from a Datadog monitor. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
+Trigger a test alert from a Datadog monitor. The alert should appear on the Robusta timeline.

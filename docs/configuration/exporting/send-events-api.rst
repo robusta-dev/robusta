@@ -1,7 +1,7 @@
 Send Events API
 ================
 
-Send alerts from any monitoring system to Robusta through a single webhook endpoint. HolmesGPT investigates each alert against your live cluster state, logs, metrics, and connected data sources, and attaches its findings to help accelerate triage.
+Send alerts from your monitoring system to Robusta through a single webhook endpoint.
 
 This is the recommended ingestion path for new integrations. The legacy :doc:`Send Alerts API </configuration/exporting/send-alerts-api>` remains available for existing customers.
 
@@ -24,10 +24,8 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
    send-events/solarwinds
    send-events/splunk
 
-Overview
+Endpoint
 --------
-
-The endpoint accepts the default payload structure of the supported origins. The request is parameterized by query string:
 
 .. code-block::
 
@@ -37,25 +35,17 @@ Query Parameters
 ----------------
 
 .. list-table::
-   :widths: 20 10 60 10
+   :widths: 20 70
    :header-rows: 1
 
    * - Parameter
-     - Type
      - Description
-     - Required
    * - ``type``
-     - string
      - Must be ``alert``.
-     - Yes
    * - ``origin``
-     - string
      - Identifies the monitoring product. Must be one of the supported origins listed under `Integrations`_ below.
-     - Yes
    * - ``account_id``
-     - string
      - Your Robusta account ID, found in ``generated_values.yaml``.
-     - Yes
 
 Authentication
 --------------
@@ -65,8 +55,6 @@ Send your Robusta API key as a Bearer token. Generate keys in the Robusta UI und
 .. code-block::
 
     Authorization: Bearer <API_KEY>
-
-The key must be scoped to the ``account_id`` query parameter. Mismatches return ``401``.
 
 Example Request
 ---------------
@@ -78,22 +66,6 @@ Example Request
       --header 'Authorization: Bearer API_KEY' \
       --header 'Content-Type: application/json' \
       --data-raw '{ "title": "High error rate", "severity": "high" }'
-
-Response
---------
-
-A successful request returns ``200`` with the ID of the stored event:
-
-.. code-block:: json
-
-    { "id": "8f1b...e21" }
-
-Errors:
-
-* ``400`` — missing or empty ``account_id``, ``origin``, or ``type``; invalid ``type`` value.
-* ``401`` — invalid or out-of-scope API key.
-* ``429`` — rate limit exceeded (300 requests per 5-minute window per account).
-* ``503`` — transient storage failure; vendors should retry.
 
 Integrations
 ------------
@@ -199,4 +171,3 @@ Other
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/solarwinds
         :link-type: doc
-

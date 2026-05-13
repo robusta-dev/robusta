@@ -27,8 +27,6 @@ GCP webhook notification channels do not support custom headers in the console, 
 
     https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
 
-The ``token`` query parameter is accepted as an alternative to the ``Authorization`` header.
-
 1. In the GCP Console, go to **Monitoring → Alerting → Edit Notification Channels**.
 2. Click **Add new** under **Webhooks**.
 3. Set the **Endpoint URL** to the URL above and name it ``Robusta``.
@@ -37,4 +35,4 @@ The ``token`` query parameter is accepted as an alternative to the ``Authorizati
 Verify
 ------
 
-Use **Send test notification** on the channel. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
+Use **Send test notification** on the channel. The alert should appear on the Robusta timeline.

@@ -32,4 +32,4 @@ Sentry's webhook destinations support custom headers via Internal Integrations:
 Verify
 ------
 
-Resolve and re-open a Sentry issue, or trigger an issue alert rule that points at this integration. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
+Resolve and re-open a Sentry issue, or trigger an issue alert rule that points at this integration. The alert should appear on the Robusta timeline.

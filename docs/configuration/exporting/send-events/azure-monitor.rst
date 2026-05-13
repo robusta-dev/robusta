@@ -35,4 +35,4 @@ Action Group webhook receivers do not allow custom headers, so authenticate via 
 Verify
 ------
 
-Use the action group's **Test** option. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
+Use the action group's **Test** option. The alert should appear on the Robusta timeline.

@@ -30,9 +30,9 @@ Configure PagerDuty
 
        Authorization: Bearer <ROBUSTA_API_KEY>
 
-5. Save. PagerDuty will sign the payload, but Robusta authenticates on the API key alone — the signature is ignored.
+5. Save.
 
 Verify
 ------
 
-Trigger a test alert in PagerDuty. It should appear in **Settings → Delivery Log** and on the Robusta timeline.
+Trigger a test alert in PagerDuty. It should appear on the Robusta timeline.

@@ -35,4 +35,4 @@ Configure Dynatrace
 Verify
 ------
 
-Use the **Send test notification** button. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
+Use the **Send test notification** button. The alert should appear on the Robusta timeline.

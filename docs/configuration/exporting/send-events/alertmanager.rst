@@ -43,4 +43,4 @@ Set ``continue: true`` if Robusta is not your only receiver, so alerts also reac
 Verify
 ------
 
-Open **Settings → Delivery Log** in the Robusta UI to see the request arrive, then check the timeline for the parsed alert.
+The alert should appear on the Robusta timeline.

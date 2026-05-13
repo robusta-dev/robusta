@@ -35,4 +35,4 @@ Splunk's built-in **Webhook** alert action does not let you set custom headers, 
 Verify
 ------
 
-Trigger the saved search manually. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
+Trigger the saved search manually. The alert should appear on the Robusta timeline.
