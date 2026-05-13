@@ -35,4 +35,4 @@ Configure New Relic
 Verify
 ------
 
-Trigger a test incident in New Relic. The alert should appear on the Robusta timeline.
+Trigger a test incident in New Relic. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.

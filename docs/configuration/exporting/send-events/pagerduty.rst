@@ -35,4 +35,4 @@ Configure PagerDuty
 Verify
 ------
 
-Trigger a test alert in PagerDuty. It should appear on the Robusta timeline.
+Trigger a test alert in PagerDuty. It should appear in **Settings → Delivery Log** and on the Robusta timeline.

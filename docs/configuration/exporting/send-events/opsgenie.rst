@@ -34,4 +34,4 @@ Configure Opsgenie
 Verify
 ------
 
-Create a test alert in Opsgenie. The alert should appear on the Robusta timeline.
+Create a test alert in Opsgenie. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.

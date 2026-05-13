@@ -61,4 +61,4 @@ Alternatively, if you already use **Amazon EventBridge → API destination**, po
 Verify
 ------
 
-Use the **Test alarm** action in CloudWatch. The alert should appear on the Robusta timeline.
+Use the **Test alarm** action in CloudWatch. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.

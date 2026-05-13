@@ -32,4 +32,4 @@ Save the action and attach it to the alerts you want forwarded.
 Verify
 ------
 
-Manually trigger the alert from the **Alert Manager** UI. The alert should appear on the Robusta timeline.
+Manually trigger the alert from the **Alert Manager** UI. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.

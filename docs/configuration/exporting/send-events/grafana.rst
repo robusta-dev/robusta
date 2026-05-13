@@ -35,4 +35,4 @@ Configure Grafana
 Verify
 ------
 
-Use Grafana's **Test** button on the contact point. The alert should appear on the Robusta timeline.
+Use Grafana's **Test** button on the contact point. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.

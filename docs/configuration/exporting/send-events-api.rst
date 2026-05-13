@@ -56,6 +56,8 @@ Send your Robusta API key as a Bearer token. Generate keys in the Robusta UI und
 
     Authorization: Bearer <API_KEY>
 
+The key must be scoped to the ``account_id`` query parameter. Mismatches return ``401``.
+
 Example Request
 ---------------
 
@@ -66,6 +68,22 @@ Example Request
       --header 'Authorization: Bearer API_KEY' \
       --header 'Content-Type: application/json' \
       --data-raw '{ "title": "High error rate", "severity": "high" }'
+
+Response
+--------
+
+A successful request returns ``200`` with the ID of the stored event:
+
+.. code-block:: json
+
+    { "id": "8f1b...e21" }
+
+Errors:
+
+* ``400`` — missing or empty ``account_id``, ``origin``, or ``type``; invalid ``type`` value.
+* ``401`` — invalid or out-of-scope API key.
+* ``429`` — rate limit exceeded (300 requests per 5-minute window per account).
+* ``503`` — transient storage failure; vendors should retry.
 
 Integrations
 ------------

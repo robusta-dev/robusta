@@ -71,4 +71,4 @@ Add ``robusta`` to the ``contact_groups`` you want to forward.
 Verify
 ------
 
-Acknowledge a test problem to fire a notification. The alert should appear on the Robusta timeline.
+Acknowledge a test problem to fire a notification. The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
