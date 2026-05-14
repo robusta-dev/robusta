@@ -12,6 +12,12 @@ playbookRepos: {}
 # sinks configurations
 # Each sink supports an optional mute_intervals field (parallel to activity) that mutes
 # all notifications during specified date/time ranges. Format: YYYY-MM-DD HH:MM.
+#
+# Secret values (api_key, token, etc.) can be pulled from a Kubernetes Secret using
+# the "{{ env.VARIABLE_NAME }}" syntax. Expose the secret to the runner via
+# `runner.additional_env_vars` (and to HolmesGPT via `holmes.additionalEnvVars` if used).
+# See https://docs.robusta.dev/master/setup-robusta/configuration-secrets.html
+#
 # Example:
 #   sinksConfig:
 #   - slack_sink:
@@ -729,6 +735,16 @@ runner:
       memory: 1024Mi
     limits:
       cpu: ~
+  # Use additional_env_vars to inject Kubernetes Secret values into the runner.
+  # Variables defined here can be referenced in sinksConfig / globalConfig / custom_playbooks
+  # via the "{{ env.VARIABLE_NAME }}" templating syntax.
+  # Example:
+  #   additional_env_vars:
+  #     - name: ROBUSTA_UI_TOKEN
+  #       valueFrom:
+  #         secretKeyRef:
+  #           name: my-robusta-secrets
+  #           key: ui-token
   additional_env_vars: []
   additional_env_froms: []
   customCRD: []

@@ -42,6 +42,28 @@ Add a new sink to your Helm values (``generated_values.yaml``), under ``sinksCon
 
 Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
+Using a Kubernetes Secret for the Token
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Instead of placing the token directly in your Helm values, you can store it in a Kubernetes Secret and inject it as an environment variable. Reference it in ``sinksConfig`` with the ``{{ env.VARIABLE_NAME }}`` syntax:
+
+.. code-block:: yaml
+
+  sinksConfig:
+  - robusta_sink:
+      name: robusta_ui_sink
+      token: "{{ env.ROBUSTA_UI_TOKEN }}"
+
+  runner:
+    additional_env_vars:
+      - name: ROBUSTA_UI_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: my-robusta-secrets
+            key: ui-token
+
+If you also use HolmesGPT, the same token must be exposed to it via ``holmes.additionalEnvVars``. See :ref:`Managing Secrets <Reading the Robusta UI Token from a secret in HolmesGPT>` for the full guide.
+
 Handling Short-Lived Clusters in the UI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
