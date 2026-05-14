@@ -9,6 +9,7 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
    :maxdepth: 1
    :hidden:
 
+   webhooks/send-events-api
    exporting/send-alerts-api
    exporting/configuration-changes-api
    alertmanager-integration/outofcluster-prometheus
@@ -37,14 +38,22 @@ Programmatic Integration
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`code;1em;` Send Alerts API
+    .. grid-item-card:: :octicon:`code;1em;` Send Events API
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: webhooks/send-events-api
+        :link-type: doc
+
+        Recommended. Send alerts and changes through the single
+        ``/webhooks`` ingestion endpoint.
+
+    .. grid-item-card:: :octicon:`code;1em;` Send Alerts API (legacy)
         :class-card: sd-bg-light sd-bg-text-light
         :link: exporting/send-alerts-api
         :link-type: doc
 
         Send alerts programmatically via the legacy ``/api/alerts`` REST endpoint.
 
-    .. grid-item-card:: :octicon:`code;1em;` Configuration Changes API
+    .. grid-item-card:: :octicon:`code;1em;` Configuration Changes API (legacy)
         :class-card: sd-bg-light sd-bg-text-light
         :link: exporting/configuration-changes-api
         :link-type: doc

@@ -23,7 +23,7 @@
 
    Overview <configuration/exporting/robusta-pro-features>
    Holmes Chat API <configuration/holmesgpt/holmes-chat-api>
-   configuration/exporting/send-events-api
+   configuration/webhooks/send-events-api
    configuration/exporting/alert-export-api
    configuration/exporting/alert-statistics-api
    configuration/exporting/rbac-api
