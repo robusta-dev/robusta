@@ -73,13 +73,52 @@ class WebhookSink(SinkBase):
             logging.exception(f"Webhook request error\n headers: \n{self.headers}")
 
     def __write_json(self, finding: Finding, platform_enabled: bool):
-        finding_dict = json.loads(json.dumps(finding, default=lambda o: getattr(o, '__dict__', str(o))))
+        finding_dict = {
+            "title": finding.title,
+            "description": finding.description,
+            "cluster_name": self.cluster_name,
+            "account_id": self.account_id,
+            "severity": finding.severity.name,
+            "source": finding.source.name,
+            "finding_type": finding.finding_type.name,
+            "aggregation_key": finding.aggregation_key,
+            "failure": finding.failure,
+            "fingerprint": finding.fingerprint,
+            "starts_at": finding.starts_at.isoformat() if finding.starts_at else None,
+            "ends_at": finding.ends_at.isoformat() if finding.ends_at else None,
+            "id": str(finding.id),
+            "category": finding.category,
+            "service": json.loads(
+                json.dumps(finding.service, default=lambda o: getattr(o, '__dict__', str(o)))
+            ) if finding.service else None,
+            "service_key": finding.service_key,
+            "creation_date": finding.creation_date,
+            "investigate_uri": finding.investigate_uri,
+            "add_silence_url": finding.add_silence_url,
+            "subject": {
+                "name": finding.subject.name,
+                "kind": finding.subject.subject_type.value,
+                "namespace": finding.subject.namespace,
+                "node": finding.subject.node,
+                "container": finding.subject.container,
+                "labels": finding.subject.labels,
+                "annotations": finding.subject.annotations,
+            },
+            "links": [
+                {"name": link.name, "url": link.url, "type": link.type.value if link.type else None}
+                for link in finding.links
+            ],
+        }
 
         if platform_enabled:
             finding_dict["investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
-
             if finding.add_silence_url:
                 finding_dict["silence"] = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
+
+        # Enrichments last so they're the first thing dropped if size_limit is exceeded.
+        finding_dict["enrichments"] = json.loads(
+            json.dumps(finding.enrichments, default=lambda o: getattr(o, '__dict__', str(o)))
+        )
 
         message = {}
         message_length = 0
