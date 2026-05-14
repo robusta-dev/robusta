@@ -1,5 +1,6 @@
 import tempfile
 from enum import Enum
+from typing import Optional
 
 from webexteamssdk import WebexTeamsAPI
 
@@ -38,7 +39,8 @@ class WebexSender:
         self.account_id = account_id
         self.client = WebexTeamsAPI(access_token=bot_access_token)  # Create a client using webexteamssdk
 
-    def send_finding_to_webex(self, finding: Finding, platform_enabled: bool):
+    def send_finding_to_webex(self, finding: Finding, platform_enabled: bool, room_id: Optional[str] = None):
+        target_room = room_id or self.room_id
         message, table_blocks, file_blocks, description = self._separate_blocks(finding, platform_enabled)
         adaptive_card_body = self._createAdaptiveCardBody(message, table_blocks, description)
         adaptive_card = self._createAdaptiveCard(adaptive_card_body)
@@ -51,9 +53,9 @@ class WebexSender:
         ]
 
         # Here text="." is added because Webex API throws error to add text/file/markdown
-        self.client.messages.create(roomId=self.room_id, text=".", attachments=attachment)
+        self.client.messages.create(roomId=target_room, text=".", attachments=attachment)
         if file_blocks:
-            self._send_files(file_blocks)
+            self._send_files(file_blocks, target_room)
 
     def _createAdaptiveCardBody(self, message_content, table_blocks: List[TableBlock], description):
         body = []
@@ -154,7 +156,7 @@ class WebexSender:
 
         return message_content, table_blocks, file_blocks, description
 
-    def _send_files(self, files: List[FileBlock]):
+    def _send_files(self, files: List[FileBlock], room_id: str):
         # Webex allows for only one file attachment per message
         # This function sends the files individually to webex
         for block in files:
@@ -164,7 +166,7 @@ class WebexSender:
                     f.write(block.contents)
                     f.flush()
                     self.client.messages.create(
-                        roomId=self.room_id,
+                        roomId=room_id,
                         files=[f.name],
                     )
                     f.close()  # File is deleted when closed
