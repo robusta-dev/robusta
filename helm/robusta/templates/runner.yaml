@@ -42,6 +42,32 @@ spec:
       securityContext:
       {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.runner.dnsConfig.enabled }}
+      {{- $policy := .Values.runner.dnsConfig.policy }}
+      {{- $hasConfig := or .Values.runner.dnsConfig.nameservers .Values.runner.dnsConfig.searches .Values.runner.dnsConfig.options }}
+
+      {{- if and (eq $policy "None") (not $hasConfig) }}
+        {{- fail "dnsConfig: when dnsPolicy is 'None', you must set at least one of nameservers, searches, or options" }}
+      {{- end }}
+      dnsPolicy: {{ $policy | quote }}
+      {{- if $hasConfig }}
+      dnsConfig:
+        {{- with .Values.runner.dnsConfig.nameservers }}
+        nameservers:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.runner.dnsConfig.searches }}
+        searches:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.runner.dnsConfig.options }}
+        options:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{ else }}
+      dnsPolicy: ClusterFirst
+      {{- end }}
       {{- if .Values.runner.hardenedFs }}
       initContainers:
       - name: setup-venv

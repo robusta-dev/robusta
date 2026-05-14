@@ -62,6 +62,14 @@ def handle_holmes_error(e: Exception) -> NoReturn:
             "Holmes endpoint is currently unreachable.",
         )
     elif isinstance(e, requests.HTTPError):
+        # Log the upstream response body so 4xx/5xx diagnostics aren't lost in
+        # the generic "Holmes internal configuration error" branch below
+        # (e.g. {"detail":"missing user_id"} would otherwise be invisible).
+        if e.response is not None:
+            logging.error(
+                f"Holmes responded {e.response.status_code} on {e.request.method if e.request else '?'} "
+                f"{e.request.url if e.request else '?'}: {e.response.text}"
+            )
         if e.response.status_code == 401 and "invalid_api_key" in e.response.text:
             raise ActionException(
                 ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key."
@@ -256,12 +264,11 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
     conversation_title = build_conversation_title(params)
     params_resource_kind = params.resource.kind or ""
     try:
+        params_dict = params.dict(exclude={"holmes_url", "render_graph_images", "resource", "context"})
         holmes_req = HolmesIssueChatRequest(
-            ask=params.ask,
-            conversation_history=params.conversation_history,
+            **params_dict,
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
-            model=params.model,
         )
         result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
         result.raise_for_status()
