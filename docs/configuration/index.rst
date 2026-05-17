@@ -1,5 +1,7 @@
 :hide-toc:
 
+.. include:: ./_legacy_banner.rst
+
 Send Alerts to Robusta
 =======================
 
