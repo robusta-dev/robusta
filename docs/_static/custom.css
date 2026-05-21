@@ -352,3 +352,63 @@ h3 {
 .success-icon {
     color: #28a745; /* or any green color you prefer */
 }
+
+/* Region selector */
+.robusta-region-selector {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.75rem 0 1.25rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+    border-left: 3px solid var(--md-primary-fg-color, #1976d2);
+    border-radius: 4px;
+    background-color: var(--md-code-bg-color, #f5f5f5);
+    font-size: 0.8rem;
+}
+
+.robusta-region-selector__label {
+    font-weight: 600;
+    color: var(--md-default-fg-color, #333);
+}
+
+.robusta-region-selector__options {
+    display: inline-flex;
+    gap: 0.25rem;
+}
+
+.robusta-region-selector__btn {
+    appearance: none;
+    border: 1px solid var(--md-default-fg-color--lightest, #ccc);
+    background: var(--md-default-bg-color, #fff);
+    color: var(--md-default-fg-color, #333);
+    padding: 0.25rem 0.7rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 500;
+    line-height: 1.2;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.robusta-region-selector__btn:hover {
+    border-color: var(--md-primary-fg-color, #1976d2);
+}
+
+.robusta-region-selector__btn.is-active {
+    background: var(--md-primary-fg-color, #1976d2);
+    border-color: var(--md-primary-fg-color, #1976d2);
+    color: #fff;
+}
+
+.robusta-region-selector__note {
+    color: var(--md-default-fg-color--light, #666);
+    font-size: 0.75rem;
+}
+
+@media (max-width: 600px) {
+    .robusta-region-selector__note {
+        flex-basis: 100%;
+    }
+}
