@@ -144,34 +144,103 @@
     menu.setAttribute("role", "listbox");
 
     const items = [];
+
+    function focusItem(idx) {
+      if (idx < 0) idx = items.length - 1;
+      if (idx >= items.length) idx = 0;
+      items.forEach(function (it, i) { it.tabIndex = i === idx ? 0 : -1; });
+      items[idx].focus();
+    }
+
+    function selectItem(key) {
+      syncAll(key);
+      picker.classList.remove("is-open");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.focus();
+    }
+
     Object.keys(REGIONS).forEach(function (key) {
       const item = document.createElement("li");
       item.setAttribute("role", "option");
       item.setAttribute("data-region", key);
       item.className = "robusta-region-inline__option";
-      item.tabIndex = -1;
       const isActive = key === currentRegion;
       item.setAttribute("aria-selected", String(isActive));
+      item.tabIndex = isActive ? 0 : -1;
       if (isActive) item.classList.add("is-active");
       item.textContent = REGIONS[key].label;
       item.addEventListener("click", function (e) {
         e.preventDefault();
-        syncAll(key);
-        picker.classList.remove("is-open");
-        trigger.setAttribute("aria-expanded", "false");
-        trigger.focus();
+        selectItem(key);
+      });
+      item.addEventListener("keydown", function (e) {
+        const idx = items.indexOf(item);
+        switch (e.key) {
+          case "Enter":
+          case " ":
+            e.preventDefault();
+            selectItem(key);
+            break;
+          case "ArrowDown":
+            e.preventDefault();
+            focusItem(idx + 1);
+            break;
+          case "ArrowUp":
+            e.preventDefault();
+            focusItem(idx - 1);
+            break;
+          case "Home":
+            e.preventDefault();
+            focusItem(0);
+            break;
+          case "End":
+            e.preventDefault();
+            focusItem(items.length - 1);
+            break;
+          case "Tab":
+            picker.classList.remove("is-open");
+            trigger.setAttribute("aria-expanded", "false");
+            break;
+          case "Escape":
+            e.preventDefault();
+            picker.classList.remove("is-open");
+            trigger.setAttribute("aria-expanded", "false");
+            trigger.focus();
+            break;
+        }
       });
       menu.appendChild(item);
       items.push(item);
     });
 
+    function openMenu() {
+      closeAllInlineMenus(picker);
+      picker.classList.add("is-open");
+      trigger.setAttribute("aria-expanded", "true");
+      const activeIdx = items.findIndex(function (it) { return it.classList.contains("is-active"); });
+      focusItem(activeIdx >= 0 ? activeIdx : 0);
+    }
+
     trigger.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      const willOpen = !picker.classList.contains("is-open");
-      closeAllInlineMenus(willOpen ? picker : null);
-      picker.classList.toggle("is-open", willOpen);
-      trigger.setAttribute("aria-expanded", String(willOpen));
+      if (picker.classList.contains("is-open")) {
+        picker.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+      } else {
+        openMenu();
+      }
+    });
+
+    trigger.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openMenu();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        openMenu();
+        focusItem(items.length - 1);
+      }
     });
 
     picker.appendChild(trigger);

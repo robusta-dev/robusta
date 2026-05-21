@@ -116,6 +116,8 @@ def robusta_url_role(name, rawtext, text, lineno, inliner, options=None, content
     else:
         url = raw_text.strip()
         label = url
+    if not label:
+        label = url
     if not url:
         msg = inliner.reporter.error(
             "robusta-url role requires a URL", line=lineno
