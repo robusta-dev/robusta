@@ -9,6 +9,8 @@
   const STORAGE_KEY = "robusta-docs-region";
   const URL_PATTERN = /\b(platform|api)(?:\.(?:eu|ap))?\.robusta\.dev\b/g;
   const DETECT_PATTERN = /\b(?:platform|api)(?:\.(?:eu|ap))?\.robusta\.dev\b/;
+  const BAR_CLASS = "robusta-region-box__bar";
+  const BTN_CLASS = "robusta-region-box__region-btn";
 
   function getRegion() {
     try {
@@ -32,13 +34,12 @@
     });
   }
 
-  const targets = [];
+  // Each box on the page has its own collection of URL targets so its
+  // contents update in place when the region changes.
+  const boxes = [];
 
-  function resetTargets() {
-    targets.length = 0;
-  }
-
-  function collectTextNodes(root) {
+  function collectTargets(root) {
+    const targets = [];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: function (node) {
         if (!node.nodeValue || !DETECT_PATTERN.test(node.nodeValue)) {
@@ -55,9 +56,6 @@
     while ((node = walker.nextNode())) {
       targets.push({ kind: "text", node: node, original: node.nodeValue });
     }
-  }
-
-  function collectAttributes(root) {
     const ATTR_NAMES = ["href", "src", "data-clipboard-text", "value", "title"];
     const selector = ATTR_NAMES.map(function (a) { return "[" + a + "]"; }).join(",");
     root.querySelectorAll(selector).forEach(function (el) {
@@ -68,11 +66,12 @@
         }
       });
     });
+    return targets;
   }
 
-  function applyRegion(regionKey) {
-    for (let i = 0; i < targets.length; i++) {
-      const t = targets[i];
+  function applyToBox(box, regionKey) {
+    for (let i = 0; i < box.targets.length; i++) {
+      const t = box.targets[i];
       const next = rewrite(t.original, regionKey);
       if (t.kind === "text") {
         if (t.node.nodeValue !== next) t.node.nodeValue = next;
@@ -80,86 +79,94 @@
         if (t.node.getAttribute(t.attr) !== next) t.node.setAttribute(t.attr, next);
       }
     }
+    updateBoxButtons(box, regionKey);
   }
 
-  function buildToggle(current) {
-    const wrap = document.createElement("div");
-    wrap.className = "robusta-region-selector";
-    wrap.setAttribute("role", "region");
-    wrap.setAttribute("aria-label", "Robusta region selector");
+  function updateBoxButtons(box, regionKey) {
+    box.buttons.forEach(function (btn) {
+      const isActive = btn.getAttribute("data-region") === regionKey;
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-checked", String(isActive));
+    });
+  }
+
+  function syncAll(regionKey) {
+    saveRegion(regionKey);
+    boxes.forEach(function (box) {
+      applyToBox(box, regionKey);
+    });
+  }
+
+  function buildBar(currentRegion) {
+    const bar = document.createElement("div");
+    bar.className = BAR_CLASS;
 
     const label = document.createElement("span");
-    label.className = "robusta-region-selector__label";
-    label.textContent = "Select your region:";
-    wrap.appendChild(label);
+    label.className = "robusta-region-box__bar-label";
+    label.textContent = "Region";
+    bar.appendChild(label);
 
     const group = document.createElement("div");
-    group.className = "robusta-region-selector__options";
+    group.className = "robusta-region-box__region-options";
     group.setAttribute("role", "radiogroup");
+    group.setAttribute("aria-label", "Select your Robusta region");
 
+    const buttons = [];
     Object.keys(REGIONS).forEach(function (key) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.setAttribute("role", "radio");
       btn.setAttribute("data-region", key);
-      btn.className = "robusta-region-selector__btn";
+      btn.className = BTN_CLASS;
       btn.textContent = REGIONS[key].label;
-      const active = key === current;
+      const active = key === currentRegion;
       btn.setAttribute("aria-checked", String(active));
       if (active) btn.classList.add("is-active");
       btn.addEventListener("click", function () {
-        const r = btn.getAttribute("data-region");
-        saveRegion(r);
-        applyRegion(r);
-        group.querySelectorAll("button[data-region]").forEach(function (b) {
-          const isActive = b.getAttribute("data-region") === r;
-          b.classList.toggle("is-active", isActive);
-          b.setAttribute("aria-checked", String(isActive));
-        });
+        syncAll(key);
       });
       group.appendChild(btn);
+      buttons.push(btn);
     });
 
-    wrap.appendChild(group);
+    bar.appendChild(group);
+    return { bar: bar, buttons: buttons };
+  }
 
-    const note = document.createElement("span");
-    note.className = "robusta-region-selector__note";
-    note.textContent = "URLs on this page will update to match.";
-    wrap.appendChild(note);
+  function initBox(el, currentRegion) {
+    const existingBar = el.querySelector(":scope > ." + BAR_CLASS);
+    if (existingBar) existingBar.remove();
 
-    return wrap;
+    const built = buildBar(currentRegion);
+    el.insertBefore(built.bar, el.firstChild);
+
+    const targetRoot = el.querySelector(".robusta-region-box__body") || el;
+    const targets = collectTargets(targetRoot);
+
+    const box = {
+      el: el,
+      bar: built.bar,
+      buttons: built.buttons,
+      targets: targets,
+    };
+    boxes.push(box);
+    applyToBox(box, currentRegion);
   }
 
   function init() {
+    boxes.length = 0;
     const content =
       document.querySelector(".md-content__inner") ||
-      document.querySelector("article.md-content__inner") ||
       document.querySelector("article") ||
-      document.querySelector("main");
+      document.querySelector("main") ||
+      document.body;
     if (!content) return;
 
-    resetTargets();
-
-    const existing = content.querySelector(".robusta-region-selector");
-    if (existing && existing.parentNode) {
-      existing.parentNode.removeChild(existing);
-    }
-
-    collectTextNodes(content);
-    collectAttributes(content);
-    if (targets.length === 0) return;
-
     const region = getRegion();
-    const toggle = buildToggle(region);
-
-    const firstHeading = content.querySelector("h1");
-    if (firstHeading && firstHeading.parentNode) {
-      firstHeading.parentNode.insertBefore(toggle, firstHeading.nextSibling);
-    } else {
-      content.insertBefore(toggle, content.firstChild);
-    }
-
-    applyRegion(region);
+    const elements = content.querySelectorAll(".robusta-region-box");
+    elements.forEach(function (el) {
+      initBox(el, region);
+    });
   }
 
   if (document.readyState === "loading") {

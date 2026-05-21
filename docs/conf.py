@@ -50,6 +50,7 @@ extensions = [
     "sphinx_design",
     "sphinxcontrib.images",
     "autorobusta",
+    "region_box",
     "sphinx_immaterial",
     "sphinxcontrib.details.directive",
     "sphinx_jinja",
