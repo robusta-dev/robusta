@@ -74,7 +74,7 @@ RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
     && apt-get install -y --no-install-recommends git ssh curl libcairo2 apt-transport-https gnupg2 \
-    && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin \
+    && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
     && rm -rf /var/lib/apt/lists/*
 
 
