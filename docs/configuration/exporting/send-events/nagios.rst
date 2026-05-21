@@ -14,7 +14,7 @@ Prerequisites
 Webhook URL
 -----------
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=nagios&account_id=<ACCOUNT_ID>
 
@@ -37,7 +37,7 @@ Restrict the file to the Nagios user:
 
 Define a notification command that references ``$USER20$``:
 
-.. code-block::
+.. robusta-code::
 
     define command {
         command_name notify-robusta-service

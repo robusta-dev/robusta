@@ -36,7 +36,7 @@ When deploying Robusta in a tightly restricted environment, the runner needs out
 .. note::
    Traffic is **always initiated outbound from the runner**. No inbound connections to your cluster are required. All endpoints are reached over HTTPS (TCP/443) unless noted otherwise.
 
-.. code-block:: text
+.. robusta-code:: text
 
     # Robusta SaaS platform (required if robusta_sink enabled)
     *.robusta.dev
@@ -118,7 +118,7 @@ Verifying the Allowlist
 
 After applying firewall rules, you can sanity-check connectivity from inside the runner pod:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     kubectl exec -n <robusta-ns> deploy/robusta-runner -- \
       sh -c 'for host in api.robusta.dev relay.robusta.dev platform.robusta.dev; do

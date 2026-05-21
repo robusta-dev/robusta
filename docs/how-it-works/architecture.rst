@@ -48,7 +48,7 @@ Security & Networking
 Next Steps
 ^^^^^^^^^^
 
-`Ready to install Robusta? Get started. <https://platform.robusta.dev/signup>`_
+:robusta-url:`Ready to install Robusta? Get started. <https://platform.robusta.dev/signup>`
 
 .. _Robusta Classic:
 

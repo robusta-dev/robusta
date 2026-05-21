@@ -18,7 +18,7 @@ Webhook Endpoint
 
 Send alerts to Robusta using the following endpoint:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     POST https://api.robusta.dev/api/alerts
 
@@ -37,7 +37,7 @@ Quick Example
 
 Here's a simple example of sending a custom alert:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --location --request POST 'https://api.robusta.dev/api/alerts' \
         --header 'Authorization: Bearer YOUR_API_KEY' \

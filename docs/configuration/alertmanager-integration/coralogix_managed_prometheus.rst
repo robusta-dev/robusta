@@ -20,7 +20,7 @@ Common Configuration (for both webhooks)
 1. In the Coralogix site go to Data Flow, then Outbound Webhooks, and click ``Generic webhook``.
 2. In the url insert:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/generic/alertmanager
 

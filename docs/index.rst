@@ -77,6 +77,8 @@ Robusta is available as **SaaS**, **self-hosted**, or **open source**. See :doc:
 Ready to get started?
 ---------------------
 
+.. robusta-region-picker::
+
 .. button-link:: https://platform.robusta.dev/signup
     :color: primary
     :outline:

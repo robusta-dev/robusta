@@ -114,7 +114,7 @@ Example Request
 
 Here is an example of a ``POST`` request to send a list of configuration changes:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --location --request POST 'https://api.robusta.dev/api/config-changes' \
     --header 'Authorization: Bearer API-KEY' \

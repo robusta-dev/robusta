@@ -6,7 +6,7 @@ Robusta is delivered through the **Robusta Platform** — a centralized place to
 SaaS (Hosted)
 ^^^^^^^^^^^^^^
 
-The hosted Platform runs in Robusta's infrastructure. You install the in-cluster Agent, sign up at `platform.robusta.dev <https://platform.robusta.dev/signup>`_, and your alerts and investigations stream into the hosted UI.
+The hosted Platform runs in Robusta's infrastructure. You install the in-cluster Agent, sign up at :robusta-url:`platform.robusta.dev <https://platform.robusta.dev/signup>`, and your alerts and investigations stream into the hosted UI.
 
 The SaaS Platform is **SOC 2 compliant** and available in multiple regions, including the **US**, **EU**, and **Asia Pacific**.
 

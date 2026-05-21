@@ -37,7 +37,7 @@ Step 3: Create a Webhook Configuration in SolarWinds
    - **Description**: Robusta Webhook
    - **Destination URL**:
 
-     .. code-block::
+     .. robusta-code::
 
         https://api.robusta.dev/integrations/generic/solarwinds?account_id=ACCOUNT_ID_HERE
 

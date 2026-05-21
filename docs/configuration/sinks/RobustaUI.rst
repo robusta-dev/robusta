@@ -20,7 +20,7 @@ Configuring the Robusta UI Sink
 ------------------------------------------------
 
 .. tip::
-    This guide is for users who have already installed Robusta on their cluster. If you haven't installed Robusta yet, we recommend starting by `creating a free Robusta UI account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=robusta-ui-sink-page>`_ instead.
+    This guide is for users who have already installed Robusta on their cluster. If you haven't installed Robusta yet, we recommend starting by :robusta-url:`creating a free Robusta UI account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=robusta-ui-sink-page>` instead.
 
 Use the ``robusta`` CLI to generate a token:
 

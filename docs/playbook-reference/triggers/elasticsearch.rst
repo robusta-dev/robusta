@@ -28,7 +28,7 @@ The following Elasticsearch Watcher configuration will trigger a Robusta playboo
 Make sure you update ``<account_id>``, ``<cluster_name>``, and ``<secret_key>`` in the emphasized line.
 These should match the Robusta Helm chart values.
 
-.. code-block:: json
+.. robusta-code:: json
    :emphasize-lines: 26,27,33
 
     {

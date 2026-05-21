@@ -22,7 +22,7 @@ Configure the Alertmanager webhook
 
 Apply the following Secret in the GMP namespace (default ``gmp-public``). Replace ``<ACCOUNT_ID>`` and ``<SIGNING_KEY>`` with your credentials.
 
-.. code-block:: yaml
+.. robusta-code:: yaml
 
    apiVersion: v1
    kind: Secret
@@ -103,7 +103,7 @@ Optional: verify credentials with curl
 
 You can manually validate the webhook and credentials by posting a sample alert:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
    curl -X POST 'https://api.robusta.dev/integrations/generic/alertmanager' \
      -H 'Authorization: Bearer <ACCOUNT_ID> <SIGNING_KEY>' \

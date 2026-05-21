@@ -63,7 +63,7 @@ Example Request
 
 Here is an example of a ``POST`` request to query the resource count in a namespace:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --location 'https://api.robusta.dev/api/namespaces/resources' \
     --header 'Authorization: Bearer API-KEY-HERE' \

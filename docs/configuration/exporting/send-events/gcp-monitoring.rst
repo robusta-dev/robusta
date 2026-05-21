@@ -14,7 +14,7 @@ Prerequisites
 Webhook URL
 -----------
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>
 
@@ -23,7 +23,7 @@ Configure GCP
 
 GCP webhook notification channels do not support custom headers in the console, so include the API key in the URL:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
 

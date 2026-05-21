@@ -27,7 +27,7 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
 Endpoint
 --------
 
-.. code-block::
+.. robusta-code::
 
     POST https://api.robusta.dev/webhooks?type=alert&origin=<ORIGIN>&account_id=<ACCOUNT_ID>
 
@@ -61,7 +61,7 @@ The key must be scoped to the ``account_id`` query parameter. Mismatches return 
 Example Request
 ---------------
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --location --request POST \
       'https://api.robusta.dev/webhooks?type=alert&origin=datadog&account_id=ACCOUNT_ID' \
