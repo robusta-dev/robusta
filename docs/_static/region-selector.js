@@ -82,12 +82,23 @@
       }
     }
     for (let j = 0; j < boxes.length; j++) {
-      const buttons = boxes[j].buttons;
-      for (let k = 0; k < buttons.length; k++) {
-        const btn = buttons[k];
-        const active = btn.getAttribute("data-region") === regionKey;
-        btn.classList.toggle("is-active", active);
-        btn.setAttribute("aria-checked", String(active));
+      const box = boxes[j];
+      if (box.buttons) {
+        for (let k = 0; k < box.buttons.length; k++) {
+          const btn = box.buttons[k];
+          const active = btn.getAttribute("data-region") === regionKey;
+          btn.classList.toggle("is-active", active);
+          btn.setAttribute("aria-checked", String(active));
+        }
+      }
+      if (box.items) {
+        if (box.currentEl) box.currentEl.textContent = REGIONS[regionKey].label;
+        for (let m = 0; m < box.items.length; m++) {
+          const item = box.items[m];
+          const active = item.getAttribute("data-region") === regionKey;
+          item.classList.toggle("is-active", active);
+          item.setAttribute("aria-selected", String(active));
+        }
       }
     }
   }
@@ -97,31 +108,76 @@
     applyRegion(regionKey);
   }
 
+  function closeAllInlineMenus(except) {
+    document.querySelectorAll("." + INLINE_PICKER_CLASS + ".is-open").forEach(function (p) {
+      if (p === except) return;
+      p.classList.remove("is-open");
+      const trig = p.querySelector(".robusta-region-inline__trigger");
+      if (trig) trig.setAttribute("aria-expanded", "false");
+    });
+  }
+
   function buildInlinePicker(currentRegion) {
     const picker = document.createElement("span");
     picker.className = INLINE_PICKER_CLASS;
-    picker.setAttribute("role", "radiogroup");
-    picker.setAttribute("aria-label", "Select your Robusta region");
 
-    const buttons = [];
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "robusta-region-inline__trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const currentEl = document.createElement("span");
+    currentEl.className = "robusta-region-inline__current";
+    currentEl.textContent = REGIONS[currentRegion].label;
+
+    const caret = document.createElement("span");
+    caret.className = "robusta-region-inline__caret";
+    caret.setAttribute("aria-hidden", "true");
+    caret.textContent = "▾";
+
+    trigger.appendChild(currentEl);
+    trigger.appendChild(caret);
+
+    const menu = document.createElement("ul");
+    menu.className = "robusta-region-inline__menu";
+    menu.setAttribute("role", "listbox");
+
+    const items = [];
     Object.keys(REGIONS).forEach(function (key) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.setAttribute("role", "radio");
-      btn.setAttribute("data-region", key);
-      btn.className = INLINE_BTN_CLASS;
-      btn.textContent = REGIONS[key].label;
-      const active = key === currentRegion;
-      btn.setAttribute("aria-checked", String(active));
-      if (active) btn.classList.add("is-active");
-      btn.addEventListener("click", function (e) {
+      const item = document.createElement("li");
+      item.setAttribute("role", "option");
+      item.setAttribute("data-region", key);
+      item.className = "robusta-region-inline__option";
+      item.tabIndex = -1;
+      const isActive = key === currentRegion;
+      item.setAttribute("aria-selected", String(isActive));
+      if (isActive) item.classList.add("is-active");
+      item.textContent = REGIONS[key].label;
+      item.addEventListener("click", function (e) {
         e.preventDefault();
         syncAll(key);
+        picker.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.focus();
       });
-      picker.appendChild(btn);
-      buttons.push(btn);
+      menu.appendChild(item);
+      items.push(item);
     });
-    return { picker: picker, buttons: buttons };
+
+    trigger.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const willOpen = !picker.classList.contains("is-open");
+      closeAllInlineMenus(willOpen ? picker : null);
+      picker.classList.toggle("is-open", willOpen);
+      trigger.setAttribute("aria-expanded", String(willOpen));
+    });
+
+    picker.appendChild(trigger);
+    picker.appendChild(menu);
+
+    return { picker: picker, trigger: trigger, currentEl: currentEl, items: items };
   }
 
   function buildBar(currentRegion) {
@@ -186,7 +242,7 @@
       if (existingPicker) existingPicker.remove();
       const built = buildInlinePicker(region);
       el.appendChild(built.picker);
-      boxes.push({ buttons: built.buttons });
+      boxes.push({ currentEl: built.currentEl, items: built.items });
     });
 
     collectTargets(content);
@@ -195,6 +251,14 @@
 
     applyRegion(region);
   }
+
+  document.addEventListener("click", function (e) {
+    const open = document.querySelector("." + INLINE_PICKER_CLASS + ".is-open");
+    if (open && !open.contains(e.target)) closeAllInlineMenus(null);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeAllInlineMenus(null);
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);

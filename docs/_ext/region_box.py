@@ -87,6 +87,25 @@ class RobustaCodeDirective(SphinxDirective):
         return [container]
 
 
+class RobustaRegionPickerDirective(SphinxDirective):
+    """Standalone region picker: a 'Select Region' label + dropdown, no URL."""
+
+    has_content = False
+    required_arguments = 0
+    optional_arguments = 1
+    final_argument_whitespace = True
+
+    def run(self):
+        label = (self.arguments[0].strip() if self.arguments else "Select Region")
+        html = (
+            f'<div class="robusta-region-picker">'
+            f'<span class="robusta-region-picker__label">{escape(label)}</span>'
+            f'<span class="robusta-region-inline robusta-region-picker__host"></span>'
+            f"</div>"
+        )
+        return [nodes.raw("", html, format="html")]
+
+
 def robusta_url_role(name, rawtext, text, lineno, inliner, options=None, content=None):
     """Inline ``:robusta-url:`URL``` or ``:robusta-url:`label <URL>```."""
     raw_text = nodes.unescape(text)
@@ -115,9 +134,10 @@ def robusta_url_role(name, rawtext, text, lineno, inliner, options=None, content
 def setup(app):
     app.add_directive("robusta-url", RobustaUrlDirective)
     app.add_directive("robusta-code", RobustaCodeDirective)
+    app.add_directive("robusta-region-picker", RobustaRegionPickerDirective)
     app.add_role("robusta-url", robusta_url_role)
     return {
-        "version": "0.2",
+        "version": "0.3",
         "parallel_read_safe": True,
         "parallel_write_safe": True,
     }
