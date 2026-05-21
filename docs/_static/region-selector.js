@@ -34,6 +34,10 @@
 
   const targets = [];
 
+  function resetTargets() {
+    targets.length = 0;
+  }
+
   function collectTextNodes(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: function (node) {
@@ -134,6 +138,13 @@
       document.querySelector("main");
     if (!content) return;
 
+    resetTargets();
+
+    const existing = content.querySelector(".robusta-region-selector");
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+
     collectTextNodes(content);
     collectAttributes(content);
     if (targets.length === 0) return;
@@ -148,12 +159,19 @@
       content.insertBefore(toggle, content.firstChild);
     }
 
-    if (region !== "us") applyRegion(region);
+    applyRegion(region);
   }
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
+  }
+
+  // Material/Sphinx-Immaterial instant navigation swaps the content area
+  // without firing DOMContentLoaded. The theme exposes an RxJS `document$`
+  // observable that emits on every swap; re-run init() on each emission.
+  if (typeof window !== "undefined" && window.document$ && typeof window.document$.subscribe === "function") {
+    window.document$.subscribe(init);
   }
 })();
