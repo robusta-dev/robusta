@@ -554,11 +554,12 @@ h3 {
     top: calc(100% + 2px);
     left: 0;
     z-index: 30;
-    display: none;
+    display: none !important;
     margin: 0 !important;
-    padding: 0.2rem 0 !important;
+    padding: 0.15rem 0 !important;
     list-style: none !important;
-    min-width: 4rem;
+    min-width: 100%;
+    width: auto;
     background: var(--md-default-bg-color, #fff);
     border: 1px solid var(--md-default-fg-color--lighter, rgba(0, 0, 0, 0.18));
     border-radius: 4px;
@@ -568,17 +569,19 @@ h3 {
 
 .md-typeset .robusta-region-inline__picker.is-open .robusta-region-inline__menu,
 .robusta-region-inline__picker.is-open .robusta-region-inline__menu {
-    display: block;
+    display: block !important;
 }
 
 .md-typeset .robusta-region-inline__option,
 .robusta-region-inline__option {
-    display: block;
-    padding: 0.3rem 0.75rem;
-    margin: 0;
+    display: block !important;
+    padding: 0.25rem 0.5rem !important;
+    margin: 0 !important;
     cursor: pointer;
     color: var(--md-default-fg-color, #333);
     user-select: none;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .md-typeset .robusta-region-inline__option:hover,
