@@ -13,7 +13,7 @@ Prerequisites
 Webhook URL
 -----------
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=alertmanager&account_id=<ACCOUNT_ID>
 
@@ -22,7 +22,7 @@ Configure AlertManager
 
 Add a webhook receiver to ``alertmanager.yml``:
 
-.. code-block:: yaml
+.. robusta-code:: yaml
 
     receivers:
       - name: robusta

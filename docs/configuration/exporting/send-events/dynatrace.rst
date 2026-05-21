@@ -14,7 +14,7 @@ Prerequisites
 Webhook URL
 -----------
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=dynatrace&account_id=<ACCOUNT_ID>
 

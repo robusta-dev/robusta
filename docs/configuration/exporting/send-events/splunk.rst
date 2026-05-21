@@ -14,7 +14,7 @@ Prerequisites
 Webhook URL
 -----------
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>
 
@@ -26,7 +26,7 @@ Splunk's built-in **Webhook** alert action does not let you set custom headers, 
 1. Open or create a Splunk saved search and choose **Add Actions → Webhook**.
 2. Set the **URL** to the webhook URL above with ``&token=<ROBUSTA_API_KEY>`` appended, so authentication travels with the request:
 
-   .. code-block::
+   .. robusta-code::
 
        https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
 

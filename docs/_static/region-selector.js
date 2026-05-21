@@ -34,12 +34,13 @@
     });
   }
 
-  // Each box on the page has its own collection of URL targets so its
-  // contents update in place when the region changes.
+  // All URL occurrences across the page content (text nodes + relevant
+  // attributes). Boxes are separate — each holds its selector buttons so
+  // every box on the page stays visually in sync on region change.
+  const targets = [];
   const boxes = [];
 
   function collectTargets(root) {
-    const targets = [];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: function (node) {
         if (!node.nodeValue || !DETECT_PATTERN.test(node.nodeValue)) {
@@ -66,12 +67,11 @@
         }
       });
     });
-    return targets;
   }
 
-  function applyToBox(box, regionKey) {
-    for (let i = 0; i < box.targets.length; i++) {
-      const t = box.targets[i];
+  function applyRegion(regionKey) {
+    for (let i = 0; i < targets.length; i++) {
+      const t = targets[i];
       const next = rewrite(t.original, regionKey);
       if (t.kind === "text") {
         if (t.node.nodeValue !== next) t.node.nodeValue = next;
@@ -79,22 +79,20 @@
         if (t.node.getAttribute(t.attr) !== next) t.node.setAttribute(t.attr, next);
       }
     }
-    updateBoxButtons(box, regionKey);
-  }
-
-  function updateBoxButtons(box, regionKey) {
-    box.buttons.forEach(function (btn) {
-      const isActive = btn.getAttribute("data-region") === regionKey;
-      btn.classList.toggle("is-active", isActive);
-      btn.setAttribute("aria-checked", String(isActive));
-    });
+    for (let j = 0; j < boxes.length; j++) {
+      const buttons = boxes[j].buttons;
+      for (let k = 0; k < buttons.length; k++) {
+        const btn = buttons[k];
+        const active = btn.getAttribute("data-region") === regionKey;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-checked", String(active));
+      }
+    }
   }
 
   function syncAll(regionKey) {
     saveRegion(regionKey);
-    boxes.forEach(function (box) {
-      applyToBox(box, regionKey);
-    });
+    applyRegion(regionKey);
   }
 
   function buildBar(currentRegion) {
@@ -103,7 +101,7 @@
 
     const label = document.createElement("span");
     label.className = "robusta-region-box__bar-label";
-    label.textContent = "Region";
+    label.textContent = "Select Region";
     bar.appendChild(label);
 
     const group = document.createElement("div");
@@ -133,28 +131,10 @@
     return { bar: bar, buttons: buttons };
   }
 
-  function initBox(el, currentRegion) {
-    const existingBar = el.querySelector(":scope > ." + BAR_CLASS);
-    if (existingBar) existingBar.remove();
-
-    const built = buildBar(currentRegion);
-    el.insertBefore(built.bar, el.firstChild);
-
-    const targetRoot = el.querySelector(".robusta-region-box__body") || el;
-    const targets = collectTargets(targetRoot);
-
-    const box = {
-      el: el,
-      bar: built.bar,
-      buttons: built.buttons,
-      targets: targets,
-    };
-    boxes.push(box);
-    applyToBox(box, currentRegion);
-  }
-
   function init() {
+    targets.length = 0;
     boxes.length = 0;
+
     const content =
       document.querySelector(".md-content__inner") ||
       document.querySelector("article") ||
@@ -163,10 +143,20 @@
     if (!content) return;
 
     const region = getRegion();
-    const elements = content.querySelectorAll(".robusta-region-box");
-    elements.forEach(function (el) {
-      initBox(el, region);
+
+    content.querySelectorAll(".robusta-region-box").forEach(function (el) {
+      const existingBar = el.querySelector(":scope > ." + BAR_CLASS);
+      if (existingBar) existingBar.remove();
+      const built = buildBar(region);
+      el.insertBefore(built.bar, el.firstChild);
+      boxes.push({ buttons: built.buttons });
     });
+
+    collectTargets(content);
+
+    if (targets.length === 0 && boxes.length === 0) return;
+
+    applyRegion(region);
   }
 
   if (document.readyState === "loading") {

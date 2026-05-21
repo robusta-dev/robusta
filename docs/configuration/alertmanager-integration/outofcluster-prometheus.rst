@@ -21,7 +21,7 @@ This integration lets your central Prometheus send alerts to Robusta, as if they
 
 .. admonition:: alertmanager.yaml
 
-    .. code-block:: yaml
+    .. robusta-code:: yaml
 
         receivers:
           - name: 'robusta'
@@ -72,7 +72,7 @@ If you are using a third-party AlertManager and want to give it separate credent
 
 .. admonition:: alertmanager.yaml
 
-    .. code-block:: yaml
+    .. robusta-code:: yaml
 
         receivers:
           - name: 'robusta'

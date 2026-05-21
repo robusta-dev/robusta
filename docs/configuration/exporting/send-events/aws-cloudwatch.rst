@@ -14,7 +14,7 @@ Prerequisites
 Webhook URL
 -----------
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>
 
@@ -25,7 +25,7 @@ Recipe
 2. Create a Lambda function (Python 3.12) and subscribe it to the ``robusta`` SNS topic. Store the Robusta API key in **Lambda → Configuration → Environment variables** as ``ROBUSTA_API_KEY``.
 3. Use the following handler:
 
-   .. code-block:: python
+   .. robusta-code:: python
 
        import json
        import os

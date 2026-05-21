@@ -69,7 +69,7 @@ Step 4: Add the Workflow File
 
 Create a new file in your repository at ``.github/workflows/holmes-pr-review.yaml`` with the following contents:
 
-.. code-block:: yaml
+.. robusta-code:: yaml
 
     name: Holmes PR review
     on:

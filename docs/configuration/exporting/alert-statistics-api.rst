@@ -41,7 +41,7 @@ Example Request
 
 The following `curl` command demonstrates how to query aggregated alert data for a specified time range:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --location 'https://api.robusta.dev/api/query/report?account_id=XXXXXX-XXXX_XXXX_XXXXX7&start_ts=2024-10-27T04:02:05.032Z&end_ts=2024-11-27T05:02:05.032Z' \
     --header 'Authorization: Bearer API-KEY'

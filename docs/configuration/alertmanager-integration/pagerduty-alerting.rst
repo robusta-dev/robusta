@@ -47,7 +47,7 @@ Set the following values:
 
 * **Webhook URL**:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/generic/pagerduty/incidents
 
@@ -88,7 +88,7 @@ Step 1: Create an Integration for Alertmanager
 1. In Event Orchestration, create a new **Integration** named ``Alertmanager``.
 2. Use the following webhook URL:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/generic/pagerduty/alerts
 
@@ -116,7 +116,7 @@ Step 3: Add a Webhook Action
 
 * **URL**:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/generic/pagerduty/alerts
 
@@ -171,7 +171,7 @@ Optional: Cluster Name via Query Param
 
 You can specify the target cluster using a query parameter in the webhook URL:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/generic/pagerduty/incidents?cluster=your-cluster-name
 
@@ -179,7 +179,7 @@ This is useful for multi-cluster setups where Robusta should assign findings to 
 
 For example:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/generic/pagerduty/incidents?cluster=test-cluster
 

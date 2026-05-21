@@ -48,7 +48,7 @@ Example Request
 
 The following ``curl`` command demonstrates how to export alert history data for the ``CrashLoopBackoff`` alert:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --location 'https://api.robusta.dev/api/query/alerts?alert_name=CrashLoopBackoff&account_id=ACCOUNT_ID&start_ts=2024-09-02T04%3A02%3A05.032Z&end_ts=2024-09-17T05%3A02%3A05.032Z' \
     --header 'Authorization: Bearer API-KEY'

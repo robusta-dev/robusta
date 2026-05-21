@@ -14,7 +14,7 @@ Prerequisites
 Webhook URL
 -----------
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>
 
@@ -23,7 +23,7 @@ Configure Azure
 
 Action Group webhook receivers do not allow custom headers, so authenticate via the URL:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
 
