@@ -378,8 +378,6 @@ h3 {
 .md-typeset .robusta-region-box__bar-label,
 .robusta-region-box__bar-label {
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
     color: var(--md-default-fg-color--light, rgba(0, 0, 0, 0.6));
 }
 
