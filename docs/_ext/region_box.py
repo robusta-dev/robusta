@@ -1,5 +1,6 @@
 """
-Directives for Robusta platform URL / code blocks with an embedded region selector.
+Directives and role for Robusta platform URL / code components with an
+embedded region selector.
 
 Usage in .rst::
 
@@ -10,15 +11,26 @@ Usage in .rst::
        curl --location --request POST 'https://api.robusta.dev/api/alerts' \
            --header 'Authorization: Bearer API-KEY'
 
-The rendered HTML carries the ``robusta-region-box`` class; the
-client-side script in ``_static/region-selector.js`` injects the
-US/EU/AP selector and keeps every box on the page in sync.
+    Sign up at :robusta-url:`https://platform.robusta.dev/signup` to get started.
+
+    Or with custom link text:
+
+    Visit :robusta-url:`our platform <https://platform.robusta.dev/signup>` today.
+
+The rendered HTML carries ``robusta-region-box`` (block) or
+``robusta-region-inline`` (inline) classes; the client-side script in
+``_static/region-selector.js`` injects the US/EU/AP selector and keeps
+every region-aware component on the page in sync.
 """
 
+import re
 from html import escape
 
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
+
+
+_LABELLED_URL_RE = re.compile(r"^\s*(.+?)\s*<\s*([^<>\s]+)\s*>\s*$", re.DOTALL)
 
 
 class RobustaUrlDirective(SphinxDirective):
@@ -75,11 +87,37 @@ class RobustaCodeDirective(SphinxDirective):
         return [container]
 
 
+def robusta_url_role(name, rawtext, text, lineno, inliner, options=None, content=None):
+    """Inline ``:robusta-url:`URL``` or ``:robusta-url:`label <URL>```."""
+    raw_text = nodes.unescape(text)
+    match = _LABELLED_URL_RE.match(raw_text)
+    if match:
+        label = match.group(1).strip()
+        url = match.group(2).strip()
+    else:
+        url = raw_text.strip()
+        label = url
+    if not url:
+        msg = inliner.reporter.error(
+            "robusta-url role requires a URL", line=lineno
+        )
+        return [inliner.problematic(rawtext, rawtext, msg)], [msg]
+
+    html = (
+        f'<span class="robusta-region-inline">'
+        f'<a class="robusta-region-inline__url" href="{escape(url, quote=True)}">'
+        f"{escape(label)}</a>"
+        f"</span>"
+    )
+    return [nodes.raw("", html, format="html")], []
+
+
 def setup(app):
     app.add_directive("robusta-url", RobustaUrlDirective)
     app.add_directive("robusta-code", RobustaCodeDirective)
+    app.add_role("robusta-url", robusta_url_role)
     return {
-        "version": "0.1",
+        "version": "0.2",
         "parallel_read_safe": True,
         "parallel_write_safe": True,
     }

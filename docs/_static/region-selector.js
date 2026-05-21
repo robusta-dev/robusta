@@ -11,6 +11,8 @@
   const DETECT_PATTERN = /\b(?:platform|api)(?:\.(?:eu|ap))?\.robusta\.dev\b/;
   const BAR_CLASS = "robusta-region-box__bar";
   const BTN_CLASS = "robusta-region-box__region-btn";
+  const INLINE_PICKER_CLASS = "robusta-region-inline__picker";
+  const INLINE_BTN_CLASS = "robusta-region-inline__btn";
 
   function getRegion() {
     try {
@@ -95,6 +97,33 @@
     applyRegion(regionKey);
   }
 
+  function buildInlinePicker(currentRegion) {
+    const picker = document.createElement("span");
+    picker.className = INLINE_PICKER_CLASS;
+    picker.setAttribute("role", "radiogroup");
+    picker.setAttribute("aria-label", "Select your Robusta region");
+
+    const buttons = [];
+    Object.keys(REGIONS).forEach(function (key) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("role", "radio");
+      btn.setAttribute("data-region", key);
+      btn.className = INLINE_BTN_CLASS;
+      btn.textContent = REGIONS[key].label;
+      const active = key === currentRegion;
+      btn.setAttribute("aria-checked", String(active));
+      if (active) btn.classList.add("is-active");
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        syncAll(key);
+      });
+      picker.appendChild(btn);
+      buttons.push(btn);
+    });
+    return { picker: picker, buttons: buttons };
+  }
+
   function buildBar(currentRegion) {
     const bar = document.createElement("div");
     bar.className = BAR_CLASS;
@@ -149,6 +178,14 @@
       if (existingBar) existingBar.remove();
       const built = buildBar(region);
       el.insertBefore(built.bar, el.firstChild);
+      boxes.push({ buttons: built.buttons });
+    });
+
+    content.querySelectorAll(".robusta-region-inline").forEach(function (el) {
+      const existingPicker = el.querySelector(":scope > ." + INLINE_PICKER_CLASS);
+      if (existingPicker) existingPicker.remove();
+      const built = buildInlinePicker(region);
+      el.appendChild(built.picker);
       boxes.push({ buttons: built.buttons });
     });
 

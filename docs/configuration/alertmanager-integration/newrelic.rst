@@ -44,7 +44,7 @@ In New Relic:
 2. Click **New destination** → choose **Webhook**.
 3. Configure:
 
-   - **URL**: ``https://api.robusta.dev/integrations/generic/newrelic``
+   - **URL**: :robusta-url:`https://api.robusta.dev/integrations/generic/newrelic`
    - **Authentication**: **Bearer token**
    - **Token**: paste the **Robusta API key** from Step 1.
 

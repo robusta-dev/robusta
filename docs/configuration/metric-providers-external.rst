@@ -185,5 +185,5 @@ Next Steps
 ----------
 
 - Configure :doc:`alert routing </notification-routing/index>`
-- `Set up AI-powered insights <https://platform.robusta.dev/signup>`_
+- :robusta-url:`Set up AI-powered insights <https://platform.robusta.dev/signup>`
 - Learn about :doc:`common configuration options <metric-providers>`

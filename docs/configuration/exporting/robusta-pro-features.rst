@@ -25,5 +25,5 @@ Getting Started
 
 To access these APIs:
 
-1. `Sign up <https://platform.robusta.dev/signup>`_ for Robusta SaaS or contact support@robusta.dev for self-hosted plans
+1. :robusta-url:`Sign up <https://platform.robusta.dev/signup>` for Robusta SaaS or contact support@robusta.dev for self-hosted plans
 2. Generate API keys in the Robusta Platform under **Settings** → **API Keys**
