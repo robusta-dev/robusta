@@ -40,6 +40,12 @@ enableHolmesGPT: false
 
 holmes:
   sentryDSN: "https://aa95c183188a6ddf134ebfffe85fd108@o4510692373299200.ingest.de.sentry.io/4510707946094672"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 615Mi
+    limits:
+      memory: 615Mi
 
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
