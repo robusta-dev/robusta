@@ -13,6 +13,7 @@ class WebexSinkParams(SinkBaseParams):
     room_id_override: Optional[str] = None
     namespace_room_id_override: Optional[str] = None
     send_to_default_if_missing: bool = True
+    disable_platform_links: bool = False
 
     @classmethod
     def _get_sink_type(cls):
