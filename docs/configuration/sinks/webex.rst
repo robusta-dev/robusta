@@ -65,6 +65,35 @@ Now we're ready to configure the webex sink.
 
 You should now get playbooks results in Webex!
 
+Configuration parameters
+------------------------------------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Field
+     - Default
+     - Description
+   * - ``bot_access_token``
+     - *(required)*
+     - The Webex bot access token.
+   * - ``room_id``
+     - *(required)*
+     - Default Webex room ID to send notifications to.
+   * - ``room_id_override``
+     - *(none)*
+     - Template resolved against subject labels/annotations to route to a different room.
+   * - ``namespace_room_id_override``
+     - *(none)*
+     - Template resolved against namespace labels/annotations to route to a different room.
+   * - ``send_to_default_if_missing``
+     - ``true``
+     - When overrides don't resolve, send to ``room_id`` (``true``) or drop the finding (``false``).
+   * - ``disable_platform_links``
+     - ``false``
+     - When ``true``, omits the Robusta platform ``Investigate`` and ``Silence`` links from messages.
+
 Dynamic Room Routing
 ------------------------------------------------
 

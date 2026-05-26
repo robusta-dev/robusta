@@ -34,6 +34,8 @@ class WebexSink(SinkBase):
         room_id = self._resolve_room_id(finding)
         if room_id is None:
             return
+        if self.params.disable_platform_links:
+            platform_enabled = False
         self.sender.send_finding_to_webex(finding, platform_enabled, room_id=room_id)
 
     def _resolve_room_id(self, finding: Finding) -> Optional[str]:
