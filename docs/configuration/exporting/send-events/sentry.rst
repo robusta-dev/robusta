@@ -3,8 +3,8 @@ Sentry
 
 Forward Sentry alerts to Robusta via Sentry's Internal Integration.
 
-Sentry exposes two webhook surfaces — pick whichever matches what you
-want forwarded, or set up both on the same integration:
+Sentry can send events to Robusta in two different ways. Use either
+one, or enable both on the same integration:
 
 * :ref:`sentry-path-issue-lifecycle` — fires on every issue created /
   resolved / assigned / archived / unresolved across the org. Lighter
