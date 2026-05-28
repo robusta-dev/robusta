@@ -77,11 +77,10 @@ In the **INTERNAL INTEGRATION DETAILS** section:
 
    .. note::
 
-      If the checkbox is locked, hover over the lock for Sentry's
-      explanation. Common causes: the org's Sentry plan doesn't
-      include alert-rule integration actions (a Business/Team-tier
-      feature on Sentry SaaS), or **Alerts** in the Permissions
-      section below hasn't been granted yet.
+      The checkbox stays locked until **Webhook URL** (step 5) is
+      filled in — Sentry's tooltip reads
+      *"Cannot enable alert rule action without a webhook url"*.
+      Fill the Webhook URL first, then tick this checkbox.
 
 7. **Schema**: leave blank for the typical Robusta setup. The schema
    is only needed when you want to add *custom form fields* (e.g.
