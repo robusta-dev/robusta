@@ -1,8 +1,7 @@
 Sentry
 =======
 
-Forward Sentry alerts to Robusta via Sentry's Internal Integration
-(called **Custom Integration** in the current UI).
+Forward Sentry alerts to Robusta via Sentry's Internal Integration.
 
 Sentry exposes two webhook surfaces — pick whichever matches what you
 want forwarded, or set up both on the same integration:
@@ -59,8 +58,7 @@ Open the list page
 ~~~~~~~~~~~~~~~~~~
 
 1. In Sentry, navigate to **Settings → Integrations → Custom
-   Integrations** (direct link:
-   ``https://<your-org>.sentry.io/settings/custom-integrations/``).
+   Integrations**.
 2. Click **Create New Integration** in the top right.
 3. In the **Choose Integration Type** dialog, select **Internal
    Integration** and click **Next**.
