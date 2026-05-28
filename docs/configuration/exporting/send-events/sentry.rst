@@ -152,13 +152,6 @@ Register Robusta as an alert action
    the integration in the picker — without it, Robusta won't appear
    in the "Send a notification via an integration" dropdown.
 
-   .. note::
-
-      Sentry appends the schema's ``uri`` path to the webhook URL
-      host when an alert rule fires, so the path component of the
-      **Webhook URL** field (``/webhooks``) must match the schema
-      ``uri``. Query parameters in the Webhook URL are preserved.
-
 .. _sentry-save:
 
 Save the integration
