@@ -54,10 +54,6 @@ Replace ``<ACCOUNT_ID>`` with your Robusta account id and
 Create the Custom Integration
 -----------------------------
 
-These steps are shared by both webhook paths — finish this section
-first, then jump to :ref:`sentry-path-issue-lifecycle`,
-:ref:`sentry-path-alert-rule`, or both.
-
 Open the list page
 ~~~~~~~~~~~~~~~~~~
 
