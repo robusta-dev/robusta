@@ -54,8 +54,8 @@ Replace ``<ACCOUNT_ID>`` with your Robusta account id and
 Create the Custom Integration
 -----------------------------
 
-Open the list page
-~~~~~~~~~~~~~~~~~~
+Start a new Internal Integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. In Sentry, navigate to **Settings → Integrations → Custom
    Integrations**.
