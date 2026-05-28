@@ -67,11 +67,6 @@ Start a new Internal Integration
    only for display in Sentry).
 5. **Webhook URL**: paste the URL from the previous section.
 
-Grant permissions
-~~~~~~~~~~~~~~~~~
-
-In the **PERMISSIONS** section, change the dropdowns:
-
 6. **Issue & Event**: set to **Read**.
 7. **Alerts**: set to **Read** (only needed if you'll set up
    :ref:`sentry-path-alert-rule`; harmless to grant either way).
