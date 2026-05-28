@@ -48,31 +48,41 @@ Replace ``<ACCOUNT_ID>`` with your Robusta account id and
 Create the Custom Integration
 -----------------------------
 
-Sentry's "Internal Integration" has been renamed to **Custom
-Integration** in the current UI; it's the same feature.
+Sentry's "Internal Integration" lives under **Custom Integrations** in
+the current UI; the two names refer to the same feature.
 
-1. In Sentry, open **Settings → Integrations → Custom Integrations**
-   (direct link:
+Open the list page
+~~~~~~~~~~~~~~~~~~
+
+1. In Sentry, navigate to **Settings → Integrations → Custom
+   Integrations** (direct link:
    ``https://<your-org>.sentry.io/settings/custom-integrations/``).
-2. Click **Create New Integration → Internal Integration**.
-3. **Name**: ``Robusta``.
-4. **Webhook URL**: paste the URL from above.
-5. **Permissions**: grant **Issue & Event: Read**.
-6. **Webhooks**: enable **only** the ``issue`` checkbox. Sentry will
-   POST to the webhook URL whenever an issue is created, resolved,
-   assigned, archived, or unresolved.
+2. Click **Create New Integration** in the top right.
+3. In the **Choose Integration Type** dialog, select **Internal
+   Integration** and click **Next**.
 
-   .. warning::
+Fill in "Internal Integration Details"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-      Do **not** enable the ``error`` checkbox. It fires on every
-      individual error event (not per issue), which will exhaust
-      Robusta's 300-requests-per-5-minutes rate limit on any non-trivial
-      service. The relay parser also doesn't recognise the ``error``
-      webhook payload shape, so enabled-``error`` traffic lands as
-      ``parse_status=failed`` rows.
-7. **Schema** *(optional, only needed if you want Sentry Alert Rules to
-   target Robusta)*: paste the following JSON to register the
-   integration as an Alert Rule Action.
+In the **INTERNAL INTEGRATION DETAILS** section:
+
+4. **Name**: ``Robusta`` (or ``Robusta Prod Alerts``, etc. — this is
+   only for display in Sentry).
+5. **Webhook URL**: paste the URL from the previous section.
+6. **Alert Rule Action**: enable this checkbox if you want the
+   integration to be selectable inside Sentry Issue Alert and Metric
+   Alert rules. This is required for the alert-rule path described
+   below; leave it disabled if you only want the issue lifecycle
+   webhook.
+
+   .. note::
+
+      The checkbox stays locked until **Schema** (next field) contains
+      a valid ``alert-rule-action`` element. Fill the schema first,
+      then enable the checkbox.
+
+7. **Schema** *(required when Alert Rule Action is enabled, otherwise
+   leave blank)*: paste the following JSON.
 
    .. code-block:: json
 
@@ -90,21 +100,59 @@ Integration** in the current UI; it's the same feature.
         ]
       }
 
-8. Click **Save Changes**, then **Install** the integration to your
-   organization.
+   .. note::
 
-.. note::
+      Sentry appends the schema's ``uri`` path to the webhook URL host
+      when an alert rule fires, so the path component of the **Webhook
+      URL** field above (``/webhooks``) must match the schema ``uri``.
+      Query parameters in the Webhook URL are preserved.
 
-   Sentry appends the schema's ``uri`` path to the webhook URL host
-   when an alert rule fires, so the path component of the **Webhook
-   URL** field above (``/webhooks``) must match the schema ``uri``.
-   Query parameters in the Webhook URL are preserved.
+8. **Overview** and **Authorized JavaScript Origins**: leave both
+   blank.
+
+Grant permissions
+~~~~~~~~~~~~~~~~~
+
+In the **PERMISSIONS** section, change the dropdowns:
+
+9. **Issue & Event**: set to **Read**.
+10. **Alerts**: set to **Read** (only required if you enabled Alert
+    Rule Action in step 6).
+11. Leave every other permission row at **No Access**.
+
+Subscribe to webhook events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the **WEBHOOKS** section:
+
+12. Tick **only** the ``issue`` checkbox (sub-events: ``created``,
+    ``resolved``, ``assigned``, ``archived``, ``unresolved``). Leave
+    ``error``, ``comment``, ``seer``, and ``preprod_artifact``
+    unchecked.
+
+    .. warning::
+
+       Do **not** enable the ``error`` checkbox. It fires on every
+       individual error event (not per issue), which will exhaust
+       Robusta's 300-requests-per-5-minutes rate limit on any
+       non-trivial service. The relay parser also doesn't recognise
+       the ``error`` webhook payload shape, so enabled-``error``
+       traffic lands as ``parse_status=failed`` rows.
+
+Save
+~~~~
+
+13. Click **Save Changes** at the bottom of the form. The integration
+    now appears under **INTERNAL INTEGRATIONS** on the Custom
+    Integrations list page with a **Dashboard** button next to it —
+    that dashboard is the primary debugging surface (see
+    :ref:`troubleshooting <sentry-troubleshooting>`).
 
 Wire up an Issue Alert Rule (optional)
 --------------------------------------
 
 Skip this section if you only want the issue lifecycle webhook
-behavior — the integration is already live after step 8.
+behavior — the integration is already live after step 13.
 
 To route a specific Sentry alert rule through Robusta:
 
@@ -127,6 +175,8 @@ Verify
 Open **Settings → Delivery Log** in the Robusta UI — the event should
 appear there with parse status ``parsed``, and the corresponding row
 should land on the Robusta timeline.
+
+.. _sentry-troubleshooting:
 
 Troubleshooting
 ---------------
