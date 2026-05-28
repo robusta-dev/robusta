@@ -9,13 +9,14 @@ one, or enable both on the same integration:
 
 * :ref:`sentry-path-issue-lifecycle` — fires on every issue created /
   resolved / assigned / archived / unresolved across the org. Lighter
-  payload (no per-event details, no k8s subject), zero alert-rule
-  plumbing. Use this when you want every Sentry issue on the Robusta
-  timeline.
+  payload (no per-event details, no event-level tags), zero
+  alert-rule plumbing. Use this when you want every Sentry issue on
+  the Robusta timeline.
 * :ref:`sentry-path-alert-rule` — fires only when a Sentry Issue
   Alert Rule (or Metric Alert Rule) triggers and lists Robusta as one
-  of its actions. Richer payload (event detail, rule name, Kubernetes
-  tags). Use this when you want rule-driven, throttled alerts.
+  of its actions. Richer payload (event detail, rule name, and all
+  tags attached to the event). Use this when you want rule-driven,
+  throttled alerts.
 
 The recommended setup uses both on a single integration: subscribe to
 the issue lifecycle webhook *and* register the integration as an alert
