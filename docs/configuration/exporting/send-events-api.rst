@@ -20,6 +20,7 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
    send-events/newrelic
    send-events/opsgenie
    send-events/pagerduty
+   send-events/rootly
    send-events/sentry
    send-events/solarwinds
    send-events/splunk
@@ -172,6 +173,11 @@ Incident Management
     .. grid-item-card:: :octicon:`pulse;1em;` Opsgenie
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/opsgenie
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` Rootly
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: send-events/rootly
         :link-type: doc
 
 Other
