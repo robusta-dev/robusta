@@ -101,7 +101,7 @@ In the **INTERNAL INTEGRATION DETAILS** section:
                   "type": "text",
                   "name": "tags",
                   "label": "Tags",
-                  "default": "sentry"
+                  "default": "issue.title"
                 }
               ]
             }
@@ -118,14 +118,23 @@ In the **INTERNAL INTEGRATION DETAILS** section:
 
    .. note::
 
-      Sentry's schema validator rejects ``alert-rule-action`` elements
-      whose ``required_fields`` array is empty
-      (*"[] is too short for element of type 'alert-rule-action'"*).
+      Sentry's schema validator imposes two constraints worth knowing
+      about:
+
+      * ``required_fields`` must contain **at least one element**
+        (*"[] is too short for element of type 'alert-rule-action'"*).
+      * ``text``/``textarea`` fields may only use ``issue.title`` or
+        ``issue.description`` as their ``default`` value — arbitrary
+        strings are rejected
+        (*"Elements of type ['text', 'textarea'] may only have a
+        default value of the following: ['issue.title',
+        'issue.description'], but X was found"*).
+
       The ``tags`` field above is a placeholder so the schema saves
-      cleanly; users configuring an alert rule will see a "Tags" text
-      input pre-filled with ``sentry`` and can leave it as-is. Robusta
-      ignores ``data.issue_alert.settings`` server-side, so the value
-      doesn't affect ingestion.
+      cleanly; pre-filled with ``issue.title`` so users configuring an
+      alert rule don't have to type anything. Robusta ignores
+      ``data.issue_alert.settings`` server-side, so the value doesn't
+      affect ingestion.
 
    .. note::
 
