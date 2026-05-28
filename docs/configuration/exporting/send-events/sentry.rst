@@ -32,7 +32,8 @@ Prerequisites
 * Your Robusta ``account_id``, found in ``generated_values.yaml``.
 * A Robusta API key with ``Read/Write`` access to alerts, generated
   under **Settings → API Keys → New API Key**.
-* Sentry org-level access to install Internal Integrations.
+* Sentry **Owner** or **Manager** role on the org (lower roles can't
+  create Custom Integrations).
 
 Webhook URL
 -----------
@@ -44,18 +45,23 @@ Webhook URL
 Replace ``<ACCOUNT_ID>`` with your Robusta account id and
 ``<ROBUSTA_API_KEY>`` with the API key you just generated.
 
-Create the Internal Integration
--------------------------------
+Create the Custom Integration
+-----------------------------
 
-1. In Sentry, go to **Settings → Developer Settings → New Internal
-   Integration**.
-2. **Name**: ``Robusta``.
-3. **Webhook URL**: paste the URL from above.
-4. **Permissions**: grant **Issue & Event: Read**.
-5. **Webhooks**: enable the ``issue`` checkbox. Sentry will POST to
+Sentry's "Internal Integration" has been renamed to **Custom
+Integration** in the current UI; it's the same feature.
+
+1. In Sentry, open **Settings → Integrations → Custom Integrations**
+   (direct link:
+   ``https://<your-org>.sentry.io/settings/custom-integrations/``).
+2. Click **Create New Integration → Internal Integration**.
+3. **Name**: ``Robusta``.
+4. **Webhook URL**: paste the URL from above.
+5. **Permissions**: grant **Issue & Event: Read**.
+6. **Webhooks**: enable the ``issue`` checkbox. Sentry will POST to
    the webhook URL whenever an issue is created, resolved, assigned,
    archived, or unresolved.
-6. **Schema** *(optional, only needed if you want Sentry Alert Rules to
+7. **Schema** *(optional, only needed if you want Sentry Alert Rules to
    target Robusta)*: paste the following JSON to register the
    integration as an Alert Rule Action.
 
@@ -75,7 +81,7 @@ Create the Internal Integration
         ]
       }
 
-7. Click **Save Changes**, then **Install** the integration to your
+8. Click **Save Changes**, then **Install** the integration to your
    organization.
 
 .. note::
@@ -89,7 +95,7 @@ Wire up an Issue Alert Rule (optional)
 --------------------------------------
 
 Skip this section if you only want the issue lifecycle webhook
-behavior — the integration is already live after step 7.
+behavior — the integration is already live after step 8.
 
 To route a specific Sentry alert rule through Robusta:
 
