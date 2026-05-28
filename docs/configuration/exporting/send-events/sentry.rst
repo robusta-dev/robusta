@@ -71,30 +71,24 @@ In the **INTERNAL INTEGRATION DETAILS** section:
 4. **Name**: ``Robusta`` (or ``Robusta Prod Alerts``, etc. — this is
    only for display in Sentry).
 5. **Webhook URL**: paste the URL from the previous section.
-6. **Overview** and **Authorized JavaScript Origins**: leave both
-   blank.
-
-   You'll come back to **Alert Rule Action** and **Schema** in
-   :ref:`sentry-path-alert-rule` if you want that path; for now leave
-   them at their defaults.
 
 Grant permissions
 ~~~~~~~~~~~~~~~~~
 
 In the **PERMISSIONS** section, change the dropdowns:
 
-7. **Issue & Event**: set to **Read**.
-8. **Alerts**: set to **Read** (only needed if you'll set up
+6. **Issue & Event**: set to **Read**.
+7. **Alerts**: set to **Read** (only needed if you'll set up
    :ref:`sentry-path-alert-rule`; harmless to grant either way).
-9. Leave every other permission row at **No Access**.
+8. Leave every other permission row at **No Access**.
 
 Save the base integration before configuring either webhook path:
 
-10. Click **Save Changes** at the bottom of the form. The integration
-    now appears under **INTERNAL INTEGRATIONS** on the Custom
-    Integrations list page with a **Dashboard** button next to it —
-    that dashboard is the primary debugging surface (see
-    :ref:`troubleshooting <sentry-troubleshooting>`).
+9. Click **Save Changes** at the bottom of the form. The integration
+   now appears under **INTERNAL INTEGRATIONS** on the Custom
+   Integrations list page with a **Dashboard** button next to it —
+   that dashboard is the primary debugging surface (see
+   :ref:`troubleshooting <sentry-troubleshooting>`).
 
 .. _sentry-path-issue-lifecycle:
 
