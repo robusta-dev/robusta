@@ -96,7 +96,14 @@ In the **INTERNAL INTEGRATION DETAILS** section:
             "settings": {
               "type": "alert-rule-settings",
               "uri": "/webhooks",
-              "required_fields": []
+              "required_fields": [
+                {
+                  "type": "text",
+                  "name": "tags",
+                  "label": "Tags",
+                  "default": "sentry"
+                }
+              ]
             }
           }
         ]
@@ -108,6 +115,17 @@ In the **INTERNAL INTEGRATION DETAILS** section:
    to render the integration in the picker — without it, Robusta
    won't appear in the "Send a notification via an integration"
    dropdown.
+
+   .. note::
+
+      Sentry's schema validator rejects ``alert-rule-action`` elements
+      whose ``required_fields`` array is empty
+      (*"[] is too short for element of type 'alert-rule-action'"*).
+      The ``tags`` field above is a placeholder so the schema saves
+      cleanly; users configuring an alert rule will see a "Tags" text
+      input pre-filled with ``sentry`` and can leave it as-is. Robusta
+      ignores ``data.issue_alert.settings`` server-side, so the value
+      doesn't affect ingestion.
 
    .. note::
 
