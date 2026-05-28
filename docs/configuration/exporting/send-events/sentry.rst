@@ -72,13 +72,8 @@ Start a new Internal Integration
    :ref:`sentry-path-alert-rule`; harmless to grant either way).
 8. Leave every other permission row at **No Access**.
 
-Save the base integration before configuring either webhook path:
-
-9. Click **Save Changes** at the bottom of the form. The integration
-   now appears under **INTERNAL INTEGRATIONS** on the Custom
-   Integrations list page with a **Dashboard** button next to it —
-   that dashboard is the primary debugging surface (see
-   :ref:`troubleshooting <sentry-troubleshooting>`).
+Continue to whichever path you want — :ref:`sentry-path-issue-lifecycle`,
+:ref:`sentry-path-alert-rule`, or both — then save the integration.
 
 .. _sentry-path-issue-lifecycle:
 
@@ -90,27 +85,22 @@ Sentry POSTs to the Webhook URL on every issue lifecycle transition
 ``unresolved``). This is the simpler path: no schema, no alert rules,
 every issue lands on the Robusta timeline automatically.
 
-Open the integration you just created and scroll to the **WEBHOOKS**
-section:
+In the **WEBHOOKS** section of the same form:
 
 1. Tick **only** the ``issue`` checkbox (sub-events: ``created``,
    ``resolved``, ``assigned``, ``archived``, ``unresolved``).
 2. Leave ``error``, ``comment``, ``seer``, and ``preprod_artifact``
    unchecked.
-3. Click **Save Changes**.
 
 .. warning::
 
    Do **not** enable the ``error`` checkbox. It fires on every
-   individual error event (not per issue), which will exhaust
-   Robusta's 300-requests-per-5-minutes rate limit on any non-trivial
-   service. The relay parser also doesn't recognise the ``error``
-   webhook payload shape, so enabled-``error`` traffic lands as
-   ``parse_status=failed`` rows.
+   individual error event (not per issue) — a noisy service will
+   generate far more webhook traffic than the issue checkbox does.
 
-That's the entire Path A setup. Skip ahead to :ref:`Verify
-<sentry-verify>` to test it, or continue to Path B to layer
-alert-rule routing on top.
+That's the entire Path A configuration. Continue to
+:ref:`sentry-path-alert-rule` if you also want rule-driven alerts,
+or jump to :ref:`sentry-save` to save the integration.
 
 .. _sentry-path-alert-rule:
 
@@ -128,18 +118,7 @@ the alert rule that uses it.
 Register Robusta as an alert action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open the integration and scroll back up to **INTERNAL INTEGRATION
-DETAILS**:
-
-1. **Alert Rule Action**: tick this checkbox. The notification
-   destination is the **Webhook URL** you saved earlier.
-
-   .. note::
-
-      The checkbox is locked until **Webhook URL** is filled in —
-      Sentry's tooltip reads
-      *"Cannot enable alert rule action without a webhook url"*. If
-      you completed the shared setup above the URL is already there.
+1. **Alert Rule Action**: tick this checkbox.
 
 2. **Schema**: paste the following JSON so Robusta appears in
    Sentry's alert rule action picker.
@@ -175,46 +154,36 @@ DETAILS**:
 
    .. note::
 
-      Sentry's schema validator requires ``required_fields`` to
-      contain **at least one element** — an empty array fails with
-      *"[] is too short for element of type 'alert-rule-action'"*.
-      The single ``select`` field above is a placeholder that mirrors
-      Sentry's `documented schema example
-      <https://docs.sentry.io/integrations/integration-platform/ui-components/alert-rule-action/>`_:
-      users configuring an alert rule see a "Destination" dropdown
-      whose only option is "Robusta", so there's nothing to type and
-      no risk of misconfiguration. Robusta ignores
-      ``data.issue_alert.settings`` server-side, so the value doesn't
-      affect ingestion.
-
-      A ``text`` field would also satisfy the constraint, but Sentry
-      additionally restricts ``text``/``textarea`` defaults to
-      ``issue.title`` or ``issue.description`` only, which is a more
-      brittle pattern.
-
-   .. note::
-
       Sentry appends the schema's ``uri`` path to the webhook URL
       host when an alert rule fires, so the path component of the
       **Webhook URL** field (``/webhooks``) must match the schema
       ``uri``. Query parameters in the Webhook URL are preserved.
 
-3. Click **Save Changes**.
+.. _sentry-save:
 
-Create the Sentry alert rule
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Save the integration
+--------------------
 
-The integration is now selectable in alert rules, but until a rule is
-actually configured against it Sentry won't POST anything. For each
-project that should forward to Robusta:
+Click **Save Changes** at the bottom of the form. The integration
+now appears under **INTERNAL INTEGRATIONS** on the Custom
+Integrations list page with a **Dashboard** button next to it — that
+dashboard is the primary debugging surface (see
+:ref:`troubleshooting <sentry-troubleshooting>`).
 
-4. Open **Alerts → Create Alert** and choose **Issues**.
-5. Configure your conditions and filters as usual.
-6. Under **Then perform these actions**, click **Add action** and
+Wire up a Sentry alert rule (Path B)
+------------------------------------
+
+If you set up Path B, the integration is now selectable in alert
+rules — but until a rule is actually configured against it Sentry
+won't POST anything. For each project that should forward to Robusta:
+
+1. Open **Alerts → Create Alert** and choose **Issues**.
+2. Configure your conditions and filters as usual.
+3. Under **Then perform these actions**, click **Add action** and
    select **Send a notification via an integration → Robusta**.
-7. The "Destination" dropdown the schema declared appears here; leave
-   it at "Robusta".
-8. Save the rule.
+4. The "Destination" dropdown the schema declared appears here;
+   leave it at "Robusta".
+5. Save the rule.
 
 When the rule's conditions match, Sentry POSTs the ``event_alert``
 payload to Robusta, and the rule name shows up as the Robusta
