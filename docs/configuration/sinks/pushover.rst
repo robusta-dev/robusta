@@ -46,4 +46,8 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+.. note::
+
+   To secure your API token and user key using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 You should now get playbook results in Pushover!

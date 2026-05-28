@@ -59,6 +59,28 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+Securing API Keys with Environment Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To keep your PagerDuty integration key secure:
+
+.. code-block:: yaml
+
+   runner:
+     additional_env_vars:
+       - name: PAGERDUTY_KEY
+         valueFrom:
+           secretKeyRef:
+             name: robusta-secrets
+             key: pagerduty_key
+
+   sinksConfig:
+     - pagerduty_sink:
+         name: main_pagerduty_sink
+         api_key: "{{ env.PAGERDUTY_KEY }}"
+
+See :ref:`Managing Secrets` for complete documentation.
+
 Example Output:
 
 .. admonition:: To view the Alerts, on PagerDuty's dashboard navigate to `Incidents` > `Alerts`

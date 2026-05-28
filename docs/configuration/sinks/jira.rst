@@ -82,6 +82,10 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+.. note::
+
+   To secure your API key and credentials using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 Try the example below to recieve an alert notification in Jira.
 
 

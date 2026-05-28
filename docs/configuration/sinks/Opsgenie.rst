@@ -59,6 +59,29 @@ Save the file and apply the configuration:
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+Using Environment Variables for API Keys
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To secure your Opsgenie API key, load it from a Kubernetes Secret:
+
+.. code-block:: yaml
+
+   runner:
+     additional_env_vars:
+       - name: OPSGENIE_API_KEY
+         valueFrom:
+           secretKeyRef:
+             name: robusta-secrets
+             key: opsgenie_key
+
+   sinksConfig:
+     - opsgenie_sink:
+         name: ops_genie_sink
+         api_key: "{{ env.OPSGENIE_API_KEY }}"
+         teams: ["noc"]
+
+See :ref:`Managing Secrets` for more information.
+
 **Example Output:**
 
 .. admonition:: Typically you'll send alerts from Robusta to OpsGenie and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.

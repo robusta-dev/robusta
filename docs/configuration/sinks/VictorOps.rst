@@ -25,6 +25,10 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+.. note::
+
+   To secure your REST endpoint URL using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 **Example Output:**
 
 .. admonition:: Typically you'll send alerts from Robusta to VictorOps and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.

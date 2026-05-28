@@ -29,3 +29,23 @@ Save the file and run
    :name: cb-add-discord-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
+
+Using Environment Variables for API Keys
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   runner:
+     additional_env_vars:
+       - name: DATADOG_API_KEY
+         valueFrom:
+           secretKeyRef:
+             name: robusta-secrets
+             key: datadog_key
+
+   sinksConfig:
+     - datadog_sink:
+         name: datadog_sink
+         api_key: "{{ env.DATADOG_API_KEY }}"
+
+For more information, see :ref:`Managing Secrets`.

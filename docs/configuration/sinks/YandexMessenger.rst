@@ -59,4 +59,8 @@ After you have configured the sink in your ``generated_values.yaml`` save the fi
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+.. note::
+
+   To secure your bot token using Kubernetes Secrets, see :ref:`Managing Secrets`.
+
 You should now get playbooks results in Yandex Messenger!
