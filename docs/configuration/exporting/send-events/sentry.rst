@@ -63,11 +63,6 @@ Start a new Internal Integration
 3. In the **Choose Integration Type** dialog, select **Internal
    Integration** and click **Next**.
 
-Fill in "Internal Integration Details"
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In the **INTERNAL INTEGRATION DETAILS** section:
-
 4. **Name**: ``Robusta`` (or ``Robusta Prod Alerts``, etc. — this is
    only for display in Sentry).
 5. **Webhook URL**: paste the URL from the previous section.
