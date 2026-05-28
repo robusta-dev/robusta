@@ -7,16 +7,16 @@ Integration.
 Sentry can send events to Robusta in two different ways. Use either
 one, or enable both on the same integration:
 
-* :ref:`sentry-path-issue-lifecycle` — fires on every issue created /
-  resolved / assigned / archived / unresolved across the org. Lighter
-  payload (no per-event details, no event-level tags), zero
-  alert-rule plumbing. Use this when you want every Sentry issue on
-  the Robusta timeline.
-* :ref:`sentry-path-alert-rule` — fires only when a Sentry Issue
-  Alert Rule (or Metric Alert Rule) triggers and lists Robusta as one
-  of its actions. Richer payload (event detail, rule name, and all
-  tags attached to the event). Use this when you want rule-driven,
-  throttled alerts.
+* :ref:`Path A — Issue Lifecycle Webhook <sentry-path-issue-lifecycle>`
+  fires on every issue created / resolved / assigned / archived /
+  unresolved across the org. Lighter payload (no per-event details,
+  no event-level tags), zero alert-rule plumbing. Use this when you
+  want every Sentry issue on the Robusta timeline.
+* :ref:`Path B — Alert Rule Action <sentry-path-alert-rule>` fires
+  only when a Sentry Issue Alert Rule (or Metric Alert Rule) triggers
+  and lists Robusta as one of its actions. Richer payload (event
+  detail, rule name, and all tags attached to the event). Use this
+  when you want rule-driven, throttled alerts.
 
 The recommended setup uses both on a single integration: subscribe to
 the issue lifecycle webhook *and* register the integration as an alert
@@ -69,11 +69,13 @@ Start a new Internal Integration
 
 6. **Issue & Event**: set to **Read**.
 7. **Alerts**: set to **Read** (only needed if you'll set up
-   :ref:`sentry-path-alert-rule`; harmless to grant either way).
-8. Leave every other permission row at **No Access**.
+   :ref:`Path B <sentry-path-alert-rule>`; harmless to grant either
+   way).
 
-Continue to whichever path you want — :ref:`sentry-path-issue-lifecycle`,
-:ref:`sentry-path-alert-rule`, or both — then save the integration.
+Continue to whichever path you want —
+:ref:`Path A <sentry-path-issue-lifecycle>`,
+:ref:`Path B <sentry-path-alert-rule>`, or both — then save the
+integration.
 
 .. _sentry-path-issue-lifecycle:
 
@@ -99,8 +101,8 @@ In the **WEBHOOKS** section of the same form:
    generate far more webhook traffic than the issue checkbox does.
 
 That's the entire Path A configuration. Continue to
-:ref:`sentry-path-alert-rule` if you also want rule-driven alerts,
-or jump to :ref:`sentry-save` to save the integration.
+:ref:`Path B <sentry-path-alert-rule>` if you also want rule-driven
+alerts, or jump to :ref:`Save the integration <sentry-save>`.
 
 .. _sentry-path-alert-rule:
 
