@@ -29,7 +29,7 @@ Configure Rootly
 
        Authorization: Bearer <ROBUSTA_API_KEY>
 
-4. Subscribe the webhook to the alert events you want forwarded — at minimum ``alert.created`` and ``alert.resolved``. ``alert.acknowledged`` is also supported and is treated as a still-firing alert.
+4. Subscribe the webhook to the alert events you want forwarded — at minimum ``alert.created``. If the Rootly UI offers other ``alert.*`` events (for example to notify on resolution), subscribe to those as well; Robusta accepts the whole ``alert.*`` family and uses the alert object's ``ended_at`` field to tell firing from resolved, so the parser stays correct regardless of which specific event names Rootly emits.
 5. Save. Rootly will start delivering alerts immediately.
 
 Payload
