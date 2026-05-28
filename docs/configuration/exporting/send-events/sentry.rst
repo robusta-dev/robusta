@@ -82,16 +82,39 @@ In the **INTERNAL INTEGRATION DETAILS** section:
       *"Cannot enable alert rule action without a webhook url"*.
       Fill the Webhook URL first, then tick this checkbox.
 
-7. **Schema**: leave blank for the typical Robusta setup. The schema
-   is only needed when you want to add *custom form fields* (e.g.
-   a user-fillable title or filter) to the alert rule configuration
-   UI in Sentry. The basic "fire ``event_alert`` webhook to the
-   Webhook URL" behavior is driven entirely by the **Alert Rule
-   Action** checkbox above — no schema required.
+7. **Schema** *(required for the alert-rule path; leave blank if you
+   only want the issue lifecycle webhook)*: paste the following JSON
+   so Robusta appears in Sentry's alert rule action picker.
 
-   If you do want custom form fields, see Sentry's
-   `Alert Rule Action UI component docs
-   <https://docs.sentry.io/organization/integrations/integration-platform/ui-components/alert-rule-action/>`_.
+   .. code-block:: json
+
+      {
+        "elements": [
+          {
+            "type": "alert-rule-action",
+            "title": "Send to Robusta",
+            "settings": {
+              "type": "alert-rule-settings",
+              "uri": "/webhooks",
+              "required_fields": []
+            }
+          }
+        ]
+      }
+
+   The ``title`` is what shows up as the action label inside Sentry's
+   alert rule editor. The ``Alert Rule Action`` checkbox in step 6
+   toggles the feature on, but Sentry uses this schema to know *how*
+   to render the integration in the picker — without it, Robusta
+   won't appear in the "Send a notification via an integration"
+   dropdown.
+
+   .. note::
+
+      Sentry appends the schema's ``uri`` path to the webhook URL host
+      when an alert rule fires, so the path component of the **Webhook
+      URL** field above (``/webhooks``) must match the schema ``uri``.
+      Query parameters in the Webhook URL are preserved.
 
 8. **Overview** and **Authorized JavaScript Origins**: leave both
    blank.
