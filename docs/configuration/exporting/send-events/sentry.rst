@@ -21,13 +21,6 @@ The recommended setup uses both on a single integration: subscribe to
 the issue lifecycle webhook *and* register the integration as an alert
 rule action.
 
-.. note::
-
-   Sentry Internal Integrations **do not let you add custom outgoing
-   HTTP headers** (the only auth header Sentry sends is its own
-   ``Sentry-Hook-Signature``). Pass the Robusta API key via the
-   ``&token=`` URL parameter instead.
-
 Prerequisites
 -------------
 
