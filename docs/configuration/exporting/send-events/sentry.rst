@@ -98,10 +98,10 @@ In the **INTERNAL INTEGRATION DETAILS** section:
               "uri": "/webhooks",
               "required_fields": [
                 {
-                  "type": "text",
-                  "name": "tags",
-                  "label": "Tags",
-                  "default": "issue.title"
+                  "type": "select",
+                  "label": "Destination",
+                  "name": "destination",
+                  "options": [["robusta", "Robusta"]]
                 }
               ]
             }
@@ -118,23 +118,22 @@ In the **INTERNAL INTEGRATION DETAILS** section:
 
    .. note::
 
-      Sentry's schema validator imposes two constraints worth knowing
-      about:
-
-      * ``required_fields`` must contain **at least one element**
-        (*"[] is too short for element of type 'alert-rule-action'"*).
-      * ``text``/``textarea`` fields may only use ``issue.title`` or
-        ``issue.description`` as their ``default`` value — arbitrary
-        strings are rejected
-        (*"Elements of type ['text', 'textarea'] may only have a
-        default value of the following: ['issue.title',
-        'issue.description'], but X was found"*).
-
-      The ``tags`` field above is a placeholder so the schema saves
-      cleanly; pre-filled with ``issue.title`` so users configuring an
-      alert rule don't have to type anything. Robusta ignores
+      Sentry's schema validator requires ``required_fields`` to
+      contain **at least one element** — an empty array fails with
+      *"[] is too short for element of type 'alert-rule-action'"*.
+      The single ``select`` field above is a placeholder that mirrors
+      Sentry's `documented schema example
+      <https://docs.sentry.io/integrations/integration-platform/ui-components/alert-rule-action/>`_:
+      users configuring an alert rule see a "Destination" dropdown
+      whose only option is "Robusta", so there's nothing to type and
+      no risk of misconfiguration. Robusta ignores
       ``data.issue_alert.settings`` server-side, so the value doesn't
       affect ingestion.
+
+      A ``text`` field would also satisfy the constraint, but Sentry
+      additionally restricts ``text``/``textarea`` defaults to
+      ``issue.title`` or ``issue.description`` only, which is a more
+      brittle pattern.
 
    .. note::
 
