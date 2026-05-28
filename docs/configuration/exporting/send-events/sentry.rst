@@ -1,7 +1,8 @@
 Sentry
 =======
 
-Forward Sentry alerts to Robusta via Sentry's Internal Integration.
+Forward Sentry alerts and issues to Robusta via Sentry's Internal
+Integration.
 
 Sentry can send events to Robusta in two different ways. Use either
 one, or enable both on the same integration:
