@@ -18,10 +18,6 @@ one, or enable both on the same integration:
   detail, rule name, and all tags attached to the event). Use this
   when you want rule-driven, throttled alerts.
 
-The recommended setup uses both on a single integration: subscribe to
-the issue lifecycle webhook *and* register the integration as an alert
-rule action.
-
 Prerequisites
 -------------
 
@@ -54,44 +50,36 @@ Replace ``<ACCOUNT_ID>`` with your Robusta account id and
 Create the Custom Integration
 -----------------------------
 
-Start a new Internal Integration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 1. In Sentry, navigate to **Settings → Integrations → Custom
    Integrations**.
 2. Click **Create New Integration** in the top right.
 3. In the **Choose Integration Type** dialog, select **Internal
    Integration** and click **Next**.
-
 4. **Name**: ``Robusta`` (or ``Robusta Prod Alerts``, etc. — this is
    only for display in Sentry).
 5. **Webhook URL**: paste the URL from the previous section.
 
-6. **Issue & Event**: set to **Read**.
-7. **Alerts**: set to **Read** (only needed if you'll set up
-   :ref:`Path B <sentry-path-alert-rule>`; harmless to grant either
-   way).
-
-Continue to whichever path you want —
-:ref:`Path A <sentry-path-issue-lifecycle>`,
-:ref:`Path B <sentry-path-alert-rule>`, or both — then save the
-integration.
+Then configure :ref:`Path A <sentry-path-issue-lifecycle>`,
+:ref:`Path B <sentry-path-alert-rule>`, or both, and save the
+integration at the end.
 
 .. _sentry-path-issue-lifecycle:
 
 Path A — Issue Lifecycle Webhook
 ---------------------------------
 
-Sentry POSTs to the Webhook URL on every issue lifecycle transition
-(``created`` / ``resolved`` / ``assigned`` / ``archived`` /
-``unresolved``). This is the simpler path: no schema, no alert rules,
-every issue lands on the Robusta timeline automatically.
+Subscribe to lifecycle events so every Sentry issue lands on the
+Robusta timeline.
 
-In the **WEBHOOKS** section of the same form:
+In the **PERMISSIONS** section of the same form:
 
-1. Tick **only** the ``issue`` checkbox (sub-events: ``created``,
+1. **Issue & Event**: set to **Read**.
+
+Then in the **WEBHOOKS** section:
+
+2. Tick **only** the ``issue`` checkbox (sub-events: ``created``,
    ``resolved``, ``assigned``, ``archived``, ``unresolved``).
-2. Leave ``error``, ``comment``, ``seer``, and ``preprod_artifact``
+3. Leave ``error``, ``comment``, ``seer``, and ``preprod_artifact``
    unchecked.
 
 .. warning::
@@ -100,29 +88,28 @@ In the **WEBHOOKS** section of the same form:
    individual error event (not per issue) — a noisy service will
    generate far more webhook traffic than the issue checkbox does.
 
-That's the entire Path A configuration. Continue to
-:ref:`Path B <sentry-path-alert-rule>` if you also want rule-driven
-alerts, or jump to :ref:`Save the integration <sentry-save>`.
+Continue to :ref:`Path B <sentry-path-alert-rule>` if you also want
+rule-driven alerts, or jump to :ref:`Save the integration
+<sentry-save>`.
 
 .. _sentry-path-alert-rule:
 
 Path B — Alert Rule Action
 --------------------------
 
-This path makes Robusta selectable as an action inside Sentry Issue
-Alert and Metric Alert rules. Sentry POSTs only when one of those
-rules fires, and the webhook carries the event detail plus the rule
-name as the aggregation key.
+Register Robusta as a selectable action inside Sentry Issue Alert and
+Metric Alert rules so the integration receives the rich
+``event_alert`` payload only when a rule fires.
 
-Two parts: register the integration as an alert action, then create
-the alert rule that uses it.
+In the **PERMISSIONS** section of the same form:
 
-Register Robusta as an alert action
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. **Alerts**: set to **Read**.
 
-1. **Alert Rule Action**: tick this checkbox.
+Then back in **INTERNAL INTEGRATION DETAILS**:
 
-2. **Schema**: paste the following JSON so Robusta appears in
+2. **Alert Rule Action**: tick this checkbox.
+
+3. **Schema**: paste the following JSON so Robusta appears in
    Sentry's alert rule action picker.
 
    .. code-block:: json
@@ -148,11 +135,14 @@ Register Robusta as an alert action
         ]
       }
 
-   The ``title`` is what shows up as the action label inside Sentry's
-   alert rule editor. The ``Alert Rule Action`` checkbox toggles the
-   feature on, but Sentry uses this schema to know *how* to render
+   The ``title`` is the action label that shows up inside Sentry's
+   alert rule editor. The schema is what tells Sentry how to render
    the integration in the picker — without it, Robusta won't appear
    in the "Send a notification via an integration" dropdown.
+
+After configuring Path B, continue to :ref:`Save the integration
+<sentry-save>` — Sentry needs the integration saved before any
+alert rule can reference it.
 
 .. _sentry-save:
 
@@ -165,12 +155,16 @@ Integrations list page with a **Dashboard** button next to it — that
 dashboard is the primary debugging surface (see
 :ref:`troubleshooting <sentry-troubleshooting>`).
 
-Wire up a Sentry alert rule (Path B)
-------------------------------------
+Create a Sentry alert rule (Path B)
+-----------------------------------
 
-If you set up Path B, the integration is now selectable in alert
-rules — but until a rule is actually configured against it Sentry
-won't POST anything. For each project that should forward to Robusta:
+This section only applies if you configured
+:ref:`Path B <sentry-path-alert-rule>` above. Skip it for a Path A-only
+setup.
+
+The integration is now selectable in alert rules, but until a rule is
+actually configured against it Sentry won't POST anything. For each
+project that should forward to Robusta:
 
 1. Open **Alerts → Create Alert** and choose **Issues**.
 2. Configure your conditions and filters as usual.
