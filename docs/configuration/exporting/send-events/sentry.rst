@@ -87,6 +87,12 @@ Then in the **WEBHOOKS** section:
    individual error event (not per issue) — a noisy service will
    generate far more webhook traffic than the issue checkbox does.
 
+3. Click **Save Changes** at the bottom of the form. The integration
+   now appears under **INTERNAL INTEGRATIONS** on the Custom
+   Integrations list page with a **Dashboard** button next to it —
+   that dashboard is the primary debugging surface (see
+   :ref:`troubleshooting <sentry-troubleshooting>`).
+
 .. _sentry-path-alert-rule:
 
 Alert Rule Action
@@ -135,16 +141,11 @@ Then in the **PERMISSIONS** section:
 
 3. **Alerts**: set to **Read**.
 
-.. _sentry-save:
-
-Save the integration
---------------------
-
-Click **Save Changes** at the bottom of the form. The integration
-now appears under **INTERNAL INTEGRATIONS** on the Custom
-Integrations list page with a **Dashboard** button next to it — that
-dashboard is the primary debugging surface (see
-:ref:`troubleshooting <sentry-troubleshooting>`).
+4. Click **Save Changes** at the bottom of the form. The integration
+   now appears under **INTERNAL INTEGRATIONS** on the Custom
+   Integrations list page with a **Dashboard** button next to it —
+   that dashboard is the primary debugging surface (see
+   :ref:`troubleshooting <sentry-troubleshooting>`).
 
 Create a Sentry alert rule (Path B)
 -----------------------------------
