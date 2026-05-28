@@ -71,41 +71,28 @@ In the **INTERNAL INTEGRATION DETAILS** section:
 5. **Webhook URL**: paste the URL from the previous section.
 6. **Alert Rule Action**: enable this checkbox if you want the
    integration to be selectable inside Sentry Issue Alert and Metric
-   Alert rules. This is required for the alert-rule path described
-   below; leave it disabled if you only want the issue lifecycle
-   webhook.
+   Alert rules. The notification destination is the **Webhook URL**
+   you just filled in. Leave it disabled if you only want the issue
+   lifecycle webhook.
 
    .. note::
 
-      The checkbox stays locked until **Schema** (next field) contains
-      a valid ``alert-rule-action`` element. Fill the schema first,
-      then enable the checkbox.
+      If the checkbox is locked, hover over the lock for Sentry's
+      explanation. Common causes: the org's Sentry plan doesn't
+      include alert-rule integration actions (a Business/Team-tier
+      feature on Sentry SaaS), or **Alerts** in the Permissions
+      section below hasn't been granted yet.
 
-7. **Schema** *(required when Alert Rule Action is enabled, otherwise
-   leave blank)*: paste the following JSON.
+7. **Schema**: leave blank for the typical Robusta setup. The schema
+   is only needed when you want to add *custom form fields* (e.g.
+   a user-fillable title or filter) to the alert rule configuration
+   UI in Sentry. The basic "fire ``event_alert`` webhook to the
+   Webhook URL" behavior is driven entirely by the **Alert Rule
+   Action** checkbox above — no schema required.
 
-   .. code-block:: json
-
-      {
-        "elements": [
-          {
-            "type": "alert-rule-action",
-            "title": "Send to Robusta",
-            "settings": {
-              "type": "alert-rule-settings",
-              "uri": "/webhooks",
-              "required_fields": []
-            }
-          }
-        ]
-      }
-
-   .. note::
-
-      Sentry appends the schema's ``uri`` path to the webhook URL host
-      when an alert rule fires, so the path component of the **Webhook
-      URL** field above (``/webhooks``) must match the schema ``uri``.
-      Query parameters in the Webhook URL are preserved.
+   If you do want custom form fields, see Sentry's
+   `Alert Rule Action UI component docs
+   <https://docs.sentry.io/organization/integrations/integration-platform/ui-components/alert-rule-action/>`_.
 
 8. **Overview** and **Authorized JavaScript Origins**: leave both
    blank.
