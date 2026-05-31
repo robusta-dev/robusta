@@ -89,9 +89,7 @@ Then in the **WEBHOOKS** section:
 
 3. Click **Save Changes** at the bottom of the form. The integration
    now appears under **INTERNAL INTEGRATIONS** on the Custom
-   Integrations list page with a **Dashboard** button next to it —
-   that dashboard is the primary debugging surface (see
-   :ref:`troubleshooting <sentry-troubleshooting>`).
+   Integrations list page.
 
 .. _sentry-path-alert-rule:
 
@@ -143,9 +141,7 @@ Then in the **PERMISSIONS** section:
 
 4. Click **Save Changes** at the bottom of the form. The integration
    now appears under **INTERNAL INTEGRATIONS** on the Custom
-   Integrations list page with a **Dashboard** button next to it —
-   that dashboard is the primary debugging surface (see
-   :ref:`troubleshooting <sentry-troubleshooting>`).
+   Integrations list page.
 
 Create a Sentry alert rule (Path B)
 -----------------------------------
