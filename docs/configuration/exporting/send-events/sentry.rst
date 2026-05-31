@@ -195,13 +195,14 @@ Troubleshooting
 ---------------
 
 Sentry exposes its own delivery history on the Custom Integration's
-**Dashboard** tab — open the integration from **Settings → Integrations
-→ Custom Integrations → Robusta** and switch to **Dashboard**. The
-dashboard lists every outgoing webhook with the HTTP status code
-Robusta returned, the timestamp, the request body Sentry sent, and the
-response body Robusta replied with. Always start debugging here — it
-tells you whether the problem is on Sentry's side (no requests showing
-up) or Robusta's side (requests present but non-200).
+**Dashboard** tab — open **Settings → Integrations → Custom
+Integrations** and, near the Robusta integration, click the
+**Dashboard** button. The dashboard lists every outgoing webhook
+with the HTTP status code Robusta returned, the timestamp, the
+request body Sentry sent, and the response body Robusta replied
+with. Always start debugging here — it tells you whether the problem
+is on Sentry's side (no requests showing up) or Robusta's side
+(requests present but non-200).
 
 Common responses and what they mean:
 
