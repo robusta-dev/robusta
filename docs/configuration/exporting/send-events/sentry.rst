@@ -143,8 +143,8 @@ Then in the **PERMISSIONS** section:
    now appears under **INTERNAL INTEGRATIONS** on the Custom
    Integrations list page.
 
-Create a Sentry alert rule (Path B)
------------------------------------
+Create a Sentry alert rule
+--------------------------
 
 This section only applies if you configured
 :ref:`Alert Rule Action <sentry-path-alert-rule>` above. Skip it if
