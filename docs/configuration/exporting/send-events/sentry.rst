@@ -173,12 +173,12 @@ Verify
 
 Trigger an event end-to-end to confirm the pipeline:
 
-* **Path A**: in Sentry, pick any existing issue → click
-  **Resolve** → then **Unresolve**. Two ``issue`` webhooks fire
+* **Issue Lifecycle Webhook**: in Sentry, pick any existing issue →
+  click **Resolve** → then **Unresolve**. Two ``issue`` webhooks fire
   back-to-back.
-* **Path B**: trigger an Issue Alert Rule that targets the Robusta
-  integration (or set the rule to "An event is seen" with no filters
-  and trigger any error in the app).
+* **Send alert webhook**: trigger an Issue Alert Rule that targets
+  the Robusta integration (or set the rule to "An event is seen"
+  with no filters and trigger any error in the app).
 
 Then:
 
@@ -239,11 +239,11 @@ Common responses and what they mean:
 If the dashboard shows **no recent requests** even though you
 triggered an event:
 
-* For **Path A**, verify the ``issue`` checkbox under **Webhooks** is
-  enabled and the integration is saved.
-* For **Path B**, verify the **Alert Rule Action** checkbox is on,
-  the **Schema** is saved, and the alert rule in your project lists
-  Robusta as one of its actions.
+* For the **Issue Lifecycle Webhook**, verify the ``issue`` checkbox
+  under **Webhooks** is enabled and the integration is saved.
+* For the **Send alert webhook** path, verify the **Alert Rule
+  Action** checkbox is on, the **Schema** is saved, and the alert
+  rule in your project lists Robusta as one of its actions.
 
 If the dashboard shows **200 responses but nothing appears in the
 Robusta timeline**, open the Robusta **Delivery Log** and look for
