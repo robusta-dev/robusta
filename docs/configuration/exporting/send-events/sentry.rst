@@ -12,8 +12,8 @@ one, or enable both on the same integration:
   unresolved across the org. Lighter payload (no per-event details,
   no event-level tags), zero alert-rule plumbing. Use this when you
   want every Sentry issue on the Robusta timeline.
-* :ref:`Alert Rule Action <sentry-path-alert-rule>` fires only when a
-  Sentry Issue Alert Rule (or Metric Alert Rule) triggers and lists
+* :ref:`Send alert webhook <sentry-path-alert-rule>` fires only when
+  a Sentry Issue Alert Rule (or Metric Alert Rule) triggers and lists
   Robusta as one of its actions. Richer payload (event detail, rule
   name, and all tags attached to the event). Use this when you want
   rule-driven, throttled alerts.
@@ -61,7 +61,7 @@ Create the Custom Integration
 
 Then configure
 :ref:`Issue Lifecycle Webhook <sentry-path-issue-lifecycle>`,
-:ref:`Alert Rule Action <sentry-path-alert-rule>`, or both, and save
+:ref:`Send alert webhook <sentry-path-alert-rule>`, or both, and save
 the integration at the end.
 
 .. _sentry-path-issue-lifecycle:
@@ -93,12 +93,16 @@ Then in the **WEBHOOKS** section:
 
 .. _sentry-path-alert-rule:
 
-Alert Rule Action
------------------
+Send alert webhook
+------------------
 
 Register Robusta as a selectable action inside Sentry Issue Alert and
 Metric Alert rules so the integration receives the rich
-``event_alert`` payload only when a rule fires.
+``event_alert`` payload only when a rule fires. Two parts: configure
+the integration, then add Robusta to an existing alert rule.
+
+Configure the integration
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the **INTERNAL INTEGRATION DETAILS** section of the same form:
 
@@ -143,24 +147,20 @@ Then in the **PERMISSIONS** section:
    now appears under **INTERNAL INTEGRATIONS** on the Custom
    Integrations list page.
 
-Create a Sentry alert rule
---------------------------
+Add Robusta to an existing alert rule
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This section only applies if you configured
-:ref:`Alert Rule Action <sentry-path-alert-rule>` above. Skip it if
-you only set up the issue lifecycle webhook.
+The integration is now selectable in alert rules, but until a rule
+references it Sentry won't POST anything. For each Sentry alert rule
+you want to forward to Robusta:
 
-The integration is now selectable in alert rules, but until a rule is
-actually configured against it Sentry won't POST anything. For each
-project that should forward to Robusta:
-
-1. Open **Alerts → Create Alert** and choose **Issues**.
-2. Configure your conditions and filters as usual.
-3. Under **Then perform these actions**, click **Add action** and
+1. In the project that owns the rule, open **Alerts → Alert Rules**
+   and click the rule you want to forward.
+2. Under **Then perform these actions**, click **Add action** and
    select **Send a notification via an integration → Robusta**.
-4. The "Destination" dropdown the schema declared appears here;
+3. The "Destination" dropdown the schema declared appears here;
    leave it at "Robusta".
-5. Save the rule.
+4. **Save** the rule.
 
 When the rule's conditions match, Sentry POSTs the ``event_alert``
 payload to Robusta, and the rule name shows up as the Robusta
