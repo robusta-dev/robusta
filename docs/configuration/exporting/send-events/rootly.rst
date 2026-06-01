@@ -16,21 +16,17 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=rootly&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=rootly&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<ROBUSTA_API_KEY>`` with the API key you generated.
 
 Configure Rootly
 ----------------
 
 1. In Rootly, go to **Integrations → Webhooks → New Webhook**.
 2. Set the **URL** to the webhook URL above.
-3. Add a custom header:
-
-   .. code-block::
-
-       Authorization: Bearer <ROBUSTA_API_KEY>
-
-4. Subscribe the webhook to the alert events you want forwarded — at minimum ``alert.created``. If the Rootly UI offers other ``alert.*`` events (for example to notify on resolution), subscribe to those as well; Robusta accepts the whole ``alert.*`` family and uses the alert object's ``ended_at`` field to tell firing from resolved, so the parser stays correct regardless of which specific event names Rootly emits.
-5. Save. Rootly will start delivering alerts immediately.
+3. Subscribe the webhook to the alert events you want forwarded — at minimum ``alert.created``. If the Rootly UI offers other ``alert.*`` events (for example to notify on resolution), subscribe to those as well; Robusta accepts the whole ``alert.*`` family and uses the alert object's ``ended_at`` field to tell firing from resolved, so the parser stays correct regardless of which specific event names Rootly emits.
+4. Save. Rootly will start delivering alerts immediately.
 
 Payload
 -------
