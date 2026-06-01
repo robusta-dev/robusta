@@ -20,10 +20,6 @@ Webhook URL
 
 Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<ROBUSTA_API_KEY>`` with the API key you generated.
 
-.. note::
-
-   Rootly outgoing webhooks **do not let you add custom outgoing HTTP headers**, so the Robusta API key goes in the ``&token=`` URL parameter rather than an ``Authorization`` header.
-
 Configure Rootly
 ----------------
 
