@@ -130,7 +130,7 @@ class WebexSender:
 
         blocks = [MarkdownBlock(text=f"*Source:* _{self.cluster_name}_\n\n")]
 
-        # Seperate blocks into *Other* Blocks, TableBlocks and FileBlocks
+        # Separate blocks into *Other* Blocks, TableBlocks and FileBlocks
         for enrichment in finding.enrichments:
             blocks.extend([block for block in enrichment.blocks if self.__is_webex_text_block(block)])
             table_blocks.extend([block for block in enrichment.blocks if isinstance(block, TableBlock)])

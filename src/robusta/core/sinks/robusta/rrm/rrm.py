@@ -57,7 +57,7 @@ class RRM:
                     logging.warning(f"Could not handle resources from kind {resource_kind}")
 
         except Exception:
-            error = "An error occured while handling resources. Please check the runner logs for details"
+            error = "An error occurred while handling resources. Please check the runner logs for details"
             errors.append(error)
 
             logging.error(f"An error occurred while creating CR rules", exc_info=True)
