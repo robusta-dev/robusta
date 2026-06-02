@@ -83,7 +83,7 @@ def handle_holmes_error(e: Exception) -> NoReturn:
         )
     else:
         raise ActionException(
-            ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occured."
+            ErrorCodes.HOLMES_UNEXPECTED_ERROR, "An unexpected error occurred."
         )
 
 

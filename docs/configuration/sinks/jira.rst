@@ -82,7 +82,7 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-Try the example below to recieve an alert notification in Jira.
+Try the example below to receive an alert notification in Jira.
 
 
 Test your Jira Prometheus Integration

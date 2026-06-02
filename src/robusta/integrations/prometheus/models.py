@@ -134,7 +134,7 @@ class PrometheusKubernetesAlert(
             return unquote(q_expr[0])
 
         except Exception as e:
-            logging.error(f"An error occured in 'get_prometheus_query' | URL: {url} | Error: {e}")
+            logging.error(f"An error occurred in 'get_prometheus_query' | URL: {url} | Error: {e}")
             return ""
 
     def get_description(self) -> str:
