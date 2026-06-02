@@ -67,7 +67,7 @@ Monitoring Specific Resources in Namespaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, the Robusta UI sink discovers the standard resources in all namespaces using the standard discovery interval. 
-However, we have a configuration to monitor custom namespaced resources, and an API is exposed via the the Robusta Backend to see how many of each resource you have in a namespace.
+However, we have a configuration to monitor custom namespaced resources, and an API is exposed via the Robusta Backend to see how many of each resource you have in a namespace.
 
 To configure this, use the ``namespace_discovery_seconds`` and ``namespaceMonitoredResources`` settings in the Robusta UI sink:
 

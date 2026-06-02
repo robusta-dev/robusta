@@ -143,7 +143,7 @@ Step 3: Add a Webhook Action
 
 Step 4: Route Matching
 ---------------------------
-In the routing configuration, route it to the the service of your choice or you can do it dynamically by setting the route to:
+In the routing configuration, route it to the service of your choice or you can do it dynamically by setting the route to:
 
 .. code-block::
 
