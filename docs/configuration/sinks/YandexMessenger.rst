@@ -6,7 +6,7 @@ Yandex Messenger
 
    For new setups, we recommend `HolmesGPT <https://holmesgpt.dev/>`_ instead.
 
-   Sinks statically forward every notification to a fixed destination. Modern Robusta instead investigates and routes alerts **agentically** so the LLM makes intelligent triage decisions about each alert. Set this up with :ref:`triggered workflows <defining-playbooks>` and `MCP servers <https://holmesgpt.dev/data-sources/remote-mcp-servers/?tab=robusta-helm-chart>`_, or configure `alert triage <https://platform.robusta.dev/holmes/alerts-triage>`_ in the Robusta platform.
+   Sinks statically forward every notification to a fixed destination. Modern Robusta instead investigates and routes alerts **agentically** so the LLM makes intelligent triage decisions about each alert. Set this up with `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ for alerts, or :ref:`Triggered Workflows <defining-playbooks>` for custom events.
 
 
 Robusta can report issues and events in your Kubernetes cluster to Yandex Messenger chats, channels or private conversations.
