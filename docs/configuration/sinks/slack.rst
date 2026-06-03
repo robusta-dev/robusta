@@ -1,6 +1,15 @@
 Slack
 #################
 
+.. admonition:: This page documents a legacy sink in Robusta classic
+   :class: warning
+
+   You probably want to connect HolmesGPT to Slack and Teams directly, instead of using this legacy sink.
+
+   Open the `Slack & Teams settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform and connect HolmesGPT to Slack and Teams there. HolmesGPT can then triage alerts and reply in your channels, and you can chat with it directly to investigate issues on demand.
+
+   Under the hood this investigates and routes alerts **agentically**, using :ref:`triggered workflows <defining-playbooks>` together with `MCP servers <https://holmesgpt.dev/data-sources/remote-mcp-servers/?tab=robusta-helm-chart>`_, so the LLM makes intelligent triage decisions instead of blindly forwarding every notification.
+
 Robusta can proxy Prometheus alerts to Slack, adding powerful features like :ref:`AI investigation <AI Analysis>`, :ref:`smart grouping <notification-grouping>` and more.
 
 .. image:: /images/robusta-slack.png

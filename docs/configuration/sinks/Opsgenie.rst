@@ -1,6 +1,14 @@
 Opsgenie
 ##########
 
+.. admonition:: This page documents a legacy sink in Robusta classic
+   :class: warning
+
+   You probably want `HolmesGPT <https://holmesgpt.dev/>`_ instead.
+
+   Sinks statically forward every notification to a fixed destination. Modern Robusta instead investigates and routes alerts **agentically**, using :ref:`triggered workflows <defining-playbooks>` together with `MCP servers <https://holmesgpt.dev/data-sources/remote-mcp-servers/?tab=robusta-helm-chart>`_, so the LLM makes intelligent triage decisions about each alert instead of blindly forwarding everything.
+
+
 Robusta can report issues and events in your Kubernetes cluster to the OpsGenie alerts API.
 
 To configure OpsGenie, We need an OpsGenie API key. It can be configured using the OpsGenie team integration.

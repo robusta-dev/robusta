@@ -1,6 +1,14 @@
 PagerDuty
 ##########
 
+.. admonition:: This page documents a legacy sink in Robusta classic
+   :class: warning
+
+   You probably want `HolmesGPT <https://holmesgpt.dev/>`_ instead.
+
+   Sinks statically forward every notification to a fixed destination. Modern Robusta instead investigates and routes alerts **agentically**, using :ref:`triggered workflows <defining-playbooks>` together with `MCP servers <https://holmesgpt.dev/data-sources/remote-mcp-servers/?tab=robusta-helm-chart>`_, so the LLM makes intelligent triage decisions about each alert instead of blindly forwarding everything.
+
+
 Robusta can send three types of data to `PagerDuty <https://www.pagerduty.com/>`_:
 
 * `Change Events <https://support.pagerduty.com/docs/change-events>`_ - for example, when Deployments are updated
