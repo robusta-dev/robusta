@@ -4,7 +4,7 @@ Slack
 .. admonition:: This page documents a legacy sink in Robusta classic
    :class: warning
 
-   You probably want to connect HolmesGPT to Slack and Teams directly, instead of using this legacy sink.
+   For new setups, we recommend connecting HolmesGPT to Slack and Teams directly instead of using this legacy sink.
 
    Open the `Slack & Teams settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform and connect HolmesGPT to Slack and Teams there. HolmesGPT can then triage alerts and reply in your channels, and you can chat with it directly to investigate issues on demand.
 
