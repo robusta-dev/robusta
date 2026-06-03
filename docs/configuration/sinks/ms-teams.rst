@@ -8,7 +8,7 @@ MS Teams
 
    Open the `Slack & Teams settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform and connect HolmesGPT to Slack and Teams there. HolmesGPT can then triage alerts and reply in your channels, and you can chat with it directly to investigate issues on demand.
 
-   Under the hood this investigates and routes alerts **agentically**, using :ref:`triggered workflows <defining-playbooks>` together with `MCP servers <https://holmesgpt.dev/data-sources/remote-mcp-servers/?tab=robusta-helm-chart>`_, so the LLM makes intelligent triage decisions instead of blindly forwarding every notification.
+   Under the hood this investigates and routes alerts **agentically**, using :ref:`triggered workflows <defining-playbooks>` together with `MCP servers <https://holmesgpt.dev/data-sources/remote-mcp-servers/?tab=robusta-helm-chart>`_, so the LLM makes intelligent triage decisions about each alert.
 
 Robusta can report issues and events in your Kubernetes cluster to a MS Teams webhook.
 
