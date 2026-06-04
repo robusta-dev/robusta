@@ -6,6 +6,13 @@ All Sinks
 ==================
 
 
+.. admonition:: Sinks are a legacy feature of Robusta classic
+   :class: warning
+
+   For new setups, we recommend `HolmesGPT <https://holmesgpt.dev/>`_ instead.
+
+   Sinks statically forward every notification to a fixed destination. Modern Robusta instead investigates and routes alerts **agentically** so the LLM makes intelligent triage decisions about each alert. Set this up with `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ for alerts, or :ref:`Triggered Workflows <defining-playbooks>` for custom events.
+
 Robusta can send notifications to various destinations, known as sinks.
 
 **Related Topics:**
