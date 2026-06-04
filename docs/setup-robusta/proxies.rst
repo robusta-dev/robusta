@@ -128,7 +128,7 @@ After applying firewall rules, you can sanity-check connectivity from inside the
 A non-zero HTTP code (including ``401``/``404``) confirms TCP + TLS reach the host. Connection timeouts indicate the firewall is still blocking.
 
 Copying Images to a Private Image Registry
-----------------------------------------
+------------------------------------------
 
 If you are running the Robusta **self-hosted platform** (the ``robusta-platform`` Helm chart) in an environment that cannot pull from public registries (Docker Hub, ``us-central1-docker.pkg.dev``, ``quay.io``), mirror the images below to your internal registry and override the registry fields in your Helm values.
 
