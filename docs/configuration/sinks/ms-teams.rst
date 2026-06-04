@@ -4,11 +4,15 @@ MS Teams
 .. admonition:: This page documents a legacy sink in Robusta classic
    :class: warning
 
-   For new setups, we recommend connecting HolmesGPT to MS Teams directly instead of using this legacy sink.
+   For new setups, we recommend connecting HolmesGPT to MS Teams instead of using this legacy sink.
 
-   Open the `MS Teams settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform and connect HolmesGPT to MS Teams there. HolmesGPT can then triage alerts and reply in your channels, and you can chat with it directly to investigate issues on demand.
+   Open the `MS Teams settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform to connect HolmesGPT to MS Teams. This adds a single HolmesGPT bot that powers all of the flows below:
 
-   Under the hood this investigates and routes alerts **agentically** so the LLM makes intelligent triage decisions about each alert. Set this up with `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ for alerts, or :ref:`Triggered Workflows <defining-playbooks>` for custom events.
+   - **Chat** — ``@mention`` the bot in any channel to investigate issues on demand; it replies in the thread.
+   - **Alerts** — let `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ automatically investigate incoming alerts and post the findings to MS Teams.
+   - **Custom events** — use :ref:`Triggered Workflows <defining-playbooks>` to react to arbitrary events and notify MS Teams.
+
+   These are separate flows that share the same bot: chat is interactive, while Alerts Triage and Triggered Workflows run automatically.
 
 Robusta can report issues and events in your Kubernetes cluster to a MS Teams webhook.
 

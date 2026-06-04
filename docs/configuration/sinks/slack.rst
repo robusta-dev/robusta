@@ -4,11 +4,15 @@ Slack
 .. admonition:: This page documents a legacy sink in Robusta classic
    :class: warning
 
-   For new setups, we recommend connecting HolmesGPT to Slack directly instead of using this legacy sink.
+   For new setups, we recommend connecting HolmesGPT to Slack instead of using this legacy sink.
 
-   Open the `Slack settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform and connect HolmesGPT to Slack there. HolmesGPT can then triage alerts and reply in your channels, and you can chat with it directly to investigate issues on demand.
+   Open the `Slack settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform to connect HolmesGPT to Slack. This adds a single HolmesGPT Slack bot that powers all of the flows below:
 
-   Under the hood this investigates and routes alerts **agentically** so the LLM makes intelligent triage decisions about each alert. Set this up with `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ for alerts, or :ref:`Triggered Workflows <defining-playbooks>` for custom events.
+   - **Chat** — ``@mention`` the bot in any channel to investigate issues on demand; it replies in the thread.
+   - **Alerts** — let `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ automatically investigate incoming alerts and post the findings to Slack.
+   - **Custom events** — use :ref:`Triggered Workflows <defining-playbooks>` to react to arbitrary events and notify Slack.
+
+   These are separate flows that share the same bot: chat is interactive, while Alerts Triage and Triggered Workflows run automatically.
 
 Robusta can proxy Prometheus alerts to Slack, adding powerful features like :ref:`AI investigation <AI Analysis>`, :ref:`smart grouping <notification-grouping>` and more.
 
