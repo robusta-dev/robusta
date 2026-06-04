@@ -1,19 +1,9 @@
 Robusta UI
 #################
 
-Take your Kubernetes monitoring to the next level with a Robusta UI integration:
+The Robusta UI sink connects your Robusta installation to the Robusta SaaS platform, where you can investigate alerts with HolmesGPT, review timelines, and more.
 
-- **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
-- **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
-- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta’s automatic change tracking for Kubernetes
-
-.. raw:: html
-
-    <div style="text-align: center;">
-      <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0" target="_blank" rel="noopener noreferrer">
-          <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
-      </a>
-    </div>
+For the full list of platform features, see `home.robusta.dev <https://home.robusta.dev>`_.
 
 
 Configuring the Robusta UI Sink
@@ -45,6 +35,10 @@ Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 Handling Short-Lived Clusters in the UI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+   This is a Robusta classic feature for Kubernetes monitoring and does not apply to HolmesGPT.
+
 By default, inactive Robusta clusters will be kept in the UI for 6 months **data retention**. (4380 hours)
 
 If you have many short-lived clusters, you can remove them from the UI automatically once they stop running.
@@ -66,7 +60,11 @@ To do so, configure a shorter retention period by setting the ``ttl_hours`` in t
 Monitoring Specific Resources in Namespaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, the Robusta UI sink discovers the standard resources in all namespaces using the standard discovery interval. 
+.. note::
+
+   This is a Robusta classic feature for Kubernetes monitoring and does not apply to HolmesGPT.
+
+By default, the Robusta UI sink discovers the standard resources in all namespaces using the standard discovery interval.
 However, we have a configuration to monitor custom namespaced resources, and an API is exposed via the Robusta Backend to see how many of each resource you have in a namespace.
 
 To configure this, use the ``namespace_discovery_seconds`` and ``namespaceMonitoredResources`` settings in the Robusta UI sink:

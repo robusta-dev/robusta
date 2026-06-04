@@ -27,6 +27,8 @@ import re
 from html import escape
 
 from docutils import nodes
+from docutils.parsers.rst import directives
+from sphinx.util import parselinenos
 from sphinx.util.docutils import SphinxDirective
 
 
@@ -68,6 +70,9 @@ class RobustaCodeDirective(SphinxDirective):
     required_arguments = 0
     optional_arguments = 1
     final_argument_whitespace = False
+    option_spec = {
+        "emphasize-lines": directives.unchanged_required,
+    }
 
     def run(self):
         language = self.arguments[0] if self.arguments else "text"
@@ -83,6 +88,17 @@ class RobustaCodeDirective(SphinxDirective):
         container = nodes.container(classes=["robusta-region-box", "robusta-region-box--code"])
         literal = nodes.literal_block(code, code)
         literal["language"] = language
+
+        emphasize_spec = self.options.get("emphasize-lines")
+        if emphasize_spec:
+            try:
+                nlines = len(code.split("\n"))
+                hl_lines = [x + 1 for x in parselinenos(emphasize_spec, nlines) if 0 <= x < nlines]
+            except ValueError:
+                hl_lines = []
+            if hl_lines:
+                literal["highlight_args"] = {"hl_lines": hl_lines}
+
         container += literal
         return [container]
 
