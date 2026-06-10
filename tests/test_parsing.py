@@ -1,3 +1,5 @@
+"""Tests for template placeholder substitution in robusta.utils.parsing."""
+
 import pytest
 
 from robusta.core.reporting import FindingSubject, FindingSubjectType
@@ -34,4 +36,5 @@ SUBJECT = FindingSubject(
     ],
 )
 def test_format_event_templated_string(template: str, expected_output: str):
+    """Resolve subject fields, labels and annotations in braced and unbraced placeholders."""
     assert format_event_templated_string(SUBJECT, template) == expected_output
