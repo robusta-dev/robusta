@@ -70,7 +70,7 @@ class ZulipSender:
     def __build_msg_data(self, stream_name: str, topic: str, content: str):
         return {"type": "stream", "to": stream_name, "topic": topic, "content": content}
 
-    def __get_stream_id(self, stream_name: str):
+    def __get_stream_id(self, stream_name: str) -> int | None:
         try:
             params = {"stream": stream_name}
             r = self.zclient.get(f"{self.api_url}/api/v1/get_stream_id?{urlencode(params)}")
@@ -98,7 +98,7 @@ class ZulipSender:
             return []
 
     # because there's no direct topic access, they are only identifiable by a message they are part of
-    def __find_msg_id_for_topic_title(self, title_name: str):
+    def __find_msg_id_for_topic_title(self, title_name: str) -> int | None:
         def find_msg_id(topics, title):
             return [topic["max_id"] for topic in topics if title in topic["name"]]
 
