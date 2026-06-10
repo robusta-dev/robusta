@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from urllib.parse import urlencode
 
 from requests.sessions import Session
 
@@ -24,22 +25,32 @@ ZULIP_MESSAGE_DEFAULT_LEN: int = 10_000
 
 
 class ZulipSender:
-    def __init__(self, api_url: str, zclient: Session, account_id: str, cluster_name: str, signing_key: str):
+    def __init__(
+        self, api_url: str, stream_name: str, zclient: Session, account_id: str, cluster_name: str, signing_key: str
+    ):
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
         self.api_url = api_url
         self.zclient = zclient
 
+        self.max_message_len = self.__get_max_msg_len()
+
+        self.stream_name = stream_name
+        self.stream_id = self.__get_stream_id(stream_name)
+        self.topic_cache = self.__load_topics(self.stream_id)
+
+    def __get_max_msg_len(self):
         try:
             r = self.zclient.post(f"{self.api_url}/api/v1/register")
             r.raise_for_status()
-            self.max_message_len = int(r.json()["max_message_length"])
+            return int(r.json()["max_message_length"])
+
         except Exception as e:
             logging.exception(
                 f"Zulip Sink: failed to fetch max_message_length: {e}. Using default value of: {ZULIP_MESSAGE_DEFAULT_LEN}"
             )
-            self.max_message_len = ZULIP_MESSAGE_DEFAULT_LEN
+            return ZULIP_MESSAGE_DEFAULT_LEN
 
     def __to_zulip_bold(self, text: str):
         return f"**{text}**"
@@ -55,6 +66,55 @@ class ZulipSender:
 
     def __to_zulip_table(self, block: TableBlock):
         return block.to_table_string(table_fmt="pipe")
+
+    def __build_msg_data(self, stream_name: str, topic: str, content: str):
+        return {"type": "stream", "to": stream_name, "topic": topic, "content": content}
+
+    def __get_stream_id(self, stream_name: str):
+        try:
+            params = {"stream": stream_name}
+            r = self.zclient.get(f"{self.api_url}/api/v1/get_stream_id?{urlencode(params)}")
+            r.raise_for_status()
+
+            return int(r.json()["stream_id"])
+        except Exception as e:
+            logging.exception(f"Zulip Sink: failed to fetch stream_id: {e}")
+
+    def __load_topics(self, stream_id: int | None):
+        if stream_id is None:
+            logging.warning("stream_id is None")
+            return []
+
+        try:
+            r = self.zclient.get(f"{self.api_url}/api/v1/users/me/{stream_id}/topics")
+            r.raise_for_status()
+
+            topics = r.json().get("topics", [])
+            logging.warning(f"topics: {topics}")
+
+            return topics
+        except Exception as e:
+            logging.exception(f"Zulip Sink: could not fetch topics for stream: {stream_id}: {e}")
+            return []
+
+    # because there's no direct topic access, they are only identifiable by a message they are part of
+    def __find_msg_id_for_topic_title(self, title_name: str):
+        def find_msg_id(topics, title):
+            return [topic["max_id"] for topic in topics if title in topic["name"]]
+
+        msg_id = find_msg_id(self.topic_cache, title_name)
+
+        if not msg_id:
+            self.topic_cache = self.__load_topics(self.stream_id)
+            msg_id = find_msg_id(self.topic_cache, title_name)
+
+        if len(msg_id) > 1:
+            logging.warning(f"Zulip Sink: found multiple topics: {msg_id} that match the title: {title_name}")
+
+        if len(msg_id) == 0:
+            logging.warning(f"Zulip Sink: topic not found: {title_name}")
+
+        return msg_id[0] if msg_id else None
 
     def __upload_to_zulip(self, filename: str, content: bytes):
         try:
@@ -139,7 +199,7 @@ class ZulipSender:
             if finding.add_silence_url:
                 silence_url = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
                 message_lines.append(self.__to_zulip_link("🔕 Silence", silence_url))
-                
+
         for link in finding.links:
             message_lines.append(f"🎬 {self.__to_zulip_link(link.name, link.url)}")
 
@@ -156,18 +216,33 @@ class ZulipSender:
             if self.__enough_msg_bytes_free(message, formatted_line):
                 message += formatted_line
 
-        templated_channel_topic = ChannelTransformer.template(
-            sink_params.topic_override,
-            sink_params.topic_name,
-            self.cluster_name,
-            finding.subject.labels,
-            finding.subject.annotations,
-        )
-
-        data = {"type": "stream", "to": sink_params.stream_name, "topic": templated_channel_topic, "content": message}
-
         try:
-            r = self.zclient.post(f"{self.api_url}/api/v1/messages", data=data)
-            r.raise_for_status()
+            if sink_params.topic_autoresolve and finding.source == FindingSource.PROMETHEUS:
+                title = finding.title.removeprefix("[RESOLVED] ")
+                msg_id = self.__find_msg_id_for_topic_title(title)
+
+                logging.warning(f"sending with msg_id: {msg_id}")
+                channel_topic = "✔ " + title if status == FindingStatus.RESOLVED and msg_id else title
+
+                data = self.__build_msg_data(self.stream_name, channel_topic, message)
+
+                r = self.zclient.post(f"{self.api_url}/api/v1/messages", data=data)
+                if msg_id:
+                    data["propagate_mode"] = "change_all"
+                    r = self.zclient.patch(f"{self.api_url}/api/v1/messages/{msg_id}", data=data)
+
+                r.raise_for_status()
+            else:
+                channel_topic = ChannelTransformer.template(
+                    sink_params.topic_override,
+                    sink_params.topic_name,
+                    self.cluster_name,
+                    finding.subject.labels,
+                    finding.subject.annotations,
+                )
+                data = self.__build_msg_data(self.stream_name, channel_topic, message)
+
+                r = self.zclient.post(f"{self.api_url}/api/v1/messages", data=data)
+                r.raise_for_status()
         except Exception as e:
             logging.exception(f"Zulip Sink: failed to send data: {e}")

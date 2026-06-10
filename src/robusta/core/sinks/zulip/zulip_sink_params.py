@@ -14,6 +14,7 @@ class ZulipSinkParams(SinkBaseParams):
     stream_name: str = "Monitoring"
     topic_name: str = "Robusta"
     topic_override: Optional[str] = None
+    topic_autoresolve: bool = False
     log_preview_char_limit: int = 500
 
     @classmethod
