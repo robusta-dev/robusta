@@ -228,8 +228,8 @@ class ZulipSender:
 
                 r = self.zclient.post(f"{self.api_url}/api/v1/messages", data=data)
                 if msg_id:
-                    data["propagate_mode"] = "change_all"
-                    r = self.zclient.patch(f"{self.api_url}/api/v1/messages/{msg_id}", data=data)
+                    patch_data = {"topic": channel_topic, "propagate_mode": "change_all"}
+                    r = self.zclient.patch(f"{self.api_url}/api/v1/messages/{msg_id}", data=patch_data)
 
                 r.raise_for_status()
             else:
