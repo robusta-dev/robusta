@@ -90,7 +90,7 @@ class ZulipSender:
             r.raise_for_status()
 
             topics = r.json().get("topics", [])
-            logging.warning(f"topics: {topics}")
+            logging.debug(f"topics: {topics}")
 
             return topics
         except Exception as e:
