@@ -100,7 +100,7 @@ class ZulipSender:
     # because there's no direct topic access, they are only identifiable by a message they are part of
     def __find_msg_id_for_topic_title(self, title_name: str) -> int | None:
         def find_msg_id(topics, title):
-            return [topic["max_id"] for topic in topics if title in topic["name"]]
+            return [topic["max_id"] for topic in topics if topic["name"] == title or topic["name"] == f"✔ {title}"]
 
         msg_id = find_msg_id(self.topic_cache, title_name)
 
