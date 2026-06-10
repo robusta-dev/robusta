@@ -34,6 +34,7 @@ class ZulipSender:
         self.api_url = api_url
         self.zclient = zclient
 
+        self.max_topic_len: int | None = None
         self.max_message_len = self.__get_max_msg_len()
 
         self.stream_name = stream_name
@@ -44,7 +45,12 @@ class ZulipSender:
         try:
             r = self.zclient.post(f"{self.api_url}/api/v1/register")
             r.raise_for_status()
-            return int(r.json()["max_message_length"])
+            config = r.json()
+            max_topic_len = config.get("max_topic_length")
+            if max_topic_len is not None:
+                self.max_topic_len = int(max_topic_len)
+
+            return int(config["max_message_length"])
 
         except Exception as e:
             logging.exception(
@@ -69,6 +75,10 @@ class ZulipSender:
 
     def __build_msg_data(self, stream_name: str, topic: str, content: str):
         return {"type": "stream", "to": stream_name, "topic": topic, "content": content}
+
+    def __to_topic_name(self, title: str, resolved: bool = False):
+        topic_name = f"✔ {title}" if resolved else title
+        return topic_name[: self.max_topic_len] if self.max_topic_len is not None else topic_name
 
     def __get_stream_id(self, stream_name: str) -> int | None:
         try:
@@ -100,7 +110,8 @@ class ZulipSender:
     # because there's no direct topic access, they are only identifiable by a message they are part of
     def __find_msg_id_for_topic_title(self, title_name: str) -> int | None:
         def find_msg_id(topics, title):
-            return [topic["max_id"] for topic in topics if topic["name"] == title or topic["name"] == f"✔ {title}"]
+            topic_names = [self.__to_topic_name(title), self.__to_topic_name(title, resolved=True)]
+            return [topic["max_id"] for topic in topics if topic["name"] in topic_names]
 
         msg_id = find_msg_id(self.topic_cache, title_name)
 
@@ -222,7 +233,7 @@ class ZulipSender:
                 msg_id = self.__find_msg_id_for_topic_title(title)
 
                 logging.warning(f"sending with msg_id: {msg_id}")
-                channel_topic = "✔ " + title if status == FindingStatus.RESOLVED and msg_id else title
+                channel_topic = self.__to_topic_name(title, status == FindingStatus.RESOLVED and bool(msg_id))
 
                 data = self.__build_msg_data(self.stream_name, channel_topic, message)
 
