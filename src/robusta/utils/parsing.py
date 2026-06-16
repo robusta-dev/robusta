@@ -15,6 +15,11 @@ class ExtendedTemplate(Template):
     # annotations and labels. Note the pattern is case-insensitive (see the documentation
     # of string.Template).
     idpattern = r'(?a:[_a-z][_a-z0-9.]*)'
+    # Braced placeholders (${...}) additionally allow "-" and "/" so that label and
+    # annotation keys like "com.example/job-count" can be referenced. This is restricted
+    # to the braced form to keep unbraced placeholders (e.g. "$name-suffix") behaving
+    # as before.
+    braceidpattern = r"(?a:[_a-z][_a-z0-9./-]*)"
 
 
 def format_event_templated_string(subject: Union[FindingSubject, ObjectReference], string_to_substitute) -> str:
