@@ -33,6 +33,12 @@ clusterZone: ""
 
 global:
   clusterDomain: "cluster.local"
+  # Optional image pull secrets applied to the runner, kubewatch, and the runtime pods
+  # created by the runner (e.g. KRR, Popeye, via the runner ServiceAccount).
+  # A component's own imagePullSecrets (e.g. runner.imagePullSecrets), when set, is used
+  # instead of this global; otherwise the component inherits this global. Leave empty to
+  # keep existing behavior. HolmesGPT is a separate subchart - set holmes.imagePullSecrets.
+  imagePullSecrets: []
 
 automountServiceAccountToken: true
 
@@ -648,6 +654,7 @@ kubewatch:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  # set to override global.imagePullSecrets for kubewatch; leave empty to inherit the global
   imagePullSecrets: []
   config:
     namespace: ""
@@ -707,6 +714,7 @@ grafanaRenderer:
 # parameters for the robusta runner service account
 runnerServiceAccount:
   # image pull secrets added to the runner service account. Any pod using the service account will get those
+  # set to override global.imagePullSecrets; leave empty to inherit the global
   imagePullSecrets: []
   # Additional annotations for the ServiceAccount.
   annotations: {}
@@ -737,6 +745,7 @@ runner:
   annotations: {}
   nodeSelector: ~
   customClusterRoleRules: []
+  # set to override global.imagePullSecrets for the runner; leave empty to inherit the global
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
