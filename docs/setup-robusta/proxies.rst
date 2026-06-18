@@ -113,6 +113,19 @@ When deploying Robusta in a tightly restricted environment, the runner needs out
 
 If you mirror images to a private registry, override ``image.registry`` (and the per-component ``image:`` fields) in your Helm values and you can drop the public registries from the allowlist.
 
+If your private registry requires authentication, set ``global.imagePullSecrets``. This applies the
+pull secret to every component at once — the runner, kubewatch, HolmesGPT, and the pods the runner
+launches at runtime (e.g. KRR, Popeye, via the runner ServiceAccount):
+
+.. code-block:: yaml
+
+    global:
+      imagePullSecrets:
+        - name: my-registry-secret
+
+A per-component value (e.g. ``runner.imagePullSecrets``, ``kubewatch.imagePullSecrets``) overrides the
+global one for that component. Leaving ``global.imagePullSecrets`` empty keeps the previous behavior.
+
 Verifying the Allowlist
 ----------------------------------------
 

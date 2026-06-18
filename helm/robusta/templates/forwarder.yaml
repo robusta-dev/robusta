@@ -31,9 +31,10 @@ spec:
       serviceAccountName: {{ include "robusta.fullname" . }}-forwarder-service-account
       {{- end }}
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
-      {{- if .Values.kubewatch.imagePullSecrets }}
+      {{- $pullSecrets := .Values.kubewatch.imagePullSecrets | default (.Values.global.imagePullSecrets | default list) }}
+      {{- if $pullSecrets }}
       imagePullSecrets:
-      {{- toYaml .Values.kubewatch.imagePullSecrets | nindent 6 }}
+      {{- toYaml $pullSecrets | nindent 6 }}
       {{- end }}
       {{- with .Values.kubewatch.securityContext.pod }}
       securityContext:

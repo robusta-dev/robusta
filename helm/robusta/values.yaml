@@ -33,6 +33,11 @@ clusterZone: ""
 
 global:
   clusterDomain: "cluster.local"
+  # Optional image pull secrets applied globally to the runner, kubewatch, holmes,
+  # and runtime pods created by the runner (e.g. KRR, Popeye, via the runner ServiceAccount).
+  # A per-component imagePullSecrets (e.g. runner.imagePullSecrets) overrides this global
+  # value for that component. Leave empty to keep existing behavior.
+  imagePullSecrets: []
 
 automountServiceAccountToken: true
 
