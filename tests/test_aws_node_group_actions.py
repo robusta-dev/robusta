@@ -154,5 +154,5 @@ def test_boto_client_uses_explicit_credentials(mock_boto_client, mock_event):
         "eks",
         region_name="us-west-2",
         aws_access_key_id="AKID",
-        aws_secret_access_key="SECRET",
+        aws_secret_access_key="SECRET",  # noqa: S106
     )
