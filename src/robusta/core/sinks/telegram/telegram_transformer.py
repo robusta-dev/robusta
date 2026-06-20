@@ -17,6 +17,14 @@ _DIVIDER = "-------------------"
 _MARKDOWNV2_SPECIAL_CHARS = r"_*[]()~`>#+-=|{}.!"
 _MARKDOWNV2_ESCAPE_RE = re.compile("([" + re.escape(_MARKDOWNV2_SPECIAL_CHARS) + "])")
 
+# inline token: slack link <url|text> | github link [text](url) | code `...` | bold *...*
+_INLINE_RE = re.compile(
+    r"<(?P<slack_url>[^|>]+)\|(?P<slack_text>[^>]+)>"
+    r"|\[(?P<gh_text>[^\]]+)\]\((?P<gh_url>[^)]+)\)"
+    r"|`(?P<code>[^`]+)`"
+    r"|\*(?P<bold>[^*]+)\*"
+)
+
 
 def escape_markdownv2(text: str) -> str:
     """Escape all Telegram MarkdownV2 special characters in arbitrary text."""
@@ -51,7 +59,7 @@ class TelegramTransformer:
 
     def block_to_markdownv2(self, block: BaseBlock) -> str:
         if isinstance(block, MarkdownBlock):
-            return ""  # handled in a later task
+            return self._inline_to_markdownv2(block.text) if block.text else ""
         elif isinstance(block, HeaderBlock):
             return self.bold(block.text)
         elif isinstance(block, DividerBlock):
@@ -72,6 +80,31 @@ class TelegramTransformer:
         else:
             logging.debug(f"Unsupported block type ({type(block)}) for telegram MarkdownV2 rendering")
             return ""
+
+    def _inline_to_markdownv2(self, text: str) -> str:
+        if not self.markdown:
+            # plain text: strip the markers, keep readable link text
+            text = re.sub(r"<([^|>]+)\|([^>]+)>", r"\2 (\1)", text)
+            text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 (\2)", text)
+            text = re.sub(r"`([^`]+)`", r"\1", text)
+            text = re.sub(r"\*([^*]+)\*", r"\1", text)
+            return text
+
+        out = []
+        last = 0
+        for m in _INLINE_RE.finditer(text):
+            out.append(escape_markdownv2(text[last:m.start()]))  # plain run before token
+            if m.group("slack_url") is not None:
+                out.append(self.link(m.group("slack_text"), m.group("slack_url")))
+            elif m.group("gh_text") is not None:
+                out.append(self.link(m.group("gh_text"), m.group("gh_url")))
+            elif m.group("code") is not None:
+                out.append(self.code(m.group("code")))
+            elif m.group("bold") is not None:
+                out.append(self.bold(m.group("bold")))
+            last = m.end()
+        out.append(escape_markdownv2(text[last:]))  # trailing plain run
+        return "".join(out)
 
     def to_markdownv2(self, blocks: List[BaseBlock]) -> str:
         rendered = [self.block_to_markdownv2(block) for block in blocks]

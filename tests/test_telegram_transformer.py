@@ -60,3 +60,41 @@ def test_to_markdownv2_joins_blocks():
 def test_plain_mode_header_no_markers():
     t = TelegramTransformer(None)
     assert t.block_to_markdownv2(HeaderBlock("pod_x")) == "pod_x"
+
+
+def test_markdown_block_preserves_bold_escapes_content():
+    t = TelegramTransformer("MarkdownV2")
+    # underscore in surrounding text is escaped; *bold* preserved with escaped inner text
+    out = t.block_to_markdownv2(MarkdownBlock("pod_x is *down_now*"))
+    assert out == r"pod\_x is *down\_now*"
+
+
+def test_markdown_block_preserves_code():
+    t = TelegramTransformer("MarkdownV2")
+    out = t.block_to_markdownv2(MarkdownBlock("see `value_1` here"))
+    assert out == r"see `value_1` here"  # inside code, _ is not escaped
+
+
+def test_markdown_block_slack_link():
+    t = TelegramTransformer("MarkdownV2")
+    out = t.block_to_markdownv2(MarkdownBlock("<https://x.io/a_b|click_here>"))
+    assert out == r"[click\_here](https://x.io/a_b)"
+
+
+def test_markdown_block_github_link():
+    t = TelegramTransformer("MarkdownV2")
+    out = t.block_to_markdownv2(MarkdownBlock("[click_here](https://x.io/a_b)"))
+    assert out == r"[click\_here](https://x.io/a_b)"
+
+
+def test_markdown_block_unbalanced_asterisk_does_not_crash():
+    t = TelegramTransformer("MarkdownV2")
+    out = t.block_to_markdownv2(MarkdownBlock("weird * lonely _ marks"))
+    # lonely markers are escaped, never emitted raw
+    assert out == r"weird \* lonely \_ marks"
+
+
+def test_markdown_block_plain_mode_strips_markers():
+    t = TelegramTransformer(None)
+    out = t.block_to_markdownv2(MarkdownBlock("pod_x is *down* see <https://x.io|here>"))
+    assert out == "pod_x is down see here (https://x.io)"
