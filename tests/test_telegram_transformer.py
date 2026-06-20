@@ -145,3 +145,28 @@ def test_client_omits_parse_mode_when_none():
         client.send_message("hi")
     body = post.call_args.kwargs["json"]
     assert "parse_mode" not in body
+
+
+def _render_sink_text(parse_mode="MarkdownV2"):
+    from robusta.core.reporting.base import Finding
+    from robusta.core.sinks.telegram.telegram_sink import TelegramSink
+
+    with patch.object(TelegramSink, "__init__", lambda self, *a, **k: None):
+        sink = TelegramSink.__new__(TelegramSink)
+        sink.transformer = TelegramTransformer(parse_mode)
+        sink.cluster_name = "prod_cluster"
+        sink.account_id = "acc"
+        finding = Finding(title="Pod crowdsec-agent_k8vkt OOMKilled", aggregation_key="OOM")
+        return sink._TelegramSink__get_message_text(finding, platform_enabled=False)
+
+
+def test_sink_escapes_underscore_in_title():
+    text = _render_sink_text("MarkdownV2")
+    assert r"crowdsec\-agent\_k8vkt" in text
+    assert "crowdsec-agent_k8vkt" not in text  # raw form must not leak through
+
+
+def test_sink_plain_mode_has_no_escapes():
+    text = _render_sink_text(None)
+    assert "crowdsec-agent_k8vkt" in text  # raw, but plain text never crashes telegram
+    assert "\\" not in text
