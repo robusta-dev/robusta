@@ -12,6 +12,10 @@ _MARKDOWNV2_SPECIAL_CHARS = r"_*[]()~`>#+-=|{}.!"
 _MARKDOWNV2_ESCAPE_RE = re.compile("([" + re.escape(_MARKDOWNV2_SPECIAL_CHARS) + "])")
 
 # inline token: slack link <url|text> | github link [text](url) | code `...` | bold *...*
+# Extension point: to preserve more MarkdownV2 constructs in body text (italic _..._,
+# strikethrough ~...~, spoiler ||...||), add an alternative group here and a matching
+# branch in _inline_to_markdownv2. The escape char set itself is fixed by Telegram's
+# MarkdownV2 spec and lives in _MARKDOWNV2_SPECIAL_CHARS.
 _INLINE_RE = re.compile(
     r"<(?P<slack_url>[^|>]+)\|(?P<slack_text>[^>]+)>"
     r"|\[(?P<gh_text>[^\]]+)\]\((?P<gh_url>[^)]+)\)"
