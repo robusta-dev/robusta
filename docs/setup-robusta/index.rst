@@ -17,6 +17,7 @@
    upgrade
    tuning-performance
    configuration-secrets
+   env-vars
    openshift
    node-selector
    proxies
