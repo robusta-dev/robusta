@@ -3,13 +3,7 @@ import re
 from typing import List, Optional
 
 from robusta.core.reporting.base import BaseBlock
-from robusta.core.reporting.blocks import (
-    DividerBlock,
-    HeaderBlock,
-    JsonBlock,
-    KubernetesDiffBlock,
-    MarkdownBlock,
-)
+from robusta.core.reporting.blocks import DividerBlock, HeaderBlock, JsonBlock, KubernetesDiffBlock, MarkdownBlock
 
 MARKDOWNV2 = "MarkdownV2"
 _DIVIDER = "-------------------"
@@ -93,7 +87,7 @@ class TelegramTransformer:
         out = []
         last = 0
         for m in _INLINE_RE.finditer(text):
-            out.append(escape_markdownv2(text[last:m.start()]))  # plain run before token
+            out.append(escape_markdownv2(text[last : m.start()]))  # plain run before token
             if m.group("slack_url") is not None:
                 out.append(self.link(m.group("slack_text"), m.group("slack_url")))
             elif m.group("gh_text") is not None:

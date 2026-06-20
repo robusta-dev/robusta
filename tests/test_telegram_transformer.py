@@ -3,12 +3,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from robusta.core.reporting.blocks import (
-    DividerBlock,
-    HeaderBlock,
-    JsonBlock,
-    MarkdownBlock,
-)
+from robusta.core.reporting.blocks import DividerBlock, HeaderBlock, JsonBlock, MarkdownBlock
 from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkParams
 from robusta.core.sinks.telegram.telegram_transformer import (
     TelegramTransformer,
@@ -29,9 +24,7 @@ def test_escape_markdownv2_underscore_pod_name():
 
 
 def test_escape_markdownv2_all_special_chars():
-    assert escape_markdownv2("_*[]()~`>#+-=|{}.!") == (
-        r"\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!"
-    )
+    assert escape_markdownv2("_*[]()~`>#+-=|{}.!") == (r"\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!")
 
 
 def test_escape_markdownv2_plain_text_unchanged():
