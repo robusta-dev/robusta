@@ -56,12 +56,6 @@ def test_json_block_wrapped_in_code_fence():
     assert '{"a": 1}' in out  # inner JSON has no ` or \, so it is unchanged
 
 
-def test_to_markdownv2_joins_blocks():
-    t = TelegramTransformer("MarkdownV2")
-    out = t.to_markdownv2([HeaderBlock("A"), DividerBlock(), HeaderBlock("B")])
-    assert out.count("\n") == 2
-
-
 def test_plain_mode_header_no_markers():
     t = TelegramTransformer(None)
     assert t.block_to_markdownv2(HeaderBlock("pod_x")) == "pod_x"
@@ -90,6 +84,12 @@ def test_markdown_block_github_link():
     t = TelegramTransformer("MarkdownV2")
     out = t.block_to_markdownv2(MarkdownBlock("[click_here](https://x.io/a_b)"))
     assert out == r"[click\_here](https://x.io/a_b)"
+
+
+def test_link_escapes_closing_paren_in_url():
+    t = TelegramTransformer("MarkdownV2")
+    # a ) inside the URL must be escaped, or it would terminate the link early
+    assert t.link("docs", "https://x.io/foo(bar)") == r"[docs](https://x.io/foo(bar\))"
 
 
 def test_markdown_block_unbalanced_asterisk_does_not_crash():

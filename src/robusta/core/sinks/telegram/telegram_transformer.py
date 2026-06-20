@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import List, Optional
+from typing import Optional
 
 from robusta.core.reporting.base import BaseBlock
 from robusta.core.reporting.blocks import DividerBlock, HeaderBlock, JsonBlock, KubernetesDiffBlock, MarkdownBlock
@@ -30,6 +30,11 @@ def escape_markdownv2_code(text: str) -> str:
     return text.replace("\\", "\\\\").replace("`", "\\`")
 
 
+def escape_markdownv2_url(url: str) -> str:
+    """Escape content placed inside the (...) of a MarkdownV2 inline link (only ) and \\)."""
+    return url.replace("\\", "\\\\").replace(")", "\\)")
+
+
 class TelegramTransformer:
     """Render Robusta blocks/values as Telegram MarkdownV2 (or plain text when parse_mode is None)."""
 
@@ -48,7 +53,7 @@ class TelegramTransformer:
 
     def link(self, text: str, url: str) -> str:
         if self.markdown:
-            return f"[{escape_markdownv2(text)}]({url})"
+            return f"[{escape_markdownv2(text)}]({escape_markdownv2_url(url)})"
         return f"{text} ({url})"
 
     def block_to_markdownv2(self, block: BaseBlock) -> str:
@@ -99,7 +104,3 @@ class TelegramTransformer:
             last = m.end()
         out.append(escape_markdownv2(text[last:]))  # trailing plain run
         return "".join(out)
-
-    def to_markdownv2(self, blocks: List[BaseBlock]) -> str:
-        rendered = [self.block_to_markdownv2(block) for block in blocks]
-        return "\n".join(line for line in rendered if line)
