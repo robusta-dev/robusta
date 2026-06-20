@@ -39,7 +39,7 @@ def update_severity_map(global_config):
         custom_severity_map = global_config.get("custom_severity_map", {})
         for key in custom_severity_map.keys():
             SEVERITY_MAP[key] = FindingSeverity.from_severity(custom_severity_map[key].upper())
-    except:
+    except Exception:
         logging.exception("Failed to map custom severities")
 
 
