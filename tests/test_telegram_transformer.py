@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from pydantic import ValidationError
 
@@ -121,3 +123,25 @@ def test_parse_mode_accepts_none():
 def test_parse_mode_rejects_unsupported():
     with pytest.raises(ValidationError):
         _params(parse_mode="HTML")
+
+
+def test_client_sends_parse_mode_when_set():
+    from robusta.core.sinks.telegram.telegram_client import TelegramClient
+
+    client = TelegramClient(chat_id=1, thread_id=None, bot_token="x", parse_mode="MarkdownV2")
+    with patch("robusta.core.sinks.telegram.telegram_client.requests.post") as post:
+        post.return_value.status_code = 200
+        client.send_message("hi")
+    body = post.call_args.kwargs["json"]
+    assert body["parse_mode"] == "MarkdownV2"
+
+
+def test_client_omits_parse_mode_when_none():
+    from robusta.core.sinks.telegram.telegram_client import TelegramClient
+
+    client = TelegramClient(chat_id=1, thread_id=None, bot_token="x", parse_mode=None)
+    with patch("robusta.core.sinks.telegram.telegram_client.requests.post") as post:
+        post.return_value.status_code = 200
+        client.send_message("hi")
+    body = post.call_args.kwargs["json"]
+    assert "parse_mode" not in body

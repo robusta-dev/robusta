@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Union
+from typing import Optional, Union
 
 import requests
 
@@ -10,10 +10,13 @@ TELEGRAM_BASE_URL = os.environ.get("TELEGRAM_BASE_URL", "https://api.telegram.or
 
 
 class TelegramClient:
-    def __init__(self, chat_id: Union[int, str], thread_id: int, bot_token: str):
+    def __init__(
+        self, chat_id: Union[int, str], thread_id: int, bot_token: str, parse_mode: Optional[str] = "MarkdownV2"
+    ):
         self.chat_id = int(chat_id)
         self.thread_id = thread_id
         self.bot_token = bot_token
+        self.parse_mode = parse_mode
 
     def send_message(self, message: str, disable_links_preview: bool = True):
         url = f"{TELEGRAM_BASE_URL}/bot{self.bot_token}/sendMessage"
@@ -21,9 +24,10 @@ class TelegramClient:
             "chat_id": self.chat_id,
             "message_thread_id": self.thread_id,
             "disable_web_page_preview": disable_links_preview,
-            "parse_mode": "Markdown",
             "text": message,
         }
+        if self.parse_mode is not None:
+            message_json["parse_mode"] = self.parse_mode
         response = requests.post(url, json=message_json)
 
         if response.status_code != 200:
