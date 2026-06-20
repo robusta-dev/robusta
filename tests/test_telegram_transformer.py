@@ -1,14 +1,24 @@
+import pytest
+from pydantic import ValidationError
+
 from robusta.core.reporting.blocks import (
     DividerBlock,
     HeaderBlock,
     JsonBlock,
     MarkdownBlock,
 )
+from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkParams
 from robusta.core.sinks.telegram.telegram_transformer import (
     TelegramTransformer,
     escape_markdownv2,
     escape_markdownv2_code,
 )
+
+
+def _params(**kw):
+    base = dict(name="tg", bot_token="t", chat_id=123)
+    base.update(kw)
+    return TelegramSinkParams(**base)
 
 
 def test_escape_markdownv2_underscore_pod_name():
@@ -98,3 +108,16 @@ def test_markdown_block_plain_mode_strips_markers():
     t = TelegramTransformer(None)
     out = t.block_to_markdownv2(MarkdownBlock("pod_x is *down* see <https://x.io|here>"))
     assert out == "pod_x is down see here (https://x.io)"
+
+
+def test_parse_mode_defaults_to_markdownv2():
+    assert _params().parse_mode == "MarkdownV2"
+
+
+def test_parse_mode_accepts_none():
+    assert _params(parse_mode=None).parse_mode is None
+
+
+def test_parse_mode_rejects_unsupported():
+    with pytest.raises(ValidationError):
+        _params(parse_mode="HTML")
