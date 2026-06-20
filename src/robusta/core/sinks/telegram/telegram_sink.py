@@ -94,7 +94,7 @@ class TelegramSink(SinkBase):
                 )
 
         for link in finding.links:
-            actions_content = self.transformer.link(link.link_text, link.url)
+            actions_content += self.transformer.link(link.link_text, link.url) + " "
 
         if actions_content:
             actions_content += "\n\n"

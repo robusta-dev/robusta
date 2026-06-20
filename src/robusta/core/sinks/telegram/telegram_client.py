@@ -7,6 +7,8 @@ import requests
 from robusta.core.reporting.utils import PNG_SUFFIX, SVG_SUFFIX, convert_svg_to_png, is_image
 
 TELEGRAM_BASE_URL = os.environ.get("TELEGRAM_BASE_URL", "https://api.telegram.org")
+# guard the notification path against a slow/unreachable Telegram API hanging the sink
+TELEGRAM_REQUEST_TIMEOUT_SECONDS = 30
 
 
 class TelegramClient:
@@ -28,7 +30,7 @@ class TelegramClient:
         }
         if self.parse_mode is not None:
             message_json["parse_mode"] = self.parse_mode
-        response = requests.post(url, json=message_json)
+        response = requests.post(url, json=message_json, timeout=TELEGRAM_REQUEST_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             logging.error(
@@ -43,7 +45,7 @@ class TelegramClient:
             file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
 
         files = {file_type.lower(): (file_name, contents)}
-        response = requests.post(url, files=files)
+        response = requests.post(url, files=files, timeout=TELEGRAM_REQUEST_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             logging.error(

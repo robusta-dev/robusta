@@ -140,7 +140,7 @@ def test_client_omits_parse_mode_when_none():
     assert "parse_mode" not in body
 
 
-def _render_sink_text(parse_mode="MarkdownV2"):
+def _render_sink_text(parse_mode="MarkdownV2", links=None):
     from robusta.core.reporting.base import Finding
     from robusta.core.sinks.telegram.telegram_sink import TelegramSink
 
@@ -150,6 +150,8 @@ def _render_sink_text(parse_mode="MarkdownV2"):
         sink.cluster_name = "prod_cluster"
         sink.account_id = "acc"
         finding = Finding(title="Pod crowdsec-agent_k8vkt OOMKilled", aggregation_key="OOM")
+        if links:
+            finding.links = links
         return sink._TelegramSink__get_message_text(finding, platform_enabled=False)
 
 
@@ -163,3 +165,23 @@ def test_sink_plain_mode_has_no_escapes():
     text = _render_sink_text(None)
     assert "crowdsec-agent_k8vkt" in text  # raw, but plain text never crashes telegram
     assert "\\" not in text
+
+
+def test_sink_aggregates_multiple_action_links():
+    from robusta.core.reporting.base import Link
+
+    links = [Link(url="https://a.io/1", name="first"), Link(url="https://b.io/2", name="second")]
+    text = _render_sink_text("MarkdownV2", links=links)
+    # both links must survive; the old code overwrote and kept only the last one
+    assert "first" in text and "https://a.io/1" in text
+    assert "second" in text and "https://b.io/2" in text
+
+
+def test_client_send_message_passes_timeout():
+    from robusta.core.sinks.telegram.telegram_client import TelegramClient
+
+    client = TelegramClient(chat_id=1, thread_id=None, bot_token="x")
+    with patch("robusta.core.sinks.telegram.telegram_client.requests.post") as post:
+        post.return_value.status_code = 200
+        client.send_message("hi")
+    assert post.call_args.kwargs["timeout"] == 30
