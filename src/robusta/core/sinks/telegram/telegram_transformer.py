@@ -20,6 +20,7 @@ _INLINE_RE = re.compile(
     r"<(?P<slack_url>[^|>]+)\|(?P<slack_text>[^>]+)>"
     r"|\[(?P<gh_text>[^\]]+)\]\((?P<gh_url>[^)]+)\)"
     r"|`(?P<code>[^`]+)`"
+    r"|\*\*(?P<bold2>[^*]+)\*\*"  # github-style **bold** — must precede the single-* alternative
     r"|\*(?P<bold>[^*]+)\*"
 )
 
@@ -90,6 +91,7 @@ class TelegramTransformer:
             text = re.sub(r"<([^|>]+)\|([^>]+)>", r"\2 (\1)", text)
             text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 (\2)", text)
             text = re.sub(r"`([^`]+)`", r"\1", text)
+            text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
             text = re.sub(r"\*([^*]+)\*", r"\1", text)
             return text
 
@@ -103,6 +105,8 @@ class TelegramTransformer:
                 out.append(self.link(m.group("gh_text"), m.group("gh_url")))
             elif m.group("code") is not None:
                 out.append(self.code(m.group("code")))
+            elif m.group("bold2") is not None:
+                out.append(self.bold(m.group("bold2")))
             elif m.group("bold") is not None:
                 out.append(self.bold(m.group("bold")))
             last = m.end()

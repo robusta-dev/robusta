@@ -92,6 +92,17 @@ def test_link_escapes_closing_paren_in_url():
     assert t.link("docs", "https://x.io/foo(bar)") == r"[docs](https://x.io/foo(bar\))"
 
 
+def test_markdown_block_double_asterisk_bold():
+    t = TelegramTransformer("MarkdownV2")
+    # github-style **bold** becomes MarkdownV2 *bold* with no stray asterisks
+    assert t.block_to_markdownv2(MarkdownBlock("see **down_now** ok")) == r"see *down\_now* ok"
+
+
+def test_markdown_block_double_asterisk_plain_mode():
+    t = TelegramTransformer(None)
+    assert t.block_to_markdownv2(MarkdownBlock("see **bold** ok")) == "see bold ok"
+
+
 def test_markdown_block_unbalanced_asterisk_does_not_crash():
     t = TelegramTransformer("MarkdownV2")
     out = t.block_to_markdownv2(MarkdownBlock("weird * lonely _ marks"))
