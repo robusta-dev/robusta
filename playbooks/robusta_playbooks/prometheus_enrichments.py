@@ -231,14 +231,13 @@ def prometheus_sla_enricher(event: ExecutionBaseEvent, params: PrometheusSlaPara
         query_result = float(prometheus_result.vector_result[-1]["value"]["value"])
 
     rule_result: bool = False
-    if params.operator == ">":
-        rule_result = query_result > params.threshold
-    elif params.operator == "<":
-        rule_result = query_result < params.threshold
-    elif params.operator == "==":
-        rule_result = query_result == params.threshold
-    elif params.operator == "!=":
-        rule_result = query_result != params.threshold
+    results: dict = {
+        ">": query_result > params.threshold,
+        "<": query_result < params.threshold,
+        "==": query_result == params.threshold,
+        "!=": query_result != params.threshold,
+    }
+    rule_result = results.get(params.operator, False)
 
     original_title = ""
     for sink in event.named_sinks:
