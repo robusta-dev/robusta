@@ -47,6 +47,8 @@ Query Parameters
      - Identifies the monitoring product. Must be one of the supported origins listed under `Integrations`_ below.
    * - ``account_id``
      - Your Robusta account ID, found in ``generated_values.yaml``.
+   * - ``cluster``
+     - Optional. The cluster to associate the alert with. When set, it overrides any cluster found in the alert payload and is used for the resulting alert investigation. When omitted, the cluster is taken from the payload if present, otherwise the alert is recorded under the ``external`` cluster. Use this when your monitoring system cannot add a cluster label to the alert itself.
 
 Authentication
 --------------
