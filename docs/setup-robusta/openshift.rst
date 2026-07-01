@@ -49,8 +49,10 @@ Some lesser used Robusta Classic features require more permissions than the base
 
 In order to support the ``python_debugger``, ``java_debugger`` and ``node_disk_analyzer``
 playbooks, permission to run a far more privileged container needs to be granted to
-the ``runner`` service account. This container has ``SYS_ADMIN`` and ``SYS_PTRACE`` capabilities and must
-run as root on the node.
+the ``runner`` service account. This container runs privileged with the ``SYS_ADMIN`` and
+``SYS_PTRACE`` capabilities. The privileged SCC uses ``runAsUser: RunAsAny``, so it does not force
+a specific user; the debug container typically runs as root in order to attach to and inspect other
+processes on the node.
 
 **Important**: These capabilities are **OPTIONAL** and only needed for the native debugging features mentioned above. Most Robusta deployments work fine with the baseline SCC.
 

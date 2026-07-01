@@ -744,7 +744,11 @@ runner:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  # Legacy: rules here are ADDED to the built-in runner ClusterRole rules (backwards compatible).
   customClusterRoleRules: []
+  # When set, these rules fully REPLACE the built-in runner ClusterRole rules (built-ins and
+  # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
+  overrideClusterRoles: []
   # set to override global.imagePullSecrets for the runner; leave empty to inherit the global
   imagePullSecrets: []
   extraVolumes: []

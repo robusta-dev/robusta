@@ -29,17 +29,24 @@ These features require write permissions and will gracefully fail if attempted w
 
 **Read-only mode is ideal for**: Investigation, diagnostics, log analysis, metric enrichment, and reporting.
 
-Implementation: Using customClusterRoleRules
----------------------------------------------
+Implementation: Using overrideClusterRoles
+-------------------------------------------
 
-Robusta's Helm chart supports the ``customClusterRoleRules`` parameter, which allows you to completely replace the default ClusterRole rules with your own custom rules.
+Robusta's Helm chart supports the ``runner.overrideClusterRoles`` parameter. When set, the rules you
+provide **fully replace** the built-in runner ClusterRole rules, so only the permissions you list are granted.
+
+.. note::
+
+   Do not confuse this with ``runner.customClusterRoleRules``. That parameter *adds* rules on top of the
+   built-in rules (which include write verbs), so it **cannot** be used to make the runner read-only.
+   Use ``runner.overrideClusterRoles`` for read-only mode.
 
 To use read-only mode, create a custom values file with the following configuration:
 
 .. code-block:: yaml
 
     runner:
-      customClusterRoleRules:
+      overrideClusterRoles:
         # Core API resources - read-only
         - apiGroups:
             - ""
@@ -53,14 +60,12 @@ To use read-only mode, create a custom values file with the following configurat
             - persistentvolumeclaims
             - pods
             - pods/status
-            - pods/exec
             - pods/log
             - replicasets
             - replicationcontrollers
             - services
             - serviceaccounts
             - endpoints
-            - secrets
           verbs:
             - get
             - list
@@ -218,31 +223,31 @@ Then install or upgrade Robusta with this values file:
 Verifying Read-Only Permissions
 --------------------------------
 
-After installation, verify that the runner service account has only read permissions:
+After installation, verify that the runner service account has only read permissions. The ClusterRole is
+cluster-scoped, so no namespace flag is needed:
 
 .. code-block:: bash
 
-    # Check the ClusterRole
-    kubectl describe clusterrole robusta-runner-cluster-role -n robusta-system
-
-    # Verify that the rules only contain "get", "list", "watch" verbs
-    # You should NOT see "create", "delete", "patch", or "update" verbs
+    # Inspect the ClusterRole - the rules should only contain "get", "list", "watch" verbs,
+    # and NOT "create", "delete", "patch", or "update".
+    kubectl describe clusterrole robusta-runner-cluster-role
 
 Testing Write Protection
 ------------------------
 
-To confirm that write operations are blocked, try a simple test:
+Use ``kubectl auth can-i`` to confirm what the runner service account can and cannot do
+(replace ``robusta-system`` with your release namespace):
 
 .. code-block:: bash
 
-    # Get the runner pod
-    RUNNER_POD=$(kubectl get pod -n robusta-system -l app.kubernetes.io/name=robusta-runner -o jsonpath='{.items[0].metadata.name}')
+    SA=system:serviceaccount:robusta-system:robusta-runner-service-account
 
-    # Try to create a test pod (should fail with permission denied)
-    kubectl exec -it $RUNNER_POD -n robusta-system -- \
-      kubectl create pod test --image=nginx -n default
+    kubectl auth can-i list pods        --as=$SA -n default   # -> yes
+    kubectl auth can-i delete pods      --as=$SA -n default   # -> no
+    kubectl auth can-i patch deployments --as=$SA -n default  # -> no
+    kubectl auth can-i create pods/exec --as=$SA -n default   # -> no
 
-This command should fail with a "forbidden" or "permission denied" error, confirming that write operations are blocked.
+The read verbs should return ``yes`` while all write/exec verbs return ``no``, confirming the runner is read-only.
 
 Notes and Recommendations
 --------------------------

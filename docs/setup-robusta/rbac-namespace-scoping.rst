@@ -3,21 +3,51 @@
 RBAC: Namespace-Scoped Deployments
 ========================================
 
-By default, Robusta uses cluster-wide RBAC. This guide explains namespace-scoped options and limitations.
+By default, Robusta and HolmesGPT use cluster-wide RBAC: they are granted a ``ClusterRole`` bound with a
+``ClusterRoleBinding``, so they can read (and, for the runner, act on) resources in every namespace.
 
-Pattern 1: Namespace-Scoped ServiceAccount with Cluster-Wide Role
-------------------------------------------------------------------
+In restricted environments you may want to limit what HolmesGPT can see to a specific set of namespaces.
+This guide explains how, and what the trade-offs are.
 
-Deploy Robusta in a specific namespace but monitor the entire cluster.
+Scoping HolmesGPT to Specific Namespaces
+----------------------------------------
 
-Pattern 2: Multiple Runners Per Namespace
-------------------------------------------
+Set ``holmes.overrideClusterRoles`` to the list of namespaces HolmesGPT is allowed to access. Instead of a
+cluster-wide ``ClusterRoleBinding``, the chart then creates a namespaced ``RoleBinding`` in each listed
+namespace (reusing the same ClusterRole for its rules):
 
-Deploy separate Robusta instances for different teams using namespace-scoped Roles.
+.. code-block:: yaml
 
-Recommendations
----------------
+    holmes:
+      overrideClusterRoles:
+        - default
+        - monitoring
 
-- Use Pattern 1 for cluster-wide visibility with namespace isolation
-- Use Pattern 2 for strict multi-tenancy
-- Test thoroughly to verify investigations work in your scope
+When this list is empty (the default), HolmesGPT keeps its cluster-wide binding — existing installs are
+unaffected.
+
+.. important::
+
+   - The listed namespaces **must already exist**; the chart does not create them.
+   - Access is limited to **namespaced** resources in those namespaces. **Cluster-scoped** resources
+     (for example ``nodes``, ``persistentvolumes``, cluster-level events) are no longer readable, so
+     tools that rely on them (node health, cluster-wide resource views) will not work.
+
+Verifying the Scope
+-------------------
+
+.. code-block:: bash
+
+    SA=system:serviceaccount:<release-namespace>:robusta-holmes-service-account
+
+    kubectl auth can-i list pods --as=$SA -n default      # -> yes
+    kubectl auth can-i list pods --as=$SA -n monitoring   # -> yes
+    kubectl auth can-i list pods --as=$SA -n kube-system  # -> no
+
+Notes on the Runner
+-------------------
+
+The Robusta runner remains cluster-wide. To reduce the runner's permissions, use
+:ref:`a read-only ClusterRole <read-only-service-account>` via ``runner.overrideClusterRoles``.
+Fully scoping the runner to a subset of namespaces is not supported through Helm values, because the
+runner watches cluster-wide resources and events to function.
