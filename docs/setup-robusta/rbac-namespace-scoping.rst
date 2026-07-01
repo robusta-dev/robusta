@@ -26,6 +26,17 @@ namespace (reusing the same ClusterRole for its rules):
 When this list is empty (the default), HolmesGPT keeps its cluster-wide binding — existing installs are
 unaffected.
 
+Apply it with a Helm upgrade (merge it into your existing values file, or pass it as an extra ``-f`` file):
+
+.. code-block:: bash
+
+    helm upgrade --install robusta robusta/robusta \
+      -f generated_values.yaml \
+      -n <release-namespace>
+
+You can combine this with a :ref:`read-only runner <read-only-service-account>` in the same values file to
+get a fully restricted, audit-only deployment.
+
 .. important::
 
    - The listed namespaces **must already exist**; the chart does not create them.
