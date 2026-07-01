@@ -12,14 +12,14 @@ This guide explains how, and what the trade-offs are.
 Scoping HolmesGPT to Specific Namespaces
 ----------------------------------------
 
-Set ``holmes.overrideClusterRoles`` to the list of namespaces HolmesGPT is allowed to access. Instead of a
+Set ``holmes.roleBindingNamespaces`` to the list of namespaces HolmesGPT is allowed to access. Instead of a
 cluster-wide ``ClusterRoleBinding``, the chart then creates a namespaced ``RoleBinding`` in each listed
 namespace (reusing the same ClusterRole for its rules):
 
 .. code-block:: yaml
 
     holmes:
-      overrideClusterRoles:
+      roleBindingNamespaces:
         - default
         - monitoring
 
