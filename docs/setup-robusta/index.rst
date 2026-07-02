@@ -18,6 +18,7 @@
    tuning-performance
    configuration-secrets
    openshift
+   read-only-service-account
    node-selector
    proxies
    privacy-and-security

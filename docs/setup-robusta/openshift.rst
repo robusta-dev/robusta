@@ -49,11 +49,38 @@ Some lesser used Robusta Classic features require more permissions than the base
 
 In order to support the ``python_debugger``, ``java_debugger`` and ``node_disk_analyzer``
 playbooks, permission to run a far more privileged container needs to be granted to
-the ``runner`` service account. This container has ``SYS_ADMIN`` capabilities and must
-run as root on the node.
+the ``runner`` service account. This container runs privileged with the ``SYS_ADMIN`` and
+``SYS_PTRACE`` capabilities. The privileged SCC uses ``runAsUser: RunAsAny``, so it does not force
+a specific user; the debug container typically runs as root in order to attach to and inspect other
+processes on the node.
+
+**Important**: These capabilities are **OPTIONAL** and only needed for the native debugging features mentioned above. Most Robusta deployments work fine with the baseline SCC.
+
+Baseline SCC is Sufficient For:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ✅ All investigations and diagnostics
+- ✅ KRR scans (resource right-sizing)
+- ✅ Popeye scans (cluster analysis)
+- ✅ Log analysis and enrichment
+- ✅ Metrics and event analysis
+- ✅ Alert correlation
+- ✅ Pod restart and scaling
+- ✅ Deployment patching
+- ✅ All standard playbooks
+
+Privileged SCC Only Needed For:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ❌ Python debugger (``python_debugger`` playbook)
+- ❌ Java debugger (``java_debugger`` playbook)
+- ❌ Node disk analyzer (``node_disk_analyzer`` playbook)
+
+Enabling the Privileged SCC
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To support these features in a production environment, you may want to only temporarily
-enable this permission so that a normal request cannot bypass the the less permissive SCC found
+enable this permission so that a normal request cannot bypass the less permissive SCC found
 in the baseline. To enable these privileged operations in your OpenShift environment,
 update the ``generated_values.yaml`` as follows:
 
@@ -62,7 +89,7 @@ update the ``generated_values.yaml`` as follows:
     openshift:
       enabled: true
       createScc: true
-      createPrivilegedScc: true
+      createPrivilegedScc: true  # Optional - only if you need debugging features
 
 You may also reference an existing SCC using the ``openshift.privilegedSccName`` value.
 In test environments, you can reference the ``privileged`` SCC to enable these features in your
