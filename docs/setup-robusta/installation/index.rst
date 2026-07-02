@@ -19,7 +19,7 @@ Prerequisites
 Sign Up and Install
 ---------------------
 
-Sign up `for a free Robusta account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=install-page>`_ and follow the install wizard. It generates a ``generated_values.yaml`` file and provides the Helm install commands tailored to your cluster.
+Sign up :robusta-url:`for a free Robusta account ↗ <https://platform.robusta.dev/signup?utm_source=docs&utm_content=install-page>` and follow the install wizard. It generates a ``generated_values.yaml`` file and provides the Helm install commands tailored to your cluster.
 
 .. note::
 

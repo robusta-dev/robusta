@@ -1,3 +1,5 @@
+.. include:: ../_legacy_banner.rst
+
 Grafana - Self-Hosted
 *********************
 
@@ -42,7 +44,7 @@ Generate and save your new ``API Key``
 Select ``Webhook`` from the Integration options.
 Add the following URL. Add your ``account_id`` to it:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/alerts/grafana?account_id=YOUR_ACCOUNT_ID
 
@@ -109,7 +111,7 @@ To configure it:
 
 2. Insert the following URL:
 
-.. code-block::
+.. robusta-code::
 
     https://api.robusta.dev/integrations/generic/alertmanager
 

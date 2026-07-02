@@ -1,6 +1,16 @@
 Webex
 #################
 
+.. admonition:: This page documents a legacy sink in Robusta classic
+   :class: warning
+
+   For new setups, we recommend `HolmesGPT <https://holmesgpt.dev/>`_ instead.
+
+   HolmesGPT triages your alerts instead of just forwarding them. Sinks are deterministic: they send every notification, unchanged, to a fixed destination, leaving you to read and prioritize each one yourself.
+
+   HolmesGPT instead uses AI to investigate each alert, surface the likely root cause, and escalate only what needs attention — so you get fewer, more actionable notifications. Set this up with `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ for alerts, or :ref:`Triggered Workflows <defining-playbooks>` for custom events.
+
+
 Robusta can report issues and events in your Kubernetes cluster to Webex.
 
 .. image:: /images/webex_sink/webex_sink_example.png
@@ -64,3 +74,86 @@ Now we're ready to configure the webex sink.
             room_id: <YOUR ROOM ID>
 
 You should now get playbooks results in Webex!
+
+Configuration parameters
+------------------------------------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Field
+     - Default
+     - Description
+   * - ``bot_access_token``
+     - *(required)*
+     - The Webex bot access token.
+   * - ``room_id``
+     - *(required)*
+     - Default Webex room ID to send notifications to.
+   * - ``room_id_override``
+     - *(none)*
+     - Template resolved against subject labels/annotations to route to a different room.
+   * - ``namespace_room_id_override``
+     - *(none)*
+     - Template resolved against namespace labels/annotations to route to a different room.
+   * - ``send_to_default_if_missing``
+     - ``true``
+     - When overrides don't resolve, send to ``room_id`` (``true``) or drop the finding (``false``).
+   * - ``disable_platform_links``
+     - ``false``
+     - When ``true``, omits the Robusta platform ``Investigate`` and ``Silence`` links from messages.
+
+Dynamic Room Routing
+------------------------------------------------
+
+You can route alerts to different Webex rooms based on Kubernetes labels or
+annotations. The sink supports two override fields, evaluated in order:
+
+1. ``namespace_room_id_override`` — resolved against the **Namespace** object's labels
+   and annotations (looked up by the finding's namespace, with TTL caching to avoid
+   hammering the K8s API).
+2. ``room_id_override`` — resolved against the finding's **subject** labels and
+   annotations (same behavior as Slack's ``channel_override``).
+
+If neither override produces a room id, ``send_to_default_if_missing`` decides what
+happens:
+
+- ``true`` *(default)* — send to the configured ``room_id``.
+- ``false`` — drop the finding silently.
+
+Both override fields use the same template syntax as Slack:
+
+- ``cluster_name`` — the Robusta cluster name.
+- ``labels.foo`` / ``$labels.foo`` — value of a label.
+- ``annotations.bar`` / ``$annotations.bar`` — value of an annotation.
+- ``${labels.foo-bar}`` / ``${annotations.kubernetes.io/owner}`` — bracket form
+  required when the key contains characters other than letters, digits, or underscores
+  (e.g. ``-``, ``/``, ``.``).
+- Composite patterns are allowed: ``"$cluster_name-$labels.team"``.
+
+Example — route by a label on the namespace, fall back to the default room:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - webex_sink:
+        name: webex_sink
+        bot_access_token: <YOUR BOT ACCESS TOKEN>
+        room_id: <DEFAULT ROOM ID>
+        namespace_room_id_override: "${labels.webex-room}"
+        send_to_default_if_missing: true
+
+Example — route by namespace label first, fall back to a subject label, drop if neither
+is present:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - webex_sink:
+        name: webex_sink
+        bot_access_token: <YOUR BOT ACCESS TOKEN>
+        room_id: <DEFAULT ROOM ID>
+        namespace_room_id_override: "${labels.webex-room}"
+        room_id_override: "$labels.team"
+        send_to_default_if_missing: false

@@ -1,3 +1,5 @@
+.. include:: ../_legacy_banner.rst
+
 LaunchDarkly Integration with Robusta
 =====================================
 
@@ -43,7 +45,7 @@ In LaunchDarkly:
 3. Configure:
 
    - **Name**: ``Robusta``
-   - **URL**: ``https://api.robusta.dev/integrations/generic/launchdarkly?api_key=YOUR_API_KEY_HERE&account_id=YOUR_ACCOUNT_ID_HERE``
+   - **URL**: :robusta-url:`https://api.robusta.dev/integrations/generic/launchdarkly?api_key=YOUR_API_KEY_HERE&account_id=YOUR_ACCOUNT_ID_HERE`
    - Replace ``YOUR_API_KEY_HERE`` with the API key from Step 1.
    - Replace ``YOUR_ACCOUNT_ID_HERE`` with your account ID from Step 1.
 
@@ -64,7 +66,7 @@ Including API keys in URLs can expose them in logs, browser history, and monitor
 
 If you’re using a third-party service that supports custom headers, configure the webhook like this:
 
-- **URL**: ``https://api.robusta.dev/integrations/generic/launchdarkly?account_id=YOUR_ACCOUNT_ID_HERE``
+- **URL**: :robusta-url:`https://api.robusta.dev/integrations/generic/launchdarkly?account_id=YOUR_ACCOUNT_ID_HERE`
 - **Headers**:
 
    .. code-block:: text

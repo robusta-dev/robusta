@@ -209,6 +209,7 @@ class HolmesChatParams(HolmesParams):
     additional_system_prompt: Optional[str] = None
     request_type: Optional[str] = None
     request_source: Optional[str] = None
+    user_email: Optional[str] = None
     source_ref: Optional[str] = None
     conversation_id: Optional[str] = None
     conversation_source: Optional[str] = None

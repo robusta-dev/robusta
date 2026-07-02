@@ -4,7 +4,7 @@ Route By Time of Day
 In this example we'll route alerts to different support teams based on the time of day:
 
 * Between 12AM and 12PM, #shift-1 will receive alerts.
-* The rest of the time, #payment-support-2 will recieve notifications.
+* The rest of the time, #payment-support-2 will receive notifications.
 
 .. code-block:: yaml
 

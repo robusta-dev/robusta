@@ -1,3 +1,5 @@
+.. include:: ../_legacy_banner.rst
+
 Send Alerts API
 ===============
 
@@ -19,8 +21,10 @@ Use this endpoint to send alert data to Robusta. You can send up to 1000 alerts 
 
 .. _send-alerts-api:
 
-POST https://api.robusta.dev/api/alerts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+POST endpoint
+^^^^^^^^^^^^^
+
+.. robusta-url:: https://api.robusta.dev/api/alerts
 
 Request Body Schema
 """"""""""""""""""""
@@ -131,7 +135,7 @@ Example Request
 
 Here is an example of a ``POST`` request to send a list of alerts:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --location --request POST 'https://api.robusta.dev/api/alerts' \
     --header 'Authorization: Bearer API-KEY' \

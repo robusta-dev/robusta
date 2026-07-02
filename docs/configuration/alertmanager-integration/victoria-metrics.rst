@@ -1,3 +1,5 @@
+.. include:: ../_legacy_banner.rst
+
 VictoriaMetrics Alerts
 =======================
 

@@ -268,6 +268,8 @@ class Finding(Filterable):
         add_silence_url: bool = False,
         silence_labels: Dict[Any, Any] = None,
     ) -> None:
+        if subject is None:
+            subject = FindingSubject()
         self.id: uuid.UUID = uuid.uuid4()
         self.title = title
         self.finding_type = finding_type

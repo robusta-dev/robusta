@@ -56,7 +56,7 @@ Retrieve the current RBAC configuration for your account.
 
 **Request:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X GET 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY'
@@ -109,7 +109,7 @@ Create or update the RBAC configuration for your account.
 
 **Request:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X POST 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY' \
@@ -186,7 +186,7 @@ Remove all RBAC configurations for your account.
 
 **Request:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X DELETE 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY'
@@ -319,7 +319,7 @@ Examples
 
 **Set up namespace-level permissions for developers:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X POST 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY' \
@@ -349,7 +349,7 @@ Examples
 
 **Set up cluster-wide admin access:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X POST 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY' \
@@ -367,7 +367,7 @@ Examples
 
 **Complex configuration with multiple scopes and permission groups:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X POST 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY' \
@@ -429,14 +429,14 @@ Examples
 
 **Retrieve current configuration:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X GET 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY'
 
 **Clear all RBAC configurations:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X DELETE 'https://api.robusta.dev/api/rbac?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY'

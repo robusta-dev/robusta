@@ -352,3 +352,262 @@ h3 {
 .success-icon {
     color: #28a745; /* or any green color you prefer */
 }
+
+/* Robusta region-aware URL / code component */
+.md-typeset .robusta-region-box,
+.robusta-region-box {
+    margin: 1rem 0 1.5rem !important;
+    border: 1px solid var(--md-default-fg-color--lightest, rgba(0, 0, 0, 0.12));
+    border-radius: 4px;
+    background-color: var(--md-code-bg-color, rgba(0, 0, 0, 0.04));
+    overflow: hidden;
+}
+
+.md-typeset .robusta-region-box__bar,
+.robusta-region-box__bar {
+    display: flex !important;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.6rem;
+    background-color: var(--md-default-fg-color--lightest, rgba(0, 0, 0, 0.06));
+    border-bottom: 1px solid var(--md-default-fg-color--lightest, rgba(0, 0, 0, 0.08));
+    font-size: 0.72rem;
+    line-height: 1.2;
+}
+
+.md-typeset .robusta-region-box__bar-label,
+.robusta-region-box__bar-label {
+    font-weight: 600;
+    color: var(--md-default-fg-color--light, rgba(0, 0, 0, 0.6));
+}
+
+.md-typeset .robusta-region-box__region-options,
+.robusta-region-box__region-options {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.md-typeset .robusta-region-box__region-btn,
+.robusta-region-box__region-btn {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-block !important;
+    border: 1px solid var(--md-default-fg-color--lighter, rgba(0, 0, 0, 0.26)) !important;
+    background: var(--md-default-bg-color, #fff) !important;
+    color: var(--md-default-fg-color, #333) !important;
+    padding: 0.2rem 0.7rem !important;
+    margin: 0 !important;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.72rem !important;
+    font-weight: 600;
+    line-height: 1.2;
+    min-width: 2.2rem;
+    text-align: center;
+    box-shadow: none;
+    border-radius: 0 !important;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.md-typeset .robusta-region-box__region-btn + .robusta-region-box__region-btn,
+.robusta-region-box__region-btn + .robusta-region-box__region-btn {
+    border-left-width: 0 !important;
+}
+
+.md-typeset .robusta-region-box__region-btn:first-child,
+.robusta-region-box__region-btn:first-child {
+    border-top-left-radius: 3px !important;
+    border-bottom-left-radius: 3px !important;
+}
+
+.md-typeset .robusta-region-box__region-btn:last-child,
+.robusta-region-box__region-btn:last-child {
+    border-top-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+}
+
+.md-typeset .robusta-region-box__region-btn:hover,
+.robusta-region-box__region-btn:hover {
+    color: var(--md-primary-fg-color, #1976d2) !important;
+}
+
+.md-typeset .robusta-region-box__region-btn.is-active,
+.robusta-region-box__region-btn.is-active {
+    background: var(--md-primary-fg-color, #1976d2) !important;
+    border-color: var(--md-primary-fg-color, #1976d2) !important;
+    color: var(--md-primary-bg-color, #fff) !important;
+    z-index: 1;
+    position: relative;
+}
+
+.md-typeset .robusta-region-box__region-btn:focus-visible,
+.robusta-region-box__region-btn:focus-visible {
+    outline: 2px solid var(--md-accent-fg-color, #1976d2);
+    outline-offset: 2px;
+    z-index: 1;
+    position: relative;
+}
+
+/* URL body */
+.md-typeset .robusta-region-box__body,
+.robusta-region-box__body {
+    padding: 0.6rem 0.85rem;
+    font-family: var(--md-code-font, "Roboto Mono", monospace);
+    font-size: 0.78rem;
+    word-break: break-all;
+}
+
+.md-typeset .robusta-region-box--url a.robusta-region-box__url,
+.robusta-region-box--url a.robusta-region-box__url {
+    color: var(--md-typeset-a-color, var(--md-primary-fg-color, #1976d2));
+    text-decoration: none;
+}
+
+.md-typeset .robusta-region-box--url a.robusta-region-box__url:hover,
+.robusta-region-box--url a.robusta-region-box__url:hover {
+    text-decoration: underline;
+}
+
+/* Let the inner literal block sit flush inside the frame */
+.md-typeset .robusta-region-box--code > .highlight,
+.md-typeset .robusta-region-box--code > div[class*="highlight"],
+.md-typeset .robusta-region-box--code > pre {
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* Inline region-aware URL: small picker beside the link */
+.md-typeset .robusta-region-inline,
+.robusta-region-inline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.md-typeset .robusta-region-inline__url,
+.robusta-region-inline__url {
+    word-break: break-all;
+    white-space: normal;
+}
+
+.md-typeset .robusta-region-inline__picker,
+.robusta-region-inline__picker {
+    position: relative;
+    display: inline-block !important;
+    vertical-align: baseline;
+    line-height: 1;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.md-typeset .robusta-region-inline__trigger,
+.robusta-region-inline__trigger {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.2rem;
+    border: 1px solid var(--md-default-fg-color--lighter, rgba(0, 0, 0, 0.26)) !important;
+    background: var(--md-default-bg-color, #fff) !important;
+    color: var(--md-default-fg-color, #333) !important;
+    padding: 0.1rem 0.45rem !important;
+    margin: 0 !important;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.72rem !important;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: 3px !important;
+    box-shadow: none;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.md-typeset .robusta-region-inline__trigger:hover,
+.robusta-region-inline__trigger:hover {
+    border-color: var(--md-primary-fg-color, #1976d2) !important;
+    color: var(--md-primary-fg-color, #1976d2) !important;
+}
+
+.md-typeset .robusta-region-inline__trigger:focus-visible,
+.robusta-region-inline__trigger:focus-visible {
+    outline: 2px solid var(--md-accent-fg-color, #1976d2);
+    outline-offset: 2px;
+}
+
+.md-typeset .robusta-region-inline__caret,
+.robusta-region-inline__caret {
+    font-size: 0.7em;
+    line-height: 1;
+    opacity: 0.7;
+}
+
+.md-typeset .robusta-region-inline__menu,
+.robusta-region-inline__menu {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    z-index: 30;
+    display: none !important;
+    margin: 0 !important;
+    padding: 0.15rem 0 !important;
+    list-style: none !important;
+    min-width: 100%;
+    width: auto;
+    background: var(--md-default-bg-color, #fff);
+    border: 1px solid var(--md-default-fg-color--lighter, rgba(0, 0, 0, 0.18));
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    font-weight: 500;
+}
+
+.md-typeset .robusta-region-inline__picker.is-open .robusta-region-inline__menu,
+.robusta-region-inline__picker.is-open .robusta-region-inline__menu {
+    display: block !important;
+}
+
+.md-typeset .robusta-region-inline__option,
+.robusta-region-inline__option {
+    display: block !important;
+    padding: 0.25rem 0.5rem !important;
+    margin: 0 !important;
+    cursor: pointer;
+    color: var(--md-default-fg-color, #333);
+    user-select: none;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.md-typeset .robusta-region-inline__option:hover,
+.robusta-region-inline__option:hover {
+    background: var(--md-default-fg-color--lightest, rgba(0, 0, 0, 0.06));
+}
+
+.md-typeset .robusta-region-inline__option.is-active,
+.robusta-region-inline__option.is-active {
+    background: var(--md-primary-fg-color, #1976d2);
+    color: var(--md-primary-bg-color, #fff);
+}
+
+/* Standalone region picker block (label + dropdown, no URL) */
+.md-typeset .robusta-region-picker,
+.robusta-region-picker {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0 0.5rem !important;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.md-typeset .robusta-region-picker__label,
+.robusta-region-picker__label {
+    font-weight: 600;
+    color: var(--md-default-fg-color--light, rgba(0, 0, 0, 0.7));
+}

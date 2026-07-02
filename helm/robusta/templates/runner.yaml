@@ -34,9 +34,10 @@ spec:
       serviceAccountName: {{ include "robusta.fullname" . }}-runner-service-account
       {{- end }}
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
-      {{- if .Values.runner.imagePullSecrets }}
+      {{- $pullSecrets := .Values.runner.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      {{- if $pullSecrets }}
       imagePullSecrets:
-      {{- toYaml .Values.runner.imagePullSecrets | nindent 6 }}
+      {{- toYaml $pullSecrets | nindent 6 }}
       {{- end }}
       {{- with .Values.runner.securityContext.pod }}
       securityContext:

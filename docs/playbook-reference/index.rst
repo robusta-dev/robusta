@@ -18,7 +18,7 @@ Playbooks Basics
 
 Playbooks are deterministic rules for responding to alerts and unhealthy conditions in a Kubernetes cluster.
 
-Playbooks are recommended for advanced use cases. Most users should start with the `Robusta SRE Agent <https://platform.robusta.dev/signup>`_, which requires far less configuration.
+Playbooks are recommended for advanced use cases. Most users should start with the :robusta-url:`Robusta SRE Agent <https://platform.robusta.dev/signup>`, which requires far less configuration.
 
 How Playbooks Work
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

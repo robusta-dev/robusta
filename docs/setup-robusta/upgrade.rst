@@ -3,15 +3,6 @@ Upgrade and Uninstall
 
 Robusta is upgraded using ``helm upgrade``. For detailed instructions, see :ref:`Helm Upgrade`.
 
-On rare occasions, in addition to a ``helm upgrade``, some manual steps are required.
-
-Does my upgrade require manual steps?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A :ref:`Manual Upgrade` is only relevant for older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). You'll know you need it if ``helm upgrade`` fails with a ``com.coreos.monitoring.v1.Prometheus.spec`` error.
-
-In all other cases, you can do a :ref:`Simple Upgrade` and no more.
-
 .. _Simple Upgrade:
 
 Helm Upgrade
@@ -44,13 +35,35 @@ Verify that Robusta is running and there are no errors in the logs:
 
     kubectl logs -n <NAMESPACE> -l app=robusta-runner
 
+Installing pre-releases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Manual Upgrade
+Install beta version of Robusta with ``helm upgrade --devel``.
+
+Uninstall
+^^^^^^^^^^
+
+You can uninstall Robusta as follows:
+
+.. code-block:: bash
+
+    helm uninstall robusta
+
+.. _Manual Upgrade:
+
+Robusta Classic: Manual Upgrade
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
-    This section only applies to older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). New installs do not need this.
+    This section only applies to older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). New installs do not need this and can use the :ref:`Simple Upgrade` above.
+
+Does my upgrade require manual steps?
+------------------------------------
+
+A manual upgrade is only relevant for older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). You'll know you need it if ``helm upgrade`` fails with a ``com.coreos.monitoring.v1.Prometheus.spec`` error.
+
+In all other cases, you can do a :ref:`Simple Upgrade` and no more.
 
 Why are manual upgrades necessary?
 ------------------------------------
@@ -86,7 +99,7 @@ Manual upgrade instructions
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 
-3. If you're upgrading from Robusta v0.10.27 or below and using thanos please check if you need to adapt your config according to the `kube-prometheus-stack upgrade docs <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md#from-51x-to-52x>`_. 
+3. If you're upgrading from Robusta v0.10.27 or below and using thanos please check if you need to adapt your config according to the `kube-prometheus-stack upgrade docs <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md#from-51x-to-52x>`_.
 
 4. Update Robusta with Helm. If you've lost ``generated_values.yaml``, you can :ref:`extract it from the cluster.<where-is-generated-values>`
 
@@ -97,17 +110,3 @@ Manual upgrade instructions
 .. code-block:: bash
 
     kubectl logs -n <NAMESPACE> -l app=robusta-runner
-
-Installing pre-releases
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Install beta version of Robusta with ``helm upgrade --devel``.
-
-Uninstall
-^^^^^^^^^^
-
-You can uninstall Robusta as follows:
-
-.. code-block:: bash
-
-    helm uninstall robusta

@@ -64,7 +64,7 @@ Example Request
 
 The following ``curl`` command demonstrates how to ask Holmes about a failing pod:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X POST 'https://api.robusta.dev/api/holmes/ACCOUNT_ID/chat' \
     --header 'Content-Type: application/json' \
@@ -211,7 +211,7 @@ To enable streaming, set ``stream`` to ``true`` in the request body. All other p
 Example Streaming Request
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -N -X POST 'https://api.robusta.dev/api/holmes/ACCOUNT_ID/chat' \
     --header 'Content-Type: application/json' \
@@ -499,7 +499,7 @@ Consuming the Stream
 
 **Python (using requests):**
 
-.. code-block:: python
+.. robusta-code:: python
 
     import requests
     import json

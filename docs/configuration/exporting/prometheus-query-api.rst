@@ -12,7 +12,7 @@ in your connected clusters.
 Endpoint
 --------
 
-.. code-block::
+.. robusta-code::
 
     POST https://api.robusta.dev/api/accounts/{account_id}/clusters/{cluster_name}/prometheus/query
 
@@ -86,7 +86,7 @@ Example Request
 
 Using duration (last 5 minutes):
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X POST "https://api.robusta.dev/api/accounts/ACCOUNT_ID/clusters/CLUSTER_NAME/prometheus/query" \
       -H "Authorization: Bearer YOUR_API_KEY" \
@@ -99,7 +99,7 @@ Using duration (last 5 minutes):
 
 Using date range:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl -X POST "https://api.robusta.dev/api/accounts/ACCOUNT_ID/clusters/CLUSTER_NAME/prometheus/query" \
       -H "Authorization: Bearer YOUR_API_KEY" \

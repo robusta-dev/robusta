@@ -159,7 +159,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         serviceAccountName=params.service_account_name,
         containers=[
             Container(
-                name=to_kubernetes_name(IMAGE),
+                name="popeye-scanner",
                 image=IMAGE,
                 command=[
                     "/bin/sh",

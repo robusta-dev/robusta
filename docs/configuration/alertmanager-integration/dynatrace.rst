@@ -1,3 +1,5 @@
+.. include:: ../_legacy_banner.rst
+
 Dynatrace Integration with Robusta
 ==================================
 
@@ -31,7 +33,7 @@ Step 2: Create a Dynatrace Problems Webhook
 3. Click **Add notification** and choose **Webhook**.
 4. Configure the **URL**:
 
-   ``https://api.robusta.dev/integrations/generic/dynatrace``
+   :robusta-url:`https://api.robusta.dev/integrations/generic/dynatrace`
 
 5. Set the **Custom payload** to the Dynatrace macro:
 

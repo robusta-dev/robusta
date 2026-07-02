@@ -136,7 +136,7 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                 )
 
         except Exception as e:
-            logging.error(f"An error occured while creating PrometheusRules CRD name: {name}", exc_info=True)
+            logging.error(f"An error occurred while creating PrometheusRules CRD name: {name}", exc_info=True)
 
             raise e
 
@@ -152,7 +152,7 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
             )
 
         except Exception as e:
-            logging.error("An error occured while deleting the PrometheusRules CRD", exc_info=True)
+            logging.error("An error occurred while deleting the PrometheusRules CRD", exc_info=True)
 
             raise e
 

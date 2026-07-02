@@ -1,3 +1,5 @@
+.. include:: ../_legacy_banner.rst
+
 GCP Cloud Monitoring Integration with Robusta
 =============================================
 
@@ -35,7 +37,7 @@ Step 2: Create a Webhook Notification Channel in GCP
 3. Configure the webhook with the following settings:
 
    - **Display Name**: ``RobustaWebhook``
-   - **Endpoint URL**: ``https://api.robusta.dev/integrations/generic/gcp``
+   - **Endpoint URL**: :robusta-url:`https://api.robusta.dev/integrations/generic/gcp`
    - **Authentication**: Select **Basic Authentication**
    - **Username**: Your Robusta ``account_id`` from Step 1
    - **Password**: Your Robusta API key from Step 1

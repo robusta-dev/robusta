@@ -1,3 +1,5 @@
+.. include:: ../_legacy_banner.rst
+
 Nagios Integration with Robusta
 ===============================
 
@@ -12,7 +14,7 @@ Requirements
 - Robusta must already be deployed and running in your environment.
 - The Nagios host must be able to send `curl` requests to the Robusta API endpoint:
 
-  .. code-block::
+  .. robusta-code::
 
      https://api.robusta.dev/integrations/generic/nagios
 
@@ -78,7 +80,7 @@ Step 4: Create the Bash Command Script
 
 Save this as `notify-robusta.sh`, ensure it's executable (`chmod +x notify-robusta.sh`), and Nagios can access it.
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     #!/bin/sh
 
