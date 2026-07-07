@@ -52,7 +52,9 @@ def build_investigation_title(params: AIInvestigateParams) -> str:
     if params.investigation_type == "analyze_problems":
         return params.ask
 
-    return params.context.get("issue_type", "unknown health issue")
+    if params.context:
+        return params.context.get("issue_type", "unknown health issue")
+    return params.ask or "unknown health issue"
 
 
 def handle_holmes_error(e: Exception) -> NoReturn:
@@ -89,6 +91,11 @@ def handle_holmes_error(e: Exception) -> NoReturn:
 
 @action
 def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
+    """Investigate an alert using HolmesGPT via /api/chat.
+
+    Builds a text prompt from the structured investigation params and calls
+    the /api/chat endpoint (the only endpoint current Holmes versions serve).
+    """
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
     if not holmes_url:
         raise ActionException(
@@ -101,22 +108,23 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
     try:
         params.ask = add_labels_to_ask(params)
-        holmes_req = HolmesRequest(
-            source=params.context.get("source", "unknown source")
-            if params.context
-            else "unknown source",
-            title=investigation__title,
-            subject=subject,
-            context=params.context if params.context else {},
+
+        # Build a text prompt from the structured investigation context
+        ask_prompt = _build_ask_prompt(investigation__title, subject, params)
+
+        holmes_req = HolmesChatRequest(
+            ask=ask_prompt,
+            model=params.model,
+            stream=params.stream,
             include_tool_calls=True,
             include_tool_call_results=True,
-            sections=params.sections,
-            model=params.model,
         )
+
+        url = f"{holmes_url}/api/chat"
 
         if params.stream:
             with requests.post(
-                f"{holmes_url}/api/stream/investigate",
+                url,
                 data=holmes_req.json(),
                 stream=True,
                 headers={"Connection": "keep-alive"},
@@ -124,18 +132,23 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
                 resp.raise_for_status()
                 for line in resp.iter_content(
                     chunk_size=None, decode_unicode=True
-                ):  # Avoid streaming chunks from holmes. send them as they arrive.
+                ):
                     if line:
                         event.ws(data=line)
             return
 
         else:
-            result = requests.post(
-                f"{holmes_url}/api/investigate", data=holmes_req.json()
-            )
+            result = requests.post(url, data=holmes_req.json())
             result.raise_for_status()
 
-            holmes_result = HolmesResult(**json.loads(result.text))
+            chat_result = HolmesChatResult(**json.loads(result.text))
+
+            # Map HolmesChatResult to HolmesResult for downstream compatibility
+            holmes_result = HolmesResult(
+                analysis=chat_result.analysis,
+                tool_calls=chat_result.tool_calls,
+            )
+
             title_suffix = (
                 f" on {params.resource.name}"
                 if params.resource
@@ -175,6 +188,37 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         handle_holmes_error(e)
 
 
+def _build_ask_prompt(title: str, subject: dict, params: AIInvestigateParams) -> str:
+    """Build a text prompt for /api/chat from structured investigation params."""
+    parts = [f"Investigate the following alert: {title}"]
+
+    if subject:
+        resource_parts = []
+        for key in ("name", "namespace", "kind", "node", "container"):
+            if subject.get(key):
+                resource_parts.append(f"{key}: {subject[key]}")
+        if resource_parts:
+            parts.append(f"Resource: {', '.join(resource_parts)}")
+
+    if params.context:
+        labels = params.context.get("labels")
+        if labels:
+            parts.append(f"Labels: {labels}")
+        description = params.context.get("description")
+        if description:
+            parts.append(f"Description: {description}")
+
+    if params.ask:
+        parts.append(f"Additional context: {params.ask}")
+
+    parts.append(
+        "Using your Kubernetes and Prometheus toolsets, find the root cause "
+        "and provide concrete remediation steps."
+    )
+
+    return "\n\n".join(parts)
+
+
 def build_conversation_title(params: HolmesConversationParams) -> str:
     return (
         f"{params.resource}, {params.ask} for issue '{params.context.robusta_issue_id}'"
@@ -182,6 +226,8 @@ def build_conversation_title(params: HolmesConversationParams) -> str:
 
 
 def add_labels_to_ask(params: HolmesConversationParams) -> str:
+    if not params.context:
+        return params.ask or ""
     label_string = (
         f"the alert has the following labels: {params.context.get('labels')}"
         if params.context.get("labels")
