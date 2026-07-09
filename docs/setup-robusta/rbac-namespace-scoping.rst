@@ -1,48 +1,86 @@
 .. _rbac-namespace-scoping:
 
-RBAC: Namespace-Scoped Deployments
+RBAC: Namespace-Scoped HolmesGPT
 ========================================
 
-By default, Robusta and HolmesGPT use cluster-wide RBAC: they are granted a ``ClusterRole`` bound with a
-``ClusterRoleBinding``, so they can read (and, for the runner, act on) resources in every namespace.
+By default, HolmesGPT uses cluster-wide RBAC: the chart creates a ``ClusterRole`` and binds it with a
+``ClusterRoleBinding``, so Holmes can read resources in every namespace.
 
-In restricted environments you may want to limit what HolmesGPT can see to a specific set of namespaces.
-This guide explains how, how it works under the hood, and what the trade-offs are.
+To restrict Holmes to a specific set of namespaces you can create your own ``RoleBinding`` objects that
+**reuse the ServiceAccount and ClusterRole the chart already creates**, and remove the cluster-wide binding.
+You do not need to create a ServiceAccount or ClusterRole yourself.
 
-Scoping HolmesGPT to Specific Namespaces
-----------------------------------------
+What the chart already creates
+------------------------------
 
-Set ``holmes.roleBindingNamespaces`` to the list of namespaces HolmesGPT is allowed to access. Instead of a
-cluster-wide ``ClusterRoleBinding``, the chart then creates a namespaced ``RoleBinding`` in each listed
-namespace (reusing the same ClusterRole for its rules):
+With the default values, the Holmes chart creates these objects (``<release>`` is your Helm release name,
+usually ``robusta``, in the release namespace):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30 40
+
+   * - Kind
+     - Name
+     - Purpose
+   * - ServiceAccount
+     - ``<release>-holmes-service-account``
+     - Identity the Holmes pod runs as
+   * - ClusterRole
+     - ``<release>-holmes-cluster-role``
+     - The read permissions Holmes needs (rules only)
+   * - ClusterRoleBinding
+     - ``<release>-holmes-cluster-role-binding``
+     - Grants the ClusterRole **cluster-wide** — this is what makes Holmes see every namespace
+
+Reuse the ServiceAccount and ClusterRole; replace the binding
+-------------------------------------------------------------
+
+Step 1 — Create a ``RoleBinding`` in each namespace Holmes should access. It binds the **existing**
+ServiceAccount to the **existing** ClusterRole, but a ``RoleBinding`` only grants those rules inside its own
+namespace:
 
 .. code-block:: yaml
 
-    holmes:
-      roleBindingNamespaces:
-        - default
-        - monitoring
-
-When this list is empty (the default), HolmesGPT keeps its cluster-wide binding — existing installs are
-unaffected.
-
-Apply it with a Helm upgrade (merge it into your existing values file, or pass it as an extra ``-f`` file):
+    # holmes-rolebindings.yaml  (one RoleBinding per target namespace)
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: holmes-namespace-scoped
+      namespace: default                      # repeat this file for "monitoring", etc.
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole                        # reuse the chart's ClusterRole (rules only)
+      name: robusta-holmes-cluster-role
+    subjects:
+      - kind: ServiceAccount
+        name: robusta-holmes-service-account   # reuse the chart's ServiceAccount
+        namespace: <release-namespace>
 
 .. code-block:: bash
 
-    helm upgrade --install robusta robusta/robusta \
-      -f generated_values.yaml \
-      -n <release-namespace>
+    kubectl apply -f holmes-rolebindings.yaml
 
-You can combine this with a :ref:`read-only runner <read-only-service-account>` in the same values file to
-get a fully restricted, audit-only deployment.
+Step 2 — Remove the cluster-wide binding, otherwise it still grants Holmes access to every namespace and the
+RoleBindings above are redundant:
 
-How It Works
+.. code-block:: bash
+
+    kubectl delete clusterrolebinding robusta-holmes-cluster-role-binding
+
+Holmes now has read access only in the namespaces where you created a RoleBinding.
+
+.. warning::
+
+   A ``helm upgrade`` re-creates ``robusta-holmes-cluster-role-binding`` (the chart always renders it),
+   which restores cluster-wide access. After each upgrade, re-run the ``kubectl delete`` above, or manage
+   the deletion/RoleBindings through your GitOps/post-render tooling.
+
+How it works
 ------------
 
-In Kubernetes RBAC, a ``ClusterRole`` is only a set of permissions ("get/list/watch pods", etc.). On its
-own it grants nothing — what determines **where** those permissions apply is the **binding type**, not the
-role:
+In Kubernetes RBAC a ``ClusterRole`` is only a set of permissions. On its own it grants nothing — the
+**binding type** decides where those permissions apply:
 
 .. list-table::
    :header-rows: 1
@@ -55,51 +93,28 @@ role:
    * - ``RoleBinding`` (in namespace ``X``) → ClusterRole
      - Only namespaced resources **in namespace** ``X``
 
-A ``RoleBinding`` is allowed to reference a ``ClusterRole``; when it does, Kubernetes applies that
-ClusterRole's rules but confined to the RoleBinding's own namespace. HolmesGPT keeps one ClusterRole with
-its read rules, and ``roleBindingNamespaces`` only changes how that role is *bound*. For
-``roleBindingNamespaces: [default, monitoring]`` the chart renders one ``RoleBinding`` per namespace and no
-``ClusterRoleBinding``:
-
-.. code-block:: yaml
-
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: RoleBinding
-    metadata:
-      name: robusta-holmes-role-binding
-      namespace: "default"        # a second identical binding is created in "monitoring"
-    roleRef:
-      apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole           # reuse the same rules, no duplication
-      name: robusta-holmes-cluster-role
-    subjects:
-      - kind: ServiceAccount
-        name: robusta-holmes-service-account
-        namespace: robusta        # the ServiceAccount lives in the release namespace
-
-When HolmesGPT's ServiceAccount makes a request, the RBAC authorizer considers all ``ClusterRoleBinding``
-objects plus the ``RoleBinding`` objects in the request's namespace. A ``list pods`` in ``default`` matches
-the RoleBinding there and is allowed; the same request in ``kube-system`` has no binding and is denied. That
-is the entire scoping mechanism — the permission simply does not exist in namespaces where no binding was
-created.
+A ``RoleBinding`` may reference a ``ClusterRole``; when it does, Kubernetes applies that ClusterRole's rules
+but confined to the RoleBinding's own namespace. That is why we can reuse the chart's ClusterRole without
+duplicating its rules — one rule set, one thin binding per namespace. When Holmes' ServiceAccount makes a
+request, the authorizer checks all ClusterRoleBindings plus the RoleBindings in the request's namespace: a
+``list pods`` in ``default`` matches the RoleBinding there and is allowed; the same request in
+``kube-system`` matches nothing and is denied.
 
 .. important::
 
-   - The listed namespaces **must already exist**; the chart does not create them.
-   - Access is limited to **namespaced** resources in those namespaces. **Cluster-scoped** resources
-     (for example ``nodes``, ``persistentvolumes``, cluster-level events) are no longer granted, because a
-     ``RoleBinding`` structurally cannot grant them — only a ``ClusterRoleBinding`` can. Tools that rely on
-     them (node health, cluster-wide resource views) will not work in scoped mode.
+   Access is limited to **namespaced** resources in the bound namespaces. **Cluster-scoped** resources
+   (for example ``nodes``, ``persistentvolumes``, cluster-level events) are no longer granted, because a
+   ``RoleBinding`` structurally cannot grant them — only a ``ClusterRoleBinding`` can. Tools that rely on
+   them (node health, cluster-wide resource views) will not work in scoped mode.
 
 .. note::
 
    ``kubectl auth can-i list nodes --as=<holmes-sa> -n default`` may return ``yes`` even though real node
-   access is denied. That is a quirk of ``can-i``: passing ``-n default`` evaluates the check *inside* the
-   default namespace, where the RoleBinding does grant the ``nodes`` rule, and the authorizer matches
-   verb+resource without re-checking that ``nodes`` is cluster-scoped. A real ``kubectl get nodes`` request
-   uses an empty namespace, matches no binding, and is denied.
+   access is denied. Passing ``-n default`` evaluates the check *inside* the default namespace, where the
+   RoleBinding grants the ``nodes`` rule, and the authorizer matches verb+resource without re-checking that
+   ``nodes`` is cluster-scoped. A real ``kubectl get nodes`` (empty namespace) matches no binding and is denied.
 
-Verifying the Scope
+Verifying the scope
 -------------------
 
 .. code-block:: bash
@@ -110,10 +125,10 @@ Verifying the Scope
     kubectl auth can-i list pods --as=$SA -n monitoring   # -> yes
     kubectl auth can-i list pods --as=$SA -n kube-system  # -> no
 
-Notes on the Runner
+Notes on the runner
 -------------------
 
 The Robusta runner remains cluster-wide. To reduce the runner's permissions, use
 :ref:`a read-only ClusterRole <read-only-service-account>` via ``runner.overrideClusterRoles``.
-Fully scoping the runner to a subset of namespaces is not supported through Helm values, because the
-runner watches cluster-wide resources and events to function.
+Fully scoping the runner to a subset of namespaces is not supported, because the runner watches
+cluster-wide resources and events to function.
