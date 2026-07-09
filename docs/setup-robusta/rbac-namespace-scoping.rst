@@ -125,6 +125,30 @@ Verifying the scope
     kubectl auth can-i list pods --as=$SA -n monitoring   # -> yes
     kubectl auth can-i list pods --as=$SA -n kube-system  # -> no
 
+Tell Holmes which namespaces it can access
+-------------------------------------------
+
+Holmes has no way to discover its own RBAC scope. A denial only ever names the resource and namespace that
+were **rejected** ("...cannot list resource pods ... in the namespace kube-system"); it never lists the
+namespaces that are **allowed**. Without guidance, Holmes may assume it has cluster-wide access, repeatedly
+retry cluster-wide queries (``kubectl get pods -A``, ``get nodes``), or mistake the ``Forbidden`` errors for
+a broken cluster.
+
+After scoping, add a **global instruction** telling Holmes exactly which namespaces it may use. Global
+instructions are account-level and are injected into Holmes' system prompt for every investigation; set them
+in the Robusta UI (HolmesGPT settings → global instructions). Keep the list in sync with the namespaces you
+bound above.
+
+Example global instruction:
+
+.. code-block:: text
+
+    This HolmesGPT instance has namespace-scoped RBAC. You can only read Kubernetes resources in the
+    "default" and "monitoring" namespaces. Always scope kubectl queries with `-n default` or `-n monitoring`.
+    Do not run cluster-wide queries such as `kubectl get pods -A`, `kubectl get nodes`, or
+    `kubectl get namespaces` — they will be denied. If something you need is in another namespace, report
+    that it is outside your permitted scope instead of retrying.
+
 Notes on the runner
 -------------------
 
