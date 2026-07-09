@@ -88,7 +88,8 @@ virtualenv = "^20.36.1"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
-pytest = "^6.2.4"
+# Pin to fix CVE-2025-71176 (pytest < 9.0.3)
+pytest = "^9.0.3"
 python-dotenv = "^0.18.0"
 Sphinx = "6.2.1"
 #furo = "^2021.11.12"
