@@ -19,6 +19,7 @@
    configuration-secrets
    openshift
    read-only-service-account
+   rbac-namespace-scoping
    node-selector
    proxies
    privacy-and-security
