@@ -6,6 +6,7 @@ Forward Jira Service Management (JSM) alerts to Robusta via the JSM outgoing web
 Prerequisites
 -------------
 
+* A Jira Service Management **Premium** or **Enterprise** plan — outgoing webhook integrations are not available on lower tiers.
 * A Robusta account with API access.
 * Your Robusta ``account_id``, found in ``generated_values.yaml``.
 * A Robusta API key with ``Read/Write`` access to alerts, generated under **Settings → API Keys → New API Key**.
