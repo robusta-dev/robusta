@@ -30,8 +30,11 @@ def init_logging():
         logging.basicConfig(handlers=[handler], level=logging_level, force=True)
     else:
         logging_format = "%(log_color)s%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s"
-        print("setting up colored logging")
-        colorlog.basicConfig(format=logging_format, level=logging_level, datefmt=logging_datefmt)
+        # force=True so a prior configuration (e.g. a JSON handler from an
+        # earlier init_logging() call) is replaced, mirroring the JSON branch.
+        colorlog.basicConfig(
+            format=logging_format, level=logging_level, datefmt=logging_datefmt, force=True
+        )
 
     logging.getLogger().setLevel(logging_level)
     for logger_name in ["werkzeug", "telethon"]:

@@ -3,6 +3,21 @@ import json
 import logging
 from io import StringIO
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def restore_root_logger():
+    """Snapshot and restore the root logger so handlers don't leak between tests."""
+    root = logging.getLogger()
+    saved_handlers = root.handlers[:]
+    saved_level = root.level
+    try:
+        yield
+    finally:
+        root.handlers = saved_handlers
+        root.setLevel(saved_level)
+
 
 def _reload_log_init(monkeypatch, json_enabled: bool):
     """Reload env_vars + log_init so ENABLE_JSON_LOGS_FORMAT is re-read from env."""
