@@ -17,7 +17,8 @@ def init_logging():
         # JSON logs (one object per line) are easier for log scrapers like
         # Filebeat to index, search, and filter. Rename levelname -> severity
         # to match the convention used across Robusta services (relay, holmes).
-        print("setting up json logging")
+        # Avoid printing anything to stdout here so the JSON stream is not
+        # corrupted by a plain-text line.
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(
             JsonFormatter(
