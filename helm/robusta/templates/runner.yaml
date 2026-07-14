@@ -121,6 +121,8 @@ spec:
             value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
           - name: LOG_LEVEL
             value: {{ .Values.runner.log_level }}
+          - name: ENABLE_JSON_LOGS_FORMAT
+            value: {{ .Values.global.enableJsonLogsFormat | default false | quote }}
           - name: INSTALLATION_NAMESPACE
             valueFrom:
               fieldRef:
