@@ -104,6 +104,10 @@ DISABLE_FINDINGS_PERSISTENCE = load_bool("DISABLE_FINDINGS_PERSISTENCE", False)
 DISABLE_DISCOVERY = load_bool("DISABLE_DISCOVERY", False)
 DISABLE_RESOURCE_WATCH_PERSISTENCE = load_bool("DISABLE_RESOURCE_WATCH_PERSISTENCE", False)
 
+# When true, logs are emitted as JSON (one object per line) instead of the default
+# colored text format. Useful for log scrapers like Filebeat. Defaults to false.
+ENABLE_JSON_LOGS_FORMAT = load_bool("ENABLE_JSON_LOGS_FORMAT", False)
+
 PROMETHEUS_ERROR_LOG_PERIOD_SEC = int(os.environ.get("DISCOVERY_MAX_BATCHES", 14400))
 
 RRM_PERIOD_SEC = int(os.environ.get("RRM_PERIOD_SEC", 90))

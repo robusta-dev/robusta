@@ -30,7 +30,7 @@ from robusta.api import (
     action,
     JobEvent,
 )
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, SET_KRR_SECURITY_CONTEXT, load_bool
+from robusta.core.model.env_vars import ENABLE_JSON_LOGS_FORMAT, INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, SET_KRR_SECURITY_CONTEXT, load_bool
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
@@ -515,6 +515,15 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             allowPrivilegeEscalation=False,
             seccompProfile=SeccompProfile(type="RuntimeDefault")
         )
+
+    # Mirror the runner's JSON log setting onto the KRR scan job, but ONLY when
+    # KRR_PUSH_SCAN is enabled. In that mode results are POSTed back via
+    # --publish_scan_url and the job's logs are not parsed. When KRR_PUSH_SCAN is
+    # false the result is extracted by json.loads()-ing the job's captured logs
+    # (see below), and pod.get_logs() returns the combined stdout+stderr stream,
+    # so JSON-formatted log lines would corrupt that parsing.
+    if ENABLE_JSON_LOGS_FORMAT and KRR_PUSH_SCAN:
+        env_var.append(EnvVar(name="ENABLE_JSON_LOGS_FORMAT", value="true"))
 
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
