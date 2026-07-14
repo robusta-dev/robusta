@@ -16,6 +16,7 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
    send-events/dynatrace
    send-events/gcp-monitoring
    send-events/grafana
+   send-events/jsm
    send-events/nagios
    send-events/newrelic
    send-events/opsgenie
@@ -175,6 +176,11 @@ Incident Management
     .. grid-item-card:: :octicon:`pulse;1em;` Opsgenie
         :class-card: sd-bg-light sd-bg-text-light
         :link: send-events/opsgenie
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`pulse;1em;` Jira Service Management
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: send-events/jsm
         :link-type: doc
 
     .. grid-item-card:: :octicon:`pulse;1em;` Rootly
