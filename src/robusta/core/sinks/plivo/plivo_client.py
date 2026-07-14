@@ -14,10 +14,13 @@ class PlivoClient:
         url = f"{PLIVO_API_BASE}/{self.auth_id}/Message/"
         payload = {"src": src, "dst": dst, "text": text, "type": "sms"}
 
-        response = requests.post(
-            url, json=payload, auth=(self.auth_id, self.auth_token), timeout=(5, 15)
-        )
-        if not response.ok:
-            logging.error(
-                f"Failed to send Plivo SMS to {dst}: {response.status_code} {response.reason} {response.text}"
+        try:
+            response = requests.post(
+                url, json=payload, auth=(self.auth_id, self.auth_token), timeout=(5, 15)
             )
+            if not response.ok:
+                logging.error(
+                    f"Failed to send Plivo SMS to {dst}: {response.status_code} {response.reason} {response.text}"
+                )
+        except Exception as e:
+            logging.error(f"Error sending Plivo SMS to {dst}: {e}", exc_info=True)
