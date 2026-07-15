@@ -38,6 +38,13 @@ from robusta.core.reporting.custom_rendering import render_value
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
+# A single-character ellipsis is used (rather than "...") for table-cell truncation
+# so the width accounting stays exact - it consumes exactly one column of the cell.
+TABLE_TRUNCATION_ELLIPSIS = "…"
+# Never shrink a text column below this many characters, otherwise the value
+# becomes unreadable (essentially just the ellipsis).
+TABLE_MIN_COLUMN_WIDTH = 4
+
 
 class MarkdownBlock(BaseBlock):
     """
@@ -365,26 +372,76 @@ class TableBlock(BaseBlock):
             self.metadata["format"] = TableBlockFormat.vertical.value
 
     @classmethod
+    def __is_number(cls, value) -> bool:
+        try:
+            float(str(value))
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    @classmethod
+    def __numeric_column_indices(cls, rendered_rows, num_columns: int) -> set:
+        # A column is considered numeric when every non-empty cell parses as a
+        # number (e.g. the "Fired"/"Resolved" counters). These are kept at full
+        # width so the counts always stay readable.
+        numeric_indices = set()
+        for idx in range(num_columns):
+            values = [str(row[idx]) for row in rendered_rows if idx < len(row)]
+            non_empty = [v for v in values if v.strip() != ""]
+            if non_empty and all(cls.__is_number(v) for v in non_empty):
+                numeric_indices.add(idx)
+        return numeric_indices
+
+    @classmethod
     def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
-        # We need to make sure the total table width, doesn't exceed the max width,
-        # otherwise, the table is printed corrupted
-        columns_max_widths = [len(header) for header in headers]
+        # We need to make sure the total table width doesn't exceed the max width,
+        # otherwise the table is printed corrupted.
+        num_columns = len(headers)
+        columns_max_widths = [len(str(header)) for header in headers]
         for row in rendered_rows:
             for idx, val in enumerate(row):
                 columns_max_widths[idx] = max(len(str(val)), columns_max_widths[idx])
 
-        if sum(columns_max_widths) > table_max_width:  # We want to limit the widest column
-            largest_width = max(columns_max_widths)
-            widest_column_idx = columns_max_widths.index(largest_width)
-            diff = sum(columns_max_widths) - table_max_width
-            columns_max_widths[widest_column_idx] = largest_width - diff
-            if columns_max_widths[widest_column_idx] < 0:  # in case the diff is bigger than the largest column
-                # just divide equally
-                columns_max_widths = [
-                    int(table_max_width / len(columns_max_widths)) for i in range(0, len(columns_max_widths))
-                ]
+        if sum(columns_max_widths) <= table_max_width:
+            return columns_max_widths
+
+        # Only shrink text columns; numeric columns (counters) are left intact so
+        # the numbers are never the ones that get truncated.
+        numeric_indices = cls.__numeric_column_indices(rendered_rows, num_columns)
+        shrinkable = [idx for idx in range(num_columns) if idx not in numeric_indices]
+        if not shrinkable:  # nothing but numeric columns - fall back to shrinking everything
+            shrinkable = list(range(num_columns))
+
+        # Water-fill: repeatedly trim the currently-widest shrinkable column by one
+        # character. This distributes the reduction fairly (widest first) instead of
+        # gutting a single column, and never drops a column below TABLE_MIN_COLUMN_WIDTH.
+        while sum(columns_max_widths) > table_max_width:
+            candidates = [idx for idx in shrinkable if columns_max_widths[idx] > TABLE_MIN_COLUMN_WIDTH]
+            if not candidates:
+                break  # can't shrink any further without making columns unreadable
+            widest = max(candidates, key=lambda idx: columns_max_widths[idx])
+            columns_max_widths[widest] -= 1
 
         return columns_max_widths
+
+    @classmethod
+    def __truncate_cell(cls, value: str, max_width: int) -> str:
+        # Truncate an over-wide cell to a single line with an ellipsis, instead of
+        # letting tabulate word-wrap it onto extra physical lines (which mangles
+        # every following row in the rendered table).
+        if max_width <= 0 or len(value) <= max_width:
+            return value
+        ellipsis = TABLE_TRUNCATION_ELLIPSIS
+        if max_width <= len(ellipsis):
+            return value[:max_width]
+        keep = max_width - len(ellipsis)
+        # For dotted, space-free qualified names (e.g. Java class paths like
+        # "ats.betting...settler.AbstractBetSettler") the distinctive part is the
+        # suffix (the class name), so trim from the left and keep the tail. For any
+        # other text a trailing cut reads more naturally.
+        if "." in value and " " not in value:
+            return ellipsis + value[-keep:]
+        return value[:keep] + ellipsis
 
     @classmethod
     def __trim_rows(cls, contents: str, max_chars: int):
@@ -430,11 +487,19 @@ class TableBlock(BaseBlock):
     def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH, table_fmt: str = "presto") -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
         col_max_width = self.__calc_max_width(self.headers, rendered_rows, table_max_width)
+        # Truncate over-wide cells ourselves rather than passing maxcolwidths to
+        # tabulate. tabulate would *wrap* long cells onto extra physical lines,
+        # which corrupts the whole table; truncating keeps every row on one line.
+        truncated_headers = [
+            self.__truncate_cell(str(header), col_max_width[idx]) for idx, header in enumerate(self.headers)
+        ]
+        truncated_rows = [
+            [self.__truncate_cell(val, col_max_width[idx]) for idx, val in enumerate(row)] for row in rendered_rows
+        ]
         return tabulate(
-            rendered_rows,
-            headers=self.headers,
+            truncated_rows,
+            headers=truncated_headers,
             tablefmt=table_fmt,
-            maxcolwidths=col_max_width,
         )
 
     def render_rows(self) -> List[List]:
