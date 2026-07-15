@@ -379,7 +379,7 @@ class TableBlock(BaseBlock):
 
     @classmethod
     def __numeric_column_indices(cls, rendered_rows, num_columns: int) -> set:
-        # Numeric columns (e.g. the Fired/Resolved counters) are kept at full width.
+        # Numeric columns (e.g. counters) are kept at full width.
         numeric_indices = set()
         for idx in range(num_columns):
             non_empty = [str(row[idx]) for row in rendered_rows if idx < len(row) and str(row[idx]).strip()]
