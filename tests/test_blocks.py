@@ -136,11 +136,8 @@ def test_all_block_types(slack_channel: SlackChannel):
     print(result)
 
 
-# Regression tests for FRO-211 / ROB-3946: the "Alerts Summary" digest table
-# rendered a corrupted ASCII table because long cell values (Java class names in
-# the label:site column) were word-wrapped onto extra physical lines instead of
-# being truncated. These tests pin down that rows stay single-line and over-wide
-# cells are truncated with an ellipsis.
+# Regression tests for FRO-211 / ROB-3946: over-wide cells must be truncated to a
+# single line, not word-wrapped onto extra lines (which corrupted the digest table).
 LONG_CLASS_NAME = "ats.betting.betcatcher.settlement.settler.AbstractBetSettler"
 
 
@@ -154,16 +151,12 @@ def test_to_table_string_truncates_wide_column_without_wrapping():
     output = table_block.to_table_string(table_max_width=40)
     lines = output.splitlines()
 
-    # presto renders: header line + separator line + exactly one line per row.
-    # If any cell had wrapped, there would be extra physical lines here.
+    # presto renders header + separator + one line per row; wrapping would add lines.
     assert len(lines) == 2 + len(rows)
-    # Every physical line stays bounded: the content budget (table_max_width) plus
-    # the fixed per-column separator/padding overhead tabulate adds. Without the
-    # fix, wrapped cells would have blown past this and split rows across lines.
+    # Bounded width: content budget + tabulate's per-column separator/padding overhead.
     assert all(len(line) <= 40 + 6 * len(table_block.headers) for line in lines)
 
-    # The over-wide class name is truncated, not present in full, and the "wrap
-    # spillover" fragments from the bug report never appear on their own line.
+    # The class name is truncated, not present in full, and no wrap-spillover fragment.
     assert LONG_CLASS_NAME not in output
     assert "…" in output
     assert not any(line.strip() in ("ServiceImpl", "erviceImpl") for line in lines)
@@ -216,3 +209,28 @@ def test_to_markdown_wide_table_stays_single_line_per_row():
     inner = markdown.strip().strip("`").strip("\n")
     body_lines = [line for line in inner.splitlines() if line.strip()]
     assert len(body_lines) == 2 + len(rows)
+
+
+def test_to_table_string_headerless_and_ragged_rows():
+    # No headers, and rows wider than the (empty) header list must not IndexError.
+    table_block = TableBlock(rows=[[LONG_CLASS_NAME, "extra", "cols"]], headers=[])
+
+    output = table_block.to_table_string(table_max_width=30)
+
+    assert output  # rendered without raising
+    assert LONG_CLASS_NAME not in output  # still truncated
+    assert "…" in output
+
+
+def test_to_table_string_all_numeric_table_is_not_truncated():
+    # Every column numeric and over budget: leave widths intact rather than ellipsize numbers.
+    table_block = TableBlock(
+        rows=[["123456789012345", "678901234567890", "112233445566778"]],
+        headers=["a", "b", "c"],
+    )
+
+    output = table_block.to_table_string(table_max_width=10)
+
+    assert "…" not in output
+    for value in ("123456789012345", "678901234567890", "112233445566778"):
+        assert value in output
