@@ -20,6 +20,7 @@ include_trailing_comma = true
 python = ">=3.10, <3.12"
 setuptools = "^80.9.0"
 colorlog = "^5.0.1"
+python-json-logger = "^3.0.0"
 pydantic = "^1.8.1"
 kubernetes = "^26.1.0"
 pymsteams = "^0.1.16"

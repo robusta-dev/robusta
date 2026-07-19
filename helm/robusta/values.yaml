@@ -33,6 +33,10 @@ clusterZone: ""
 
 global:
   clusterDomain: "cluster.local"
+  # When true, Robusta components emit logs as JSON (one object per line) instead
+  # of colored text, which is easier to index with log scrapers like Filebeat.
+  # This is shared with subcharts (e.g. Holmes) automatically.
+  enableJsonLogsFormat: false
   # Optional image pull secrets applied to the runner, kubewatch, and the runtime pods
   # created by the runner (e.g. KRR, Popeye, via the runner ServiceAccount).
   # A component's own imagePullSecrets (e.g. runner.imagePullSecrets), when set, is used
