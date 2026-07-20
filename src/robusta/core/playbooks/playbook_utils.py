@@ -7,16 +7,23 @@ from pydantic.main import BaseModel
 from pydantic.types import SecretStr
 
 
+_ENV_PLACEHOLDER_RE = re.compile(r"{{\s*env\.([^}\s]+)\s*}}")
+
+
 def get_env_replacement(value: str) -> Optional[str]:
-    env_values = re.findall(r"{{[ ]*env\.(.*)[ ]*}}", value)
-    if env_values:
-        env_var_value = os.environ.get(env_values[0].strip(), None)
+    if not _ENV_PLACEHOLDER_RE.search(value):
+        return None
+
+    def _sub(match: "re.Match[str]") -> str:
+        name = match.group(1).strip()
+        env_var_value = os.environ.get(name, None)
         if not env_var_value:
-            msg = f"ENV var replacement {env_values[0]} does not exist for param: {value}"
+            msg = f"ENV var replacement {name} does not exist for param: {value}"
             logging.error(msg)
             raise Exception(msg)
         return env_var_value
-    return None
+
+    return _ENV_PLACEHOLDER_RE.sub(_sub, value)
 
 
 def replace_env_vars_values(values: Dict) -> Dict:
