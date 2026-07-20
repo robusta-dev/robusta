@@ -658,6 +658,12 @@ kubewatch:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  dnsConfig:
+    enabled: false
+    policy: ClusterFirst
+    nameservers: []
+    searches: []
+    options: []
   # set to override global.imagePullSecrets for kubewatch; leave empty to inherit the global
   imagePullSecrets: []
   config:
