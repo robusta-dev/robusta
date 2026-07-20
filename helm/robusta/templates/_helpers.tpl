@@ -11,6 +11,39 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 
+{{/*
+Render dnsPolicy (+ optional dnsConfig) for a component.
+Pass the component's dnsConfig dict as the context, e.g.:
+  {{- include "robusta.dnsConfig" .Values.runner.dnsConfig | nindent 6 }}
+When disabled (or unset) it falls back to dnsPolicy: ClusterFirst.
+*/}}
+{{- define "robusta.dnsConfig" -}}
+{{- if .enabled -}}
+{{- $hasConfig := or .nameservers .searches .options -}}
+{{- if and (eq .policy "None") (not $hasConfig) -}}
+{{- fail "dnsConfig: when dnsPolicy is 'None', you must set at least one of nameservers, searches, or options" -}}
+{{- end -}}
+dnsPolicy: {{ .policy | quote }}
+{{- if $hasConfig }}
+dnsConfig:
+  {{- with .nameservers }}
+  nameservers:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .searches }}
+  searches:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .options }}
+  options:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- else -}}
+dnsPolicy: ClusterFirst
+{{- end -}}
+{{- end -}}
+
 {{ define "robusta.configfile" -}}
 playbook_repos:
 {{ toYaml .Values.playbookRepos | indent 2 }}
