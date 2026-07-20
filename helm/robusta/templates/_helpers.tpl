@@ -18,12 +18,13 @@ Pass the component's dnsConfig dict as the context, e.g.:
 When disabled (or unset) it falls back to dnsPolicy: ClusterFirst.
 */}}
 {{- define "robusta.dnsConfig" -}}
-{{- if .enabled -}}
+{{- if and . .enabled -}}
+{{- $policy := default "ClusterFirst" .policy -}}
 {{- $hasConfig := or .nameservers .searches .options -}}
-{{- if and (eq .policy "None") (not $hasConfig) -}}
-{{- fail "dnsConfig: when dnsPolicy is 'None', you must set at least one of nameservers, searches, or options" -}}
+{{- if and (eq $policy "None") (not .nameservers) -}}
+{{- fail "dnsConfig: when dnsPolicy is 'None', you must provide at least one nameserver (Kubernetes requires it)" -}}
 {{- end -}}
-dnsPolicy: {{ .policy | quote }}
+dnsPolicy: {{ $policy | quote }}
 {{- if $hasConfig }}
 dnsConfig:
   {{- with .nameservers }}
