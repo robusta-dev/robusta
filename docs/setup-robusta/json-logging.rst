@@ -26,14 +26,3 @@ This single switch is shared across the Robusta components:
 
 The default is ``false``, which preserves the existing colored text output. No
 change is needed unless you want JSON logs.
-
-Log Format
--------------------------------------
-
-When enabled, each log line is a JSON object. The ``level`` field is emitted as
-``severity`` (matching the Google Cloud Logging convention used across Robusta
-services):
-
-.. code-block:: json
-
-    {"asctime": "2026-07-14T11:54:51", "severity": "INFO", "name": "robusta", "message": "..."}
