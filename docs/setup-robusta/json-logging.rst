@@ -37,16 +37,3 @@ services):
 .. code-block:: json
 
     {"asctime": "2026-07-14T11:54:51", "severity": "INFO", "name": "robusta", "message": "..."}
-
-KRR Enforcer
--------------------------------------
-
-The KRR Enforcer is installed from its own chart (``krr-enforcer``) rather than
-as part of the Robusta chart, so it exposes its own value:
-
-.. code-block:: yaml
-
-    enableJsonLogsFormat: true
-
-If it is deployed under an umbrella chart that sets ``global.enableJsonLogsFormat``,
-that value is honored as a fallback.
