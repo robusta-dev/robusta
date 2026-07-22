@@ -15,7 +15,7 @@ Robusta can send SMS notifications about issues and events in your Kubernetes cl
 
 Getting your Auth ID and Auth Token
 ------------------------------------------------
-Log in to the Plivo console at `cx.plivo.com <https://cx.plivo.com>`_. Your Auth ID and Auth Token are shown on the dashboard.
+Log in to the Plivo console at `cx.plivo.com <https://cx.plivo.com/?utm_source=github&utm_medium=oss&utm_campaign=robusta>`_. Your Auth ID and Auth Token are shown on the dashboard.
 
 Getting a sender number
 ------------------------------------------------
