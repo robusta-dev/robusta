@@ -78,8 +78,10 @@ Query Parameters
      - The workflow to run. Repeat the parameter (``&workflow_id=a&workflow_id=b``) or comma-separate values (``&workflow_id=a,b``) to trigger several workflows from one event. Each value must be a valid UUID.
    * - ``cluster``
      - Optional. Runs the investigation on this agent instead of the one configured on the workflow. See `Targeting a Cluster Per Request`_.
+   * - ``type``
+     - Optional. Categorizes the event: ``alert``, ``incident``, ``change``, or ``event``. Defaults to ``event``, and any other value is rejected. It does not affect workflow routing — an event carrying a ``workflow_id`` always goes to workflows. See `Limitations`_.
    * - ``token``
-     - Optional. Your API key, as an alternative to the ``Authorization`` header. Ignored if an ``Authorization`` header is present.
+     - Optional. Your API key, as an alternative to the ``Authorization`` header. Ignored if an ``Authorization`` header is present. See the warning under `Authentication`_.
 
 Authentication
 --------------
@@ -90,11 +92,15 @@ Send a Robusta API key with the ``Alerts: Write`` permission. Create one in the 
 
     Authorization: Bearer <API_KEY>
 
-For systems that cannot set headers, append the key as a query parameter instead:
+The ``Authorization`` header is the preferred method. For systems that cannot set headers, append the key as a query parameter instead:
 
 .. robusta-code::
 
     POST https://api.robusta.dev/webhooks?account_id=<ACCOUNT_ID>&workflow_id=<WORKFLOW_ID>&token=<API_KEY>
+
+.. warning::
+
+    Use ``token`` only when the sending system cannot set headers. A key in the query string is recorded wherever URLs are — proxy and access logs, browser history, and observability tooling. Give such keys the ``Alerts: Write`` permission and nothing more, and rotate the key in **Settings → API Keys** if the URL is ever exposed.
 
 Example Request
 ---------------

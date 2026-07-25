@@ -21,7 +21,7 @@ The Robusta Platform is where your alerts are investigated, grouped, and acted o
         :link: alert-triage
         :link-type: doc
 
-        AI investigates every alert and returns a root cause, a fix, a priority, and an owning team
+        AI investigates your alerts and returns a root cause, a fix, a priority, and an owning team
 
     .. grid-item-card:: :octicon:`organization;1em;` Incident Grouping
         :class-card: sd-bg-light sd-bg-text-light
