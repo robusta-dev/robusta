@@ -27,7 +27,7 @@ The Robusta Platform is a centralized place to control your SRE agents and chat 
 The Platform receives investigation results from HolmesGPT and provides:
 
 - AI-powered root cause analysis results for every alert
-- Centralized alert management and triage
+- Centralized alert management and :doc:`triage </platform/alert-triage>`
 - Historical alert analysis and timelines
 - HolmesGPT Slack and Teams bot — tag the AI agent like a teammate to investigate issues on demand
 

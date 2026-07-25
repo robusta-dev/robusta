@@ -5,6 +5,8 @@ Send alerts from your monitoring system to Robusta through a single webhook endp
 
 This is the recommended ingestion path for new integrations. The legacy :doc:`Send Alerts API </configuration/exporting/send-alerts-api>` remains available for existing customers.
 
+Alerts ingested here feed :doc:`Alert Triage </platform/alert-triage>`, which investigates them with AI and can group related alerts into :doc:`incidents </platform/incident-grouping>`.
+
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -49,7 +51,7 @@ Query Parameters
    * - ``account_id``
      - Your Robusta account ID, found in ``generated_values.yaml``.
    * - ``cluster``
-     - Optional. The cluster to associate the alert with. When set, it overrides any cluster found in the alert payload and is used for the resulting alert investigation. When omitted, the cluster is taken from the payload if present, otherwise the alert is recorded under the ``external`` cluster. Use this when your monitoring system cannot add a cluster label to the alert itself.
+     - Optional. The cluster to associate the alert with. When set, it overrides any cluster found in the alert payload and is used for the resulting alert investigation. When omitted, the cluster is taken from the payload if present, otherwise the alert is recorded under the ``external`` cluster. Use this when your monitoring system cannot add a cluster label to the alert itself. The same parameter works on Triggered Workflows — see :ref:`Targeting a Cluster Per Request <triggered-workflows-cluster-param>`.
 
 Authentication
 --------------

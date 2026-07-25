@@ -38,7 +38,7 @@ The Robusta Platform (SaaS or Self-Hosted) adds on top:
 
 - A web interface
 - HolmesGPT bots for Slack and Microsoft Teams
-- Automatic alert triage and grouping
+- Automatic :doc:`alert triage </platform/alert-triage>` and :doc:`incident grouping </platform/incident-grouping>`
 - Background agents that proactively investigate and surface issues
 
 Robusta Classic
