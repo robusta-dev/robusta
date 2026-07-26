@@ -1,4 +1,5 @@
 import json
+import re
 
 from hikaru.model.rel_1_26 import HikaruDocumentBase, ObjectMeta, Pod
 
@@ -19,6 +20,7 @@ from robusta.api import (  # LinkProp,; LinksBlock,
     TableBlock,
     action,
 )
+from robusta.core.reporting.blocks import BLOCK_SIZE_LIMIT
 from robusta.core.reporting.consts import ScanType
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from tests.config import CONFIG
@@ -136,101 +138,93 @@ def test_all_block_types(slack_channel: SlackChannel):
     print(result)
 
 
-# Regression tests for FRO-211 / ROB-3946: over-wide cells must be truncated to a
-# single line, not word-wrapped onto extra lines (which corrupted the digest table).
+# Regression tests for FRO-211 / ROB-3946: long values must stay complete (wrapped
+# onto extra lines, never cut mid-value), and an over-long table must drop whole rows
+# with a note rather than blow past Slack's block limit and lose its closing ``` fence.
 LONG_CLASS_NAME = "ats.betting.betcatcher.settlement.settler.AbstractBetSettler"
 
 
-def test_to_table_string_truncates_wide_column_without_wrapping():
-    rows = [
-        [LONG_CLASS_NAME, "103", "0"],
-        ["orders.checkout.impl.OrderServiceImpl", "16", "4"],
-    ]
-    table_block = TableBlock(rows=rows, headers=["label:site", "Fired", "Resolved"])
-
-    output = table_block.to_table_string(table_max_width=40)
-    lines = output.splitlines()
-
-    # presto renders header + separator + one line per row; wrapping would add lines.
-    assert len(lines) == 2 + len(rows)
-    # Bounded width: content budget + tabulate's per-column separator/padding overhead.
-    assert all(len(line) <= 40 + 6 * len(table_block.headers) for line in lines)
-
-    # The class name is truncated, not present in full, and no wrap-spillover fragment.
-    assert LONG_CLASS_NAME not in output
-    assert "…" in output
-    assert not any(line.strip() in ("ServiceImpl", "erviceImpl") for line in lines)
+def _column_values(output, column_index=0):
+    """Rebuild each logical row's column value from a wrapped presto table."""
+    values, lines = [], output.splitlines()
+    for line in lines[2:]:  # skip header + separator
+        if "|" not in line:
+            continue
+        cell = line.split("|")[column_index].strip()
+        starts_new_row = all(part.strip() for part in line.split("|")[1:])
+        if starts_new_row:
+            values.append(cell)
+        elif values:
+            values[-1] += cell  # continuation of the previous row's wrapped value
+    return values
 
 
-def test_to_table_string_keeps_distinctive_suffix_of_dotted_names():
-    table_block = TableBlock(rows=[[LONG_CLASS_NAME, "103", "0"]], headers=["label:site", "Fired", "Resolved"])
-
-    output = table_block.to_table_string(table_max_width=40)
-
-    # Dotted, space-free qualified names are trimmed from the left so the class
-    # name (the distinctive suffix) survives.
-    assert "AbstractBetSettler" in output
-    assert "ats.betting.betcatcher" not in output
-
-
-def test_to_table_string_never_truncates_numeric_columns():
-    table_block = TableBlock(
-        rows=[[LONG_CLASS_NAME, "103", "9999"]],
-        headers=["label:site", "Fired", "Resolved"],
-    )
-
-    output = table_block.to_table_string(table_max_width=40)
-
-    # The numeric counters are always shown in full - only the wide text column shrinks.
-    assert "103" in output
-    assert "9999" in output
-    assert "…" not in output.split("103")[1]  # nothing after the counters got ellipsized
-
-
-def test_to_table_string_trailing_truncation_for_plain_text():
-    long_sentence = "this is a fairly long free text value that should be cut at the end"
-    table_block = TableBlock(rows=[[long_sentence, "1", "0"]], headers=["message", "Fired", "Resolved"])
-
-    output = table_block.to_table_string(table_max_width=30)
-
-    # Plain text (contains spaces) is truncated from the right, ending in an ellipsis.
-    assert "this is a fairly" in output
-    assert "…" in output
-    assert long_sentence not in output
-
-
-def test_to_markdown_wide_table_stays_single_line_per_row():
+def test_long_values_are_wrapped_not_cut():
     rows = [[LONG_CLASS_NAME, "103", "0"], ["orders.checkout.impl.OrderServiceImpl", "16", "4"]]
     table_block = TableBlock(rows=rows, headers=["label:site", "Fired", "Resolved"])
 
-    markdown = table_block.to_markdown().text
+    output = table_block.to_table_string(table_max_width=40)
 
-    # Strip the ``` code fences, then assert the table body is header + separator + one line per row.
-    inner = markdown.strip().strip("`").strip("\n")
-    body_lines = [line for line in inner.splitlines() if line.strip()]
-    assert len(body_lines) == 2 + len(rows)
-
-
-def test_to_table_string_headerless_and_ragged_rows():
-    # No headers, and rows wider than the (empty) header list must not IndexError.
-    table_block = TableBlock(rows=[[LONG_CLASS_NAME, "extra", "cols"]], headers=[])
-
-    output = table_block.to_table_string(table_max_width=30)
-
-    assert output  # rendered without raising
-    assert LONG_CLASS_NAME not in output  # still truncated
-    assert "…" in output
+    # The full path survives, reassembled across the wrapped lines - nothing is elided.
+    assert _column_values(output) == [LONG_CLASS_NAME, "orders.checkout.impl.OrderServiceImpl"]
+    assert "…" not in output
 
 
-def test_to_table_string_all_numeric_table_is_not_truncated():
-    # Every column numeric and over budget: leave widths intact rather than ellipsize numbers.
+def test_numeric_columns_are_not_shrunk():
     table_block = TableBlock(
-        rows=[["123456789012345", "678901234567890", "112233445566778"]],
-        headers=["a", "b", "c"],
+        rows=[[LONG_CLASS_NAME, "103", "9999"]], headers=["label:site", "Fired", "Resolved"]
     )
+
+    output = table_block.to_table_string(table_max_width=40)
+
+    # Counters stay on one line - only the wide text column absorbs the reduction.
+    assert "103" in output and "9999" in output
+    assert all(line.count("|") == 2 for line in output.splitlines() if "|" in line)
+
+
+def test_all_numeric_table_is_not_shrunk():
+    values = ["123456789012345", "678901234567890", "112233445566778"]
+    table_block = TableBlock(rows=[values], headers=["a", "b", "c"])
 
     output = table_block.to_table_string(table_max_width=10)
 
-    assert "…" not in output
-    for value in ("123456789012345", "678901234567890", "112233445566778"):
+    for value in values:
         assert value in output
+
+
+def test_headerless_and_ragged_rows():
+    # No headers, and rows wider than the (empty) header list must not IndexError.
+    table_block = TableBlock(rows=[[LONG_CLASS_NAME, "extra", "cols"]], headers=[])
+
+    assert table_block.to_table_string(table_max_width=30)
+
+
+def test_to_markdown_small_table_has_no_omission_note():
+    table_block = TableBlock(rows=[[LONG_CLASS_NAME, "1", "0"]], headers=["label:site", "Fired", "Resolved"])
+
+    markdown = table_block.to_markdown().text
+
+    assert "more rows not shown" not in markdown
+    assert markdown.startswith("```") and markdown.endswith("```")
+
+
+def test_to_markdown_drops_whole_rows_and_keeps_code_fence():
+    # The 4-column shape of the "Alerts Summary" digest that triggered the bug.
+    rows = [[f"ats.betting.betcatcher.validation.impl.Validator{i:03d}Foo", "nj", "1", "0"] for i in range(200)]
+    table_block = TableBlock(rows=rows, headers=["label:site", "label:component", "Fired", "Resolved"])
+
+    markdown = table_block.to_markdown().text
+
+    # Small enough that MarkdownBlock never blind-cuts it, so the fence is intact.
+    assert len(markdown) < BLOCK_SIZE_LIMIT
+    assert markdown.startswith("```") and markdown.endswith("```")
+    # The reader is told what was left out.
+    assert re.search(r"\.\.\. \d+ more rows not shown", markdown)
+
+    # Every displayed value is a complete class name - rows are dropped as whole units,
+    # so no row is left showing only the first half of a wrapped value.
+    inner = markdown.split("```")[1]
+    displayed = _column_values(inner)
+    assert displayed  # some rows did survive
+    for value in displayed:
+        assert re.fullmatch(r"ats\.betting\.betcatcher\.validation\.impl\.Validator\d{3}Foo", value), value

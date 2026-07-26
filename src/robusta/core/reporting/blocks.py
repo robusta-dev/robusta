@@ -38,9 +38,7 @@ from robusta.core.reporting.custom_rendering import render_value
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
-# Single-char ellipsis so truncated-cell width accounting stays exact (one column).
-TABLE_TRUNCATION_ELLIPSIS = "…"
-# Don't shrink a text column below this, or it becomes just the ellipsis.
+# Don't shrink a text column below this, or its values become unreadable.
 TABLE_MIN_COLUMN_WIDTH = 4
 
 
@@ -401,8 +399,8 @@ class TableBlock(BaseBlock):
         if sum(columns_max_widths) <= table_max_width:
             return columns_max_widths
 
-        # Only shrink text columns, so numeric columns are never truncated. If every
-        # column is numeric, leave the widths as-is rather than ellipsizing numbers.
+        # Only shrink text columns, so numeric columns never get wrapped. If every
+        # column is numeric, leave the widths as-is rather than wrapping numbers.
         numeric_indices = cls.__numeric_column_indices(rendered_rows, num_columns)
         shrinkable = [idx for idx in range(num_columns) if idx not in numeric_indices]
         if not shrinkable:
@@ -418,21 +416,6 @@ class TableBlock(BaseBlock):
             columns_max_widths[widest] -= 1
 
         return columns_max_widths
-
-    @classmethod
-    def __truncate_cell(cls, value: str, max_width: int) -> str:
-        # Truncate over-wide cells to one line, instead of letting tabulate wrap them.
-        if max_width <= 0 or len(value) <= max_width:
-            return value
-        ellipsis = TABLE_TRUNCATION_ELLIPSIS
-        if max_width <= len(ellipsis):
-            return value[:max_width]
-        keep = max_width - len(ellipsis)
-        # Dotted, space-free names (e.g. Java class paths) keep their distinctive
-        # suffix via a left trim; other text is trimmed on the right.
-        if "." in value and " " not in value:
-            return ellipsis + value[-keep:]
-        return value[:keep] + ellipsis
 
     @classmethod
     def __trim_rows(cls, contents: str, max_chars: int):
@@ -458,6 +441,43 @@ class TableBlock(BaseBlock):
 
         return "\n".join(lines[:lines_to_include]) + truncator
 
+    def __render_within_budget(self, max_chars: int, table_max_width: int, table_fmt: str) -> str:
+        """Render the table, dropping whole rows to fit max_chars.
+
+        Values themselves are never cut - long ones wrap onto extra lines - so rows must be
+        dropped as complete units. Cutting by physical line would leave a wrapped value's
+        continuation behind and show a partial value as if it were the whole thing.
+        """
+        rows = self.__to_strings_rows(self.render_rows())
+        # Column widths are computed once from all rows, so dropping rows never reflows
+        # the columns and the rendered size shrinks monotonically with the row count.
+        col_max_width = self.__calc_max_width(self.headers, rows, table_max_width)
+
+        def render(subset: List[List[str]]) -> str:
+            return tabulate(subset, headers=self.headers, tablefmt=table_fmt, maxcolwidths=col_max_width)
+
+        full = render(rows)
+        if len(full) <= max_chars:
+            return full
+
+        # Largest number of whole rows that fits alongside the "N more rows" note.
+        best = None
+        low, high = 0, len(rows)
+        while low <= high:
+            mid = (low + high) // 2
+            candidate = render(rows[:mid])
+            omitted = len(rows) - mid
+            if omitted:
+                candidate = f"{candidate}\n... {omitted} more rows not shown"
+            if len(candidate) <= max_chars:
+                best = candidate
+                low = mid + 1
+            else:
+                high = mid - 1
+
+        # Fall back to the line-based trim if not even a header-only table fits.
+        return best if best is not None else self.__trim_rows(full, max_chars)
+
     @classmethod
     def __to_strings_rows(cls, rows):
         # This is just to assert all row column values are strings. Tabulate might fail on other types
@@ -468,28 +488,24 @@ class TableBlock(BaseBlock):
         table_header = "" if not add_table_header else table_header
         prefix = f"{table_header}```\n"
         suffix = "\n```"
-        table_contents = self.to_table_string()
-        if max_chars is not None:
-            max_chars = max_chars - len(prefix) - len(suffix)
-            table_contents = self.__trim_rows(table_contents, max_chars)
+        # Stay under BLOCK_SIZE_LIMIT even when no caller-supplied limit: MarkdownBlock
+        # would otherwise blindly cut the text and lose the closing ``` fence, which
+        # makes the whole table render as unformatted (non-monospace) text.
+        budget = BLOCK_SIZE_LIMIT - 1 if max_chars is None else min(max_chars, BLOCK_SIZE_LIMIT - 1)
+        table_contents = self.__render_within_budget(
+            budget - len(prefix) - len(suffix), PRINTED_TABLE_MAX_WIDTH, "presto"
+        )
 
         return MarkdownBlock(f"{prefix}{table_contents}{suffix}")
 
     def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH, table_fmt: str = "presto") -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
         col_max_width = self.__calc_max_width(self.headers, rendered_rows, table_max_width)
-        # Truncate over-wide cells ourselves; tabulate's maxcolwidths would wrap them
-        # onto extra lines and corrupt the table.
-        truncated_headers = [
-            self.__truncate_cell(str(header), col_max_width[idx]) for idx, header in enumerate(self.headers)
-        ]
-        truncated_rows = [
-            [self.__truncate_cell(val, col_max_width[idx]) for idx, val in enumerate(row)] for row in rendered_rows
-        ]
         return tabulate(
-            truncated_rows,
-            headers=truncated_headers,
+            rendered_rows,
+            headers=self.headers,
             tablefmt=table_fmt,
+            maxcolwidths=col_max_width,
         )
 
     def render_rows(self) -> List[List]:
