@@ -491,19 +491,30 @@ class TableBlock(BaseBlock):
     def to_markdown(self, max_chars=None, add_table_header: bool = True, omission_note=None) -> MarkdownBlock:
         """:param omission_note: builds the note shown when rows are dropped to fit the size limit.
         Receives the dropped rows, so callers can summarise what was left out (e.g. residual counts)."""
-        table_header = f"{self.table_name}\n" if self.table_name else ""
-        table_header = "" if not add_table_header else table_header
-        prefix = f"{table_header}```\n"
-        suffix = "\n```"
         # Stay under BLOCK_SIZE_LIMIT even when no caller-supplied limit: MarkdownBlock
         # would otherwise blindly cut the text and lose the closing ``` fence, which
         # makes the whole table render as unformatted (non-monospace) text.
         budget = BLOCK_SIZE_LIMIT - 1 if max_chars is None else min(max_chars, BLOCK_SIZE_LIMIT - 1)
-        table_contents = self.__render_within_budget(
-            budget - len(prefix) - len(suffix),
-            PRINTED_TABLE_MAX_WIDTH,
-            "presto",
-            omission_note or self.default_omission_note,
+
+        table_header = f"{self.table_name}\n" if self.table_name and add_table_header else ""
+        opening_fence, suffix = "```\n", "\n```"
+        # The table name is caller-supplied and can be arbitrarily long, so trim it rather than
+        # let the envelope alone push the block past the limit and cost us the closing fence.
+        table_header = table_header[: max(0, budget - len(opening_fence) - len(suffix))]
+        prefix = f"{table_header}{opening_fence}"
+
+        content_budget = budget - len(prefix) - len(suffix)
+        # With no room left for content, emit an empty (but properly closed) block rather than
+        # an overflow marker that wouldn't fit either.
+        table_contents = (
+            self.__render_within_budget(
+                content_budget,
+                PRINTED_TABLE_MAX_WIDTH,
+                "presto",
+                omission_note or self.default_omission_note,
+            )
+            if content_budget > 0
+            else ""
         )
 
         return MarkdownBlock(f"{prefix}{table_contents}{suffix}")

@@ -136,3 +136,18 @@ def test_upload_failure_does_not_break_the_summary(slack):
 
     assert ts == "111.1"  # the digest is still posted, just without the attachment
     assert "files.slack.com" not in str(client.chat_postMessage.call_args.kwargs["blocks"])
+
+
+def test_summary_keys_mixing_none_and_strings_do_not_crash(slack):
+    # Group keys hold raw attribute values - "workload" is None when a finding has no service -
+    # and None is not comparable with str, so sorting must normalise before comparing.
+    sender, client, _, _ = slack
+    summary_table = {
+        ("ats.wallet.DefaultFundsAdjuster", "nj"): [5, 2],
+        (None, "nj"): [5, 2],  # same counts, so the tie-break has to compare the keys
+    }
+
+    ts = _send(sender, summary_table, NotificationSummary())
+
+    assert ts == "111.1"
+    assert "None" in str(client.chat_postMessage.call_args.kwargs["blocks"])

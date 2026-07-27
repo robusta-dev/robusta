@@ -960,8 +960,14 @@ class SlackSender:
         # Sort by firing count, then resolved count (both descending), so that when the table
         # is too long to fit in a message the rows that get dropped are the least significant
         # ones rather than whichever groups happen to sort last alphabetically. The key is only
-        # a final tie-break, to keep the order stable between updates of the same message.
-        for key, value in sorted(summary_table.items(), key=lambda item: (-item[1][0], -item[1][1], item[0])):
+        # a final tie-break, to keep the order stable between updates of the same message. It is
+        # normalised to strings first: keys hold raw attribute values, which may mix None with
+        # strings (e.g. "workload" is None for a finding with no service) and aren't comparable.
+        def sort_key(item):
+            group_key, (fired, resolved) = item
+            return -fired, -resolved, tuple(str(value) for value in group_key)
+
+        for key, value in sorted(summary_table.items(), key=sort_key):
             # key is a tuple of attribute names; value is a 2-element list with
             # the number of firing and resolved notifications.
             row = list(str(e) for e in chain(key, value))
