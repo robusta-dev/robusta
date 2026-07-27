@@ -91,6 +91,7 @@ class SlackSink(SinkBase):
                     investigate_uri=investigate_uri,
                     grouping_interval=self.params.grouping.interval,
                     channel=resolved_channel,
+                    summary_state=notification_summary,
                 )
                 notification_summary.message_id = slack_thread_ts
                 should_send_notification = self.params.grouping.notification_mode.summary.threaded

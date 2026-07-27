@@ -36,6 +36,11 @@ class NotificationSummary(BaseModel):
     start_ts: float = Field(default_factory=lambda: time.time())  # Timestamp of the first notification
     # Keys for the table are determined by grouping.notification_mode.summary.by
     summary_table: DefaultDict[KeyT, List[int]] = None
+    # The full summary table is attached as a file when it doesn't fit in the message. Files
+    # can't be edited in place, so the previous one is deleted whenever a new one is uploaded.
+    attachment_file_id: Optional[str] = None
+    attachment_permalink: Optional[str] = None
+    attachment_ts: float = 0  # when the attachment was last refreshed
 
     def register_notification(self, summary_key: KeyT, resolved: bool, interval: int):
         now_ts = time.time()
@@ -45,6 +50,11 @@ class NotificationSummary(BaseModel):
             self.summary_table = defaultdict(lambda: [0, 0])
             self.start_ts = now_ts
             self.message_id = None
+            # Drop the link so the new summary doesn't point at the previous interval's file,
+            # but keep the id so that whoever uploads next can still delete that file - the
+            # sink itself has no way to reach Slack.
+            self.attachment_permalink = None
+            self.attachment_ts = 0
         self.summary_table[summary_key][idx] += 1
 
 
