@@ -900,11 +900,11 @@ class SlackSender:
         fired/resolved and a header describing the event group that this information concerns."""
         rows = []
         n_total_alerts = 0
-        # Sort by notification count (descending), so that when the table is too long to fit
-        # in a message the rows that get dropped are the least significant ones rather than
-        # whichever groups happen to sort last alphabetically. The key is a secondary sort
-        # criterion, to keep the order stable between updates for groups with equal counts.
-        for key, value in sorted(summary_table.items(), key=lambda item: (-sum(item[1]), item[0])):
+        # Sort by firing count, then resolved count (both descending), so that when the table
+        # is too long to fit in a message the rows that get dropped are the least significant
+        # ones rather than whichever groups happen to sort last alphabetically. The key is only
+        # a final tie-break, to keep the order stable between updates of the same message.
+        for key, value in sorted(summary_table.items(), key=lambda item: (-item[1][0], -item[1][1], item[0])):
             # key is a tuple of attribute names; value is a 2-element list with
             # the number of firing and resolved notifications.
             row = list(str(e) for e in chain(key, value))

@@ -458,6 +458,8 @@ class TableBlock(BaseBlock):
         col_max_width = self.__calc_max_width(self.headers, rows, table_max_width)
 
         def render(subset: List[List[str]]) -> str:
+            if not subset:  # tabulate raises IndexError on maxcolwidths with no rows
+                return tabulate(subset, headers=self.headers, tablefmt=table_fmt)
             return tabulate(subset, headers=self.headers, tablefmt=table_fmt, maxcolwidths=col_max_width)
 
         full = render(rows)
@@ -508,6 +510,8 @@ class TableBlock(BaseBlock):
 
     def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH, table_fmt: str = "presto") -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
+        if not rendered_rows:  # tabulate raises IndexError on maxcolwidths with no rows
+            return tabulate(rendered_rows, headers=self.headers, tablefmt=table_fmt)
         col_max_width = self.__calc_max_width(self.headers, rendered_rows, table_max_width)
         return tabulate(
             rendered_rows,

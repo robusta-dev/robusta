@@ -245,3 +245,25 @@ def test_to_markdown_custom_omission_note_receives_dropped_rows():
     omitted_count, omitted_fired = int(match.group(1)), int(match.group(2))
     assert omitted_fired == omitted_count  # one "fired" per dropped row
     assert len(markdown) < BLOCK_SIZE_LIMIT
+
+
+def test_empty_table_does_not_raise():
+    # tabulate raises IndexError if maxcolwidths is passed with no rows, which also hit the
+    # row-dropping path when not even one row fits the size limit.
+    table_block = TableBlock(rows=[], headers=["label:site", "Fired", "Resolved"])
+
+    assert table_block.to_table_string()
+    markdown = table_block.to_markdown().text
+    assert markdown.startswith("```") and markdown.endswith("```")
+
+
+def test_to_markdown_always_closes_code_fence():
+    # Sweep sizes/widths that previously produced an unterminated fence (which made Slack
+    # render the whole table as non-monospace text) or a blind cut past the block limit.
+    for rows_n in (0, 1, 18, 200):
+        for width in (5, 80, 600):
+            rows = [[("v" * width) + str(i), "1", "0"] for i in range(rows_n)]
+            markdown = TableBlock(rows=rows, headers=["label:site", "Fired", "Resolved"]).to_markdown().text
+            assert markdown.count("```") % 2 == 0, (rows_n, width)
+            assert markdown.rstrip().endswith("```"), (rows_n, width)
+            assert len(markdown) < BLOCK_SIZE_LIMIT, (rows_n, width, len(markdown))
