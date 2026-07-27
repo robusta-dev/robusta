@@ -860,6 +860,28 @@ class SlackSender:
             output_blocks=slack_blocks,
         )
 
+    @staticmethod
+    def __summary_table_block(table_block: TableBlock) -> BaseBlock:
+        """Render the summary table, noting the totals of any rows dropped to fit the size limit.
+
+        Without the residual counts the numbers in the table wouldn't add up to the notification
+        count in the message header, making the summary look wrong.
+        """
+        if len(table_block.headers) <= 2:
+            return table_block  # rendered as a bullet list rather than a table, see __to_slack_table
+
+        def omission_note(omitted_rows: List[List[str]]) -> str:
+            fired = resolved = 0
+            for row in omitted_rows:
+                try:
+                    fired += int(row[-2])
+                    resolved += int(row[-1])
+                except (IndexError, ValueError):  # not the expected numeric columns - just count rows
+                    return TableBlock.default_omission_note(omitted_rows)
+            return f"... {len(omitted_rows)} more groups ({fired} fired, {resolved} resolved) not shown"
+
+        return table_block.to_markdown(omission_note=omission_note)
+
     def send_or_update_summary_message(
         self,
         group_by_classification_header: List[str],
@@ -878,7 +900,11 @@ class SlackSender:
         fired/resolved and a header describing the event group that this information concerns."""
         rows = []
         n_total_alerts = 0
-        for key, value in sorted(summary_table.items()):
+        # Sort by notification count (descending), so that when the table is too long to fit
+        # in a message the rows that get dropped are the least significant ones rather than
+        # whichever groups happen to sort last alphabetically. The key is a secondary sort
+        # criterion, to keep the order stable between updates for groups with equal counts.
+        for key, value in sorted(summary_table.items(), key=lambda item: (-sum(item[1]), item[0])):
             # key is a tuple of attribute names; value is a 2-element list with
             # the number of firing and resolved notifications.
             row = list(str(e) for e in chain(key, value))
@@ -928,9 +954,15 @@ class SlackSender:
             [
                 MarkdownBlock(f"*Matching criteria*: {group_by_criteria_str}"),
                 MarkdownBlock(text=time_text),
-                table_block,
+                self.__summary_table_block(table_block),
             ]
         )
+
+        if platform_enabled and sink_params.investigate_link and investigate_uri:
+            # Rows may have been dropped to fit the message size limit, so always offer a way
+            # to see every group. Must be outside the table's code block - Slack doesn't
+            # render links inside one.
+            blocks.append(MarkdownBlock(text=f"<{investigate_uri}|View all {len(rows)} groups →>"))
 
         if threaded:
             blocks.append(MarkdownBlock(text="See thread for individual alerts"))

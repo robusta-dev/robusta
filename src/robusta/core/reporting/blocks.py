@@ -441,7 +441,11 @@ class TableBlock(BaseBlock):
 
         return "\n".join(lines[:lines_to_include]) + truncator
 
-    def __render_within_budget(self, max_chars: int, table_max_width: int, table_fmt: str) -> str:
+    @staticmethod
+    def default_omission_note(omitted_rows: List[List[str]]) -> str:
+        return f"... {len(omitted_rows)} more rows not shown"
+
+    def __render_within_budget(self, max_chars: int, table_max_width: int, table_fmt: str, omission_note) -> str:
         """Render the table, dropping whole rows to fit max_chars.
 
         Values themselves are never cut - long ones wrap onto extra lines - so rows must be
@@ -466,9 +470,8 @@ class TableBlock(BaseBlock):
         while low <= high:
             mid = (low + high) // 2
             candidate = render(rows[:mid])
-            omitted = len(rows) - mid
-            if omitted:
-                candidate = f"{candidate}\n... {omitted} more rows not shown"
+            if mid < len(rows):
+                candidate = f"{candidate}\n{omission_note(rows[mid:])}"
             if len(candidate) <= max_chars:
                 best = candidate
                 low = mid + 1
@@ -483,7 +486,9 @@ class TableBlock(BaseBlock):
         # This is just to assert all row column values are strings. Tabulate might fail on other types
         return [list(map(lambda column_value: str(column_value), row)) for row in rows]
 
-    def to_markdown(self, max_chars=None, add_table_header: bool = True) -> MarkdownBlock:
+    def to_markdown(self, max_chars=None, add_table_header: bool = True, omission_note=None) -> MarkdownBlock:
+        """:param omission_note: builds the note shown when rows are dropped to fit the size limit.
+        Receives the dropped rows, so callers can summarise what was left out (e.g. residual counts)."""
         table_header = f"{self.table_name}\n" if self.table_name else ""
         table_header = "" if not add_table_header else table_header
         prefix = f"{table_header}```\n"
@@ -493,7 +498,10 @@ class TableBlock(BaseBlock):
         # makes the whole table render as unformatted (non-monospace) text.
         budget = BLOCK_SIZE_LIMIT - 1 if max_chars is None else min(max_chars, BLOCK_SIZE_LIMIT - 1)
         table_contents = self.__render_within_budget(
-            budget - len(prefix) - len(suffix), PRINTED_TABLE_MAX_WIDTH, "presto"
+            budget - len(prefix) - len(suffix),
+            PRINTED_TABLE_MAX_WIDTH,
+            "presto",
+            omission_note or self.default_omission_note,
         )
 
         return MarkdownBlock(f"{prefix}{table_contents}{suffix}")

@@ -228,3 +228,20 @@ def test_to_markdown_drops_whole_rows_and_keeps_code_fence():
     assert displayed  # some rows did survive
     for value in displayed:
         assert re.fullmatch(r"ats\.betting\.betcatcher\.validation\.impl\.Validator\d{3}Foo", value), value
+
+
+def test_to_markdown_custom_omission_note_receives_dropped_rows():
+    rows = [[f"ats.betting.betcatcher.validation.impl.Validator{i:03d}Foo", "nj", "1", "2"] for i in range(200)]
+    table_block = TableBlock(rows=rows, headers=["label:site", "label:component", "Fired", "Resolved"])
+
+    def omission_note(omitted):
+        return f"... {len(omitted)} more groups ({sum(int(r[-2]) for r in omitted)} fired) not shown"
+
+    markdown = table_block.to_markdown(omission_note=omission_note).text
+
+    # The note reports the residual totals, so the table still reconciles with the header count.
+    match = re.search(r"\.\.\. (\d+) more groups \((\d+) fired\) not shown", markdown)
+    assert match, markdown[-200:]
+    omitted_count, omitted_fired = int(match.group(1)), int(match.group(2))
+    assert omitted_fired == omitted_count  # one "fired" per dropped row
+    assert len(markdown) < BLOCK_SIZE_LIMIT
