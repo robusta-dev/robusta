@@ -70,10 +70,17 @@ WORKDIR /app
 # Install necessary packages for the runtime environment
 # We're installing here libexpat1, to upgrade the package to include a fix to 3 high CVEs. CVE-2024-45491,CVE-2024-45490,CVE-2024-45492
 # Patching glibc for CVE-2026-0861, CVE-2026-0915, CVE-2025-15281
+# We install openssh-client rather than the "ssh" metapackage: only the ssh *client* is used
+# (GIT_SSH_COMMAND when cloning playbook repos over git@). The metapackage also pulls in
+# openssh-server and openssh-sftp-server, which are never used and carry unfixed CVEs
+# (CVE-2026-60002 (Critical) and others with no fixed Debian package available).
+# gnupg2 is intentionally not installed - the kubectl apt key is consumed in ASCII-armored
+# form below, which avoids the whole gnupg/dirmngr/gpgsm package family and its unfixed
+# CVE-2026-24882 (High).
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
-    && apt-get install -y --no-install-recommends git ssh curl libcairo2 apt-transport-https gnupg2 \
+    && apt-get install -y --no-install-recommends git openssh-client curl libcairo2 apt-transport-https \
     && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -100,13 +107,14 @@ RUN rm -rf /app/venv
 RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel*
 
 # Set up kubectl
-COPY --from=builder /app/Release.key /tmp/Release.key
-RUN cat /tmp/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
-    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
+# apt accepts an ASCII-armored key directly via signed-by, so there is no need for
+# `gpg --dearmor` (and therefore no need for gnupg2 in the runtime image).
+COPY --from=builder /app/Release.key /etc/apt/keyrings/kubernetes-apt-keyring.asc
+RUN chmod 0644 /etc/apt/keyrings/kubernetes-apt-keyring.asc \
+    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
     && apt-get update \
-    && apt-get install -y kubectl \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm /tmp/Release.key
+    && apt-get install -y --no-install-recommends kubectl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
