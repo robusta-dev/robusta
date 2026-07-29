@@ -31,10 +31,15 @@ To set many variables at once, ``runner.additional_env_froms`` accepts a Kuberne
 Firewall / DNS Allowlist
 ----------------------------------------
 
-When deploying Robusta in a tightly restricted environment, the runner needs outbound access to a number of external endpoints. The list below is organized by feature so you can allow only what you actually use. Under each wildcard, the specific hosts it expands to are listed indented so you can pick exact hostnames instead of a wildcard if your firewall requires it.
+When deploying Robusta in a tightly restricted environment, the runner needs outbound access to a number of external endpoints. The lists below are split by when the access is needed — at runtime, during installation, or only for optional add-ons — so you can allow only what you actually use. Under each wildcard, the specific hosts it expands to are listed indented so you can pick exact hostnames instead of a wildcard if your firewall requires it.
 
 .. note::
    Traffic is **always initiated outbound from the runner**. No inbound connections to your cluster are required. All endpoints are reached over HTTPS (TCP/443) unless noted otherwise.
+
+Runtime
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Required whenever the runner is running. The Robusta platform addresses depend on the region your account is hosted in — select your region to see the correct values:
 
 .. robusta-code:: text
 
@@ -43,9 +48,14 @@ When deploying Robusta in a tightly restricted environment, the runner needs out
         api.robusta.dev          # platform REST API: cluster registration, action relay, telemetry
         relay.robusta.dev        # WebSocket relay (wss://); override with WEBSOCKET_RELAY_ADDRESS
         platform.robusta.dev     # Robusta UI (links rendered into Slack/Teams/email)
-        sp.robusta.dev           # platform analytics
+        sp.robusta.dev           # platform storage
         docs.robusta.dev         # doc links embedded in notifications (not strictly required)
     *.supabase.co                # cluster data store; exact subdomain comes from your token's store_url
+
+Installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: text
 
     # Install / upgrade (only needed during helm install/upgrade and image pulls)
     robusta-charts.storage.googleapis.com   # Robusta Helm chart repository
@@ -56,6 +66,13 @@ When deploying Robusta in a tightly restricted environment, the runner needs out
     us-central1-docker.pkg.dev              # HolmesGPT MCP server images and bundled tooling
     quay.io                                 # only with bundled kube-prometheus-stack subchart
     ghcr.io                                 # only with bundled kube-prometheus-stack subchart
+
+Add-ons
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Only needed for the integrations and features you actually enable.
+
+.. code-block:: text
 
     # Error reporting (only if runner.sentry_dsn / holmes.sentryDSN is set; default points to .de.sentry.io)
     *.sentry.io
@@ -136,12 +153,12 @@ A per-component value (e.g. ``runner.imagePullSecrets``, ``kubewatch.imagePullSe
 Verifying the Allowlist
 ----------------------------------------
 
-After applying firewall rules, you can sanity-check connectivity from inside the runner pod:
+After applying firewall rules, you can sanity-check connectivity from inside the runner pod. Select your region to get the correct addresses:
 
 .. robusta-code:: bash
 
     kubectl exec -n <robusta-ns> deploy/robusta-runner -- \
-      sh -c 'for host in api.robusta.dev relay.robusta.dev platform.robusta.dev; do
+      sh -c 'for host in api.robusta.dev relay.robusta.dev platform.robusta.dev sp.robusta.dev; do
         echo "== $host =="; curl -sS -o /dev/null -w "%{http_code}\n" https://$host/ || true
       done'
 
@@ -156,7 +173,7 @@ The list reflects the images pulled by the chart at the versions shipped in the 
 
 **Images from the Robusta registry** (default: ``us-central1-docker.pkg.dev/genuine-flight-317411/devel``)
 
-.. robusta-code:: text
+.. code-block:: text
 
     robusta-db:14.1.1            # Supabase Postgres 14 (default DB image)
     robusta-db:15.0.0            # Supabase Postgres 15 (only if usePostgres15=true)
@@ -168,7 +185,7 @@ The list reflects the images pulled by the chart at the versions shipped in the 
 
 **Images from Docker Hub** (controlled by ``dockerRegistry``)
 
-.. robusta-code:: text
+.. code-block:: text
 
     supabase/gotrue:v2.189.0
     supabase/postgres-meta:v0.96.5
@@ -180,7 +197,7 @@ The list reflects the images pulled by the chart at the versions shipped in the 
 
 **Optional images** (only if the corresponding feature is enabled)
 
-.. robusta-code:: text
+.. code-block:: text
 
     quay.io/prometheuscommunity/postgres-exporter:v0.15.0   # monitoring.postgresExporter.enabled
 

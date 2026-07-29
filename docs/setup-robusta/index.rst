@@ -16,6 +16,7 @@
    multi-cluster
    upgrade
    tuning-performance
+   json-logging
    configuration-secrets
    openshift
    read-only-service-account
