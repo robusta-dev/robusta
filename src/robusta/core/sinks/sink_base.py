@@ -50,9 +50,10 @@ class NotificationSummary(BaseModel):
             self.summary_table = defaultdict(lambda: [0, 0])
             self.start_ts = now_ts
             self.message_id = None
-            # Drop the link so the new summary doesn't point at the previous interval's file,
-            # but keep the id so that whoever uploads next can still delete that file - the
-            # sink itself has no way to reach Slack.
+            # Forget the previous interval's attachment entirely. Its summary message stays in
+            # the channel and keeps linking that file, so it must not be deleted later - only
+            # files superseded within the same message may be.
+            self.attachment_file_id = None
             self.attachment_permalink = None
             self.attachment_ts = 0
         self.summary_table[summary_key][idx] += 1

@@ -112,20 +112,41 @@ def test_refreshing_the_attachment_deletes_the_previous_file(slack):
     assert deletes == ["F1"]
 
 
-def test_previous_interval_file_is_cleaned_up_after_reset(slack):
-    sender, _, uploads, deletes = slack
+def test_previous_interval_attachment_is_never_deleted(slack):
+    # Each interval posts its own summary message, and that message keeps linking its own file
+    # forever. Deleting it when the next interval starts would leave the older message pointing
+    # at a file that no longer exists.
+    sender, _, _, deletes = slack
     state = NotificationSummary()
     _send(sender, _table(200), state)
 
     state.start_ts = time.time() - 999999  # force the interval to expire
     state.register_notification(("x", "y"), False, 86400)
-    # The link is dropped so the new summary can't point at the old file, but the id is kept
-    # so the next upload can still delete it.
+    assert state.attachment_file_id is None
     assert state.attachment_permalink is None
-    assert state.attachment_file_id == "F1"
 
     _send(sender, _table(200), state)
-    assert deletes == ["F1"]
+    assert deletes == []  # the previous interval's file is left alone
+
+
+def test_superseded_file_is_deleted_only_after_the_message_points_at_the_new_one(slack):
+    sender, client, uploads, deletes = slack
+    state = NotificationSummary()
+    _send(sender, _table(200), state)
+    state.attachment_ts = 0  # pretend the throttle window elapsed
+    sender.channel_name_to_id["chan"] = "C1"
+
+    # If updating the message fails, the message still links the old file, so it must survive.
+    client.chat_update.side_effect = Exception("slack is down")
+    _send(sender, _table(200), state, msg_ts="111.1")
+    assert len(uploads) == 2
+    assert deletes == [], "deleted a file the live message still points at"
+
+    # Once an update succeeds, the superseded file can go.
+    client.chat_update.side_effect = None
+    state.attachment_ts = 0
+    _send(sender, _table(200), state, msg_ts="111.1")
+    assert deletes == ["F2"]
 
 
 def test_upload_failure_does_not_break_the_summary(slack):
@@ -151,3 +172,17 @@ def test_summary_keys_mixing_none_and_strings_do_not_crash(slack):
 
     assert ts == "111.1"
     assert "None" in str(client.chat_postMessage.call_args.kwargs["blocks"])
+
+
+def test_non_threaded_summary_can_be_updated(slack):
+    # A summary-only sink sends nothing else, so posting the summary has to record the channel
+    # id itself - otherwise every update bails and a brand new summary is posted each time.
+    sender, client, _, _ = slack
+    sender.channel_name_to_id.clear()
+    state = NotificationSummary()
+
+    ts = _send(sender, _table(3), state)
+    assert sender.channel_name_to_id["chan"] == "C1"
+
+    assert _send(sender, _table(3), state, msg_ts=ts) == "111.1"
+    assert client.chat_update.called

@@ -895,19 +895,23 @@ class SlackSender:
         block = table_block.to_markdown(omission_note=omission_note)
         return block, omitted_count
 
-    def __refresh_summary_attachment(self, table_block: TableBlock, summary_state) -> Optional[str]:
+    def __refresh_summary_attachment(self, table_block: TableBlock, summary_state) -> Tuple[Optional[str], Optional[str]]:
         """Attach the complete table as a file, since the message can only show part of it.
 
         Slack files are immutable, but the summary message is rewritten on every notification, so
-        a fresh file is uploaded (and the previous one removed) rather than edited. That is
-        throttled - re-uploading on every single notification would be wasteful.
+        a fresh file is uploaded rather than edited. That is throttled - re-uploading on every
+        single notification would be wasteful.
+
+        Returns the permalink and the id of the file it supersedes. The caller must only delete
+        that file once the message actually points at the new one, otherwise a failed update
+        leaves the message linking a file that no longer exists.
         """
         if summary_state is None:
-            return None
+            return None, None
 
         now = time.time()
         if summary_state.attachment_permalink and now - summary_state.attachment_ts < SUMMARY_ATTACHMENT_REFRESH_SECONDS:
-            return summary_state.attachment_permalink
+            return summary_state.attachment_permalink, None
 
         # A much wider table fits in a file than in a message, so nothing wraps there.
         contents = table_block.to_table_string(table_max_width=SUMMARY_ATTACHMENT_TABLE_WIDTH)
@@ -922,21 +926,22 @@ class SlackSender:
             new_file_id = resp["file"]["id"]
         except Exception:
             logging.exception("Failed to upload the full summary table to Slack")
-            return summary_state.attachment_permalink
+            return summary_state.attachment_permalink, None
 
-        previous_file_id = summary_state.attachment_file_id
+        superseded_file_id = summary_state.attachment_file_id
         summary_state.attachment_file_id = new_file_id
         summary_state.attachment_permalink = permalink
         summary_state.attachment_ts = now
+        return permalink, superseded_file_id
 
-        if previous_file_id:
-            # Best effort - a leftover file is preferable to failing the summary update.
-            try:
-                self.slack_client.files_delete(file=previous_file_id)
-            except Exception as e:
-                logging.warning(f"Could not delete the superseded summary attachment: {e}")
-
-        return permalink
+    def __delete_superseded_attachment(self, file_id: Optional[str]) -> None:
+        if not file_id:
+            return
+        # Best effort - a leftover file is preferable to failing the summary update.
+        try:
+            self.slack_client.files_delete(file=file_id)
+        except Exception as e:
+            logging.warning(f"Could not delete the superseded summary attachment: {e}")
 
     def send_or_update_summary_message(
         self,
@@ -1033,6 +1038,7 @@ class SlackSender:
                 {},
                 {},
             )
+        channel_name = channel
         if msg_ts is not None:
             method = self.slack_client.chat_update
             kwargs = {"ts": msg_ts}
@@ -1050,10 +1056,11 @@ class SlackSender:
             kwargs = {}
 
         attachment_permalink = None
+        superseded_file_id = None
         if omitted_count:
             # Too many groups to show inline - attach the complete table as a file. The link has
             # to sit outside the table's code block, Slack doesn't render links inside one.
-            attachment_permalink = self.__refresh_summary_attachment(table_block, summary_state)
+            attachment_permalink, superseded_file_id = self.__refresh_summary_attachment(table_block, summary_state)
             if attachment_permalink:
                 blocks.append(MarkdownBlock(text=f"<{attachment_permalink}|See all {len(rows)} groups> (attached)"))
 
@@ -1078,6 +1085,13 @@ class SlackSender:
                 display_as_bot=True,
                 **kwargs,
             )
+            # Updating this message later needs the channel id, and a summary-only sink never
+            # sends anything else that would record it (individual alerts, which do, are only
+            # sent in threaded mode). Without this the message can never be updated, and a new
+            # summary gets posted for every notification instead.
+            self.channel_name_to_id[channel_name] = resp["channel"]
+            # Only now that the message points at the new file is the old one safe to remove.
+            self.__delete_superseded_attachment(superseded_file_id)
             return resp["ts"]
         except Exception as e:
             logging.exception(f"error sending message to slack\n{e}\nchannel={channel}\n")
