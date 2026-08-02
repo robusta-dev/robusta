@@ -7,8 +7,8 @@
     ap: { label: "AP", infix: ".ap" },
   };
   const STORAGE_KEY = "robusta-docs-region";
-  const URL_PATTERN = /\b(platform|api)(?:\.(?:eu|ap))?\.robusta\.dev\b/g;
-  const DETECT_PATTERN = /\b(?:platform|api)(?:\.(?:eu|ap))?\.robusta\.dev\b/;
+  const URL_PATTERN = /\b(platform|api|relay|sp)(?:\.(?:eu|ap))?\.robusta\.dev\b/g;
+  const DETECT_PATTERN = /\b(?:platform|api|relay|sp)(?:\.(?:eu|ap))?\.robusta\.dev\b/;
   const BAR_CLASS = "robusta-region-box__bar";
   const BTN_CLASS = "robusta-region-box__region-btn";
   const INLINE_PICKER_CLASS = "robusta-region-inline__picker";
