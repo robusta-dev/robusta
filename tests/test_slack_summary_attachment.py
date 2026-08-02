@@ -36,6 +36,8 @@ def slack():
         web_client.return_value = client
 
         sender = SlackSender("xoxb-test", "account", "prod-nj1", "key", "chan", registry=None)
+        # A file can only be shared once the channel id is known; posting a message records it.
+        sender.channel_name_to_id["chan"] = "C1"
         yield sender, client, uploads, deletes
 
 
@@ -81,6 +83,8 @@ def test_attaches_the_full_table_when_rows_are_dropped(slack):
     assert state.attachment_permalink and state.attachment_file_id
     # Every group is in the file, even though the message only shows a fraction of them.
     assert uploads[0]["content"].decode().count("Validator") == 200
+    # Without a channel the file is only linkable, not readable by anyone else.
+    assert uploads[0]["channel"] == "C1"
 
     kwargs = client.chat_postMessage.call_args.kwargs
     assert any("files.slack.com" in str(block) for block in kwargs["blocks"])
@@ -186,3 +190,13 @@ def test_non_threaded_summary_can_be_updated(slack):
 
     assert _send(sender, _table(3), state, msg_ts=ts) == "111.1"
     assert client.chat_update.called
+
+
+def test_attachment_is_skipped_until_the_channel_id_is_known(slack):
+    # Sharing the file needs the channel id, which is only recorded once a message has been
+    # posted. Rather than upload an unreadable file, the attachment waits for the next update.
+    sender, _, uploads, _ = slack
+    sender.channel_name_to_id.clear()
+
+    _send(sender, _table(200), NotificationSummary())
+    assert uploads == []
