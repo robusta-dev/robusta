@@ -37,10 +37,11 @@ class TriggerWorkflowParams(ActionParams):
         this runner is connected to.
     :var origin: (optional) Origin label stored with the event, shown in the
         platform Delivery Log.
-    :var route_to_alert_cluster: (optional) (Default: False) When True, the
+    :var route_to_alert_cluster: (optional) (Default: True) When True, the
         workflow runs against the cluster this alert fired in (via the
         ``cluster`` URL parameter), overriding the cluster configured on the
-        workflow definition.
+        workflow definition. Set False to always use the workflow's
+        configured cluster.
     :var timeout: (optional) (Default: 30) Request timeout in seconds.
     """
 
@@ -49,7 +50,7 @@ class TriggerWorkflowParams(ActionParams):
     url: str = "https://api.robusta.dev/webhooks"
     account_id: Optional[str] = None
     origin: str = "robusta-runner"
-    route_to_alert_cluster: bool = False
+    route_to_alert_cluster: bool = True
     timeout: int = 30
 
 

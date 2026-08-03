@@ -121,7 +121,8 @@ def test_trigger_workflow_posts_alert_to_webhooks_endpoint():
     assert query["account_id"] == [ACCOUNT_ID]
     assert query["workflow_id"] == [WORKFLOW_ID]
     assert query["origin"] == ["robusta-runner"]
-    assert "cluster" not in query  # off unless route_to_alert_cluster is set
+    # route_to_alert_cluster defaults to True: the run targets the alert's cluster
+    assert query["cluster"] == [CLUSTER_NAME]
     assert request["headers"]["Authorization"] == f"Bearer {API_KEY}"
 
     body = json.loads(request["body"])
@@ -130,7 +131,7 @@ def test_trigger_workflow_posts_alert_to_webhooks_endpoint():
     assert body["alert"]["annotations"] == NODE_CORDONED_ALERT["annotations"]
 
 
-def test_trigger_workflow_multiple_ids_and_cluster_routing():
+def test_trigger_workflow_multiple_ids():
     other_workflow_id = "c8f9d2e4-0000-4c56-9abc-0123456789ab"
     with _CaptureServer() as server:
         trigger_workflow(
@@ -139,13 +140,28 @@ def test_trigger_workflow_multiple_ids_and_cluster_routing():
                 workflow_id=[WORKFLOW_ID, other_workflow_id],
                 api_key=SecretStr(API_KEY),
                 url=server.url,
-                route_to_alert_cluster=True,
             ),
         )
 
     query = parse_qs(urlparse(server.requests[0]["path"]).query)
     assert query["workflow_id"] == [WORKFLOW_ID, other_workflow_id]
     assert query["cluster"] == [CLUSTER_NAME]
+
+
+def test_trigger_workflow_cluster_routing_opt_out():
+    with _CaptureServer() as server:
+        trigger_workflow(
+            make_alert(),
+            TriggerWorkflowParams(
+                workflow_id=WORKFLOW_ID,
+                api_key=SecretStr(API_KEY),
+                url=server.url,
+                route_to_alert_cluster=False,
+            ),
+        )
+
+    query = parse_qs(urlparse(server.requests[0]["path"]).query)
+    assert "cluster" not in query  # the workflow's configured cluster applies
 
 
 def test_trigger_workflow_raises_on_http_error():
