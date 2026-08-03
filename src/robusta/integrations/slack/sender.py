@@ -896,7 +896,7 @@ class SlackSender:
         return block, omitted_count
 
     def __refresh_summary_attachment(
-        self, table_block: TableBlock, summary_state, channel_id: Optional[str]
+        self, table_block: TableBlock, summary_state, channel_id: Optional[str], thread_ts: Optional[str]
     ) -> Tuple[Optional[str], Optional[str]]:
         """Attach the complete table as a file, since the message can only show part of it.
 
@@ -911,11 +911,11 @@ class SlackSender:
         if summary_state is None:
             return None, None
 
-        if not channel_id:
-            # The file has to be shared into the channel to be readable, and that needs the
-            # channel id. It gets recorded once a message has been posted, so this only skips
-            # the very first summary - the attachment appears on the next update.
-            logging.debug("Channel id not known yet, deferring the summary attachment")
+        if not channel_id or not thread_ts:
+            # The file is shared into the summary message's own thread, so it needs that message
+            # to exist first. This only defers the attachment past the very first summary - the
+            # message is updated on the next notification, and the file appears then.
+            logging.debug("Summary message not posted yet, deferring the attachment")
             return None, None
 
         now = time.time()
@@ -928,8 +928,11 @@ class SlackSender:
         try:
             resp = self.slack_client.files_upload_v2(
                 # Without a channel the file is only linkable, not shared: the permalink opens
-                # an empty preview that other members can't read or download.
+                # an empty preview that other members can't read or download. Sharing it into
+                # the summary's thread rather than the channel keeps the channel readable when
+                # there are many groups - otherwise every group adds a file message to it.
                 channel=channel_id,
+                thread_ts=thread_ts,
                 title=file_block.filename,
                 filename=file_block.filename,
                 content=file_block.contents,
@@ -1072,11 +1075,10 @@ class SlackSender:
         if omitted_count:
             # Too many groups to show inline - attach the complete table as a file. The link has
             # to sit outside the table's code block, Slack doesn't render links inside one.
-            # On the update path `channel` is already the id; on the first post it is still the
-            # name, so fall back to whatever previous calls recorded.
-            channel_id = channel if msg_ts is not None else self.channel_name_to_id.get(channel_name)
+            # Only on the update path do we have both the channel id and the summary message to
+            # thread the file under - `channel` has already been swapped for the id there.
             attachment_permalink, superseded_file_id = self.__refresh_summary_attachment(
-                table_block, summary_state, channel_id
+                table_block, summary_state, channel if msg_ts is not None else None, msg_ts
             )
             if attachment_permalink:
                 blocks.append(MarkdownBlock(text=f"<{attachment_permalink}|See all {len(rows)} groups> (attached)"))

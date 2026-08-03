@@ -48,6 +48,13 @@ def _table(n_groups):
     }
 
 
+def _send_update(sender, summary_table, state, **kwargs):
+    """Send as an update to an existing summary - the only path that can attach a file."""
+    kwargs.setdefault("msg_ts", "111.1")
+    sender.channel_name_to_id["chan"] = "C1"
+    return _send(sender, summary_table, state, **kwargs)
+
+
 def _send(sender, summary_table, state, **kwargs):
     return sender.send_or_update_summary_message(
         GROUP_HEADER,
@@ -77,7 +84,7 @@ def test_attaches_the_full_table_when_rows_are_dropped(slack):
     sender, client, uploads, _ = slack
     state = NotificationSummary()
 
-    _send(sender, _table(200), state)
+    _send_update(sender, _table(200), state)
 
     assert len(uploads) == 1
     assert state.attachment_permalink and state.attachment_file_id
@@ -85,8 +92,10 @@ def test_attaches_the_full_table_when_rows_are_dropped(slack):
     assert uploads[0]["content"].decode().count("Validator") == 200
     # Without a channel the file is only linkable, not readable by anyone else.
     assert uploads[0]["channel"] == "C1"
+    # Shared into the summary's thread, so many groups don't each add a file to the channel.
+    assert uploads[0]["thread_ts"] == "111.1"
 
-    kwargs = client.chat_postMessage.call_args.kwargs
+    kwargs = client.chat_update.call_args.kwargs
     assert any("files.slack.com" in str(block) for block in kwargs["blocks"])
     # Slack only shares an uploaded file if it is referenced from the message text too.
     assert "files.slack.com" in kwargs["text"]
@@ -96,9 +105,8 @@ def test_attachment_is_throttled_across_updates(slack):
     sender, _, uploads, _ = slack
     state = NotificationSummary()
 
-    _send(sender, _table(200), state)
-    sender.channel_name_to_id["chan"] = "C1"
-    _send(sender, _table(200), state, msg_ts="111.1")
+    _send_update(sender, _table(200), state)
+    _send_update(sender, _table(200), state)
 
     assert len(uploads) == 1  # the message is rewritten per notification, the file is not
 
@@ -107,10 +115,9 @@ def test_refreshing_the_attachment_deletes_the_previous_file(slack):
     sender, _, uploads, deletes = slack
     state = NotificationSummary()
 
-    _send(sender, _table(200), state)
+    _send_update(sender, _table(200), state)
     state.attachment_ts = 0  # pretend the throttle window elapsed
-    sender.channel_name_to_id["chan"] = "C1"
-    _send(sender, _table(200), state, msg_ts="111.1")
+    _send_update(sender, _table(200), state)
 
     assert len(uploads) == 2
     assert deletes == ["F1"]
@@ -122,34 +129,33 @@ def test_previous_interval_attachment_is_never_deleted(slack):
     # at a file that no longer exists.
     sender, _, _, deletes = slack
     state = NotificationSummary()
-    _send(sender, _table(200), state)
+    _send_update(sender, _table(200), state)
 
     state.start_ts = time.time() - 999999  # force the interval to expire
     state.register_notification(("x", "y"), False, 86400)
     assert state.attachment_file_id is None
     assert state.attachment_permalink is None
 
-    _send(sender, _table(200), state)
+    _send_update(sender, _table(200), state)
     assert deletes == []  # the previous interval's file is left alone
 
 
 def test_superseded_file_is_deleted_only_after_the_message_points_at_the_new_one(slack):
     sender, client, uploads, deletes = slack
     state = NotificationSummary()
-    _send(sender, _table(200), state)
+    _send_update(sender, _table(200), state)
     state.attachment_ts = 0  # pretend the throttle window elapsed
-    sender.channel_name_to_id["chan"] = "C1"
 
     # If updating the message fails, the message still links the old file, so it must survive.
     client.chat_update.side_effect = Exception("slack is down")
-    _send(sender, _table(200), state, msg_ts="111.1")
+    _send_update(sender, _table(200), state)
     assert len(uploads) == 2
     assert deletes == [], "deleted a file the live message still points at"
 
     # Once an update succeeds, the superseded file can go.
     client.chat_update.side_effect = None
     state.attachment_ts = 0
-    _send(sender, _table(200), state, msg_ts="111.1")
+    _send_update(sender, _table(200), state)
     assert deletes == ["F2"]
 
 
@@ -157,10 +163,10 @@ def test_upload_failure_does_not_break_the_summary(slack):
     sender, client, _, _ = slack
     client.files_upload_v2.side_effect = Exception("no files:write scope")
 
-    ts = _send(sender, _table(200), NotificationSummary())
+    ts = _send_update(sender, _table(200), NotificationSummary())
 
     assert ts == "111.1"  # the digest is still posted, just without the attachment
-    assert "files.slack.com" not in str(client.chat_postMessage.call_args.kwargs["blocks"])
+    assert "files.slack.com" not in str(client.chat_update.call_args.kwargs["blocks"])
 
 
 def test_summary_keys_mixing_none_and_strings_do_not_crash(slack):
@@ -192,11 +198,10 @@ def test_non_threaded_summary_can_be_updated(slack):
     assert client.chat_update.called
 
 
-def test_attachment_is_skipped_until_the_channel_id_is_known(slack):
-    # Sharing the file needs the channel id, which is only recorded once a message has been
-    # posted. Rather than upload an unreadable file, the attachment waits for the next update.
+def test_attachment_is_skipped_until_the_summary_message_exists(slack):
+    # The file is shared into the summary's thread, so the message has to exist first. On the
+    # very first post there is nothing to thread under, so the attachment waits for the update.
     sender, _, uploads, _ = slack
-    sender.channel_name_to_id.clear()
 
-    _send(sender, _table(200), NotificationSummary())
+    _send(sender, _table(200), NotificationSummary())  # first post, no msg_ts
     assert uploads == []
