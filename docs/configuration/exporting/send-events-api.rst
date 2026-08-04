@@ -14,6 +14,7 @@ This is the recommended ingestion path for new integrations. The legacy :doc:`Se
    send-events/azure-monitor
    send-events/datadog
    send-events/dynatrace
+   send-events/f5
    send-events/gcp-monitoring
    send-events/grafana
    send-events/jsm
@@ -193,6 +194,11 @@ Other
 
 .. grid:: 1 1 2 3
     :gutter: 3
+
+    .. grid-item-card:: :octicon:`pulse;1em;` F5 Distributed Cloud
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: send-events/f5
+        :link-type: doc
 
     .. grid-item-card:: :octicon:`pulse;1em;` Nagios
         :class-card: sd-bg-light sd-bg-text-light

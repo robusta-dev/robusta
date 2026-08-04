@@ -1,0 +1,43 @@
+F5 Distributed Cloud
+=====================
+
+Forward alerts from F5 Distributed Cloud (XC) to Robusta via a webhook alert receiver.
+
+Prerequisites
+-------------
+
+* A Robusta account with API access.
+* Your Robusta ``account_id``, found in ``generated_values.yaml``.
+* A Robusta API key with ``Read/Write`` access to alerts.
+* An F5 Distributed Cloud tenant with permission to manage alert receivers and alert policies.
+
+Webhook URL
+-----------
+
+.. robusta-code::
+
+    https://api.robusta.dev/webhooks?type=alert&origin=f5&account_id=<ACCOUNT_ID>
+
+Configure F5 Distributed Cloud
+------------------------------
+
+1. In the F5 Distributed Cloud Console, go to **Multi-Cloud App Connect → Alerts Management → Alert Receivers** (under Shared Configuration in some tenants) and select **Add Alert Receiver**.
+2. Set **Receiver** to ``Webhook`` and name it ``robusta``.
+3. Set the **URL** to the webhook URL above.
+4. Under **Authentication**, choose **Token** and set the token value to your Robusta API key. F5 sends it as ``Authorization: Bearer <API_KEY>``.
+5. Save the receiver.
+6. Go to **Alert Policies → Add Alert Policy**, name it ``robusta``, and add the receiver you just created under **Alert Receivers**.
+7. Under **Policy Rules**, select which alerts to route — choose **Select All Alerts** to forward everything, or filter by alert group/severity.
+8. Save the policy. Only alerts matched by an active alert policy are forwarded.
+
+Verify
+------
+
+Use **Send Test Alert** on the alert receiver (available from the receiver's action menu). The event should appear in **Settings → Delivery Log** and on the Robusta timeline.
+
+Notes
+-----
+
+* F5 severities map to Robusta priorities as follows: ``critical`` and ``major`` → ``HIGH``, ``minor`` → ``LOW``, ``info`` → ``INFO``.
+* The ``namespace`` on an F5 alert is a Distributed Cloud namespace, not a Kubernetes one; it is kept as an alert label along with ``tenant``, ``site``, and ``group``.
+* F5 alerts are not tied to a Kubernetes cluster. To associate them with one of your clusters anyway, append ``&cluster=<CLUSTER_NAME>`` to the webhook URL.

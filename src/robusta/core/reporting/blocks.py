@@ -38,6 +38,9 @@ from robusta.core.reporting.custom_rendering import render_value
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
+# Don't shrink a text column below this, or its values become unreadable.
+TABLE_MIN_COLUMN_WIDTH = 4
+
 
 class MarkdownBlock(BaseBlock):
     """
@@ -365,24 +368,52 @@ class TableBlock(BaseBlock):
             self.metadata["format"] = TableBlockFormat.vertical.value
 
     @classmethod
+    def __is_number(cls, value) -> bool:
+        try:
+            float(str(value))
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    @classmethod
+    def __numeric_column_indices(cls, rendered_rows, num_columns: int) -> set:
+        # Numeric columns (e.g. counters) are kept at full width.
+        numeric_indices = set()
+        for idx in range(num_columns):
+            non_empty = [str(row[idx]) for row in rendered_rows if idx < len(row) and str(row[idx]).strip()]
+            if non_empty and all(cls.__is_number(v) for v in non_empty):
+                numeric_indices.add(idx)
+        return numeric_indices
+
+    @classmethod
     def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
-        # We need to make sure the total table width, doesn't exceed the max width,
-        # otherwise, the table is printed corrupted
-        columns_max_widths = [len(header) for header in headers]
+        # Keep the total table width within the max, otherwise it renders corrupted.
+        num_columns = max(len(headers), max((len(row) for row in rendered_rows), default=0))
+        columns_max_widths = [0] * num_columns
+        for idx, header in enumerate(headers):
+            columns_max_widths[idx] = len(str(header))
         for row in rendered_rows:
             for idx, val in enumerate(row):
                 columns_max_widths[idx] = max(len(str(val)), columns_max_widths[idx])
 
-        if sum(columns_max_widths) > table_max_width:  # We want to limit the widest column
-            largest_width = max(columns_max_widths)
-            widest_column_idx = columns_max_widths.index(largest_width)
-            diff = sum(columns_max_widths) - table_max_width
-            columns_max_widths[widest_column_idx] = largest_width - diff
-            if columns_max_widths[widest_column_idx] < 0:  # in case the diff is bigger than the largest column
-                # just divide equally
-                columns_max_widths = [
-                    int(table_max_width / len(columns_max_widths)) for i in range(0, len(columns_max_widths))
-                ]
+        if sum(columns_max_widths) <= table_max_width:
+            return columns_max_widths
+
+        # Only shrink text columns, so numeric columns never get wrapped. If every
+        # column is numeric, leave the widths as-is rather than wrapping numbers.
+        numeric_indices = cls.__numeric_column_indices(rendered_rows, num_columns)
+        shrinkable = [idx for idx in range(num_columns) if idx not in numeric_indices]
+        if not shrinkable:
+            return columns_max_widths
+
+        # Water-fill: trim the widest shrinkable column by one char at a time (fair
+        # distribution), never below TABLE_MIN_COLUMN_WIDTH.
+        while sum(columns_max_widths) > table_max_width:
+            candidates = [idx for idx in shrinkable if columns_max_widths[idx] > TABLE_MIN_COLUMN_WIDTH]
+            if not candidates:
+                break
+            widest = max(candidates, key=lambda idx: columns_max_widths[idx])
+            columns_max_widths[widest] -= 1
 
         return columns_max_widths
 
@@ -410,25 +441,88 @@ class TableBlock(BaseBlock):
 
         return "\n".join(lines[:lines_to_include]) + truncator
 
+    @staticmethod
+    def default_omission_note(omitted_rows: List[List[str]]) -> str:
+        return f"... {len(omitted_rows)} more rows not shown"
+
+    def __render_within_budget(self, max_chars: int, table_max_width: int, table_fmt: str, omission_note) -> str:
+        """Render the table, dropping whole rows to fit max_chars.
+
+        Values themselves are never cut - long ones wrap onto extra lines - so rows must be
+        dropped as complete units. Cutting by physical line would leave a wrapped value's
+        continuation behind and show a partial value as if it were the whole thing.
+        """
+        rows = self.__to_strings_rows(self.render_rows())
+        # Column widths are computed once from all rows, so dropping rows never reflows
+        # the columns and the rendered size shrinks monotonically with the row count.
+        col_max_width = self.__calc_max_width(self.headers, rows, table_max_width)
+
+        def render(subset: List[List[str]]) -> str:
+            if not subset:  # tabulate raises IndexError on maxcolwidths with no rows
+                return tabulate(subset, headers=self.headers, tablefmt=table_fmt)
+            return tabulate(subset, headers=self.headers, tablefmt=table_fmt, maxcolwidths=col_max_width)
+
+        full = render(rows)
+        if len(full) <= max_chars:
+            return full
+
+        # Largest number of whole rows that fits alongside the "N more rows" note.
+        best = None
+        low, high = 0, len(rows)
+        while low <= high:
+            mid = (low + high) // 2
+            candidate = render(rows[:mid])
+            if mid < len(rows):
+                candidate = f"{candidate}\n{omission_note(rows[mid:])}"
+            if len(candidate) <= max_chars:
+                best = candidate
+                low = mid + 1
+            else:
+                high = mid - 1
+
+        # Fall back to the line-based trim if not even a header-only table fits.
+        return best if best is not None else self.__trim_rows(full, max_chars)
+
     @classmethod
     def __to_strings_rows(cls, rows):
         # This is just to assert all row column values are strings. Tabulate might fail on other types
         return [list(map(lambda column_value: str(column_value), row)) for row in rows]
 
-    def to_markdown(self, max_chars=None, add_table_header: bool = True) -> MarkdownBlock:
-        table_header = f"{self.table_name}\n" if self.table_name else ""
-        table_header = "" if not add_table_header else table_header
-        prefix = f"{table_header}```\n"
-        suffix = "\n```"
-        table_contents = self.to_table_string()
-        if max_chars is not None:
-            max_chars = max_chars - len(prefix) - len(suffix)
-            table_contents = self.__trim_rows(table_contents, max_chars)
+    def to_markdown(self, max_chars=None, add_table_header: bool = True, omission_note=None) -> MarkdownBlock:
+        """:param omission_note: builds the note shown when rows are dropped to fit the size limit.
+        Receives the dropped rows, so callers can summarise what was left out (e.g. residual counts)."""
+        # Stay under BLOCK_SIZE_LIMIT even when no caller-supplied limit: MarkdownBlock
+        # would otherwise blindly cut the text and lose the closing ``` fence, which
+        # makes the whole table render as unformatted (non-monospace) text.
+        budget = BLOCK_SIZE_LIMIT - 1 if max_chars is None else min(max_chars, BLOCK_SIZE_LIMIT - 1)
+
+        table_header = f"{self.table_name}\n" if self.table_name and add_table_header else ""
+        opening_fence, suffix = "```\n", "\n```"
+        # The table name is caller-supplied and can be arbitrarily long, so trim it rather than
+        # let the envelope alone push the block past the limit and cost us the closing fence.
+        table_header = table_header[: max(0, budget - len(opening_fence) - len(suffix))]
+        prefix = f"{table_header}{opening_fence}"
+
+        content_budget = budget - len(prefix) - len(suffix)
+        # With no room left for content, emit an empty (but properly closed) block rather than
+        # an overflow marker that wouldn't fit either.
+        table_contents = (
+            self.__render_within_budget(
+                content_budget,
+                PRINTED_TABLE_MAX_WIDTH,
+                "presto",
+                omission_note or self.default_omission_note,
+            )
+            if content_budget > 0
+            else ""
+        )
 
         return MarkdownBlock(f"{prefix}{table_contents}{suffix}")
 
     def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH, table_fmt: str = "presto") -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
+        if not rendered_rows:  # tabulate raises IndexError on maxcolwidths with no rows
+            return tabulate(rendered_rows, headers=self.headers, tablefmt=table_fmt)
         col_max_width = self.__calc_max_width(self.headers, rendered_rows, table_max_width)
         return tabulate(
             rendered_rows,
