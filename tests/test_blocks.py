@@ -1,4 +1,5 @@
 import json
+import re
 
 from hikaru.model.rel_1_26 import HikaruDocumentBase, ObjectMeta, Pod
 
@@ -19,6 +20,7 @@ from robusta.api import (  # LinkProp,; LinksBlock,
     TableBlock,
     action,
 )
+from robusta.core.reporting.blocks import BLOCK_SIZE_LIMIT
 from robusta.core.reporting.consts import ScanType
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from tests.config import CONFIG
@@ -134,3 +136,134 @@ def test_all_block_types(slack_channel: SlackChannel):
     result = slack_sender.send_finding_to_slack(finding, slack_params, False)
     # result = slack_sender.send_finding_to_slack(finding, slack_params, True)
     print(result)
+
+
+# Regression tests for FRO-211 / ROB-3946: long values must stay complete (wrapped
+# onto extra lines, never cut mid-value), and an over-long table must drop whole rows
+# with a note rather than blow past Slack's block limit and lose its closing ``` fence.
+LONG_CLASS_NAME = "ats.betting.betcatcher.settlement.settler.AbstractBetSettler"
+
+
+def _column_values(output, column_index=0):
+    """Rebuild each logical row's column value from a wrapped presto table."""
+    values, lines = [], output.splitlines()
+    for line in lines[2:]:  # skip header + separator
+        if "|" not in line:
+            continue
+        cell = line.split("|")[column_index].strip()
+        starts_new_row = all(part.strip() for part in line.split("|")[1:])
+        if starts_new_row:
+            values.append(cell)
+        elif values:
+            values[-1] += cell  # continuation of the previous row's wrapped value
+    return values
+
+
+def test_long_values_are_wrapped_not_cut():
+    rows = [[LONG_CLASS_NAME, "103", "0"], ["orders.checkout.impl.OrderServiceImpl", "16", "4"]]
+    table_block = TableBlock(rows=rows, headers=["label:site", "Fired", "Resolved"])
+
+    output = table_block.to_table_string(table_max_width=40)
+
+    # The full path survives, reassembled across the wrapped lines - nothing is elided.
+    assert _column_values(output) == [LONG_CLASS_NAME, "orders.checkout.impl.OrderServiceImpl"]
+    assert "…" not in output
+
+
+def test_numeric_columns_are_not_shrunk():
+    table_block = TableBlock(
+        rows=[[LONG_CLASS_NAME, "103", "9999"]], headers=["label:site", "Fired", "Resolved"]
+    )
+
+    output = table_block.to_table_string(table_max_width=40)
+
+    # Counters stay on one line - only the wide text column absorbs the reduction.
+    assert "103" in output and "9999" in output
+    assert all(line.count("|") == 2 for line in output.splitlines() if "|" in line)
+
+
+def test_all_numeric_table_is_not_shrunk():
+    values = ["123456789012345", "678901234567890", "112233445566778"]
+    table_block = TableBlock(rows=[values], headers=["a", "b", "c"])
+
+    output = table_block.to_table_string(table_max_width=10)
+
+    for value in values:
+        assert value in output
+
+
+def test_headerless_and_ragged_rows():
+    # No headers, and rows wider than the (empty) header list must not IndexError.
+    table_block = TableBlock(rows=[[LONG_CLASS_NAME, "extra", "cols"]], headers=[])
+
+    assert table_block.to_table_string(table_max_width=30)
+
+
+def test_to_markdown_small_table_has_no_omission_note():
+    table_block = TableBlock(rows=[[LONG_CLASS_NAME, "1", "0"]], headers=["label:site", "Fired", "Resolved"])
+
+    markdown = table_block.to_markdown().text
+
+    assert "more rows not shown" not in markdown
+    assert markdown.startswith("```") and markdown.endswith("```")
+
+
+def test_to_markdown_drops_whole_rows_and_keeps_code_fence():
+    # The 4-column shape of the "Alerts Summary" digest that triggered the bug.
+    rows = [[f"ats.betting.betcatcher.validation.impl.Validator{i:03d}Foo", "nj", "1", "0"] for i in range(200)]
+    table_block = TableBlock(rows=rows, headers=["label:site", "label:component", "Fired", "Resolved"])
+
+    markdown = table_block.to_markdown().text
+
+    # Small enough that MarkdownBlock never blind-cuts it, so the fence is intact.
+    assert len(markdown) < BLOCK_SIZE_LIMIT
+    assert markdown.startswith("```") and markdown.endswith("```")
+    # The reader is told what was left out.
+    assert re.search(r"\.\.\. \d+ more rows not shown", markdown)
+
+    # Every displayed value is a complete class name - rows are dropped as whole units,
+    # so no row is left showing only the first half of a wrapped value.
+    inner = markdown.split("```")[1]
+    displayed = _column_values(inner)
+    assert displayed  # some rows did survive
+    for value in displayed:
+        assert re.fullmatch(r"ats\.betting\.betcatcher\.validation\.impl\.Validator\d{3}Foo", value), value
+
+
+def test_to_markdown_custom_omission_note_receives_dropped_rows():
+    rows = [[f"ats.betting.betcatcher.validation.impl.Validator{i:03d}Foo", "nj", "1", "2"] for i in range(200)]
+    table_block = TableBlock(rows=rows, headers=["label:site", "label:component", "Fired", "Resolved"])
+
+    def omission_note(omitted):
+        return f"... {len(omitted)} more groups ({sum(int(r[-2]) for r in omitted)} fired) not shown"
+
+    markdown = table_block.to_markdown(omission_note=omission_note).text
+
+    # The note reports the residual totals, so the table still reconciles with the header count.
+    match = re.search(r"\.\.\. (\d+) more groups \((\d+) fired\) not shown", markdown)
+    assert match, markdown[-200:]
+    omitted_count, omitted_fired = int(match.group(1)), int(match.group(2))
+    assert omitted_fired == omitted_count  # one "fired" per dropped row
+    assert len(markdown) < BLOCK_SIZE_LIMIT
+
+
+def test_empty_table_does_not_raise():
+    # tabulate raises IndexError if maxcolwidths is passed with no rows, which also hit the
+    # row-dropping path when not even one row fits the size limit.
+    table_block = TableBlock(rows=[], headers=["label:site", "Fired", "Resolved"])
+
+    assert table_block.to_table_string()
+    markdown = table_block.to_markdown().text
+    assert markdown.startswith("```") and markdown.endswith("```")
+
+
+def test_to_markdown_always_closes_code_fence():
+    # Sweep sizes/widths that previously produced an unterminated fence (which made Slack
+    # render the whole table as non-monospace text) or a blind cut past the block limit.
+    for rows_n in (0, 1, 18, 200):
+        for width in (5, 80, 600):
+            rows = [[("v" * width) + str(i), "1", "0"] for i in range(rows_n)]
+            markdown = TableBlock(rows=rows, headers=["label:site", "Fired", "Resolved"]).to_markdown().text
+            assert markdown.count("```") % 2 == 0, (rows_n, width)
+            assert markdown.rstrip().endswith("```"), (rows_n, width)
+            assert len(markdown) < BLOCK_SIZE_LIMIT, (rows_n, width, len(markdown))

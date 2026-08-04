@@ -1,11 +1,12 @@
 import copy
 import logging
+import time
 import ssl
 import tempfile
 import re
 from datetime import datetime, timedelta
 from itertools import chain
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import certifi
 import humanize
 from dateutil import tz
@@ -56,6 +57,11 @@ ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"
 SlackBlock = Dict[str, Any]
 MAX_BLOCK_CHARS = 3000
+# A file can hold a far wider table than a message can.
+SUMMARY_ATTACHMENT_TABLE_WIDTH = 250
+# The summary message is rewritten on every notification; don't re-upload the attachment
+# that often.
+SUMMARY_ATTACHMENT_REFRESH_SECONDS = 60
 MENTION_PATTERN = re.compile(r"<[^>]+>")
 
 
@@ -860,6 +866,98 @@ class SlackSender:
             output_blocks=slack_blocks,
         )
 
+    @staticmethod
+    def __summary_table_block(table_block: TableBlock) -> Tuple[BaseBlock, int]:
+        """Render the summary table, noting the totals of any rows dropped to fit the size limit.
+
+        Without the residual counts the numbers in the table wouldn't add up to the notification
+        count in the message header, making the summary look wrong.
+
+        Returns the block and the number of rows that didn't fit.
+        """
+        if len(table_block.headers) <= 2:
+            return table_block, 0  # rendered as a bullet list rather than a table, see __to_slack_table
+
+        omitted_count = 0
+
+        def omission_note(omitted_rows: List[List[str]]) -> str:
+            nonlocal omitted_count
+            omitted_count = len(omitted_rows)
+            fired = resolved = 0
+            for row in omitted_rows:
+                try:
+                    fired += int(row[-2])
+                    resolved += int(row[-1])
+                except (IndexError, ValueError):  # not the expected numeric columns - just count rows
+                    return TableBlock.default_omission_note(omitted_rows)
+            return f"... {len(omitted_rows)} more groups ({fired} fired, {resolved} resolved) not shown"
+
+        block = table_block.to_markdown(omission_note=omission_note)
+        return block, omitted_count
+
+    def __refresh_summary_attachment(
+        self, table_block: TableBlock, summary_state, channel_id: Optional[str], thread_ts: Optional[str]
+    ) -> Tuple[Optional[str], Optional[str]]:
+        """Attach the complete table as a file, since the message can only show part of it.
+
+        Slack files are immutable, but the summary message is rewritten on every notification, so
+        a fresh file is uploaded rather than edited. That is throttled - re-uploading on every
+        single notification would be wasteful.
+
+        Returns the permalink and the id of the file it supersedes. The caller must only delete
+        that file once the message actually points at the new one, otherwise a failed update
+        leaves the message linking a file that no longer exists.
+        """
+        if summary_state is None:
+            return None, None
+
+        if not channel_id or not thread_ts:
+            # The file is shared into the summary message's own thread, so it needs that message
+            # to exist first. This only defers the attachment past the very first summary - the
+            # message is updated on the next notification, and the file appears then.
+            logging.debug("Summary message not posted yet, deferring the attachment")
+            return None, None
+
+        now = time.time()
+        if summary_state.attachment_permalink and now - summary_state.attachment_ts < SUMMARY_ATTACHMENT_REFRESH_SECONDS:
+            return summary_state.attachment_permalink, None
+
+        # A much wider table fits in a file than in a message, so nothing wraps there.
+        contents = table_block.to_table_string(table_max_width=SUMMARY_ATTACHMENT_TABLE_WIDTH)
+        file_block = FileBlock("alerts-summary.txt", contents.encode("utf-8"))
+        try:
+            resp = self.slack_client.files_upload_v2(
+                # Without a channel the file is only linkable, not shared: the permalink opens
+                # an empty preview that other members can't read or download. Sharing it into
+                # the summary's thread rather than the channel keeps the channel readable when
+                # there are many groups - otherwise every group adds a file message to it.
+                channel=channel_id,
+                thread_ts=thread_ts,
+                title=file_block.filename,
+                filename=file_block.filename,
+                content=file_block.contents,
+            )
+            permalink = resp["file"]["permalink"]
+            new_file_id = resp["file"]["id"]
+        except Exception:
+            logging.exception("Failed to upload the full summary table to Slack")
+            return summary_state.attachment_permalink, None
+
+        superseded_file_id = summary_state.attachment_file_id
+        summary_state.attachment_file_id = new_file_id
+        summary_state.attachment_permalink = permalink
+        summary_state.attachment_ts = now
+        return permalink, superseded_file_id
+
+    def __delete_superseded_attachment(self, file_id: Optional[str]) -> None:
+        if not file_id:
+            return
+        # Best effort - a leftover file is preferable to failing the summary update.
+        try:
+            self.slack_client.files_delete(file=file_id)
+        except Exception as e:
+            logging.warning(f"Could not delete the superseded summary attachment: {e}")
+
     def send_or_update_summary_message(
         self,
         group_by_classification_header: List[str],
@@ -873,12 +971,23 @@ class SlackSender:
         investigate_uri: str = None,
         grouping_interval: int = None,  # in seconds
         channel: str = None,  # pre-resolved channel (when channel_override uses labels/annotations)
+        summary_state=None,  # NotificationSummary, for tracking the attachment across updates
     ):
         """Create or update a summary message with tabular information about the amount of events
         fired/resolved and a header describing the event group that this information concerns."""
         rows = []
         n_total_alerts = 0
-        for key, value in sorted(summary_table.items()):
+        # Sort by firing count, then resolved count (both descending), so that when the table
+        # is too long to fit in a message the rows that get dropped are the least significant
+        # ones rather than whichever groups happen to sort last alphabetically. The key is only
+        # a final tie-break, to keep the order stable between updates of the same message. It is
+        # normalised to strings first: keys hold raw attribute values, which may mix None with
+        # strings (e.g. "workload" is None for a finding with no service) and aren't comparable.
+        def sort_key(item):
+            group_key, (fired, resolved) = item
+            return -fired, -resolved, tuple(str(value) for value in group_key)
+
+        for key, value in sorted(summary_table.items(), key=sort_key):
             # key is a tuple of attribute names; value is a 2-element list with
             # the number of firing and resolved notifications.
             row = list(str(e) for e in chain(key, value))
@@ -924,21 +1033,17 @@ class SlackSender:
         else:
             blocks.append(MarkdownBlock(text=cluster_txt))
 
+        summary_block, omitted_count = self.__summary_table_block(table_block)
         blocks.extend(
             [
                 MarkdownBlock(f"*Matching criteria*: {group_by_criteria_str}"),
                 MarkdownBlock(text=time_text),
-                table_block,
+                summary_block,
             ]
         )
 
-        if threaded:
-            blocks.append(MarkdownBlock(text="See thread for individual alerts"))
-
-        output_blocks = []
-        for block in blocks:
-            output_blocks.extend(self.__to_slack(block, sink_params.name))
-
+        # Resolve the target before building the rest of the message, so that bailing out
+        # doesn't leave an uploaded attachment behind.
         if not channel:
             # Fallback: resolve channel without labels/annotations (only cluster_name will work)
             channel = ChannelTransformer.template(
@@ -948,6 +1053,7 @@ class SlackSender:
                 {},
                 {},
             )
+        channel_name = channel
         if msg_ts is not None:
             method = self.slack_client.chat_update
             kwargs = {"ts": msg_ts}
@@ -964,14 +1070,47 @@ class SlackSender:
             method = self.slack_client.chat_postMessage
             kwargs = {}
 
+        attachment_permalink = None
+        superseded_file_id = None
+        if omitted_count:
+            # Too many groups to show inline - attach the complete table as a file. The link has
+            # to sit outside the table's code block, Slack doesn't render links inside one.
+            # Only on the update path do we have both the channel id and the summary message to
+            # thread the file under - `channel` has already been swapped for the id there.
+            attachment_permalink, superseded_file_id = self.__refresh_summary_attachment(
+                table_block, summary_state, channel if msg_ts is not None else None, msg_ts
+            )
+            if attachment_permalink:
+                blocks.append(MarkdownBlock(text=f"<{attachment_permalink}|See all {len(rows)} groups> (attached)"))
+
+        if threaded:
+            blocks.append(MarkdownBlock(text="See thread for individual alerts"))
+
+        output_blocks = []
+        for block in blocks:
+            output_blocks.extend(self.__to_slack(block, sink_params.name))
+
+        message_text = "Summary for: " + ", ".join(group_by_classification_header)
+        if attachment_permalink:
+            # Uploaded files have to be referenced from the message text, not just the blocks,
+            # for Slack to actually share them (see prepare_slack_text).
+            message_text = f"{message_text}\n<{attachment_permalink}|alerts-summary.txt>"
+
         try:
             resp = method(
                 channel=channel,
-                text="Summary for: " + ", ".join(group_by_classification_header),
+                text=message_text,
                 blocks=output_blocks,
                 display_as_bot=True,
                 **kwargs,
             )
+            # Updating this message later needs the channel id, and a summary-only sink never
+            # sends anything else that would record it (individual alerts, which do, are only
+            # sent in threaded mode). Without this the message can never be updated, and a new
+            # summary gets posted for every notification instead.
+            self.channel_name_to_id[channel_name] = resp["channel"]
+            # Only now that the message points at the new file is the old one safe to remove.
+            self.__delete_superseded_attachment(superseded_file_id)
             return resp["ts"]
         except Exception as e:
             logging.exception(f"error sending message to slack\n{e}\nchannel={channel}\n")

@@ -1,4 +1,6 @@
+import json
 import logging
+from urllib.parse import urlencode
 
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.base import Finding, FindingStatus
@@ -89,6 +91,7 @@ class SlackSink(SinkBase):
                     investigate_uri=investigate_uri,
                     grouping_interval=self.params.grouping.interval,
                     channel=resolved_channel,
+                    summary_state=notification_summary,
                 )
                 notification_summary.message_id = slack_thread_ts
                 should_send_notification = self.params.grouping.notification_mode.summary.threaded
@@ -104,7 +107,13 @@ class SlackSink(SinkBase):
                 )
 
     def get_timeline_uri(self, account_id: str, cluster_name: str) -> str:
-        return f"{ROBUSTA_UI_DOMAIN}/graphs?account_id={account_id}&cluster={cluster_name}"
+        # The timeline reads its filters as JSON-encoded query params, and expects "clusters"
+        # (a list) rather than a single "cluster" - passing the latter left the link unfiltered.
+        params = {
+            "account_id": account_id,
+            "clusters": json.dumps([cluster_name]),
+        }
+        return f"{ROBUSTA_UI_DOMAIN}/graphs?{urlencode(params)}"
 
     def __replace_callback_with_string(self, slack_message, block_id, message_string):
         """
