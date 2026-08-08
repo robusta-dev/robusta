@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from pydantic import SecretStr
-from robusta.api import ActionException
+from robusta.api import ActionException, RateLimiter
 from robusta.core.model.events import ExecutionContext
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 
@@ -40,15 +40,23 @@ NODE_CORDONED_ALERT = {
 }
 
 
-def make_alert() -> PrometheusKubernetesAlert:
+def make_alert(labels: dict = None) -> PrometheusKubernetesAlert:
+    raw_alert = dict(NODE_CORDONED_ALERT, labels=labels) if labels else NODE_CORDONED_ALERT
     alert = PrometheusKubernetesAlert(
-        alert=PrometheusAlert(**NODE_CORDONED_ALERT),
-        alert_name=NODE_CORDONED_ALERT["labels"]["alertname"],
-        alert_severity=NODE_CORDONED_ALERT["labels"]["severity"],
+        alert=PrometheusAlert(**raw_alert),
+        alert_name=raw_alert["labels"]["alertname"],
+        alert_severity=raw_alert["labels"].get("severity", "warning"),
         named_sinks=[],
     )
     alert.set_context(ExecutionContext(account_id=ACCOUNT_ID, cluster_name=CLUSTER_NAME))
     return alert
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    RateLimiter.limiter_map.clear()
+    yield
+    RateLimiter.limiter_map.clear()
 
 
 class _CaptureServer:
@@ -162,6 +170,66 @@ def test_trigger_workflow_cluster_routing_opt_out():
 
     query = parse_qs(urlparse(server.requests[0]["path"]).query)
     assert "cluster" not in query  # the workflow's configured cluster applies
+
+
+def test_no_rate_limit_by_default():
+    with _CaptureServer() as server:
+        params = TriggerWorkflowParams(workflow_id=WORKFLOW_ID, api_key=SecretStr(API_KEY), url=server.url)
+        trigger_workflow(make_alert(), params)
+        trigger_workflow(make_alert(), params)
+
+    assert len(server.requests) == 2
+
+
+def test_rate_limit_skips_repeated_label_combination():
+    with _CaptureServer() as server:
+        params = TriggerWorkflowParams(
+            workflow_id=WORKFLOW_ID,
+            api_key=SecretStr(API_KEY),
+            url=server.url,
+            rate_limit_labels=["alertname", "node"],
+        )
+        trigger_workflow(make_alert(), params)
+        trigger_workflow(make_alert(), params)  # same alertname + node within the period: skipped
+
+    assert len(server.requests) == 1
+
+
+def test_rate_limit_requires_all_labels_to_match():
+    with _CaptureServer() as server:
+        params = TriggerWorkflowParams(
+            workflow_id=WORKFLOW_ID,
+            api_key=SecretStr(API_KEY),
+            url=server.url,
+            rate_limit_labels=["alertname", "node"],
+        )
+        trigger_workflow(make_alert(), params)
+        # same alertname but a different node: the AND condition doesn't match, so it fires
+        other_node = dict(NODE_CORDONED_ALERT["labels"], node="ip-10-0-2-42.ec2.internal")
+        trigger_workflow(make_alert(labels=other_node), params)
+        # a full repeat of either combination is skipped
+        trigger_workflow(make_alert(), params)
+        trigger_workflow(make_alert(labels=other_node), params)
+
+    assert len(server.requests) == 2
+
+
+def test_rate_limit_expires_after_period():
+    with _CaptureServer() as server:
+        params = TriggerWorkflowParams(
+            workflow_id=WORKFLOW_ID,
+            api_key=SecretStr(API_KEY),
+            url=server.url,
+            rate_limit_labels=["alertname"],
+            rate_limit_seconds=100,
+        )
+        trigger_workflow(make_alert(), params)
+        # age the recorded run past the rate limit period
+        for key in RateLimiter.limiter_map:
+            RateLimiter.limiter_map[key] -= 101
+        trigger_workflow(make_alert(), params)
+
+    assert len(server.requests) == 2
 
 
 def test_trigger_workflow_raises_on_http_error():

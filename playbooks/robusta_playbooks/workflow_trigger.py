@@ -23,7 +23,7 @@ from typing import List, Optional, Union
 
 import requests
 from pydantic import SecretStr
-from robusta.api import ActionException, ActionParams, ErrorCodes, PrometheusKubernetesAlert, action
+from robusta.api import ActionException, ActionParams, ErrorCodes, PrometheusKubernetesAlert, RateLimiter, action
 
 
 class TriggerWorkflowParams(ActionParams):
@@ -43,6 +43,16 @@ class TriggerWorkflowParams(ActionParams):
         workflow definition. Set False to always use the workflow's
         configured cluster.
     :var timeout: (optional) (Default: 30) Request timeout in seconds.
+    :var rate_limit_labels: (optional) Alert labels to rate limit by. When set,
+        alerts whose values for ALL of these labels match a previously seen
+        combination within ``rate_limit_seconds`` are skipped (with a log
+        message) instead of triggering the workflow again. For example, with
+        ``["alertname", "pod"]`` the action is skipped only when both the
+        alertname and the pod match an alert that already triggered the
+        workflow within the period. A label missing from the alert is treated
+        as an empty value. By default no rate limiting is applied.
+    :var rate_limit_seconds: (optional) (Default: 900) The rate limiting
+        period. Only relevant when ``rate_limit_labels`` is set.
     """
 
     workflow_id: Union[str, List[str]]
@@ -52,6 +62,8 @@ class TriggerWorkflowParams(ActionParams):
     origin: str = "robusta-runner"
     route_to_alert_cluster: bool = True
     timeout: int = 30
+    rate_limit_labels: Optional[List[str]] = None
+    rate_limit_seconds: int = 900
 
 
 def build_workflow_trigger_payload(alert: PrometheusKubernetesAlert) -> dict:
@@ -79,6 +91,18 @@ def trigger_workflow(alert: PrometheusKubernetesAlert, params: TriggerWorkflowPa
     workflow_ids = [w.strip() for w in workflow_ids if w and w.strip()]
     if not workflow_ids:
         raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, "trigger_workflow: no workflow_id provided")
+
+    if params.rate_limit_labels:
+        label_key = ",".join(
+            f"{label}={alert.alert.labels.get(label, '')}" for label in sorted(params.rate_limit_labels)
+        )
+        limiter_id = f"{','.join(sorted(workflow_ids))}:{label_key}"
+        if not RateLimiter.mark_and_test("trigger_workflow", limiter_id, params.rate_limit_seconds):
+            logging.info(
+                f"trigger_workflow: rate limited for alert {alert.alert_name} ({label_key}); "
+                f"skipping workflow(s) {workflow_ids} (rate_limit_seconds={params.rate_limit_seconds})"
+            )
+            return
 
     context = alert.get_context()
     account_id = params.account_id or context.account_id
