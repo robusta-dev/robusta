@@ -15,6 +15,16 @@ Example playbook configuration::
       - trigger_workflow:
           workflow_id: "b7f9d2e4-1234-4c56-9abc-0123456789ab"
           api_key: "{{ env.ROBUSTA_PLATFORM_API_KEY }}"
+
+Optionally, rate limit by alert labels, so an alert firing repeatedly with the
+same values for ALL the listed labels only triggers the workflow once per
+``rate_limit_seconds`` (further alerts are logged and skipped)::
+
+      - trigger_workflow:
+          workflow_id: "b7f9d2e4-1234-4c56-9abc-0123456789ab"
+          api_key: "{{ env.ROBUSTA_PLATFORM_API_KEY }}"
+          rate_limit_labels: ["alertname", "pod"]
+          rate_limit_seconds: 900
 """
 
 import json
@@ -23,7 +33,7 @@ from typing import List, Optional, Union
 
 import requests
 from pydantic import SecretStr
-from robusta.api import ActionException, ActionParams, ErrorCodes, PrometheusKubernetesAlert, action
+from robusta.api import ActionException, ActionParams, ErrorCodes, PrometheusKubernetesAlert, RateLimiter, action
 
 
 class TriggerWorkflowParams(ActionParams):
@@ -43,6 +53,15 @@ class TriggerWorkflowParams(ActionParams):
         workflow definition. Set False to always use the workflow's
         configured cluster.
     :var timeout: (optional) (Default: 30) Request timeout in seconds.
+    :var rate_limit_labels: (optional) Alert labels to rate limit by, e.g.
+        ``["alertname", "pod"]``. When set, alerts whose values match on ALL
+        the listed labels share a rate-limit bucket: once a workflow is
+        triggered for a bucket, further matching alerts within
+        ``rate_limit_seconds`` are skipped (with a log). Alerts differing on
+        any listed label are not rate limited against each other. When unset
+        (the default), no rate limiting is applied.
+    :var rate_limit_seconds: (optional) (Default: 900) The rate limit period.
+        Only relevant when ``rate_limit_labels`` is set.
     """
 
     workflow_id: Union[str, List[str]]
@@ -52,6 +71,8 @@ class TriggerWorkflowParams(ActionParams):
     origin: str = "robusta-runner"
     route_to_alert_cluster: bool = True
     timeout: int = 30
+    rate_limit_labels: Optional[List[str]] = None
+    rate_limit_seconds: int = 900
 
 
 def build_workflow_trigger_payload(alert: PrometheusKubernetesAlert) -> dict:
@@ -79,6 +100,19 @@ def trigger_workflow(alert: PrometheusKubernetesAlert, params: TriggerWorkflowPa
     workflow_ids = [w.strip() for w in workflow_ids if w and w.strip()]
     if not workflow_ids:
         raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, "trigger_workflow: no workflow_id provided")
+
+    if params.rate_limit_labels:
+        label_values = {label: alert.alert.labels.get(label, "") for label in params.rate_limit_labels}
+        rate_limit_key = ";".join(
+            [f"{label}={value}" for label, value in sorted(label_values.items())] + sorted(workflow_ids)
+        )
+        if not RateLimiter.mark_and_test("trigger_workflow", rate_limit_key, params.rate_limit_seconds):
+            logging.info(
+                f"trigger_workflow: rate limited, skipping workflow(s) {workflow_ids} for alert "
+                f"{alert.alert_name}: an alert matching {label_values} already triggered them "
+                f"within the last {params.rate_limit_seconds} seconds"
+            )
+            return
 
     context = alert.get_context()
     account_id = params.account_id or context.account_id
