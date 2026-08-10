@@ -19,6 +19,7 @@ Data Export and Reporting
 * :doc:`Alert Reporting API <alert-statistics-api>`: Get aggregated statistics and counts for different alert types
 * :doc:`Send Events API <send-events-api>`: Send alerts, incidents, and changes from any monitoring source via a single webhook endpoint
 * :doc:`RBAC Configuration API <rbac-api>`: Programmatically manage role-based access control configurations
+* :doc:`Triggered Workflows </platform/triggered-workflows>`: Run a saved Holmes investigation from any system that can send a webhook
 
 Getting Started
 ---------------

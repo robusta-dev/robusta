@@ -5,6 +5,10 @@ Notification Grouping (Slack Only)
 
 Reduce alert noise by grouping related notifications into Slack threads. Instead of flooding channels with individual alerts, Robusta creates summary messages with threaded details.
 
+.. note::
+
+    This page covers grouping of **Slack messages** by the in-cluster Robusta runner, using fixed fields such as ``namespace`` or ``severity``. To group alerts by their **root cause** into incidents, see :doc:`/platform/incident-grouping`. The two are independent and can be used together.
+
 .. image:: /images/notification-grouping.png
    :width: 600px
    :align: center
