@@ -1,11 +1,24 @@
 import base64
+import copy
 import json
+from io import BytesIO
+
 import pytest
+from PIL import Image
 from unittest.mock import Mock, patch
 from robusta.core.model.base_params import HolmesChatParams
 from robusta.core.model.events import ExecutionBaseEvent
-from robusta.core.playbooks.internal.ai_integration import holmes_chat
+from robusta.core.playbooks.internal.ai_integration import get_png_from_graph_tool, holmes_chat
 from robusta.core.stream.utils import create_sse_message, StreamEvents
+
+
+def assert_valid_png(png_bytes: bytes):
+    assert png_bytes[:8] == b"\x89PNG\r\n\x1a\n", "Not a valid PNG"
+    image = Image.open(BytesIO(png_bytes))
+    image.load()  # force full decoding, not just the header
+    assert image.format == "PNG"
+    # graph-tool charts are rendered at the fixed pygal size used by the pipeline
+    assert image.size == (1280, 500)
 
 
 def parse_sse_message(sse_message: str):
@@ -175,13 +188,15 @@ def test_holmes_chat_streaming_with_sse_events(
     # graph tools change
     datadog_output = mock_event.ws.call_args_list[2][1]["data"]
     _, data = parse_sse_message(datadog_output)
+    assert data["result_type"] == "png"
     decoded = base64.b64decode(data["result"]["data"])
-    assert decoded[:8] == b"\x89PNG\r\n\x1a\n", "Not a valid PNG"
+    assert_valid_png(decoded)
 
     prom_output = mock_event.ws.call_args_list[3][1]["data"]
     _, data = parse_sse_message(prom_output)
+    assert data["result_type"] == "png"
     decoded = base64.b64decode(data["result"]["data"])
-    assert decoded[:8] == b"\x89PNG\r\n\x1a\n", "Not a valid PNG"
+    assert_valid_png(decoded)
     # answer << >> parts is gone.
     assert mock_event.ws.call_args_list[4][1]["data"] == create_sse_message(
         StreamEvents.ANSWER_END.value,
@@ -189,3 +204,58 @@ def test_holmes_chat_streaming_with_sse_events(
             "analysis": "some analysis... add the  rest of analysis",
         },
     )
+
+
+@patch("robusta.core.playbooks.internal.ai_integration.requests.post")
+def test_holmes_chat_streaming_forwards_unconvertible_graph_event_unchanged(
+    mock_post, mock_event, holmes_chat_params
+):
+    """If a graph tool result cannot be converted to a PNG, the stream must keep
+    flowing and the original event must be forwarded as-is (not dropped)."""
+    broken_prom_tool = copy.deepcopy(prom_tool)
+    broken_prom_tool["result"]["data"] = "this is {{ not json"
+
+    sse_events = [
+        create_sse_message(
+            StreamEvents.START_TOOL.value,
+            {"tool_name": "execute_prometheus_range_query", "id": "tooluse_x"},
+        ),
+        create_sse_message(StreamEvents.TOOL_RESULT.value, broken_prom_tool),
+    ]
+    mock_post.return_value = MockResponse(sse_events)
+
+    holmes_chat(mock_event, holmes_chat_params)
+
+    assert mock_event.ws.call_count == len(sse_events)
+    # the unconvertible graph event is passed through byte-for-byte, without result_type=png
+    assert mock_event.ws.call_args_list[1][1]["data"] == sse_events[1]
+
+
+def _small_prometheus_matrix() -> dict:
+    base_timestamp = 1764072332
+    return {
+        "resultType": "matrix",
+        "result": [
+            {
+                "metric": {"pod": "pod-a", "namespace": "default"},
+                "values": [[base_timestamp + i * 60, str(10.0 + i)] for i in range(10)],
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize("output_type", ["Plain", "Bytes", "Percentage", "CPUUsage", "NotARealFormat", None])
+def test_get_png_from_graph_tool_output_types(output_type):
+    """Every declared axis format must render, and unknown/missing formats must
+    fall back to Plain instead of failing."""
+    tool_result_data = {
+        "data": _small_prometheus_matrix(),
+        "description": "node memory used",
+    }
+    if output_type is not None:
+        tool_result_data["output_type"] = output_type
+
+    contents, name = get_png_from_graph_tool(tool_result_data)
+
+    assert name == "node_memory_used"
+    assert_valid_png(contents)
