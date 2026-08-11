@@ -80,7 +80,7 @@ WORKDIR /app
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
-    && apt-get install -y --no-install-recommends git openssh-client curl libcairo2 apt-transport-https \
+    && apt-get install -y --no-install-recommends git openssh-client curl fonts-dejavu-core apt-transport-https \
     && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
     && rm -rf /var/lib/apt/lists/*
 

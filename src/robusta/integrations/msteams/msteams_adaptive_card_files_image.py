@@ -5,7 +5,7 @@ import uuid
 from typing import List
 
 from robusta.core.reporting.blocks import FileBlock
-from robusta.core.reporting.utils import JPG_SUFFIX, PNG_SUFFIX, file_suffix_match, is_image
+from robusta.core.reporting.utils import JPG_SUFFIX, PNG_SUFFIX, convert_svg_to_png, file_suffix_match, is_image
 from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeamsImages
 
 
@@ -64,6 +64,7 @@ class MsTeamsAdaptiveCardFilesImage:
     # msteams cant read parsing of url to svg image
     @classmethod
     def __svg_convert_bytes_to_jpg(cls, svg_bytes: bytes):
-        from cairosvg import svg2png
-
-        return cls.__png_convert_bytes_to_base_64_url(svg2png(bytestring=svg_bytes))
+        png_bytes = convert_svg_to_png(svg_bytes)
+        if png_bytes is None:
+            raise ValueError("failed to convert svg to png for msteams image")
+        return cls.__png_convert_bytes_to_base_64_url(png_bytes)
