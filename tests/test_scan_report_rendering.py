@@ -2,10 +2,11 @@
 Tests for Transformer.scanReportBlock_to_fileblock() — the conversion of KRR/Popeye
 scan results into a report file attached to chat/email sinks.
 
-These tests pin the current PDF-based behavior (fpdf2). If the report format is ever
-changed (e.g. different PDF library or HTML output), the format-specific assertions
-here are the only ones that should need updating.
+These tests pin the PDF-based report behavior. If the report format is ever changed
+(e.g. different PDF library or HTML output), the format-specific assertions here are
+the only ones that should need updating.
 """
+import base64
 import re
 import zlib
 from datetime import datetime
@@ -33,17 +34,48 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
     text-showing operators. Good enough for PDFs produced with built-in (core)
     fonts, which is what the scan report uses.
     """
+    def decode_stream(stream: bytes) -> bytes:
+        stream = stream.strip(b"\r\n")
+        for decoder in (
+            zlib.decompress,  # FlateDecode
+            lambda raw: zlib.decompress(base64.a85decode(raw, adobe=True)),  # ASCII85Decode + FlateDecode
+            lambda raw: raw,  # uncompressed
+        ):
+            try:
+                return decoder(stream)
+            except Exception:
+                continue
+        return stream
+
+    escape_map = {b"n": 10, b"r": 13, b"t": 9, b"b": 8, b"f": 12, b"(": 40, b")": 41, b"\\": 92}
+
+    def unescape_pdf_string(raw: bytes) -> bytes:
+        out = bytearray()
+        i = 0
+        while i < len(raw):
+            if raw[i : i + 1] != b"\\":
+                out.append(raw[i])
+                i += 1
+                continue
+            next_char = raw[i + 1 : i + 2]
+            if next_char in escape_map:
+                out.append(escape_map[next_char])
+                i += 2
+            elif next_char.isdigit():  # octal escape, up to 3 digits
+                digits_end = i + 2
+                while digits_end < len(raw) and digits_end < i + 4 and raw[digits_end : digits_end + 1].isdigit():
+                    digits_end += 1
+                out.append(int(raw[i + 1 : digits_end], 8) & 0xFF)
+                i = digits_end
+            else:
+                i += 1  # stray backslash
+        return bytes(out)
+
     text_parts = []
     for stream in re.findall(rb"stream\r?\n(.*?)endstream", pdf_bytes, re.DOTALL):
-        try:
-            data = zlib.decompress(stream.strip(b"\r\n"))
-        except zlib.error:
-            data = stream
+        data = decode_stream(stream)
         for match in re.findall(rb"\(((?:\\.|[^\\()])*)\)\s*Tj", data):
-            unescaped = (
-                match.replace(b"\\(", b"(").replace(b"\\)", b")").replace(b"\\\\", b"\\")
-            )
-            text_parts.append(unescaped.decode("latin-1"))
+            text_parts.append(unescape_pdf_string(match).decode("latin-1"))
     return "".join(text_parts)
 
 

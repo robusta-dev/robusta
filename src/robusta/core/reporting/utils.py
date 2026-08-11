@@ -21,12 +21,12 @@ def is_image(file_name: str):
 
 
 def convert_svg_to_png(svg: bytes) -> Optional[bytes]:
-    # we import cairosvg here and not globally because in some environments it isn't trivially installed (e.g. windows)
-    # and we don't want to throw an exception globally when it isn't around
-    import cairosvg
+    # we import resvg_py here and not globally so the rasterizer is only loaded on
+    # the SVG-conversion path, and environments without it can still import this module
+    import resvg_py
 
     try:
-        return cairosvg.svg2png(bytestring=svg)
+        return resvg_py.svg_to_bytes(svg_string=svg.decode("utf-8"))
     except Exception:
         logging.error(f"error converting svg to png; svg={svg}")
         return None
