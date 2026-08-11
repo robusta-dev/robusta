@@ -4026,4 +4026,4 @@ all = ["Flask", "better-exceptions", "datadog-api-client", "grafana-api", "kafka
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "a5ff4a418faffb258074766a1375dbdc826f164a3ad1c8df3029044eb86bb868"
+content-hash = "6ab0c53929ec30212598ac83308ffd0ab649b6c1808b47740438bf332bab210d"

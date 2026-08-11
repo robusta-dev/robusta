@@ -38,7 +38,9 @@ watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
 # SVG -> PNG rasterizer for charts sent to chat sinks (resvg is Apache-2.0 OR MIT,
 # bindings are MIT; replaced LGPL-licensed CairoSVG)
-resvg-py = "^0.3.4"
+# Pinned to an exact version for supply-chain safety since the binding package
+# has a small maintainer base (see PR #2136 review)
+resvg-py = "0.3.4"
 # Bump to fix CVE-2026-10142, CVE-2026-10143 (High): kafka-python protocol-parser DoS
 kafka-python = { version = "^2.3.2", optional = true }
 datadog-api-client = { version = "^1.2.0", optional = true }
