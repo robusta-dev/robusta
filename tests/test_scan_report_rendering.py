@@ -229,6 +229,35 @@ def test_empty_scan_results_still_produce_valid_report(krr_block):
     assert "Krr report" in text
 
 
+@pytest.mark.parametrize("bad_score", ["85.5", "N/A", "", None])
+def test_non_integer_score_skips_badge_without_breaking_report(popeye_block, bad_score):
+    popeye_block.score = bad_score
+
+    result = Transformer.scanReportBlock_to_fileblock(popeye_block)
+
+    assert isinstance(result, FileBlock)
+    assert_valid_pdf(result.contents)
+    text = extract_pdf_text(result.contents)
+    assert "Popeye report" in text  # report still renders, just without the score badge
+
+
+def test_row_taller_than_page_splits_across_pages(popeye_block):
+    popeye_block.results = [
+        make_popeye_row(
+            "pods", "noisy-pod", "prod", 3,
+            messages=[{"level": 2, "message": f"issue number {i} with some detail text"} for i in range(200)],
+        ),
+    ]
+
+    result = Transformer.scanReportBlock_to_fileblock(popeye_block)
+
+    assert isinstance(result, FileBlock)
+    assert_valid_pdf(result.contents)
+    text = extract_pdf_text(result.contents)
+    assert "issue number 0" in text
+    assert "issue number 199" in text  # the whole cell made it into the report
+
+
 def test_hostile_cell_content_does_not_break_report(popeye_block):
     popeye_block.config = "config with (parens), backslash \\ and percent 100%"
     popeye_block.results = [

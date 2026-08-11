@@ -272,9 +272,13 @@ class Transformer:
 
         header_cells = [Paragraph(f"<b>{cell_markup(title)}</b> {scan.end_time.strftime('%b %d, %y %X')}", title_style)]
         header_widths = [0.7]
-        if int(scan.score) >= 0:
-            header_cells.append(Paragraph(f"<b>{scan.grade}</b> {scan.score}", title_style))
-            header_widths.append(0.3)
+        try:
+            # scan.grade also parses the score, so it must stay inside this guard
+            if int(scan.score) >= 0:
+                header_cells.append(Paragraph(f"<b>{scan.grade}</b> {scan.score}", title_style))
+                header_widths.append(0.3)
+        except (TypeError, ValueError):
+            logging.warning(f"scan report has a non-integer score {scan.score!r}; skipping the score badge")
 
         page_width, _ = landscape(A4)
         margin = 28  # ~10mm, matching the previous layout
@@ -297,7 +301,15 @@ class Transformer:
             ]
             width_total = sum(scan.table_widths)
             column_widths = [w / width_total * content_width for w in scan.table_widths]
-            table = Table([heading_row, *body_rows], colWidths=column_widths, repeatRows=1)
+            # splitInRow lets a single row taller than the page (e.g. a Popeye resource
+            # with very many issues in one cell) split across pages instead of raising
+            table = Table(
+                [heading_row, *body_rows],
+                colWidths=column_widths,
+                repeatRows=1,
+                splitByRow=1,
+                splitInRow=1,
+            )
             table.setStyle(
                 TableStyle(
                     [
