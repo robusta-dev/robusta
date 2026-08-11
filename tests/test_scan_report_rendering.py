@@ -85,6 +85,12 @@ def assert_valid_pdf(contents: bytes):
     assert len(contents) > 500, "report file is suspiciously small"
 
 
+def count_pdf_pages(pdf_bytes: bytes) -> int:
+    # page objects are declared as "/Type /Page"; the negative lookahead excludes
+    # the "/Type /Pages" page-tree object
+    return len(re.findall(rb"/Type\s*/Page(?!s)", pdf_bytes))
+
+
 def make_krr_row(kind: str, name: str, namespace: str, container: str, priority: float) -> ScanReportRow:
     return ScanReportRow(
         scan_id="8481dd4a-1234-4444-9999-b8c1d915e7a1",
@@ -239,6 +245,11 @@ def test_non_integer_score_skips_badge_without_breaking_report(popeye_block, bad
     assert_valid_pdf(result.contents)
     text = extract_pdf_text(result.contents)
     assert "Popeye report" in text  # report still renders, just without the score badge
+    if bad_score:  # "85.5", "N/A"
+        assert bad_score not in text, "score badge should have been skipped"
+    elif bad_score is None:
+        assert "None" not in text, "score badge should have been skipped"
+    # for "" there is no score text whose absence could be asserted
 
 
 def test_row_taller_than_page_splits_across_pages(popeye_block):
@@ -253,9 +264,10 @@ def test_row_taller_than_page_splits_across_pages(popeye_block):
 
     assert isinstance(result, FileBlock)
     assert_valid_pdf(result.contents)
+    assert count_pdf_pages(result.contents) > 1, "a 200-issue row should span multiple pages"
     text = extract_pdf_text(result.contents)
-    assert "issue number 0" in text
-    assert "issue number 199" in text  # the whole cell made it into the report
+    for i in range(200):
+        assert f"issue number {i} with some detail text" in text, f"issue {i} missing from the report"
 
 
 def test_hostile_cell_content_does_not_break_report(popeye_block):
