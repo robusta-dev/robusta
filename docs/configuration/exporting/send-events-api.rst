@@ -50,7 +50,7 @@ Query Parameters
    * - ``account_id``
      - Your Robusta account ID, found in ``generated_values.yaml``.
    * - ``cluster``
-     - Recommended. The cluster to associate the alert with. Set it to the exact name of the cluster as it appears in the Robusta UI (the ``clusterName`` your Robusta agent was installed with), so alerts are filed under that cluster and investigated in its context. When set, it overrides any cluster found in the alert payload. When omitted, the cluster is taken from the payload if present — otherwise the request still returns ``200`` but the alert is silently recorded under a generic ``external`` cluster.
+     - Recommended. The cluster to file the alert under — use the exact name shown in the Robusta UI. Overrides any cluster in the alert payload. If omitted, the cluster is taken from the payload, or silently defaults to ``external``.
 
 Authentication
 --------------
