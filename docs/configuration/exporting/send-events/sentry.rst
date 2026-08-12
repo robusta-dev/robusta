@@ -38,10 +38,8 @@ Webhook URL
 
 Replace ``<ACCOUNT_ID>`` with your Robusta account id,
 ``<ROBUSTA_API_KEY>`` with the API key you just generated, and
-``<CLUSTER_NAME>`` with the name of the cluster to file alerts under.
-The name must exactly match the cluster's name as it appears in the
-Robusta UI (the ``clusterName`` your Robusta agent was installed
-with). If ``cluster`` is omitted, alerts are silently filed under a
+``<CLUSTER_NAME>`` with your cluster's name exactly as it appears in
+the Robusta UI. If ``cluster`` is omitted, alerts are filed under a
 generic ``external`` cluster.
 
 .. note::
