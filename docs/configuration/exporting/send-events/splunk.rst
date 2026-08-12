@@ -16,7 +16,9 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<CLUSTER_NAME>`` with your cluster's name exactly as it appears in the Robusta UI. If ``cluster`` is omitted, alerts are filed under a generic ``external`` cluster.
 
 Configure Splunk
 ----------------
@@ -28,7 +30,7 @@ Splunk's built-in **Webhook** alert action does not let you set custom headers, 
 
    .. robusta-code::
 
-       https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
+       https://api.robusta.dev/webhooks?type=alert&origin=splunk&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>&token=<ROBUSTA_API_KEY>
 
 3. Save the search. If your Splunk environment has the **Webhook Alert Action** app installed, you can instead set an ``Authorization: Bearer <ROBUSTA_API_KEY>`` header and use the plain webhook URL without ``&token=…``.
 
