@@ -16,7 +16,9 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id, and ``<CLUSTER_NAME>`` with the name of the cluster to file alerts under. The name must exactly match the cluster's name as it appears in the Robusta UI (the ``clusterName`` your Robusta agent was installed with). If ``cluster`` is omitted, alerts are silently filed under a generic ``external`` cluster.
 
 Configure Azure
 ---------------
@@ -25,7 +27,7 @@ Action Group webhook receivers do not allow custom headers, so authenticate via 
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
+    https://api.robusta.dev/webhooks?type=alert&origin=azure&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>&token=<ROBUSTA_API_KEY>
 
 1. In the Azure Portal, open **Monitor → Action groups** and either create a new group or edit an existing one.
 2. Under **Actions**, add an action of type **Webhook**.

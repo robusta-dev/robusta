@@ -16,7 +16,9 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=nagios&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=nagios&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id, and ``<CLUSTER_NAME>`` with the name of the cluster to file alerts under. The name must exactly match the cluster's name as it appears in the Robusta UI (the ``clusterName`` your Robusta agent was installed with). If ``cluster`` is omitted, alerts are silently filed under a generic ``external`` cluster.
 
 Configure Nagios
 ----------------
@@ -51,7 +53,7 @@ Define a notification command that references ``$USER20$``:
                 "type": "$NOTIFICATIONTYPE$",
                 "output": "$SERVICEOUTPUT$"
             }' \
-            'https://api.robusta.dev/webhooks?type=alert&origin=nagios&account_id=<ACCOUNT_ID>'
+            'https://api.robusta.dev/webhooks?type=alert&origin=nagios&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>'
     }
 
 Define an analogous ``notify-robusta-host`` command, then attach both to a Nagios contact:

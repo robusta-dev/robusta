@@ -16,9 +16,9 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=rootly&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
+    https://api.robusta.dev/webhooks?type=alert&origin=rootly&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>&token=<ROBUSTA_API_KEY>
 
-Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<ROBUSTA_API_KEY>`` with the API key you generated.
+Replace ``<ACCOUNT_ID>`` with your Robusta account id, ``<ROBUSTA_API_KEY>`` with the API key you generated, and ``<CLUSTER_NAME>`` with the name of the cluster to file alerts under. The name must exactly match the cluster's name as it appears in the Robusta UI (the ``clusterName`` your Robusta agent was installed with). If ``cluster`` is omitted, alerts are silently filed under a generic ``external`` cluster.
 
 Configure Rootly
 ----------------

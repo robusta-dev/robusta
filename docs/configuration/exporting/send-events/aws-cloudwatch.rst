@@ -16,7 +16,9 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id, and ``<CLUSTER_NAME>`` with the name of the cluster to file alerts under. The name must exactly match the cluster's name as it appears in the Robusta UI (the ``clusterName`` your Robusta agent was installed with). If ``cluster`` is omitted, alerts are silently filed under a generic ``external`` cluster.
 
 Recipe
 ------
@@ -32,7 +34,7 @@ Recipe
        import urllib.error
        import urllib.request
 
-       URL = "https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>"
+       URL = "https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>"
        TIMEOUT_SECONDS = 5
 
        def lambda_handler(event, context):
@@ -54,7 +56,7 @@ Recipe
                    raise
            return {"ok": True}
 
-4. Replace ``<ACCOUNT_ID>`` with your Robusta account ID and deploy.
+4. Replace ``<ACCOUNT_ID>`` with your Robusta account ID and ``<CLUSTER_NAME>`` with your cluster's name as it appears in the Robusta UI, then deploy.
 
 Alternatively, if you already use **Amazon EventBridge → API destination**, point the destination at the same URL with a Bearer token connection — no Lambda required.
 
