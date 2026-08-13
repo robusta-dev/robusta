@@ -758,7 +758,7 @@ runner:
     # KRR/Popeye scans, kubectl_command, netshoot, stress tests and debugger pods.
     # Setting true empties the runner Role and disables the
     # NodeFSSpaceAlerts and WeeklyKRRScan playbooks
-    disableCreateSecretsPodsJobs: false
+    disableCreateFromServiceAccount: false
   # set to override global.imagePullSecrets for the runner; leave empty to inherit the global
   imagePullSecrets: []
   extraVolumes: []
