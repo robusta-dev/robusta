@@ -199,7 +199,8 @@ def test_optional_rollout_writes_relocate_instead_of_disappearing(extra_args, ex
     api_group, resource = expected
 
     default = by_kind(render(*extra_args))
-    assert (api_group, resource, "patch") in grants(default["ClusterRole"])
+    for verb in ["patch", "update"]:
+        assert (api_group, resource, verb) in grants(default["ClusterRole"])
 
     restricted = by_kind(render("--set", "runner.clusterWideWriteAccess=false", *extra_args))
     for verb in ["patch", "update"]:
@@ -225,6 +226,37 @@ def test_cluster_wide_write_access_enabled_by_default():
         ("autoscaling", "horizontalpodautoscalers", "update"),  # scale_hpa_callback
     ]:
         assert grant in cluster_wide, f"{grant} is missing from the ClusterRole"
+
+
+def test_restricting_cluster_wide_writes_relocates_every_grant():
+    """
+    Restricting cluster-wide writes must MOVE grants into the namespaced Role, never drop them.
+
+    This is the general form of the per-resource test above: any rule added to the ClusterRole in
+    future that forgets a counterpart in robusta.runner.scopedWriteRules fails here, instead of
+    silently leaving a feature broken in restricted mode.
+    """
+    everything_on = [
+        "--set",
+        "openshift.enabled=true",
+        "--set",
+        "argoRollouts=true",
+        "--set",
+        "runner.customCRD={StrimziPodSet,CNPGCluster,ExecutionContext}",
+        "--set",
+        "enabledManagedConfiguration=true",
+        "--set",
+        "monitorHelmReleases=true",
+    ]
+    default = by_kind(render(*everything_on))
+    restricted = by_kind(render("--set", "runner.clusterWideWriteAccess=false", *everything_on))
+
+    default_writes = {grant for grant in grants(default["ClusterRole"]) if grant[2] not in READ_ONLY_VERBS}
+    still_granted = grants(restricted["ClusterRole"]) | grants(restricted["Role"])
+
+    # nodes are cluster-scoped, so a RoleBinding structurally cannot grant patch on them - this
+    # grant has nowhere to relocate to and is dropped on purpose (cordon/drain stop working).
+    assert default_writes - still_granted == {("", "nodes", "patch")}
 
 
 def test_managed_configuration_prometheusrules_are_namespaced():
