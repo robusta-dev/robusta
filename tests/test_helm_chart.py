@@ -138,13 +138,32 @@ def test_runner_role_can_run_robustas_own_jobs_and_debug_pods():
             ["--set", "argoRollouts=true", "--set", "runner.customCRD[0]=StrimziPodSet"],
             id="optional-crds",
         ),
+        pytest.param(["--set", "openshift.enabled=true"], id="openshift"),
+        pytest.param(
+            [
+                "--set",
+                "openshift.enabled=true",
+                "--set",
+                "argoRollouts=true",
+                "--set",
+                "runner.customCRD[0]=StrimziPodSet",
+                "--set",
+                "enabledManagedConfiguration=true",
+            ],
+            id="everything-on",
+        ),
     ],
 )
 def test_cluster_wide_write_access_disabled_leaves_a_read_only_clusterrole(extra_args):
     objects = by_kind(render("--set", "runner.clusterWideWriteAccess=false", *extra_args))
     cluster_wide = grants(objects["ClusterRole"])
+
     write_verbs = {grant for grant in cluster_wide if grant[2] not in READ_ONLY_VERBS}
-    assert write_verbs == set(), f"unexpected cluster-wide write verbs: {sorted(write_verbs)}"
+    # "use" on a SecurityContextConstraint is the one documented exception: SCCs are
+    # cluster-scoped, and without it the runner pod cannot be admitted on OpenShift at all.
+    assert write_verbs <= {
+        ("security.openshift.io", "securitycontextconstraints", "use")
+    }, f"unexpected cluster-wide write verbs: {sorted(write_verbs)}"
 
     # exec is opened with a GET by the python client, so read verbs are not harmless here
     assert not [grant for grant in cluster_wide if grant[1] == "pods/exec"]
@@ -153,6 +172,41 @@ def test_cluster_wide_write_access_disabled_leaves_a_read_only_clusterrole(extra
     namespaced = grants(objects["Role"])
     assert ("", "pods/exec", "get") in namespaced
     assert ("apps", "deployments", "patch") in namespaced
+
+
+@pytest.mark.parametrize(
+    "extra_args,expected",
+    [
+        pytest.param(["--set", "argoRollouts=true"], ("argoproj.io", "rollouts"), id="argo-rollouts"),
+        pytest.param(
+            ["--set", "runner.customCRD[0]=StrimziPodSet"], ("core.strimzi.io", "strimzipodsets"), id="strimzi"
+        ),
+        pytest.param(
+            ["--set", "runner.customCRD[0]=CNPGCluster"], ("postgresql.cnpg.io", "clusters"), id="cnpg"
+        ),
+        pytest.param(
+            ["--set", "runner.customCRD[0]=ExecutionContext"],
+            ("hub.knime.com", "executioncontexts"),
+            id="knime",
+        ),
+        pytest.param(
+            ["--set", "openshift.enabled=true"], ("apps.openshift.io", "deploymentconfigs"), id="openshift-dc"
+        ),
+    ],
+)
+def test_optional_rollout_writes_relocate_instead_of_disappearing(extra_args, expected):
+    """Restricting cluster-wide writes must not drop a grant entirely - it moves to the Role."""
+    api_group, resource = expected
+
+    default = by_kind(render(*extra_args))
+    assert (api_group, resource, "patch") in grants(default["ClusterRole"])
+
+    restricted = by_kind(render("--set", "runner.clusterWideWriteAccess=false", *extra_args))
+    for verb in ["patch", "update"]:
+        assert (api_group, resource, verb) not in grants(restricted["ClusterRole"])
+        assert (api_group, resource, verb) in grants(
+            restricted["Role"]
+        ), f"{api_group}/{resource}:{verb} vanished instead of moving to the namespaced Role"
 
 
 def test_cluster_wide_write_access_enabled_by_default():

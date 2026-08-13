@@ -57,15 +57,24 @@ inside the Robusta namespace:
     runner:
       clusterWideWriteAccess: false
 
-Robusta's own features are unaffected: KRR, Popeye, ``kubectl`` enrichments, the Python/Java
-debugger pods, node bash, scheduled jobs and managed alerts all operate in the release namespace.
+Everything Robusta runs as its own workload in the release namespace is unaffected: KRR, Popeye, the
+Python/Java debugger pods, node bash, scheduled jobs and managed alerts.
+
+``kubectl`` enrichments need a closer look. The Job itself always runs in the release namespace, so
+it starts fine — but it runs with the runner's ServiceAccount, so whether the command inside
+succeeds depends on what it does. Read-only commands (``kubectl get``, ``describe``, ``logs``,
+``top``) keep working against every namespace, because reads stay cluster-wide. Commands that
+mutate another namespace, or ``kubectl exec`` into a pod outside the release namespace, will be
+denied.
 
 .. note::
 
-   On OpenShift (``openshift.enabled: true``) the chart still grants the OpenShift-specific rules
-   cluster-wide — ``use`` on the SecurityContextConstraint the runner pod needs, plus the
-   ``apps.openshift.io`` and ``monitoring.coreos.com`` rules required to integrate with OpenShift's
-   built-in monitoring stack. Use ``runner.overrideClusterRoles`` if you need to remove those too.
+   On OpenShift (``openshift.enabled: true``), one grant stays cluster-wide even with
+   ``clusterWideWriteAccess: false``: ``use`` on the SecurityContextConstraint. SCCs are
+   cluster-scoped, so a ``RoleBinding`` cannot grant it, and without it the runner pod is not
+   admitted at all. Everything else OpenShift-specific follows the setting — the
+   ``apps.openshift.io`` and ``monitoring.coreos.com`` mutations move into the release-namespace
+   Role. Use ``runner.overrideClusterRoles`` if you need to remove the SCC grant too.
 
 What stops working
 ^^^^^^^^^^^^^^^^^^

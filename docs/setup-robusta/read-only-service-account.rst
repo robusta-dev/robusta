@@ -32,9 +32,9 @@ These features require write permissions and will gracefully fail if attempted w
 .. tip::
 
    If read-only is stricter than you need, ``runner.clusterWideWriteAccess: false`` is a middle
-   ground: the runner keeps write access inside its own namespace — so KRR, Popeye, ``kubectl``
-   enrichments and debug pods keep working — but cannot modify anything in other namespaces. See
-   :ref:`Runner Permissions and Least Privilege <runner-least-privilege>`.
+   ground: the runner keeps write access inside its own namespace — so KRR, Popeye, debug pods and
+   read-only ``kubectl`` enrichments keep working — but cannot modify anything in other namespaces.
+   See :ref:`Runner Permissions and Least Privilege <runner-least-privilege>`.
 
 Implementation: Using overrideClusterRoles
 -------------------------------------------

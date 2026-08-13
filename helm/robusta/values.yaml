@@ -760,7 +760,9 @@ runner:
   # namespaced Role and are unaffected by this setting.
   #   true  (default) - remediation and troubleshooting actions work cluster-wide: rollout restart,
   #                     delete/evict pods, cordon nodes, exec into any pod, recreate OOMKilled jobs.
-  #   false           - the ClusterRole grants only get/list/watch, so the runner ServiceAccount is
+  #   false           - the ClusterRole grants only get/list/watch (the sole exception is "use" on
+  #                     the OpenShift SecurityContextConstraint, which is cluster-scoped and
+  #                     required for the runner pod to be admitted), so the runner ServiceAccount is
   #                     no longer a cluster-admin-equivalent credential. Actions that modify
   #                     resources outside the release namespace stop working (node cordon/drain,
   #                     pod bash, rollout restart, volume analysis, HPA scaling).
