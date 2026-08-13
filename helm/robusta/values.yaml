@@ -756,7 +756,7 @@ runner:
   rbac:
     # WARNING: creation only happens in Robusta's namespace and is critical for
     # KRR/Popeye scans, kubectl_command, netshoot, stress tests and debugger pods.
-    # Setting true empties the runner Role and disables the
+    # Setting true removes the runner Role and disables the
     # NodeFSSpaceAlerts and WeeklyKRRScan playbooks
     disableCreateFromServiceAccount: false
   # set to override global.imagePullSecrets for the runner; leave empty to inherit the global

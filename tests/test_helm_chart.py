@@ -89,7 +89,15 @@ def test_runner_local_role_grants_namespaced_create():
     for rule in role.get("rules", []):
         if "create" in rule.get("verbs", []):
             granted.update(rule.get("resources", []))
-    assert {"pods", "pods/exec", "secrets", "jobs", "deployments"} <= granted
+    assert {
+        "pods",
+        "pods/exec",
+        "configmaps",
+        "persistentvolumeclaims",
+        "secrets",
+        "jobs",
+        "deployments",
+    } <= granted
 
     binding = get_doc(docs, "RoleBinding", "runner-local-role-binding")
     assert binding is not None
@@ -98,11 +106,10 @@ def test_runner_local_role_grants_namespaced_create():
     assert "runner-service-account" in subject["name"]
 
 
-def test_namespaced_create_flag_empties_role_and_disables_playbooks():
+def test_namespaced_create_flag_removes_role_and_disables_playbooks():
     docs = render_chart(["--set", "runner.rbac.disableCreateFromServiceAccount=true"])
-    role = get_doc(docs, "Role", "runner-local-role")
-    assert role["rules"] == []
-    assert get_doc(docs, "RoleBinding", "runner-local-role-binding") is not None
+    assert get_doc(docs, "Role", "runner-local-role") is None
+    assert get_doc(docs, "RoleBinding", "runner-local-role-binding") is None
 
     names = playbook_names(["--set", "runner.rbac.disableCreateFromServiceAccount=true"])
     assert "NodeFSSpaceAlerts" not in names
