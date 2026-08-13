@@ -754,19 +754,9 @@ runner:
   # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
   overrideClusterRoles: []
   rbac:
-    # Grants the runner "create" permissions (pods, pods/exec, jobs, secrets, deployments,
-    # configmaps, persistentvolumeclaims) ONLY in the namespace Robusta is installed in,
-    # via a namespaced Role. Robusta never needs cluster-wide create permissions - all
-    # built-in features create resources in Robusta's own namespace.
-    # Disabling this removes those create permissions AND disables the built-in features
-    # that rely on them:
-    #   - KRR scans (WeeklyKRRScan) and Popeye scans - run as Jobs; KRR auth is passed
-    #     via a Secret created in Robusta's namespace
-    #   - kubectl_command, ping/netshoot, stress tests, disk_benchmark - run as Jobs
-    #   - node/pod debugger actions (node_disk_analyzer, node CPU profiling, python/java
-    #     debugger, bash enrichers) - create a debugger pod in Robusta's namespace
-    #   - chaos engineering (high_cpu) - creates a Deployment
-    # When disabled, these actions fail fast with a clear error instead of a K8s 403.
+    # Create permissions, granted only in Robusta's namespace
+    # Disabling breaks: KRR/Popeye scans, kubectl_command, netshoot, stress tests
+    # disk_benchmark, debugger pods (node_disk_analyzer, profilers), chaos engineering
     namespacedCreate: true
   # set to override global.imagePullSecrets for the runner; leave empty to inherit the global
   imagePullSecrets: []

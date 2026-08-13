@@ -1,10 +1,3 @@
-"""
-Regression tests for SEC-INFRA-001 (ROB-902): the runner ClusterRole must not grant
-cluster-wide create permissions (secrets/pods/deployments/pods-exec). All create
-permissions are granted only in the installation namespace via a namespaced Role.
-
-Requires the `helm` binary; tests are skipped if it is not installed.
-"""
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,8 +10,7 @@ CHART_PATH = Path(__file__).parent.parent / "helm" / "robusta"
 
 pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm binary not available")
 
-# pods/eviction is the single allowed cluster-wide create: it is required for node drain,
-# and can only evict existing pods - it cannot create new workloads.
+# drain needs eviction; it cannot create workloads
 ALLOWED_CLUSTER_WIDE_CREATE = {"pods/eviction"}
 
 
@@ -48,7 +40,6 @@ def get_doc(docs: List[dict], kind: str, name_contains: str = "") -> Optional[di
 
 
 def test_runner_clusterrole_no_cluster_wide_create():
-    """The flagged escalation primitives must not exist: no cluster-wide create verbs."""
     docs = render_chart()
     cluster_role = get_doc(docs, "ClusterRole", "runner-cluster-role")
     assert cluster_role is not None

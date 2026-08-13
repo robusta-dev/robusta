@@ -54,8 +54,7 @@ To use read-only mode, create a custom values file with the following configurat
 .. code-block:: yaml
 
     runner:
-      # Also remove the namespaced Role that grants create permissions in Robusta's own
-      # namespace (overrideClusterRoles only replaces the ClusterRole rules).
+      # remove the namespaced create Role too
       rbac:
         namespacedCreate: false
       overrideClusterRoles:
