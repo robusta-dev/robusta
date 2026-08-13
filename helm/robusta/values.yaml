@@ -134,6 +134,12 @@ lightActions:
 enablePrometheusStack: false
 enabledManagedConfiguration: false
 enableServiceMonitors: true
+# monitor Helm releases (all namespaces) and enable on_helm_release_* triggers.
+# Robusta only reads Helm v3 release Secrets (type helm.sh/release.v1, listed with label selector owner=helm);
+# the configmap/sql storage drivers and Helm v2 are not supported.
+# NOTE: enabling this grants the runner ClusterRole get/list/watch on secrets cluster-wide,
+# because Kubernetes RBAC cannot filter by secret type or label.
+# See https://docs.robusta.dev/master/playbook-reference/triggers/helm-releases-monitoring.html
 monitorHelmReleases: false
 argoRollouts: false
 
