@@ -41,6 +41,7 @@ from robusta.integrations.scheduled.playbook_scheduler_manager_impl import Playb
 from robusta.integrations.scheduled.trigger import ScheduledTriggerEvent
 from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, Registry, SinksRegistry
 from robusta.model.playbook_definition import PlaybookDefinition
+from robusta.utils.archive import safe_extract_tar
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.file_system_watcher import FileSystemWatcher
 from robusta.core.exceptions import SupabaseDnsException
@@ -354,7 +355,7 @@ class ConfigLoader:
             f.flush()
 
             with tarfile.open(f.name, "r:gz") as tar, tempfile.TemporaryDirectory() as temp_dir:
-                tar.extractall(path=temp_dir)
+                safe_extract_tar(tar, temp_dir)
                 extracted_items = os.listdir(temp_dir)
 
                 pkg_path = temp_dir
