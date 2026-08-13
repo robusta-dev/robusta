@@ -63,7 +63,7 @@ active_playbooks:
 {{- end }}
 
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
-{{- if not .Values.runner.rbac.namespacedCreate }}
+{{- if .Values.runner.rbac.disableCreateSecretsPodsJobs }}
 {{- /* these playbooks create pods/jobs */}}
 {{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan") }}
 {{- end }}

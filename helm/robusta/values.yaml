@@ -754,11 +754,11 @@ runner:
   # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
   overrideClusterRoles: []
   rbac:
-    # Create permissions, granted only in Robusta's namespace
-    # Disabling empties the runner Role and disables the NodeFSSpaceAlerts
-    # and WeeklyKRRScan playbooks, and breaks actions that create resources:
-    # scans, kubectl_command, netshoot, stress tests, debugger pods, chaos engineering
-    namespacedCreate: true
+    # WARNING: creation only happens in Robusta's namespace and is critical for
+    # KRR/Popeye scans, kubectl_command, netshoot, stress tests and debugger pods.
+    # Setting true empties the runner Role and disables the
+    # NodeFSSpaceAlerts and WeeklyKRRScan playbooks
+    disableCreateSecretsPodsJobs: false
   # set to override global.imagePullSecrets for the runner; leave empty to inherit the global
   imagePullSecrets: []
   extraVolumes: []

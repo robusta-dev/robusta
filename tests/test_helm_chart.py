@@ -99,12 +99,12 @@ def test_runner_local_role_grants_namespaced_create():
 
 
 def test_namespaced_create_flag_empties_role_and_disables_playbooks():
-    docs = render_chart(["--set", "runner.rbac.namespacedCreate=false"])
+    docs = render_chart(["--set", "runner.rbac.disableCreateSecretsPodsJobs=true"])
     role = get_doc(docs, "Role", "runner-local-role")
     assert role["rules"] == []
     assert get_doc(docs, "RoleBinding", "runner-local-role-binding") is not None
 
-    names = playbook_names(["--set", "runner.rbac.namespacedCreate=false"])
+    names = playbook_names(["--set", "runner.rbac.disableCreateSecretsPodsJobs=true"])
     assert "NodeFSSpaceAlerts" not in names
     assert "WeeklyKRRScan" not in names
 
