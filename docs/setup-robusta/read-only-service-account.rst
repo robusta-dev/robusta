@@ -3,7 +3,15 @@
 Read-Only Service Account
 ========================================
 
-By default, Robusta's runner service account has permissions to create, update, and delete Kubernetes resources. This guide explains how to restrict the runner to read-only permissions for environments where you want to prevent any modifications to cluster resources.
+By default, Robusta's runner service account has permissions to update and delete Kubernetes resources cluster-wide (for remediation actions like ``delete_pod``, ``rollout_restart`` and node drain), while all ``create`` permissions — pods, pods/exec, jobs, secrets, deployments and configmaps — are granted **only in Robusta's installation namespace** via a namespaced Role. Robusta never has cluster-wide create permissions. This guide explains how to restrict the runner further, to fully read-only permissions.
+
+.. tip::
+
+   If you only want to remove the namespace-scoped create permissions (used for scan Jobs,
+   debugger pods and the KRR auth Secret), set ``runner.rbac.namespacedCreate: false`` in your
+   Helm values. This removes the namespaced Role and cleanly disables the built-in features
+   that depend on it (KRR/Popeye scans, kubectl/netshoot/stress actions, debugger pods, chaos
+   engineering). For fully read-only mode, use ``overrideClusterRoles`` as described below.
 
 Why Read-Only Mode?
 -------------------
@@ -46,6 +54,10 @@ To use read-only mode, create a custom values file with the following configurat
 .. code-block:: yaml
 
     runner:
+      # Also remove the namespaced Role that grants create permissions in Robusta's own
+      # namespace (overrideClusterRoles only replaces the ClusterRole rules).
+      rbac:
+        namespacedCreate: false
       overrideClusterRoles:
         # Core API resources - read-only
         - apiGroups:
