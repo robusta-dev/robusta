@@ -1,7 +1,7 @@
 import logging
 import time
 
-from robusta.api import ExecutionBaseEvent, RobustaDeployment, action, check_create_permissions
+from robusta.api import ExecutionBaseEvent, RobustaDeployment, action
 
 
 @action
@@ -10,7 +10,6 @@ def generate_high_cpu(event: ExecutionBaseEvent):
     Create a pod with high CPU on the cluster for 60 seconds.
     Can be used to simulate alerts or other high CPU load scenarios.
     """
-    check_create_permissions()
     logging.info("starting high cpu")
     dep = RobustaDeployment.from_image("stress-test", "jfusterm/stress", "stress --cpu 100")
     dep = dep.createNamespacedDeployment(dep.metadata.namespace).obj

@@ -9,9 +9,10 @@ By default, Robusta's runner service account has permissions to update and delet
 
    If you only want to remove the namespace-scoped create permissions (used for scan Jobs,
    debugger pods and the KRR auth Secret), set ``runner.rbac.namespacedCreate: false`` in your
-   Helm values. This removes the namespaced Role and cleanly disables the built-in features
-   that depend on it (KRR/Popeye scans, kubectl/netshoot/stress actions, debugger pods, chaos
-   engineering). For fully read-only mode, use ``overrideClusterRoles`` as described below.
+   Helm values. This empties the namespaced Role and disables the built-in playbooks that
+   depend on it (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``); actions that create resources
+   (scans, kubectl/netshoot/stress, debugger pods, chaos engineering) will fail without
+   permissions. For fully read-only mode, use ``overrideClusterRoles`` as described below.
 
 Why Read-Only Mode?
 -------------------

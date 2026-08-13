@@ -1,3 +1,4 @@
+import base64
 import shutil
 import subprocess
 from pathlib import Path
@@ -30,6 +31,25 @@ def render_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
     ] + (extra_args or [])
     output = subprocess.check_output(cmd, text=True)
     return [doc for doc in yaml.safe_load_all(output) if doc]
+
+
+def playbook_names(extra_args: Optional[List[str]] = None) -> set:
+    cmd = [
+        "helm",
+        "template",
+        str(CHART_PATH),
+        "--set",
+        "clusterName=test",
+        "--set",
+        "sinksConfig[0].file_sink.name=test",
+        "--set",
+        "enablePlatformPlaybooks=true",
+        "-s",
+        "templates/playbooks-config.yaml",
+    ] + (extra_args or [])
+    docs = [doc for doc in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if doc]
+    config = base64.b64decode(docs[0]["data"]["active_playbooks.yaml"]).decode()
+    return {p.get("name") for p in yaml.safe_load(config)["active_playbooks"]}
 
 
 def get_doc(docs: List[dict], kind: str, name_contains: str = "") -> Optional[dict]:
@@ -78,21 +98,21 @@ def test_runner_local_role_grants_namespaced_create():
     assert "runner-service-account" in subject["name"]
 
 
-def test_namespaced_create_flag_disables_role_and_playbooks():
+def test_namespaced_create_flag_empties_role_and_disables_playbooks():
     docs = render_chart(["--set", "runner.rbac.namespacedCreate=false"])
-    assert get_doc(docs, "Role", "runner-local-role") is None
-    assert get_doc(docs, "RoleBinding", "runner-local-role-binding") is None
+    role = get_doc(docs, "Role", "runner-local-role")
+    assert role["rules"] == []
+    assert get_doc(docs, "RoleBinding", "runner-local-role-binding") is not None
 
-    deployment = get_doc(docs, "Deployment", "runner")
-    env = deployment["spec"]["template"]["spec"]["containers"][0]["env"]
-    assert {"name": "CREATE_PERMISSIONS_DISABLED", "value": "True"} in env
+    names = playbook_names(["--set", "runner.rbac.namespacedCreate=false"])
+    assert "NodeFSSpaceAlerts" not in names
+    assert "WeeklyKRRScan" not in names
 
 
-def test_namespaced_create_enabled_by_default():
-    docs = render_chart()
-    deployment = get_doc(docs, "Deployment", "runner")
-    env_names = [e["name"] for e in deployment["spec"]["template"]["spec"]["containers"][0]["env"]]
-    assert "CREATE_PERMISSIONS_DISABLED" not in env_names
+def test_playbooks_enabled_by_default():
+    names = playbook_names()
+    assert "NodeFSSpaceAlerts" in names
+    assert "WeeklyKRRScan" in names
 
 
 def test_override_cluster_roles_still_replaces_rules():

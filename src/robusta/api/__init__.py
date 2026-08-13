@@ -122,7 +122,6 @@ from robusta.core.playbooks.node_enrichment_utils import (
 )
 from robusta.core.playbooks.node_playbook_utils import create_node_graph_enrichment, dmesg_enricher
 from robusta.core.playbooks.pod_utils.crashloop_utils import get_crash_report_enrichments
-from robusta.core.playbooks.rbac_guard import check_create_permissions
 from robusta.core.playbooks.pod_utils.imagepull_utils import (
     get_image_pull_backoff_container_statuses,
     get_image_pull_backoff_enrichment,

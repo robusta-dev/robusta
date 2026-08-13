@@ -31,7 +31,6 @@ from robusta.integrations.kubernetes.api_client_utils import (
     wait_for_pod_status,
     wait_until_job_complete,
 )
-from robusta.core.playbooks.rbac_guard import check_create_permissions
 from robusta.integrations.kubernetes.templates import get_deployment_yaml
 from robusta.utils.parsing import load_json
 
@@ -243,7 +242,6 @@ class RobustaPod(Pod):
         """
         Creates a debugging pod with high privileges
         """
-        check_create_permissions()
 
         volume_mounts = None
         volumes = None
@@ -491,7 +489,6 @@ class RobustaJob(Job):
         """
         This secret will be auto-deleted when the pod is Terminated
         """
-        check_create_permissions()
         # Due to inconsistant GC in K8s the OwnerReference needs to be the pod and not the job (Found in azure)
         job_pod = self.get_single_pod()
         robusta_owner_reference = OwnerReference(
@@ -528,7 +525,6 @@ class RobustaJob(Job):
         custom_pod_labels: Optional[Dict[str, str]] = None,
         return_logs: bool = True,
     ) -> str:
-        check_create_permissions()
         pod_meta = ObjectMeta(annotations=custom_annotations, labels=custom_pod_labels)
         if finalizers:
             pod_meta.finalizers = finalizers

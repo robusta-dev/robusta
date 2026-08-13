@@ -19,7 +19,6 @@ from robusta.api import (
     PersistentVolumeEvent,
     RobustaPod,
     action,
-    check_create_permissions,
 )
 
 
@@ -116,7 +115,6 @@ def volume_analysis(event: PersistentVolumeEvent):
 
 
 def persistent_volume_reader(persistent_volume):
-    check_create_permissions()
     reader_pod_spec = RobustaPod(
         apiVersion="v1",
         kind="Pod",
