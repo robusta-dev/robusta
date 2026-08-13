@@ -23,6 +23,10 @@ Limiting Robusta's Access in Your Cluster
 
 To reduce the permissions that Robusta needs in your cluster:
 
+- Remove the runner's write access outside its own namespace - refer to
+  :ref:`Runner Permissions and Least Privilege <runner-least-privilege>`
+- Make the runner read-only - refer to :ref:`Read-Only Service Account <read-only-service-account>`
+- Scope HolmesGPT to specific namespaces - refer to :ref:`rbac-namespace-scoping`
 - On OpenShift you can deploy Robusta with a limited SCC - refer to :ref:`OpenShift`
 
 To further limit Robusta's permissions, :ref:`speak to our team for guidance <Getting Support>`.

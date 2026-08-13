@@ -29,11 +29,19 @@ These features require write permissions and will gracefully fail if attempted w
 
 **Read-only mode is ideal for**: Investigation, diagnostics, log analysis, metric enrichment, and reporting.
 
+.. tip::
+
+   If read-only is stricter than you need, ``runner.clusterWideWriteAccess: false`` is a middle
+   ground: the runner keeps write access inside its own namespace — so KRR, Popeye, ``kubectl``
+   enrichments and debug pods keep working — but cannot modify anything in other namespaces. See
+   :ref:`Runner Permissions and Least Privilege <runner-least-privilege>`.
+
 Implementation: Using overrideClusterRoles
 -------------------------------------------
 
 Robusta's Helm chart supports the ``runner.overrideClusterRoles`` parameter. When set, the rules you
-provide **fully replace** the built-in runner ClusterRole rules, so only the permissions you list are granted.
+provide **fully replace** the built-in runner ClusterRole rules, and the chart also skips the
+namespaced runner ``Role``, so only the permissions you list are granted.
 
 .. note::
 
@@ -246,8 +254,15 @@ Use ``kubectl auth can-i`` to confirm what the runner service account can and ca
     kubectl auth can-i delete pods      --as=$SA -n default   # -> no
     kubectl auth can-i patch deployments --as=$SA -n default  # -> no
     kubectl auth can-i create pods/exec --as=$SA -n default   # -> no
+    kubectl auth can-i get pods/exec    --as=$SA -n default   # -> no
 
 The read verbs should return ``yes`` while all write/exec verbs return ``no``, confirming the runner is read-only.
+
+.. important::
+
+   Do not add ``pods/exec`` to the read-only rules above, not even with ``get``. The Kubernetes
+   python client opens an exec stream with a GET request, so ``get`` on ``pods/exec`` is enough to
+   run commands inside any pod - it is an execution permission, not a read permission.
 
 Notes and Recommendations
 --------------------------

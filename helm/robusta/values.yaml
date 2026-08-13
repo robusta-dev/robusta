@@ -751,8 +751,21 @@ runner:
   # Legacy: rules here are ADDED to the built-in runner ClusterRole rules (backwards compatible).
   customClusterRoleRules: []
   # When set, these rules fully REPLACE the built-in runner ClusterRole rules (built-ins and
-  # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
+  # customClusterRoleRules are omitted), and the namespaced runner Role is not created at all.
+  # Use for a read-only runner. Empty = built-in behavior.
   overrideClusterRoles: []
+  # Whether the runner may WRITE (create/patch/update/delete/exec) to resources in namespaces
+  # other than its own. Writes that Robusta only ever performs in its own namespace (KRR/Popeye
+  # jobs, debug pods, job secrets, managed PrometheusRules) are always granted through a
+  # namespaced Role and are unaffected by this setting.
+  #   true  (default) - remediation and troubleshooting actions work cluster-wide: rollout restart,
+  #                     delete/evict pods, cordon nodes, exec into any pod, recreate OOMKilled jobs.
+  #   false           - the ClusterRole grants only get/list/watch, so the runner ServiceAccount is
+  #                     no longer a cluster-admin-equivalent credential. Actions that modify
+  #                     resources outside the release namespace stop working (node cordon/drain,
+  #                     pod bash, rollout restart, volume analysis, HPA scaling).
+  # See docs/setup-robusta/runner-least-privilege.rst
+  clusterWideWriteAccess: true
   # set to override global.imagePullSecrets for the runner; leave empty to inherit the global
   imagePullSecrets: []
   extraVolumes: []

@@ -19,6 +19,7 @@
    json-logging
    configuration-secrets
    openshift
+   runner-least-privilege
    read-only-service-account
    rbac-namespace-scoping
    node-selector

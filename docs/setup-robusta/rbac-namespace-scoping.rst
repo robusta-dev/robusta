@@ -152,7 +152,10 @@ Example global instruction:
 Notes on the runner
 -------------------
 
-The Robusta runner remains cluster-wide. To reduce the runner's permissions, use
-:ref:`a read-only ClusterRole <read-only-service-account>` via ``runner.overrideClusterRoles``.
-Fully scoping the runner to a subset of namespaces is not supported, because the runner watches
-cluster-wide resources and events to function.
+The Robusta runner remains cluster-wide. Fully scoping the runner to a subset of namespaces is not
+supported, because the runner watches cluster-wide resources and events to function. You can still
+reduce what it is allowed to *change*:
+
+* ``runner.clusterWideWriteAccess: false`` — cluster-wide reads, but no writes outside the Robusta
+  namespace. See :ref:`Runner Permissions and Least Privilege <runner-least-privilege>`.
+* ``runner.overrideClusterRoles`` — :ref:`a fully read-only runner <read-only-service-account>`.
