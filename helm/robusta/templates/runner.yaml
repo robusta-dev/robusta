@@ -190,7 +190,7 @@ spec:
           - name: app-git-volume
             mountPath: /app/robusta-git
           - name: cache-volume
-            mountPath: /root/.cache
+            mountPath: /home/robusta/.cache
           - name: venv-lib-volume
             mountPath: /venv/lib/python3.11/site-packages
           {{- end }}

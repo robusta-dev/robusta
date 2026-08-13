@@ -86,7 +86,8 @@ RUN apt-get update \
 
 
 # Patching CVE-2024-32002
-RUN git config --global core.symlinks false
+# --system rather than --global so the setting also applies to the non-root runtime user
+RUN git config --system core.symlinks false
 
 # Temporary setuptools CVE fix untill python:3.12-slim image will be used.
 RUN rm -rf /usr/local/lib/python3.11/ensurepip/_bundled/setuptools-65.5.0-py3-none-any.whl
@@ -115,6 +116,14 @@ RUN chmod 0644 /etc/apt/keyrings/kubernetes-apt-keyring.asc \
     && apt-get update \
     && apt-get install -y --no-install-recommends kubectl \
     && rm -rf /var/lib/apt/lists/*
+
+# Run as a non-root user. uid/gid 1000 matches runner.securityContext.pod in the Helm chart.
+RUN groupadd --gid 1000 robusta \
+    && useradd --uid 1000 --gid 1000 --create-home --home-dir /home/robusta --shell /sbin/nologin robusta \
+    && chown -R 1000:1000 /app /venv /etc/robusta /home/robusta
+
+ENV HOME=/home/robusta
+USER 1000
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering

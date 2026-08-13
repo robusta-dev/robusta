@@ -766,12 +766,21 @@ runner:
   securityContext:
     container:
       allowPrivilegeEscalation: false
-      capabilities: {}
+      capabilities:
+        drop:
+          - ALL
       privileged: false
-      readOnlyRootFilesystem: false
-    pod: {}
+      readOnlyRootFilesystem: true
+    pod:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      # emptyDir/PVC mounts are created root-owned; fsGroup makes them writable for uid 1000
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
-  hardenedFs: false
+  hardenedFs: true
   setKRRSecurityContext: false
   #Enabled custom DNS configuration for runner
   dnsConfig:
