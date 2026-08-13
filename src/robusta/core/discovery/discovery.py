@@ -854,28 +854,6 @@ class Discovery:
         )
 
 
-def resource_ref(resource) -> str:
-    """Short `Kind namespace/name` reference for logging.
-
-    The extract_* helpers below log on failure. Interpolating the resource
-    itself dumps its entire pretty-printed spec/status — a few hundred lines per
-    pod, which drowns the log and the traceback that matters. Identify the
-    resource instead; the full object is available at debug level.
-    """
-    try:
-        kind = getattr(resource, "kind", None) or type(resource).__name__
-        metadata = getattr(resource, "metadata", None)
-        name = getattr(metadata, "name", None)
-        if not name:
-            # Nothing to identify it by — the kind alone still beats a full dump,
-            # and the traceback carries the rest.
-            return str(kind)
-        namespace = getattr(metadata, "namespace", None)
-        return f"{kind} {namespace}/{name}" if namespace else f"{kind} {name}"
-    except Exception:
-        return type(resource).__name__
-
-
 # This section below contains utility related to k8s python api objects (rather than hikaru)
 def extract_containers(resource) -> List[V1Container]:
     """Extract containers from k8s python api object (not hikaru)"""
@@ -893,8 +871,7 @@ def extract_containers(resource) -> List[V1Container]:
 
         return containers
     except Exception:  # may fail if one of the attributes is None
-        logging.error(f"Failed to extract containers from {resource_ref(resource)}", exc_info=True)
-        logging.debug(f"Resource that failed containers extraction: {resource}")
+        logging.error(f"Failed to extract containers from {resource}", exc_info=True)
     return []
 
 
@@ -915,23 +892,18 @@ def extract_containers_k8(resource) -> List[Container]:
 
         return containers
     except Exception:  # may fail if one of the attributes is None
-        logging.error(f"Failed to extract containers from {resource_ref(resource)}", exc_info=True)
-        logging.debug(f"Resource that failed containers extraction: {resource}")
+        logging.error(f"Failed to extract containers from {resource}", exc_info=True)
     return []
 
 
 def is_pod_ready(pod) -> bool:
-    # `status.conditions` is None on a pod the API server has accepted but
-    # kubelet has not reported on yet (routinely seen on autoscaler-created
-    # pods discovered in the same second they were created). Without the
-    # `or []` the iteration below raised TypeError, which extract_ready_pods
-    # caught and logged as an ERROR with the whole pod object dumped into it.
+    # Unset until kubelet reports on the pod.
     conditions = []
     if isinstance(pod, V1Pod):
-        conditions = pod.status.conditions or []
+        conditions = getattr(pod.status, "conditions", None) or []
 
     if isinstance(pod, Pod):
-        conditions = pod.status.conditions or []
+        conditions = getattr(pod.status, "conditions", None) or []
 
     for condition in conditions:
         if condition.type == "Ready":
@@ -986,8 +958,7 @@ def extract_ready_pods(resource) -> int:
 
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
-        logging.error(f"Failed to extract ready pods from {resource_ref(resource)}", exc_info=True)
-        logging.debug(f"Resource that failed ready pods extraction: {resource}")
+        logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
     return 0
 
 
@@ -1010,8 +981,7 @@ def extract_total_pods(resource) -> int:
             return 1
         return 0
     except Exception:
-        logging.error(f"Failed to extract total pods from {resource_ref(resource)}", exc_info=True)
-        logging.debug(f"Resource that failed total pods extraction: {resource}")
+        logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
     return 1
 
 
@@ -1054,8 +1024,7 @@ def extract_volumes(resource) -> List[V1Volume]:
             volumes = resource.spec.volumes
         return volumes
     except Exception:  # may fail if one of the attributes is None
-        logging.error(f"Failed to extract volumes from {resource_ref(resource)}", exc_info=True)
-        logging.debug(f"Resource that failed volumes extraction: {resource}")
+        logging.error(f"Failed to extract volumes from {resource}", exc_info=True)
     return []
 
 
@@ -1074,6 +1043,5 @@ def extract_volumes_k8(resource) -> List[Volume]:
             volumes = resource.spec.volumes
         return volumes
     except Exception:  # may fail if one of the attributes is None
-        logging.error(f"Failed to extract volumes from {resource_ref(resource)}", exc_info=True)
-        logging.debug(f"Resource that failed volumes extraction: {resource}")
+        logging.error(f"Failed to extract volumes from {resource}", exc_info=True)
     return []
