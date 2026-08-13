@@ -130,6 +130,9 @@ spec:
           {{- if not .Values.monitorHelmReleases }}
           - name: DISABLE_HELM_MONITORING
             value: "True"
+          {{- else if .Values.helmReleaseSecretTypes }}
+          - name: HELM_RELEASE_SECRET_TYPES
+            value: {{ join "," .Values.helmReleaseSecretTypes | quote }}
           {{- end }}
           {{- if .Values.enableHolmesGPT }}
           - name: HOLMES_ENABLED

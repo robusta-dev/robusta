@@ -100,6 +100,10 @@ DISCOVERY_BATCH_SIZE = int(os.environ.get("DISCOVERY_BATCH_SIZE", 30000))
 DISCOVERY_POD_OWNED_PODS = load_bool("DISCOVERY_POD_OWNED_PODS", False)
 
 DISABLE_HELM_MONITORING = load_bool("DISABLE_HELM_MONITORING", False)
+# comma-separated secret types read during helm releases discovery, applied as field selectors
+HELM_RELEASE_SECRET_TYPES = [
+    t.strip() for t in os.environ.get("HELM_RELEASE_SECRET_TYPES", "helm.sh/release.v1").split(",") if t.strip()
+]
 DISABLE_FINDINGS_PERSISTENCE = load_bool("DISABLE_FINDINGS_PERSISTENCE", False)
 DISABLE_DISCOVERY = load_bool("DISABLE_DISCOVERY", False)
 DISABLE_RESOURCE_WATCH_PERSISTENCE = load_bool("DISABLE_RESOURCE_WATCH_PERSISTENCE", False)

@@ -45,6 +45,7 @@ from robusta.core.model.cluster_status import ClusterStats
 from robusta.core.model.env_vars import (
     ARGO_ROLLOUTS,
     DISABLE_HELM_MONITORING,
+    HELM_RELEASE_SECRET_TYPES,
     DISCOVERY_BATCH_SIZE,
     DISCOVERY_MAX_BATCHES,
     DISCOVERY_POD_OWNED_PODS,
@@ -702,29 +703,32 @@ class Discovery:
         if not DISABLE_HELM_MONITORING:
             # discover helm state
             try:
-                continue_ref: Optional[str] = None
-                for _ in range(DISCOVERY_MAX_BATCHES):
-                    secrets = client.CoreV1Api().list_secret_for_all_namespaces(
-                        label_selector="owner=helm", _continue=continue_ref
-                    )
-                    if not secrets.items:
-                        break
+                for secret_type in HELM_RELEASE_SECRET_TYPES:
+                    continue_ref: Optional[str] = None
+                    for _ in range(DISCOVERY_MAX_BATCHES):
+                        secrets = client.CoreV1Api().list_secret_for_all_namespaces(
+                            label_selector="owner=helm",
+                            field_selector=f"type={secret_type}",
+                            _continue=continue_ref,
+                        )
+                        if not secrets.items:
+                            break
 
-                    for secret_item in secrets.items:
-                        release_data = secret_item.data.get("release", None)
-                        if not release_data:
-                            continue
+                        for secret_item in secrets.items:
+                            release_data = secret_item.data.get("release", None)
+                            if not release_data:
+                                continue
 
-                        try:
-                            decoded_release_row = HelmRelease.from_api_server(secret_item.data["release"])
-                            # we use map here to deduplicate and pick only the latest release data
-                            helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
-                        except Exception as e:
-                            logging.error(f"an error occurred while decoding helm releases: {e}")
+                            try:
+                                decoded_release_row = HelmRelease.from_api_server(secret_item.data["release"])
+                                # we use map here to deduplicate and pick only the latest release data
+                                helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
+                            except Exception as e:
+                                logging.error(f"an error occurred while decoding helm releases: {e}")
 
-                    continue_ref = secrets.metadata._continue
-                    if not continue_ref:
-                        break
+                        continue_ref = secrets.metadata._continue
+                        if not continue_ref:
+                            break
 
             except Exception as e:
                 logging.error(

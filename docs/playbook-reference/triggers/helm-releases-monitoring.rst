@@ -16,51 +16,29 @@ There are two prerequisites for using Helm triggers:
 * The :ref:`Robusta UI` sink must be enabled
 * ``monitorHelmReleases: true`` must be set in Robusta's Helm values
 
-Supported release storage types
---------------------------------
+Secret types and permissions
+-----------------------------
 
-Robusta discovers Helm releases by reading the release state that Helm itself stores in the cluster.
-Only the following storage backend is supported:
+Helm v3 stores release state in Secrets of type ``helm.sh/release.v1`` (the ``secret`` storage
+driver — Helm's default). Robusta reads only these secrets: it lists them across all namespaces with
+the label selector ``owner=helm`` and a ``type`` field selector, and decodes only the ``release``
+payload. The ``configmap`` and ``sql`` storage drivers and Helm v2 are not supported.
 
-.. list-table::
-   :header-rows: 1
-   :widths: 25 30 45
+The secret types read are configurable in Robusta's Helm values (defaults shown):
 
-   * - Helm storage driver
-     - Kubernetes object read
-     - Supported
-   * - ``secret`` (Helm v3 default)
-     - ``Secret`` of type ``helm.sh/release.v1``, labeled ``owner=helm``
-     - ✅ Yes
-   * - ``configmap``
-     - ``ConfigMap`` with release payload
-     - ❌ No
-   * - ``sql``
-     - External SQL database
-     - ❌ No
-   * - Helm v2 (Tiller)
-     - ``ConfigMap`` in ``kube-system``
-     - ❌ No
+.. code-block:: yaml
 
-When listing secrets, Robusta always applies the label selector ``owner=helm`` and only decodes the
-``release`` payload of matching secrets — the contents of other secrets are never read or sent anywhere.
+    monitorHelmReleases: true
+    helmReleaseSecretTypes:
+      - helm.sh/release.v1
 
-Required permissions
----------------------
+.. note::
 
-Setting ``monitorHelmReleases: true`` adds ``get``, ``list`` and ``watch`` on ``secrets`` to the
-runner's ``ClusterRole``. This grant is cluster-wide, so releases in **all namespaces** are monitored.
-
-This is a Kubernetes RBAC limitation: RBAC rules cannot filter by secret ``type`` or by label, so it is
-not possible to grant access only to ``helm.sh/release.v1`` secrets. Although Robusta itself only reads
-Helm release secrets (see above), the permission technically allows reading any secret in the cluster.
-
-If this grant does not fit your security requirements, you can:
-
-* Keep ``monitorHelmReleases: false`` (the default). No secret read permission is granted, and the
-  runner sets ``DISABLE_HELM_MONITORING`` so it never attempts to list secrets.
-* Replace the runner's RBAC rules entirely with ``runner.overrideClusterRoles`` in Robusta's Helm
-  values, and manage the secret permissions yourself.
+    Enabling ``monitorHelmReleases`` grants the runner's ClusterRole ``get``/``list``/``watch`` on
+    secrets cluster-wide, since Kubernetes RBAC cannot filter by secret type or label. Only secrets
+    matching ``helmReleaseSecretTypes`` are actually read. To avoid the grant entirely, keep
+    ``monitorHelmReleases: false`` (the default), or manage RBAC yourself via
+    ``runner.overrideClusterRoles``.
 
 Triggers
 -----------
