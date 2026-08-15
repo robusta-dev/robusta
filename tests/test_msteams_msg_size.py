@@ -3,6 +3,7 @@ import json
 from robusta.core.reporting import Finding
 from robusta.core.reporting.blocks import MarkdownBlock, TableBlock
 from robusta.integrations.msteams.msteams_elements.msteams_card import MsTeamsCard
+from robusta.integrations.msteams.msteams_elements.msteams_table import MsTeamsTable
 from robusta.integrations.msteams.msteams_msg import MsTeamsMsg
 
 
@@ -92,7 +93,14 @@ def test_table_trim_stops_when_budget_is_met():
     assert len(tables) == 2
     filler_rows_after, events_rows_after = tables
     assert len(filler_rows_after) == 31  # 30 rows + header, untouched
-    assert 1 <= len(events_rows_after) < 41  # header + at least one row kept
+    assert 2 <= len(events_rows_after) < 41  # header + at least one event row kept
+
+    # the trim must be tight: restoring the next removed event row would
+    # push the serialized payload back over the budget
+    removed_rows = table.rows[len(events_rows_after) - 1 :]
+    next_removed_row = MsTeamsTable(["a", "b"], [removed_rows[0]], None).get_map_value()["rows"][1]
+    restored_len = _card_len(msg) + len(json.dumps(next_removed_row, ensure_ascii=True).encode("utf-8"))
+    assert restored_len > MsTeamsMsg.MAX_SIZE_IN_BYTES
 
 
 def test_escaped_and_non_ascii_text_is_trimmed_to_fit_serialized_bytes():
