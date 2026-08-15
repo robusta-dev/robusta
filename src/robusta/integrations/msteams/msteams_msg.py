@@ -203,7 +203,7 @@ class MsTeamsMsg:
                     element.set_text_from_block(truncated)
                     max_len_left = over_budget()
             elif isinstance(element, MsTeamsTable):
-                self.__trim_table_rows(element, max_len_left)
+                self.__trim_table_rows(element, over_budget)
                 max_len_left = over_budget()
 
     def __get_images_len(self) -> int:
@@ -242,12 +242,11 @@ class MsTeamsMsg:
         freed = text_json_len - MsTeamsMsg.__json_bytes(new_text)
         return new_text, max_len_left + freed
 
-    def __trim_table_rows(self, table_element: MsTeamsTable, max_len_left: int):
+    def __trim_table_rows(self, table_element: MsTeamsTable, over_budget):
         table_map = table_element.get_map_value()
         rows = table_map.get("rows", [])
-        while rows and max_len_left < 0:
-            removed_row = rows.pop()
-            max_len_left += len(json.dumps(removed_row, ensure_ascii=True).encode("utf-8"))
+        while rows and over_budget() < 0:
+            rows.pop()
 
     def send(self):
         try:

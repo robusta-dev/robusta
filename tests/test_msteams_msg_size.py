@@ -59,6 +59,42 @@ def test_table_rows_are_trimmed_to_fit_budget():
     assert _card_len(msg) <= MsTeamsMsg.MAX_SIZE_IN_BYTES
 
 
+def test_table_trim_stops_when_budget_is_met():
+    # Boundary case: payload exceeds the limit by less than one row's serialized
+    # size (including the JSON array separator). Removing exactly one row must
+    # stop the loop instead of dropping an extra row.
+    msg = MsTeamsMsg(webhook_url="http://example.com", prefer_redirect_to_platform=False)
+    _add_title(msg)
+
+    filler_rows = [[f"small-{i}" for _ in range(2)] for i in range(30)]
+    msg.table(TableBlock(rows=filler_rows, headers=["a", "b"], table_name="filler"))
+    msg.write_current_section()
+
+    table = TableBlock(
+        rows=[["big-row", "x" * 600] for _ in range(40)],
+        headers=["a", "b"],
+        table_name="events",
+    )
+    msg.table(table)
+    msg.write_current_section()
+
+    complete_card_map = MsTeamsCard(msg.entire_msg).get_map_value()
+    assert _card_len(msg) > MsTeamsMsg.MAX_SIZE_IN_BYTES
+
+    msg._trim_card_body_up_to_max_limit(complete_card_map)
+
+    assert _card_len(msg) <= MsTeamsMsg.MAX_SIZE_IN_BYTES
+
+    # trimming walks from the end of the message, so the earlier "filler"
+    # table must be untouched once the budget is met on the "events" table
+    body = complete_card_map["attachments"][0]["content"]["body"]
+    tables = [element["rows"] for element in body if element.get("type") == "Table"]
+    assert len(tables) == 2
+    filler_rows_after, events_rows_after = tables
+    assert len(filler_rows_after) == 31  # 30 rows + header, untouched
+    assert 1 <= len(events_rows_after) < 41  # header + at least one row kept
+
+
 def test_escaped_and_non_ascii_text_is_trimmed_to_fit_serialized_bytes():
     # JSON escaping ("\n" -> "\\n") and non-ASCII UTF-8 encoding inflate the
     # serialized payload beyond the character count, which used to push the
