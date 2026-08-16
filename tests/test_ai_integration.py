@@ -17,7 +17,7 @@ def assert_valid_png(png_bytes: bytes):
     image = Image.open(BytesIO(png_bytes))
     image.load()  # force full decoding, not just the header
     assert image.format == "PNG"
-    # graph-tool charts are rendered at the fixed pygal size used by the pipeline
+    # graph-tool charts are rendered at the fixed chart size used by the pipeline
     assert image.size == (1280, 500)
 
 

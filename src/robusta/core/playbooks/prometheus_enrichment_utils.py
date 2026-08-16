@@ -6,7 +6,6 @@ from string import Template
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import humanize
-import pygal
 from hikaru.model.rel_1_26 import Node
 from prometrix import PrometheusQueryResult
 from pydantic import BaseModel
@@ -19,7 +18,8 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock, PrometheusBlockLineData
-from robusta.core.reporting.custom_rendering import PlotCustomCSS, charts_style
+from robusta.core.reporting.charts import XYChart
+from robusta.core.reporting.custom_rendering import charts_style
 from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
@@ -162,7 +162,7 @@ def create_chart_from_prometheus_query(
     filter_prom_jobs: bool = False,
     hide_legends: Optional[bool] = False,
     metrics_legends_labels: Optional[List[str]] = None,
-) -> Tuple[pygal.Graph, PrometheusBlock]:
+) -> Tuple[XYChart, PrometheusBlock]:
     starts_at: datetime
     ends_at: datetime
     if not alert_starts_at:
@@ -197,7 +197,8 @@ def create_chart_from_prometheus_query(
             f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'"
         )
 
-    # fix a pygal bug which causes infinite loops due to rounding errors with floating points
+    # sentinels for the min/max scan below; HIGHEST_END is a timestamp far past
+    # any real sample, so the first data point always replaces it
     # TODO: change min_time time before  Jan 19 3001
     HIGHEST_END = 32536799999
     LOWEST_START = 0
@@ -298,15 +299,9 @@ def create_chart_from_prometheus_query(
 
     graph_plot_color_list = [plot_data.color for plot_data in plot_data_list]
     graph_plot_color_list.extend(["#1e0047", "#2a0065"])
-    config = pygal.Config()
-    custom_css = PlotCustomCSS().get_css_file_path()
-    config.css.append(f"file://{custom_css}")
-    chart = pygal.XY(
-        config,
-        show_dots=True,
+    chart = XYChart(
         style=charts_style(graph_colors=tuple(graph_plot_color_list)),
         truncate_legend=15,
-        include_x_axis=include_x_axis,
         width=1280,
         height=500,
         show_legend=hide_legends is not True,
@@ -328,7 +323,7 @@ def create_chart_from_prometheus_query(
 
         # Fix for the case when the request and limit has the same value.
         # 6 pixels where chosen as minimum distance based on current width and height of the slack graph
-        delta = (chart.range[1] - chart.range[0]) * 6 / chart.config.height
+        delta = (chart.range[1] - chart.range[0]) * 6 / chart.height
         # Limit delta to a maximum of 2% of the Y-axis range (to prefent significant deviation)
         delta = min(delta, (chart.range[1] - chart.range[0]) * 0.02)
 
@@ -405,7 +400,7 @@ def build_chart_from_prometheus_result(
     prometheus_query_result: PrometheusQueryResult,
     chart_title: Optional[str] = "Prometheus Chart",
     values_format: Optional[ChartValuesFormat] = None,
-) -> pygal.Graph:
+) -> XYChart:
     if prometheus_query_result.result_type != "matrix":
         raise ValueError(f"Expected 'matrix' result_type, got '{prometheus_query_result.result_type}'")
 
@@ -475,19 +470,12 @@ def build_chart_from_prometheus_result(
     if min_time == HIGHEST_END:
         raise ValueError("No valid data points found in time series.")
 
-    config = pygal.Config()
-    custom_css = PlotCustomCSS().get_css_file_path()
-    config.css.append(f"file://{custom_css}")
-
     graph_colors = [plot_data.color for plot_data in plot_data_list]
     graph_colors.extend(["#1e0047", "#2a0065"])
 
-    chart = pygal.XY(
-        config,
-        show_dots=True,
+    chart = XYChart(
         style=charts_style(graph_colors=tuple(graph_colors)),
         truncate_legend=15,
-        include_x_axis=True,
         width=1280,
         height=500,
         show_legend=True,
