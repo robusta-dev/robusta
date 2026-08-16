@@ -248,6 +248,12 @@ class XYChart(_BaseChart):
                 "solid_capstyle": "round",
             }
             # matplotlib rejects an explicit dashes=None, so only set it when dashed
+            # a lone sample has no segment to draw, so it would be invisible with
+            # markers off - the alert pipeline disables them for every series
+            if len(series.values) == 1 and not series.show_dots:
+                line_kwargs["marker"] = "o"
+                line_kwargs["markersize"] = series.dots_size or 3.5
+
             dashes = _dashes_from_stroke_style(series.stroke_style)
             if dashes:
                 line_kwargs["dashes"] = dashes
@@ -255,7 +261,12 @@ class XYChart(_BaseChart):
 
         if self.range:
             ax.set_ylim(self.range[0], self.range[1])
-        ax.set_xlim(x_min, x_max)
+        if x_max > x_min:
+            ax.set_xlim(x_min, x_max)
+        else:
+            # a query that returned a single sample gives a zero-width range;
+            # widen it so matplotlib does not warn about a singular transform
+            ax.set_xlim(x_min - 1, x_max + 1)
 
         if self.y_labels is not None:
             ax.set_yticks(list(self.y_labels))
@@ -263,14 +274,19 @@ class XYChart(_BaseChart):
         if not self.show_minor_y_labels:
             ax.set_yticks(list(self.y_labels or []))
 
-        ticks = self._x_tick_positions(x_min, x_max)
-        ax.set_xticks(ticks)
-        ax.set_xticklabels(
-            [self.x_value_formatter(t) for t in ticks],
-            rotation=self.x_label_rotation,
-            ha="right",
-            rotation_mode="anchor",
-        )
+        if x_values:
+            ticks = self._x_tick_positions(x_min, x_max)
+            ax.set_xticks(ticks)
+            ax.set_xticklabels(
+                [self.x_value_formatter(t) for t in ticks],
+                rotation=self.x_label_rotation,
+                ha="right",
+                rotation_mode="anchor",
+            )
+        else:
+            # no series at all: the placeholder x-range would otherwise label
+            # every tick with the epoch
+            ax.set_xticks([])
 
         ax.grid(True, which="major", color=style.guide_stroke_color, linewidth=1, zorder=0)
         ax.set_axisbelow(True)

@@ -5,19 +5,13 @@ Prometheus/resource graphs.
 These cover the contract the rest of the pipeline depends on: SVG bytes out, at
 an exact pixel size, rasterizable by resvg, with Robusta's styling applied.
 """
+import warnings
 from io import BytesIO
 
 import pytest
 from PIL import Image
 
-from robusta.core.reporting.charts import (
-    BarChart,
-    ChartStyle,
-    TreemapChart,
-    XYChart,
-    _truncate,
-    squarify,
-)
+from robusta.core.reporting.charts import BarChart, ChartStyle, TreemapChart, XYChart, _truncate, squarify
 from robusta.core.reporting.custom_rendering import charts_style
 from robusta.core.reporting.utils import convert_svg_to_png
 
@@ -108,6 +102,44 @@ def test_empty_chart_still_renders():
     chart.show_minor_y_labels = False
 
     assert png_size(chart.render()) == (1280, 500)
+
+
+def test_empty_chart_draws_no_x_ticks():
+    """With no series there is no real x-range, so the placeholder range must not
+    get labelled - it would render every tick as the epoch."""
+    formatted = []
+    chart = XYChart()
+    chart.x_value_formatter = lambda t: formatted.append(t) or "tick"
+
+    chart.render()
+
+    assert formatted == []
+
+
+def test_single_point_is_visible_even_with_dots_disabled():
+    """The alert pipeline builds every series with show_dots=False. One sample has
+    no segment to draw, so without a marker the chart would come out blank."""
+    chart = XYChart()
+    chart.add("solo", [(1755300000, 42.0)], show_dots=False)
+
+    png = convert_svg_to_png(chart.render())
+    image = Image.open(BytesIO(png)).convert("RGB")
+    colors = {c for _, c in (image.getcolors(maxcolors=1_000_000) or [])}
+    # the default first palette colour is #9747FF - some trace of it must survive
+    assert any(r > 100 and b > 180 and g < 120 for r, g, b in colors), "the lone sample was not drawn"
+
+
+def test_single_point_does_not_warn_about_singular_axis():
+    """One sample gives a zero-width x-range; the limits must be widened rather
+    than left for matplotlib to complain about."""
+    chart = XYChart()
+    chart.add("solo", [(1755300000, 42.0)])
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        svg = chart.render()
+
+    assert png_size(svg) == (1280, 500)
 
 
 # --- label truncation -----------------------------------------------------------
