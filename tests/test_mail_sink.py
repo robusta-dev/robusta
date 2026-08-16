@@ -7,7 +7,6 @@ from unittest.mock import ANY, call, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from apprise.attachment import AttachFile
 
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting import Finding
