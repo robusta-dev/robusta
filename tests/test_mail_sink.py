@@ -1,9 +1,14 @@
+import re
+from email import message_from_string
+from html import unescape
 from io import BytesIO
+from typing import Dict, List
 from unittest.mock import ANY, call, patch
+from urllib.parse import parse_qs, urlparse
 
 import pytest
-from apprise.attachment import AttachFile
 
+from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting import Finding
 from robusta.core.reporting.blocks import (
     FileBlock,
@@ -386,3 +391,140 @@ def test_ses_configuration_validation():
         from_email="sender@example.com",
     )
     assert valid_params.use_ses is True
+
+
+# Regression tests: the action signing key must never end up in an outgoing email.
+# The account id, cluster name and signing key are deliberately distinguishable from
+# each other, so that any mix-up between them shows up in the rendered mail.
+CANARY_ACCOUNT_ID = "account-canary-1234"
+CANARY_CLUSTER_NAME = "cluster-canary-5678"
+CANARY_SIGNING_KEY = "SIGNING-KEY-CANARY-MUST-NOT-LEAK"
+
+
+class CanaryRegistry:
+    def get_global_config(self) -> dict:
+        return {
+            "account_id": CANARY_ACCOUNT_ID,
+            "cluster_name": CANARY_CLUSTER_NAME,
+            "signing_key": CANARY_SIGNING_KEY,
+        }
+
+
+@pytest.fixture()
+def canary_sink():
+    config_wrapper = MailSinkConfigWrapper(
+        mail_sink=MailSinkParams(
+            name="canary_mail_sink",
+            mailto="mailtos://user:password@example.com?from=a@x&to=b@y",
+        )
+    )
+    return MailSink(config_wrapper, CanaryRegistry())
+
+
+@pytest.fixture()
+def canary_ses_sink():
+    config_wrapper = MailSinkConfigWrapper(
+        mail_sink=MailSinkParams(
+            name="canary_ses_mail_sink",
+            mailto="mailtos://alerts@company.com",
+            use_ses=True,
+            aws_region="us-east-1",
+            from_email="robusta@company.com",
+            skip_ses_init=True,
+        )
+    )
+    return MailSink(config_wrapper, CanaryRegistry())
+
+
+def _canary_finding() -> Finding:
+    return Finding(
+        title="canary title",
+        description="Lorem ipsum",
+        aggregation_key="1234",
+        add_silence_url=True,
+    )
+
+
+def _platform_link_params(html_body: str) -> List[Dict[str, List[str]]]:
+    """Return the query params of every platform link found in an email body."""
+    urls = re.findall(r'href="([^"]*)"', unescape(html_body))
+    platform_urls = [url for url in urls if url.startswith(ROBUSTA_UI_DOMAIN)]
+    assert platform_urls, "expected the email to contain robusta platform links"
+    return [parse_qs(urlparse(url).query) for url in platform_urls]
+
+
+def test_mail_links_carry_account_id_and_cluster_name(canary_sink):
+    """Platform links in emails must identify the account and cluster, not the signing key."""
+    with (
+        patch("robusta.integrations.mail.sender.apprise") as mock_apprise,
+        patch("robusta.integrations.mail.sender.AppriseAttachment"),
+    ):
+        canary_sink.write_finding(_canary_finding(), platform_enabled=True)
+
+    html_body = mock_apprise.Apprise.return_value.notify.call_args.kwargs["body"]
+
+    link_params = _platform_link_params(html_body)
+    assert len(link_params) >= 2  # investigate link in the header and in the links block
+    for params in link_params:
+        assert params["account"] == [CANARY_ACCOUNT_ID]
+        cluster_param = params.get("clusters") or params.get("cluster")
+        assert cluster_param is not None
+        assert CANARY_CLUSTER_NAME in cluster_param[0]
+
+    # The "Source" line names the cluster the finding came from.
+    assert f"<code>{CANARY_CLUSTER_NAME}</code>" in html_body
+
+
+def test_signing_key_never_appears_in_apprise_mail(canary_sink):
+    with (
+        patch("robusta.integrations.mail.sender.apprise") as mock_apprise,
+        patch("robusta.integrations.mail.sender.AppriseAttachment"),
+    ):
+        canary_sink.write_finding(_canary_finding(), platform_enabled=True)
+
+    notify_kwargs = mock_apprise.Apprise.return_value.notify.call_args.kwargs
+    assert CANARY_SIGNING_KEY not in notify_kwargs["body"]
+    assert CANARY_SIGNING_KEY not in notify_kwargs["title"]
+
+
+def test_signing_key_never_appears_in_ses_mail(canary_ses_sink):
+    with patch.object(canary_ses_sink.sender, "ses_client") as mock_ses_client:
+        mock_ses_client.send_email.return_value = {"MessageId": "canary-message-id"}
+        canary_ses_sink.write_finding(_canary_finding(), platform_enabled=True)
+
+    message = mock_ses_client.send_email.call_args.kwargs["Message"]
+    html_body = message["Body"]["Html"]["Data"]
+    text_body = message["Body"]["Text"]["Data"]
+
+    for params in _platform_link_params(html_body):
+        assert params["account"] == [CANARY_ACCOUNT_ID]
+
+    assert CANARY_SIGNING_KEY not in message["Subject"]["Data"]
+    assert CANARY_SIGNING_KEY not in html_body
+    assert CANARY_SIGNING_KEY not in text_body
+
+
+def test_signing_key_never_appears_in_ses_raw_mail(canary_ses_sink):
+    """The raw MIME message covers headers and attachment metadata as well as the bodies."""
+    finding = _canary_finding()
+    finding.add_enrichment([FileBlock(filename="report.txt", contents=b"Report content")])
+
+    with patch.object(canary_ses_sink.sender, "ses_client") as mock_ses_client:
+        mock_ses_client.send_raw_email.return_value = {"MessageId": "canary-raw-id"}
+        canary_ses_sink.write_finding(finding, platform_enabled=True)
+
+    raw_message = mock_ses_client.send_raw_email.call_args.kwargs["RawMessage"]["Data"]
+    # Decode the message rather than scanning the wire format - quoted-printable
+    # line wrapping would otherwise let a long key slip past a substring check.
+    message = message_from_string(raw_message)
+    parts = [f"{name}: {value}" for name, value in message.items()]
+    for part in message.walk():
+        if part.get_filename():
+            parts.append(part.get_filename())
+        payload = part.get_payload(decode=True)
+        if payload is not None:
+            parts.append(payload.decode("utf-8", errors="replace"))
+
+    assert any(CANARY_ACCOUNT_ID in part for part in parts)
+    for part in parts:
+        assert CANARY_SIGNING_KEY not in part

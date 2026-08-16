@@ -10,10 +10,10 @@ class MailSink(SinkBase):
         params = sink_config.mail_sink
 
         self.sender = MailSender(
-            params.mailto,
-            self.signing_key,
-            self.account_id,
-            self.cluster_name,
+            mailto=params.mailto,
+            account_id=self.account_id,
+            cluster_name=self.cluster_name,
+            signing_key=self.signing_key,
             use_ses=params.use_ses,
             aws_region=params.aws_region,
             from_email=params.from_email,
