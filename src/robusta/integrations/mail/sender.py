@@ -23,8 +23,12 @@ from robusta.core.sinks.transformer import Transformer
 
 
 class MailSender(HTMLBaseSender):
+    # Keyword-only: account_id, cluster_name and signing_key are all plain strings, so a
+    # positional call that gets their order wrong silently puts the signing key into the
+    # `account` query parameter of the platform links we email out.
     def __init__(
         self,
+        *,
         mailto: str,
         account_id: str,
         cluster_name: str,
