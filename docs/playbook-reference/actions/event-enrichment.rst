@@ -12,6 +12,8 @@ These actions can add context to any node-related event, be it from ``on_prometh
 
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.node_bash_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.dmesg_enrichments.node_dmesg_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_status_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_running_pods_enricher
@@ -35,6 +37,8 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
     :trigger-params: {"alert_name": "ExampleLowDiskAlert"}
+
+.. robusta-action:: playbooks.robusta_playbooks.dmesg_enrichments.pod_dmesg_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
