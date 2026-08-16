@@ -16,13 +16,14 @@ Preparing Robusta's config
 Prepare your ``generated_values.yaml`` file for ArgoCD:
 
 * If it's not already present, add ``clusterName: <YOUR-CLUSTER-NAME>``
-* If installing on a test cluster like KIND, add ``isSmallCluster: true``
+* If installing on a small or test cluster like KIND, add ``clusterSize: small``
 
 Example ``generated_values.yaml``:
 
 .. code-block:: yaml
 
     clusterName: my_cluster_name # <- This is the line to be added
+    clusterSize: small           # <- Optional. Options: small (< 16 CPUs), medium (16-128 CPUs), large (> 128 CPUs).
     globalConfig:
       signing_key: xxxxxx
       account_id: xxxxxx
