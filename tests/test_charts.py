@@ -129,6 +129,49 @@ def test_single_point_is_visible_even_with_dots_disabled():
     assert any(r > 100 and b > 180 and g < 120 for r, g, b in colors), "the lone sample was not drawn"
 
 
+def test_all_zero_series_does_not_warn_about_singular_axis():
+    """A metric flat at zero collapses the callers' derived range to (0, 0), which
+    is still truthy - the axis must be given height rather than handed to
+    matplotlib as a singular transform."""
+    chart = XYChart()
+    chart.add("quiet", [(0, 0.0), (1, 0.0), (2, 0.0)])
+    chart.range = (0, 0.0)
+    chart.y_labels = [0, 0, 0, 0, 0]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        svg = chart.render()
+
+    assert png_size(svg) == (1280, 500)
+
+
+def test_collapsed_range_collapses_duplicate_y_labels():
+    """The same collapse makes every derived tick identical; five stacked zeros
+    would be drawn on top of each other."""
+    seen = []
+    chart = XYChart()
+    chart.add("quiet", [(0, 0.0), (1, 0.0)])
+    chart.range = (0, 0.0)
+    chart.y_labels = [0, 0, 0, 0, 0]
+    chart.value_formatter = lambda v: seen.append(v) or str(v)
+
+    chart.render()
+
+    assert seen == [0], "duplicate ticks should collapse to a single label"
+
+
+def test_distinct_y_labels_are_left_alone():
+    seen = []
+    chart = line_chart()
+    chart.range = (0, 100)
+    chart.y_labels = [0, 25, 50, 75, 100]
+    chart.value_formatter = lambda v: seen.append(v) or str(v)
+
+    chart.render()
+
+    assert seen == [0, 25, 50, 75, 100]
+
+
 def test_single_point_does_not_warn_about_singular_axis():
     """One sample gives a zero-width x-range; the limits must be widened rather
     than left for matplotlib to complain about."""

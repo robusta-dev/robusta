@@ -260,7 +260,14 @@ class XYChart(_BaseChart):
             ax.plot(xs, ys, **line_kwargs)
 
         if self.range:
-            ax.set_ylim(self.range[0], self.range[1])
+            y_min, y_max = self.range[0], self.range[1]
+            if y_max <= y_min:
+                # every sample shared one value - a metric flat at zero is the
+                # common case - and the callers derive the range from the maximum,
+                # so it collapses. Give the axis height rather than let matplotlib
+                # warn about a singular transform and pick its own bounds.
+                y_max = y_min + 1.0
+            ax.set_ylim(y_min, y_max)
         if x_max > x_min:
             ax.set_xlim(x_min, x_max)
         else:
@@ -269,8 +276,12 @@ class XYChart(_BaseChart):
             ax.set_xlim(x_min - 1, x_max + 1)
 
         if self.y_labels is not None:
-            ax.set_yticks(list(self.y_labels))
-            ax.set_yticklabels([self.value_formatter(v) for v in self.y_labels])
+            # the same collapse makes every computed tick identical; one is enough
+            y_labels = list(self.y_labels)
+            if len(y_labels) > 1 and len(set(y_labels)) == 1:
+                y_labels = y_labels[:1]
+            ax.set_yticks(y_labels)
+            ax.set_yticklabels([self.value_formatter(v) for v in y_labels])
         if not self.show_minor_y_labels:
             ax.set_yticks(list(self.y_labels or []))
 
@@ -395,6 +406,11 @@ class BarChart(_BaseChart):
 
 
 def _worst_ratio(row: List[float], length: float) -> float:
+    """Worst aspect ratio among the rectangles in ``row`` laid out along ``length``.
+
+    This is the squarify heuristic: keep adding rectangles to a row while this
+    value improves, and break to a new row once it gets worse. Lower is squarer.
+    """
     total = sum(row)
     if total <= 0 or length <= 0:
         return float("inf")
