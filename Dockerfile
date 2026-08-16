@@ -64,9 +64,6 @@ ENV PYTHONUNBUFFERED=1
 ENV VIRTUAL_ENV=/app/venv
 ENV PATH="/venv/bin:$PATH"
 ENV PYTHONPATH=$PYTHONPATH:.:/app/src
-# Robusta's own charts use matplotlib's object-oriented API and never select a
-# backend, but transitive imports of pyplot (prometheus-api-client) would probe
-# for a GUI toolkit. Pin the headless one so that probe never happens.
 ENV MPLBACKEND=Agg
 
 WORKDIR /app
