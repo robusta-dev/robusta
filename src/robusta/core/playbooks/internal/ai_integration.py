@@ -74,6 +74,16 @@ def handle_holmes_error(e: Exception) -> NoReturn:
             raise ActionException(
                 ErrorCodes.HOLMES_REQUEST_ERROR, "Holmes invalid api key."
             )
+        elif e.response.status_code == 401:
+            # Holmes' own API auth (fail-closed since ROB-989) rejected us —
+            # distinct from the LLM-provider invalid_api_key case above.
+            raise ActionException(
+                ErrorCodes.HOLMES_REQUEST_ERROR,
+                "Holmes rejected the runner's API key. Ensure the runner's "
+                "HOLMES_API_KEY matches the key Holmes is configured with "
+                "(both come from the <release>-holmes-api-key secret; upgrade "
+                "the Robusta helm release to sync them).",
+            )
         elif e.response.status_code == 429:
             raise ActionException(
                 ErrorCodes.HOLMES_RATE_LIMIT_EXCEEDED, "Holmes rate limit exceeded."
@@ -119,7 +129,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
                 f"{holmes_url}/api/stream/investigate",
                 data=holmes_req.json(),
                 stream=True,
-                headers={"Connection": "keep-alive"},
+                headers=HolmesDiscovery.auth_headers({"Connection": "keep-alive"}),
             ) as resp:
                 resp.raise_for_status()
                 for line in resp.iter_content(
@@ -131,7 +141,9 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
         else:
             result = requests.post(
-                f"{holmes_url}/api/investigate", data=holmes_req.json()
+                f"{holmes_url}/api/investigate",
+                data=holmes_req.json(),
+                headers=HolmesDiscovery.auth_headers(),
             )
             result.raise_for_status()
 
@@ -216,7 +228,11 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
             include_tool_calls=True,
             include_tool_call_results=True,
         )
-        result = requests.post(f"{holmes_url}/api/conversation", data=holmes_req.json())
+        result = requests.post(
+            f"{holmes_url}/api/conversation",
+            data=holmes_req.json(),
+            headers=HolmesDiscovery.auth_headers(),
+        )
         result.raise_for_status()
         holmes_result = HolmesConversationResult(**json.loads(result.text))
 
@@ -270,7 +286,11 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
         )
-        result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
+        result = requests.post(
+            f"{holmes_url}/api/issue_chat",
+            data=holmes_req.json(),
+            headers=HolmesDiscovery.auth_headers(),
+        )
         result.raise_for_status()
 
         holmes_result = HolmesChatResult(**json.loads(result.text))
@@ -332,7 +352,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                     url,
                     data=holmes_req.json(),
                     stream=True,
-                    headers={"Connection": "keep-alive"},
+                    headers=HolmesDiscovery.auth_headers({"Connection": "keep-alive"}),
                 ) as resp:
                     resp.raise_for_status()
                     for line in resp.iter_content(
@@ -342,7 +362,9 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                             event.ws(data=line)
                 return
 
-        result = requests.post(url, data=holmes_req.json())
+        result = requests.post(
+            url, data=holmes_req.json(), headers=HolmesDiscovery.auth_headers()
+        )
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
         holmes_result.files = []
@@ -414,6 +436,7 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
             f"{holmes_url}/api/oauth/callback",
             json=params.dict(),
             timeout=60,
+            headers=HolmesDiscovery.auth_headers(),
         )
         result.raise_for_status()
         response_data = result.json()
@@ -437,7 +460,7 @@ def stream_and_render_graphs(url, holmes_req, event):
         url,
         data=holmes_req.json(),
         stream=True,
-        headers={"Connection": "keep-alive"},
+        headers=HolmesDiscovery.auth_headers({"Connection": "keep-alive"}),
     ) as resp:
         resp.raise_for_status()
         for stream_event in resp.iter_content(

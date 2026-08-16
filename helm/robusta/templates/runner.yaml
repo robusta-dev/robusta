@@ -20,11 +20,16 @@ spec:
         {{- with .Values.runner.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- if or .Values.runner.annotations .Values.globalConfig.custom_annotations }}
+      {{- if or .Values.runner.annotations .Values.globalConfig.custom_annotations .Values.enableHolmesGPT }}
       annotations:
         {{- if .Values.runner.annotations}} {{ toYaml .Values.runner.annotations | nindent 8 }}
         {{- end }}
         {{- if .Values.globalConfig.custom_annotations }} {{ toYaml .Values.globalConfig.custom_annotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.enableHolmesGPT }}
+        # rolls the runner together with holmes/operator when the Holmes
+        # API-key configuration changes (see the holmes subchart's auth block)
+        checksum/holmes-api-key: {{ dig "auth" (dict) (.Values.holmes | default dict) | toYaml | sha256sum }}
         {{- end }}
       {{- end }}
     spec:
@@ -134,6 +139,23 @@ spec:
           {{- if .Values.enableHolmesGPT }}
           - name: HOLMES_ENABLED
             value: "True"
+          {{- $holmesAuth := dig "auth" (dict) (.Values.holmes | default dict) }}
+          {{- $holmesAuthEnabled := true }}
+          {{- if hasKey $holmesAuth "enabled" }}
+          {{- $holmesAuthEnabled = $holmesAuth.enabled }}
+          {{- end }}
+          {{- if $holmesAuthEnabled }}
+          # Auth for the Holmes API: the same key the holmes subchart injects
+          # into its own server, sent by the runner as X-API-Key. Optional so
+          # the runner still starts against an older holmes subchart that does
+          # not create the secret (older holmes also doesn't require the key).
+          - name: HOLMES_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ $holmesAuth.existingApiKeySecret | default (printf "%s-holmes-api-key" .Release.Name) }}
+                key: apiKey
+                optional: true
+          {{- end }}
           {{- end }}
           {{- if .Values.scaleAlertsProcessing }}
           - name: ALERTS_WORKERS_POOL

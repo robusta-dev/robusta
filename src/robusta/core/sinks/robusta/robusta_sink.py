@@ -555,7 +555,10 @@ class RobustaSink(SinkBase, EventHandler):
             return None
 
         try:
-            res = requests.get(f"{holmes_url}{HolmesDiscovery.MODEL_NAME_URL}")
+            res = requests.get(
+                f"{holmes_url}{HolmesDiscovery.MODEL_NAME_URL}",
+                headers=HolmesDiscovery.auth_headers(),
+            )
             res.raise_for_status()
             model_name = res.json()["model_name"]
             return model_name

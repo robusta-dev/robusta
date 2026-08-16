@@ -144,6 +144,10 @@ POD_WAIT_RETRIES_SECONDS = int(os.environ.get("POD_WAIT_RETRIES_SECONDS", 5))
 
 HOLMES_ENABLED = load_bool("HOLMES_ENABLED", False)
 HOLMES_ASK_SLACK_BUTTON_ENABLED = load_bool("HOLMES_ASK_SLACK_BUTTON_ENABLED", True)
+# API key for the Holmes HTTP API, sent as X-API-Key on every request. The
+# helm chart wires it from the <release>-holmes-api-key secret that the holmes
+# subchart generates; empty means no auth header (older holmes versions).
+HOLMES_API_KEY = os.environ.get("HOLMES_API_KEY", "").strip()
 
 # simple calculated values (not direct environment vars)
 SENTRY_ENABLED = SEND_ADDITIONAL_TELEMETRY and SENTRY_DSN

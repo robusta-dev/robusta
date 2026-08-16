@@ -10,6 +10,7 @@ from robusta.core.model.base_params import HolmesChatParams
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.internal.ai_integration import get_png_from_graph_tool, holmes_chat
 from robusta.core.stream.utils import create_sse_message, StreamEvents
+from robusta.integrations.prometheus.utils import HolmesDiscovery
 
 
 def assert_valid_png(png_bytes: bytes):
@@ -229,6 +230,47 @@ def test_holmes_chat_streaming_forwards_unconvertible_graph_event_unchanged(
     assert mock_event.ws.call_count == len(sse_events)
     # the unconvertible graph event is passed through byte-for-byte, without result_type=png
     assert mock_event.ws.call_args_list[1][1]["data"] == sse_events[1]
+
+
+class TestHolmesAuthHeaders:
+    """Holmes fails closed (ROB-989): the runner must send the shared API key
+    as X-API-Key on every Holmes HTTP call when HOLMES_API_KEY is set."""
+
+    def test_no_key_no_header(self):
+        with patch("robusta.integrations.prometheus.utils.HOLMES_API_KEY", ""):
+            assert HolmesDiscovery.auth_headers() == {}
+
+    def test_key_sets_x_api_key(self):
+        with patch("robusta.integrations.prometheus.utils.HOLMES_API_KEY", "test-key"):
+            assert HolmesDiscovery.auth_headers() == {"X-API-Key": "test-key"}
+
+    def test_extra_headers_preserved(self):
+        with patch("robusta.integrations.prometheus.utils.HOLMES_API_KEY", "test-key"):
+            headers = HolmesDiscovery.auth_headers({"Connection": "keep-alive"})
+        assert headers == {"Connection": "keep-alive", "X-API-Key": "test-key"}
+
+    def test_extra_headers_input_not_mutated(self):
+        extra = {"Connection": "keep-alive"}
+        with patch("robusta.integrations.prometheus.utils.HOLMES_API_KEY", "test-key"):
+            HolmesDiscovery.auth_headers(extra)
+        assert extra == {"Connection": "keep-alive"}
+
+
+@patch("robusta.core.playbooks.internal.ai_integration.requests.post")
+def test_holmes_chat_sends_api_key_header(mock_post, mock_event, holmes_chat_params):
+    """holmes_chat must pass the X-API-Key header through to requests.post."""
+    sse_events = [
+        create_sse_message(StreamEvents.ANSWER_END.value, {"analysis": "all good"})
+    ]
+    mock_post.return_value = MockResponse(sse_events)
+
+    with patch("robusta.integrations.prometheus.utils.HOLMES_API_KEY", "runner-key"):
+        holmes_chat(mock_event, holmes_chat_params)
+
+    mock_post.assert_called_once()
+    headers = mock_post.call_args[1]["headers"]
+    assert headers["X-API-Key"] == "runner-key"
+    assert headers["Connection"] == "keep-alive"
 
 
 def _small_prometheus_matrix() -> dict:

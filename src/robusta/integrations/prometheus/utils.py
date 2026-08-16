@@ -14,7 +14,7 @@ from prometrix.connect.custom_connect import CustomPrometheusConnect
 
 from robusta.core.exceptions import NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
-from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
+from robusta.core.model.env_vars import HOLMES_API_KEY, PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
@@ -196,3 +196,16 @@ class HolmesDiscovery(ServiceDiscovery):
             selectors=["app=holmes"],
             error_msg="Holmes url could not be found.",
         )
+
+    @classmethod
+    def auth_headers(cls, extra_headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """Headers for Holmes API requests, including X-API-Key when configured.
+
+        Holmes fails closed since ROB-989 and rejects unauthenticated requests
+        unless explicitly opted out; an empty HOLMES_API_KEY sends no auth
+        header (compatible with holmes versions predating the API key).
+        """
+        headers = dict(extra_headers) if extra_headers else {}
+        if HOLMES_API_KEY:
+            headers["X-API-Key"] = HOLMES_API_KEY
+        return headers
