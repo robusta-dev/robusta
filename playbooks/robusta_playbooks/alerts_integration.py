@@ -422,9 +422,13 @@ class TemplatedButtonParams(ActionParams):
     """
     :var button_text: The templated text of the button
     :var button_url: The templated URL of the button
+    :var required_label: Optional label name that must exist and have a non-empty
+                         value for the button to be added. When not set, the
+                         button is evaluated for every alert.
     """
     button_text: str
     button_url: str
+    required_label: Optional[str] = None
 
 
 @action
@@ -440,10 +444,18 @@ def button_enricher(event: KubernetesResourceEvent, params: TemplatedButtonParam
 
     If the button_url is empty, then the button will not be added.
 
+    When params.required_label is set, the button will only be added if that
+    label exists in the alert/event labels and has a non-empty value. This can
+    be used to conditionally show buttons based on alert metadata.
+
     Check example for adding a template link.
 
     """
     labels = _get_labels(event, default_value="")
+    if params.required_label:
+        label_value = labels.get(params.required_label, "")
+        if label_value is None or (isinstance(label_value, str) and label_value.strip() == ""):
+            return
     button_text = Template(params.button_text).safe_substitute(labels)
     button_url = Template(params.button_url).safe_substitute(labels)
     if button_url.strip() != "":
