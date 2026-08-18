@@ -95,16 +95,24 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
         {{- end }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
-        {{- with .Values.runner.securityContext.container }}
-        securityContext:
-        {{- if $.Values.runner.hardenedFs }}
-          {{- $hardened := merge (dict "readOnlyRootFilesystem" true) . }}
-          {{- toYaml $hardened | nindent 12 }}
-        {{- else }}
-          {{- toYaml . | nindent 12 }}
+        {{- $containerSecurityContext := deepCopy (default dict .Values.runner.securityContext.container) }}
+        {{- /* hardenedFs provides the writable mounts that a read-only root filesystem needs, so
+               the two are always turned on together. hasKey rather than merge: sprig's merge
+               treats an explicit "false" as an absent value and would silently override it. */}}
+        {{- if and .Values.runner.hardenedFs (not (hasKey $containerSecurityContext "readOnlyRootFilesystem")) }}
+        {{- $containerSecurityContext = set $containerSecurityContext "readOnlyRootFilesystem" true }}
         {{- end }}
+        {{- if $containerSecurityContext }}
+        securityContext:
+          {{- toYaml $containerSecurityContext | nindent 12 }}
         {{- end }}
         env:
+          # kubectl and CPython both write caches relative to $HOME / the source tree, which are
+          # on the read-only root filesystem. Redirect them to the writable /tmp mount.
+          - name: KUBECACHEDIR
+            value: /tmp/.kube-cache
+          - name: PYTHONPYCACHEPREFIX
+            value: /tmp/pycache
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
           - name: RELEASE_NAME
@@ -191,6 +199,8 @@ spec:
             mountPath: /app/robusta-git
           - name: cache-volume
             mountPath: /home/robusta/.cache
+          - name: ssh-volume
+            mountPath: /home/robusta/.ssh
           - name: venv-lib-volume
             mountPath: /venv/lib/python3.11/site-packages
           {{- end }}
@@ -253,6 +263,8 @@ spec:
         - name: app-git-volume
           emptyDir: {}
         - name: cache-volume
+          emptyDir: {}
+        - name: ssh-volume
           emptyDir: {}
         - name: venv-lib-volume
           emptyDir: {}

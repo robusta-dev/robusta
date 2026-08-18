@@ -120,6 +120,8 @@ RUN chmod 0644 /etc/apt/keyrings/kubernetes-apt-keyring.asc \
 # Run as a non-root user. uid/gid 1000 matches runner.securityContext.pod in the Helm chart.
 RUN groupadd --gid 1000 robusta \
     && useradd --uid 1000 --gid 1000 --create-home --home-dir /home/robusta --shell /sbin/nologin robusta \
+    && mkdir -p /home/robusta/.ssh /home/robusta/.cache \
+    && chmod 0700 /home/robusta/.ssh \
     && chown -R 1000:1000 /app /venv /etc/robusta /home/robusta
 
 ENV HOME=/home/robusta

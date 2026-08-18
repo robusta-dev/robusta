@@ -14,7 +14,10 @@ from robusta.integrations.git.well_known_hosts import WELL_KNOWN_HOST_KEYS
 
 GIT_DIR_NAME = "robusta-git"
 REPO_LOCAL_BASE_DIR = os.path.abspath(os.path.join(os.environ.get("REPO_LOCAL_BASE_DIR", "/app"), GIT_DIR_NAME))
-SSH_ROOT_DIR = os.environ.get("SSH_ROOT_DIR", "/root/.ssh")
+# The runner does not necessarily run as root, so default to the current user's home
+# rather than a hardcoded /root. Must stay in sync with where ssh looks for known_hosts
+# (see GIT_SSH_COMMAND below).
+SSH_ROOT_DIR = os.environ.get("SSH_ROOT_DIR", os.path.join(os.environ.get("HOME", "/root"), ".ssh"))
 GIT_REPOS_VERIFIED_HOSTS = os.environ.get("GIT_REPOS_VERIFIED_HOSTS", "")
 
 GIT_SSH_PREFIX = "git@"
@@ -33,8 +36,7 @@ class GitRepoManager:
         if cls.host_keys_initialized:
             return
 
-        if not os.path.exists(SSH_ROOT_DIR):
-            os.mkdir(SSH_ROOT_DIR)
+        os.makedirs(SSH_ROOT_DIR, exist_ok=True)
         with open(f"{SSH_ROOT_DIR}/known_hosts", "w") as f:
             for key in WELL_KNOWN_HOST_KEYS + custom_host_keys:
                 key = key.strip()
@@ -89,7 +91,12 @@ class GitRepo:
         else:
             ssh_key_option = ""
 
-        self.env["GIT_SSH_COMMAND"] = f"ssh {ssh_key_option} -o IdentitiesOnly=yes"
+        # Point ssh at the known_hosts file setup_host_keys() actually writes. Without this,
+        # ssh reads $HOME/.ssh/known_hosts, which is only the same file when SSH_ROOT_DIR
+        # happens to sit under $HOME.
+        self.env["GIT_SSH_COMMAND"] = (
+            f"ssh {ssh_key_option} -o IdentitiesOnly=yes -o UserKnownHostsFile={SSH_ROOT_DIR}/known_hosts"
+        )
         self.repo_lock = threading.RLock()
         self.repo_name = os.path.splitext(os.path.basename(git_repo_url))[0]
         self.repo_local_path = os.path.join(REPO_LOCAL_BASE_DIR, self.repo_name)

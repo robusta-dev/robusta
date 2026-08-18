@@ -711,6 +711,9 @@ grafanaRenderer:
       memory: 512Mi
     limits:
       cpu: ~
+  # This container runs inside the runner pod, so it inherits runner.securityContext.pod -
+  # including runAsNonRoot/runAsUser 1000. If this third-party image needs a different uid, or
+  # declares USER root, override runAsNonRoot/runAsUser here when enabling it.
   securityContext:
     container:
       privileged: false
@@ -770,7 +773,9 @@ runner:
         drop:
           - ALL
       privileged: false
-      readOnlyRootFilesystem: true
+      # readOnlyRootFilesystem is intentionally NOT set here - it is derived from hardenedFs
+      # below, so that the read-only root FS always comes together with the writable mounts it
+      # needs. Set it explicitly only if you know what you are doing; an explicit value wins.
     pod:
       runAsNonRoot: true
       runAsUser: 1000
@@ -779,7 +784,11 @@ runner:
       fsGroup: 1000
       seccompProfile:
         type: RuntimeDefault
-  # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
+  # Enable hardened filesystem security: adds readOnlyRootFilesystem to the runner container
+  # plus the writable emptyDir mounts the runner needs at runtime (/tmp, the git clone dir, the
+  # pip/HOME cache, ~/.ssh and site-packages for runtime playbook installs).
+  # Known limitation: /venv/bin stays read-only, so a playbook package that declares
+  # console_scripts entry points cannot be pip-installed at runtime while this is enabled.
   hardenedFs: true
   setKRRSecurityContext: false
   #Enabled custom DNS configuration for runner
