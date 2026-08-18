@@ -98,3 +98,15 @@ def test_home_matches_cache_and_ssh_mounts():
     mount_paths = set(re.findall(r"^\s*mountPath:\s*(\S+)\s*$", _runner_template(), re.MULTILINE))
     assert f"{home.group(1)}/.cache" in mount_paths
     assert f"{home.group(1)}/.ssh" in mount_paths
+
+def test_venv_init_container_copy_works_as_non_root():
+    # "cp -a <src>/. <dst>/" also applies the source directory's attributes to the destination
+    # directory, which the non-root user does not own: cp exits 1, the init container fails and
+    # the pod never starts. The copy must therefore operate on the entries, not on ".".
+    template = _runner_template()
+    init_copy = [line.strip() for line in template.splitlines() if "/venv-writable" in line and "cp" in line]
+    assert init_copy, "no copy command targeting /venv-writable found"
+    for line in init_copy:
+        assert '/." /venv-writable' not in line, (
+            f"copy form exits 1 as non-root because it preserves attrs on the destination dir: {line}"
+        )

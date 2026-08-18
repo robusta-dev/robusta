@@ -77,12 +77,17 @@ spec:
         {{ else }}
         image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
         {{- end }}
+        # Copies the baked site-packages into the emptyDir that shadows it, so runtime playbook
+        # pip installs have somewhere to write. Copies the entries rather than "cp -a ${SRC}/."
+        # because that form also tries to preserve timestamps on the destination directory, which
+        # the non-root user does not own - cp then exits 1 and the whole pod fails to start.
         command:
           - sh
           - -c
           - >
             SRC="/venv/lib/python$(python -V | cut -d' ' -f2 | cut -d. -f1,2)/site-packages" &&
-            cp -a "${SRC}/." /venv-writable/
+            cd "${SRC}" &&
+            find . -mindepth 1 -maxdepth 1 -exec cp -a -t /venv-writable {} +
         volumeMounts:
         - name: venv-lib-volume
           mountPath: /venv-writable
