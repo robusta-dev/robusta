@@ -18,6 +18,23 @@ Handling Secrets in Robusta's Helm Values
 ******************************************
 Refer to :ref:`Managing Secrets`.
 
+Runner Pod Security
+******************************************
+
+By default, the Robusta runner pod runs as a non-root user (uid 1000) with all Linux capabilities dropped,
+``seccompProfile: RuntimeDefault`` and privilege escalation disabled.
+
+The runner container's root filesystem is also mounted read-only, with writable ``emptyDir`` volumes only
+where the runner needs to write at runtime (``/tmp``, git playbook clones, pip caches and runtime-installed
+Python packages). This is controlled by the ``runner.hardenedFs`` Helm value (default ``true``). Setting it
+to ``false`` keeps a writable root filesystem while still running as non-root. An explicit
+``runner.securityContext.container.readOnlyRootFilesystem`` value always takes precedence over ``hardenedFs``.
+
+.. note::
+
+    With the read-only filesystem enabled, external playbook packages that declare ``console_scripts``
+    entry points cannot be pip-installed at runtime. Refer to :ref:`Loading External Actions`.
+
 Limiting Robusta's Access in Your Cluster
 *******************************************
 

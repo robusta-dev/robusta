@@ -165,6 +165,15 @@ install command for the package being installed will be run with `--no-build-iso
 the `pip docs <https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-no-build-isolation>`_
 for details).
 
+Read-Only Filesystem Limitation
+*********************************
+
+The runner runs with a read-only root filesystem by default (see the ``runner.hardenedFs`` Helm value).
+Runtime installs into Python's ``site-packages`` still work, but a package that declares
+``console_scripts`` entry points cannot be pip-installed at runtime, because the scripts target the
+read-only ``/venv/bin``. For such packages, either set ``runner.hardenedFs: false``, or bake the package
+into a custom image as described below.
+
 Baking Actions into a Custom Image
 --------------------------------------
 
