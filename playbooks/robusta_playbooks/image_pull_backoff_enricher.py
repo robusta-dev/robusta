@@ -1,9 +1,5 @@
-import enum
 import logging
-from enum import Flag
-from typing import List
 
-from hikaru.model.rel_1_26 import ContainerStatus, PodStatus
 from robusta.api import (
     Finding,
     FindingSeverity,
@@ -17,14 +13,6 @@ from robusta.api import (
 from robusta.core.playbooks.pod_utils.imagepull_utils import (
     get_image_pull_backoff_container_statuses,
 )
-
-
-def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
-    return [
-        container_status
-        for container_status in status.containerStatuses
-        if container_status.state.waiting is not None and container_status.state.waiting.reason == "ImagePullBackOff"
-    ]
 
 
 @action
