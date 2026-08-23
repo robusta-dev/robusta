@@ -5,6 +5,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Job, Node, NodeList, StatefulSet
 from pydantic.main import BaseModel
 
+from robusta.core.model.env_vars import NODE_IP_CACHE_TTL_SEC
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.reporting.base import Finding
@@ -128,9 +129,6 @@ class PrometheusAlertTrigger(BaseTrigger):
 
 class PrometheusAlertTriggers(BaseModel):
     on_prometheus_alert: Optional[PrometheusAlertTrigger]
-
-
-NODE_IP_CACHE_TTL_SEC = 15 * 60
 
 
 class AlertEventBuilder:
