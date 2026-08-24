@@ -95,10 +95,14 @@ RUN apt-get update \
 # are deliberately narrow: libssh2 stays on upstream 1.11.1 (Debian revision -6 only
 # adds the CVE patches), and attr/acl move to the first upstream releases that carry
 # the fixes (2.6.0 and 2.4.0 respectively).
-# forky is pinned to priority 100 and the three packages are requested with an explicit
-# -t forky, so no other package is resolved against testing (in particular glibc stays
-# on trixie), and the testing sources are removed again in the same layer so the shipped
-# image has no testing repository configured.
+# Only these three packages may come from forky: they get an explicit per-package pin at
+# 990, and every other forky package is pinned to -1, which makes it uninstallable. Do NOT
+# use `apt-get -t forky` here instead - a target release raises *every* forky package to
+# 990 and defeats a `Package: *` pin, so apt would happily resolve a dependency by pulling
+# forky's libc6 (2.43) or libssl3t64 into the runtime image. With the negative pin, trixie
+# stays the only source for everything else and an unsatisfiable dependency is an apt error
+# instead. The testing sources are removed again in the same layer, so the shipped image has
+# no testing repository configured.
 # Two things to know when revisiting this:
 #  * forky is a rolling suite, so the versions installed here drift over time. If a future
 #    forky rebuild raises the libc6 floor above what trixie ships, apt will refuse the
@@ -108,9 +112,9 @@ RUN apt-get update \
 #    The vulnerable code really is gone - verify with `dpkg -l libssh2-1t64 libattr1 libacl1`
 #    rather than the scan output.
 RUN echo 'deb http://deb.debian.org/debian forky main' > /etc/apt/sources.list.d/forky.list \
-    && printf 'Package: *\nPin: release n=forky\nPin-Priority: 100\n' > /etc/apt/preferences.d/99-forky \
+    && printf 'Package: libssh2-1t64 libattr1 libacl1\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
     && apt-get update \
-    && apt-get install -y --no-install-recommends -t forky libssh2-1t64 libattr1 libacl1 \
+    && apt-get install -y --no-install-recommends libssh2-1t64 libattr1 libacl1 \
     && rm -f /etc/apt/sources.list.d/forky.list /etc/apt/preferences.d/99-forky \
     && rm -rf /var/lib/apt/lists/*
 
