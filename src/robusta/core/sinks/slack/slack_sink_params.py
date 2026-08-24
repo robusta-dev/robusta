@@ -3,7 +3,7 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.common import ChannelTransformer
 
 from typing import Optional
-from pydantic import validator
+from pydantic.v1 import validator
 
 
 class SlackSinkParams(SinkBaseParams):

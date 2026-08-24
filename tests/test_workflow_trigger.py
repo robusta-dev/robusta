@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 from robusta.api import ActionException
 from robusta.core.model.events import ExecutionContext
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert

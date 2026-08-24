@@ -1,4 +1,4 @@
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase

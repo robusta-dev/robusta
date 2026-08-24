@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, List, Union, cast
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.schedule.model import DynamicDelayRepeat, FixedDelayRepeat, JobState, ScheduledJob, SchedulingInfo

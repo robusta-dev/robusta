@@ -18,7 +18,7 @@ from hikaru.model.rel_1_26 import (
     PodSpec,
     ResourceRequirements,
 )
-from pydantic import BaseModel, ValidationError
+from pydantic.v1 import BaseModel, ValidationError
 
 from robusta.api import (
     RUNNER_SERVICE_ACCOUNT,

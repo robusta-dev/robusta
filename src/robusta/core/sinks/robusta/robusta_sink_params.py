@@ -1,4 +1,4 @@
-from pydantic.main import BaseModel
+from pydantic.v1.main import BaseModel
 from typing import List, Optional
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase

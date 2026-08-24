@@ -2,7 +2,7 @@ from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from typing import Optional, Dict
-from pydantic import validator
+from pydantic.v1 import validator
 
 
 class SlackSinkPreviewParams(SlackSinkParams):

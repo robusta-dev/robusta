@@ -1,7 +1,7 @@
 import base64
 from typing import Dict, List, Optional, Union, cast
 
-from pydantic import BaseModel, SecretStr, root_validator, validator
+from pydantic.v1 import BaseModel, SecretStr, root_validator, validator
 
 from robusta.core.playbooks.playbook_utils import get_env_replacement, replace_env_vars_values
 from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper

@@ -1,6 +1,6 @@
 import time
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.playbooks.actions_registry import Action
 from robusta.core.reporting import CallbackChoice

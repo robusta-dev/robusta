@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 import pytz
 from attr import dataclass
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.helm_release import HelmRelease

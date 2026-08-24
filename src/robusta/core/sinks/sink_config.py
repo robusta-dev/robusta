@@ -1,6 +1,6 @@
 import abc
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 

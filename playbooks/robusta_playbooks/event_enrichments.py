@@ -2,7 +2,7 @@ import logging
 from typing import List, Optional
 
 from hikaru.model.rel_1_26 import Job, Node
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.api import (
     ActionException,

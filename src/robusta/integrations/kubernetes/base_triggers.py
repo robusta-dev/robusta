@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 import hikaru
 import pydash
 from hikaru import HikaruBase
-from pydantic import BaseModel, PrivateAttr
+from pydantic.v1 import BaseModel, PrivateAttr
 from pydash.helpers import UNSET
 
 from robusta.core.model.events import ExecutionBaseEvent

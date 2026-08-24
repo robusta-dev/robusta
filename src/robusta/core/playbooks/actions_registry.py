@@ -1,7 +1,7 @@
 import inspect
 from typing import Callable, Dict, List, Optional, Tuple, Type, cast
 
-from pydantic.main import BaseModel
+from pydantic.v1.main import BaseModel
 
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from robusta.utils.decorators import doublewrap

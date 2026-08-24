@@ -5,7 +5,7 @@ from typing import List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.model.env_vars import RELAY_EXTERNAL_ACTIONS_URL
 

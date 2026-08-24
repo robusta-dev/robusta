@@ -5,7 +5,7 @@ import textwrap
 from typing import Dict, List, Optional
 
 import humanize
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from robusta.api import (
     CallbackBlock,
     CallbackChoice,

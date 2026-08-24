@@ -1,5 +1,5 @@
 from typing import ClassVar
-from pydantic.dataclasses import dataclass
+from pydantic.v1.dataclasses import dataclass
 from hikaru.model.rel_1_26 import HikaruDocumentBase, ObjectMeta, LabelSelector
 import datetime
 import pytz

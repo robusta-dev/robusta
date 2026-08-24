@@ -1,7 +1,7 @@
 import abc
 from typing import Any, Dict, List, Optional, Type
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.reporting.base import Finding

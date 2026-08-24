@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import validator
+from pydantic.v1 import validator
 
 from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
 from robusta.core.sinks.sink_base_params import SinkBaseParams

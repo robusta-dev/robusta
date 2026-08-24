@@ -3,7 +3,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, root_validator
+from pydantic.v1 import BaseModel, root_validator
 
 ScopeIncludeExcludeParamsT = Dict[str, Optional[Union[str, List[str]]]]
 

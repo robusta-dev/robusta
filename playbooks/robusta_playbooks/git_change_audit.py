@@ -3,7 +3,7 @@ from typing import List
 
 import hikaru
 from hikaru.meta import HikaruBase
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 
 from robusta.api import (
     ActionParams,

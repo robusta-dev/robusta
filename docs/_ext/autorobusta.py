@@ -14,8 +14,8 @@ from docutils.nodes import Node
 from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
 from PIL import Image
-from pydantic import BaseModel
-from pydantic.fields import ModelField
+from pydantic.v1 import BaseModel
+from pydantic.v1.fields import ModelField
 from sphinx.application import Sphinx
 from sphinx.util import nested_parse_with_titles
 from sphinx.util.docutils import SphinxDirective

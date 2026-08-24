@@ -2,8 +2,8 @@ import inspect
 import json
 import logging
 
-from pydantic import BaseModel
-from pydantic.fields import ModelField
+from pydantic.v1 import BaseModel
+from pydantic.v1.fields import ModelField
 
 from robusta.utils.docs import Docstring
 

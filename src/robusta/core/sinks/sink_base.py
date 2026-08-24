@@ -4,7 +4,7 @@ from abc import abstractmethod, ABC
 from collections import defaultdict
 from typing import Any, List, Dict, Tuple, DefaultDict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding

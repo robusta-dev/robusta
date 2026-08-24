@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Union
 from hikaru.model.rel_1_26 import Container, ContainerState, ContainerStatus, Pod
 from kubernetes.client.models import V1Container, V1ContainerStatus, V1PodStatus, V1Pod, V1PodSpec, V1ResourceRequirements
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
 

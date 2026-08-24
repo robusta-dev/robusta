@@ -1,6 +1,6 @@
 from typing import Dict
 
-from pydantic.main import BaseModel, Field
+from pydantic.v1.main import BaseModel, Field
 
 
 class NodeInfo(BaseModel):

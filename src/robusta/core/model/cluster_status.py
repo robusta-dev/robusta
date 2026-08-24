@@ -1,4 +1,4 @@
-from pydantic.main import BaseModel, List, Optional
+from pydantic.v1.main import BaseModel, List, Optional
 
 
 class ClusterStats(BaseModel):

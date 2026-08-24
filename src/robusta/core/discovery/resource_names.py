@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional
 
 from kubernetes import client
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.integrations.kubernetes.custom_models import DeploymentConfig, Rollout
 from robusta.utils.error_codes import ActionException, ErrorCodes

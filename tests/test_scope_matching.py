@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 import yaml
-from pydantic import BaseModel, Extra
+from pydantic.v1 import BaseModel, Extra
 
 from robusta.core.reporting import Finding, FindingSeverity, FindingSource, FindingSubject
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
