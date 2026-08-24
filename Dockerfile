@@ -84,6 +84,46 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
     && rm -rf /var/lib/apt/lists/*
 
+# Patching libssh2 CVE-2026-58050, CVE-2026-58051, CVE-2026-66032, CVE-2026-66033,
+# CVE-2026-66034, CVE-2026-66035 (High) - libssh2 is pulled in by libcurl, which git
+# and curl depend on.
+# Patching attr CVE-2026-54371 (High) via libattr1, and acl CVE-2026-54369 (High) /
+# CVE-2026-54370 (Medium) via libacl1 - both libraries are dependencies of coreutils
+# and therefore cannot be removed.
+# Debian trixie ships no fix for any of these ("vulnerable, no DSA" in the Debian
+# security tracker); the patched packages only exist in forky/testing. The upgrades
+# are deliberately narrow: libssh2 stays on upstream 1.11.1 (Debian revision -6 only
+# adds the CVE patches), and attr/acl move to the first upstream releases that carry
+# the fixes (2.6.0 and 2.4.0 respectively).
+# forky is pinned to priority 100 and the three packages are requested with an explicit
+# -t forky, so no other package is resolved against testing (in particular glibc stays
+# on trixie), and the testing sources are removed again in the same layer so the shipped
+# image has no testing repository configured.
+# Two things to know when revisiting this:
+#  * forky is a rolling suite, so the versions installed here drift over time. If a future
+#    forky rebuild raises the libc6 floor above what trixie ships, apt will refuse the
+#    install and this layer fails loudly rather than silently pulling in a new glibc.
+#  * scanners that key off the distro release (docker scout, trivy, ...) still report these
+#    CVEs, because the Debian trixie advisories carry no fixed version to compare against.
+#    The vulnerable code really is gone - verify with `dpkg -l libssh2-1t64 libattr1 libacl1`
+#    rather than the scan output.
+RUN echo 'deb http://deb.debian.org/debian forky main' > /etc/apt/sources.list.d/forky.list \
+    && printf 'Package: *\nPin: release n=forky\nPin-Priority: 100\n' > /etc/apt/preferences.d/99-forky \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends -t forky libssh2-1t64 libattr1 libacl1 \
+    && rm -f /etc/apt/sources.list.d/forky.list /etc/apt/preferences.d/99-forky \
+    && rm -rf /var/lib/apt/lists/*
+
+# Not patched, no fix available anywhere as of this change:
+# - perl CVE-2026-57433, CVE-2026-13221, CVE-2026-57432 (Critical/High) and
+#   CVE-2026-15534, CVE-2026-19487 (Medium). Debian trixie has no fixed perl, and
+#   perl-base is an Essential package that ships in python:3.11-slim itself, so the
+#   finding cannot be dropped by removing git either. forky's perl 5.42 requires
+#   glibc 2.43, i.e. replacing libc6 in the runtime image, which is not an acceptable
+#   trade for these issues.
+# - openssl CVE-2026-14456 (High). Upstream rates this Low and fixes it in 3.5.8,
+#   which is unreleased; no Debian suite (including sid) has a fix. It only affects
+#   an OpenSSL QUIC *server* (SSL listener object), which the runner never creates.
 
 # Patching CVE-2024-32002
 RUN git config --global core.symlinks false
@@ -109,6 +149,14 @@ RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel*
 # Set up kubectl
 # apt accepts an ASCII-armored key directly via signed-by, so there is no need for
 # `gpg --dearmor` (and therefore no need for gnupg2 in the runtime image).
+# kubectl is the only Go binary in the image, so it is what Go stdlib CVEs are reported
+# against. The channel is deliberately left unpinned (latest patch of v1.35), which is
+# what moved the reported go 1.25.12 (kubectl 1.35.7) up to go 1.26.5 (kubectl 1.35.8).
+# CVE-2026-39821, CVE-2026-33818, CVE-2026-56853, CVE-2026-56858, CVE-2026-56859,
+# CVE-2026-56860, CVE-2026-56862, CVE-2026-56864, CVE-2026-56865 need go 1.25.13 /
+# 1.26.6 (released 2026-08-13); no Kubernetes patch release is built with those yet
+# (1.35.8 and 1.36.4 are both go 1.26.5), so a rebuild once the next patch ships is
+# what clears them - there is nothing to pin here.
 COPY --from=builder /app/Release.key /etc/apt/keyrings/kubernetes-apt-keyring.asc
 RUN chmod 0644 /etc/apt/keyrings/kubernetes-apt-keyring.asc \
     && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \

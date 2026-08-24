@@ -67,6 +67,9 @@ humanize = "^3.13.1"
 # Pin to fix CVE-2026-69247 (High): cryptography Bleichenbacher oracle in PKCS#7 decryption
 # Pin to fix CVE-2026-39892 (Critical): cryptography buffer overflow with non-contiguous buffers
 # Pin to fix GHSA-537c-gmf6-5ccf (High): cryptography
+# Pin to fix CVE-2026-69249 (High) + CVE-2026-69248 (Medium): cryptography X.509
+# verifier DoS on duplicate intermediates / name-constraint bypass with wildcard DNS
+# SANs (both fixed in 49.0.0, so already covered by the ^50.0.0 floor above)
 cryptography = "^50.0.0"
 # PDF renderer for KRR/Popeye scan reports (BSD-3-Clause; replaced LGPL-licensed fpdf2)
 reportlab = "^5.0.0"
