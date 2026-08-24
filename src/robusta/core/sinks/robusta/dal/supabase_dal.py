@@ -7,7 +7,9 @@ import threading
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 from cachetools import TTLCache
+import httpx
 import requests
+from gotrue.errors import AuthRetryableError
 from postgrest._sync.request_builder import SyncQueryRequestBuilder
 from postgrest.base_request_builder import BaseFilterRequestBuilder, QueryArgs
 from postgrest.exceptions import APIError as PostgrestAPIError
@@ -15,10 +17,16 @@ from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
 from supabase import create_client
 from supabase.lib.client_options import ClientOptions
+from tenacity import RetryCallState, Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.exceptions import SupabaseDnsException
-from robusta.core.model.env_vars import SUPABASE_TIMEOUT_SECONDS
+from robusta.core.model.env_vars import (
+    SUPABASE_LOGIN_RETRIES,
+    SUPABASE_LOGIN_RETRY_BACKOFF_SEC,
+    SUPABASE_LOGIN_RETRY_MAX_BACKOFF_SEC,
+    SUPABASE_TIMEOUT_SECONDS,
+)
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -69,6 +77,17 @@ def pre_select_patched(*args, **kwargs) -> QueryArgs:
 supabase_request_builder.pre_select = pre_select_patched
 
 
+class _AuthHttpClient(httpx.Client):
+    """The httpx client we hand to Supabase's auth (GoTrue) sub-client.
+
+    Mirrors ``gotrue.http_clients.SyncClient``, whose only addition over ``httpx.Client``
+    is the ``aclose()`` alias that GoTrue's ``close()`` calls.
+    """
+
+    def aclose(self) -> None:
+        self.close()
+
+
 class SupabaseDal(AccountResourceFetcher):
     def __init__(
         self,
@@ -92,6 +111,7 @@ class SupabaseDal(AccountResourceFetcher):
         self.cluster = cluster_name
         options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.client = create_client(url, key, options)
+        self.__apply_auth_client_timeout()
         self.patch_postgrest_execute()
         self.email = email
         self.password = password
@@ -103,6 +123,46 @@ class SupabaseDal(AccountResourceFetcher):
         ttl = int(os.environ.get("SAAS_SESSION_TOKEN_TTL_SEC", "82800"))  # 23 hours
         self.token_cache = TTLCache(maxsize=1, ttl=ttl)
         self.lock = threading.Lock()
+
+    def __apply_auth_client_timeout(self) -> None:
+        """Give the auth (GoTrue) client the configured timeout, over HTTP/1.1.
+
+        ``ClientOptions.postgrest_client_timeout`` only reaches postgrest. supabase 2.5.1
+        builds the auth client with neither a timeout nor an http client of its own, so
+        logins ran on httpx's 5s default - and because ``socket.create_connection`` applies
+        the connect timeout once per resolved address, a dual-stack host gave up after ~10s
+        no matter what SUPABASE_TIMEOUT_SECONDS said (ROB-1228). supabase only grew a
+        supported hook for this in 2.28 (``ClientOptions(httpx_client=...)``), so until we
+        bump, replace the client on the instance.
+
+        HTTP/2 is dropped at the same time: httpcore's sync HTTP/2 connection is not thread
+        safe, and this DAL is shared across threads (the same problem as ROB-228). No
+        transport is passed, so environment proxies keep being honored as before.
+        """
+        auth_client = self.client.auth
+        http_client = _AuthHttpClient(
+            timeout=SUPABASE_TIMEOUT_SECONDS,
+            follow_redirects=True,
+            http2=False,
+        )
+        try:
+            previous = auth_client._http_client
+            # the admin sub-API was handed the original client at construction time
+            admin = auth_client.admin
+        except AttributeError:
+            # A supabase/gotrue bump moved the internals. Keep their default client rather
+            # than failing startup over it, but say so: auth calls stay on httpx defaults.
+            http_client.close()
+            logging.warning(
+                "Could not apply SUPABASE_TIMEOUT_SECONDS to the Supabase auth client - its internals changed. "
+                "Auth calls will use the httpx default timeout.",
+                exc_info=True,
+            )
+            return
+
+        auth_client._http_client = http_client
+        admin._http_client = http_client
+        previous.close()
 
     def patch_postgrest_execute(self):
         # This is somewhat hacky.
@@ -553,13 +613,46 @@ class SupabaseDal(AccountResourceFetcher):
             logging.error(f"Failed to persist helm_releases {helm_releases} error: {e}")
             raise
 
+    def __sign_in_once(self) -> str:
+        res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+        self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
+        self.client.postgrest.auth(res.session.access_token)
+        return res.user.id
+
+    @staticmethod
+    def __log_sign_in_retry(retry_state: RetryCallState) -> None:
+        logging.warning(
+            "Supabase login attempt %s/%s failed: %s. Retrying in %.1fs",
+            retry_state.attempt_number,
+            SUPABASE_LOGIN_RETRIES,
+            retry_state.outcome.exception() if retry_state.outcome else "unknown error",
+            retry_state.next_action.sleep if retry_state.next_action else 0,
+        )
+
     def sign_in(self) -> str:
+        """Log in to Supabase, retrying transient network failures.
+
+        A single failure here used to be fatal: it propagates out of ``__init__`` through
+        Robusta sink construction up to ConfigLoader, which kills the whole runner process
+        group - so one connect timeout at pod start put the runner into CrashLoopBackOff,
+        with no in-process recovery path (ROB-1228). GoTrue labels these errors "retryable"
+        (``AuthRetryableError``); honor that instead of dying. DNS failures are retried too:
+        cluster DNS is often not ready yet at the moment the runner starts. A wrong
+        password or any other 4xx is an ``AuthApiError``, so it still fails immediately.
+        """
         logging.info("Supabase dal login")
         try:
-            res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
-            self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
-            self.client.postgrest.auth(res.session.access_token)
-            return res.user.id
+            login = Retrying(
+                stop=stop_after_attempt(max(1, SUPABASE_LOGIN_RETRIES)),
+                wait=wait_exponential(
+                    multiplier=SUPABASE_LOGIN_RETRY_BACKOFF_SEC,
+                    max=SUPABASE_LOGIN_RETRY_MAX_BACKOFF_SEC,
+                ),
+                retry=retry_if_exception_type((AuthRetryableError, httpx.TransportError)),
+                before_sleep=self.__log_sign_in_retry,
+                reraise=True,
+            )
+            return login(self.__sign_in_once)
         except Exception as e:
             # Check if this is a DNS-related error
             error_msg = str(e).lower()
