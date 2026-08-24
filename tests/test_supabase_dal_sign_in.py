@@ -15,7 +15,7 @@ from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 
 from robusta.core.exceptions import SupabaseDnsException
-from robusta.core.model.env_vars import SUPABASE_TIMEOUT_SECONDS
+from robusta.core.model.env_vars import SUPABASE_CONNECT_TIMEOUT_SECONDS, SUPABASE_TIMEOUT_SECONDS
 from robusta.core.sinks.robusta.dal import supabase_dal as supabase_dal_module
 from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal, _AuthHttpClient
 
@@ -148,10 +148,32 @@ class TestAuthClientTimeout:
 
         auth_http_client = dal.client.auth._http_client
         assert isinstance(auth_http_client, _AuthHttpClient)
-        assert auth_http_client.timeout == httpx.Timeout(SUPABASE_TIMEOUT_SECONDS)
+        assert auth_http_client.timeout == httpx.Timeout(
+            SUPABASE_TIMEOUT_SECONDS, connect=SUPABASE_CONNECT_TIMEOUT_SECONDS
+        )
         # the admin sub-API holds its own reference, handed over at construction time
         assert dal.client.auth.admin._http_client is auth_http_client
         assert original.is_closed
+
+    def test_connect_timeout_is_capped_below_the_read_budget(self):
+        """A handshake that has not completed in 10s will not; the retry should get its turn
+        rather than every attempt parking on a 60s read budget."""
+        dal = self._dal_with_real_client()
+
+        dal._SupabaseDal__apply_auth_client_timeout()
+
+        timeout = dal.client.auth._http_client.timeout
+        assert timeout.connect == SUPABASE_CONNECT_TIMEOUT_SECONDS < SUPABASE_TIMEOUT_SECONDS
+        assert timeout.read == SUPABASE_TIMEOUT_SECONDS
+
+    def test_connect_timeout_never_exceeds_a_smaller_total(self, monkeypatch):
+        """An operator who lowers SUPABASE_TIMEOUT_SECONDS below the connect cap means it."""
+        monkeypatch.setattr(supabase_dal_module, "SUPABASE_TIMEOUT_SECONDS", 2)
+        dal = self._dal_with_real_client()
+
+        dal._SupabaseDal__apply_auth_client_timeout()
+
+        assert dal.client.auth._http_client.timeout == httpx.Timeout(2, connect=2)
 
     def test_auth_client_drops_http2(self):
         """httpcore's sync HTTP/2 connection is not thread safe and this DAL is shared

@@ -32,6 +32,10 @@ SUPABASE_TIMEOUT_SECONDS = int(os.environ.get("SUPABASE_TIMEOUT_SECONDS", 60))
 SUPABASE_LOGIN_RETRIES = int(os.environ.get("SUPABASE_LOGIN_RETRIES", 4))
 SUPABASE_LOGIN_RETRY_BACKOFF_SEC = float(os.environ.get("SUPABASE_LOGIN_RETRY_BACKOFF_SEC", 2))
 SUPABASE_LOGIN_RETRY_MAX_BACKOFF_SEC = float(os.environ.get("SUPABASE_LOGIN_RETRY_MAX_BACKOFF_SEC", 30))
+# A TCP handshake that has not completed in this many seconds is not going to. Capped
+# separately from SUPABASE_TIMEOUT_SECONDS so an unreachable platform fails (and retries)
+# promptly instead of parking every attempt on the full read budget.
+SUPABASE_CONNECT_TIMEOUT_SECONDS = float(os.environ.get("SUPABASE_CONNECT_TIMEOUT_SECONDS", 10))
 GRAFANA_RENDERER_URL = os.environ.get("GRAFANA_RENDERER_URL", "http://127.0.0.1:8281/render")
 RESOURCE_UPDATES_CACHE_TTL_SEC = os.environ.get("RESOURCE_UPDATES_CACHE_TTL_SEC", 120)
 INTERNAL_PLAYBOOKS_ROOT = os.environ.get("INTERNAL_PLAYBOOKS_ROOT", "/app/src/robusta/core/playbooks/internal")

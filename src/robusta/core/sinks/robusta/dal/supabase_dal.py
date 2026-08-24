@@ -22,6 +22,7 @@ from tenacity import RetryCallState, Retrying, retry_if_exception_type, stop_aft
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.exceptions import SupabaseDnsException
 from robusta.core.model.env_vars import (
+    SUPABASE_CONNECT_TIMEOUT_SECONDS,
     SUPABASE_LOGIN_RETRIES,
     SUPABASE_LOGIN_RETRY_BACKOFF_SEC,
     SUPABASE_LOGIN_RETRY_MAX_BACKOFF_SEC,
@@ -135,13 +136,20 @@ class SupabaseDal(AccountResourceFetcher):
         supported hook for this in 2.28 (``ClientOptions(httpx_client=...)``), so until we
         bump, replace the client on the instance.
 
+        Connect is capped below the read budget (SUPABASE_CONNECT_TIMEOUT_SECONDS): with a
+        60s flat timeout, every attempt against a firewalled platform parks for a full
+        minute before the retry, so the actionable error takes minutes to appear.
+
         HTTP/2 is dropped at the same time: httpcore's sync HTTP/2 connection is not thread
         safe, and this DAL is shared across threads (the same problem as ROB-228). No
         transport is passed, so environment proxies keep being honored as before.
         """
         auth_client = self.client.auth
         http_client = _AuthHttpClient(
-            timeout=SUPABASE_TIMEOUT_SECONDS,
+            timeout=httpx.Timeout(
+                SUPABASE_TIMEOUT_SECONDS,
+                connect=min(SUPABASE_CONNECT_TIMEOUT_SECONDS, SUPABASE_TIMEOUT_SECONDS),
+            ),
             follow_redirects=True,
             http2=False,
         )
