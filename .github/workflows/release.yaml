@@ -46,9 +46,9 @@ jobs:
 
       - name: Update package version
         run: |
-          sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py helm/robusta/Chart.yaml helm/robusta/values.yaml
-          sed -i 's/version = "0.0.0"/version = "${{env.RELEASE_VER}}"/g' pyproject.toml
-          sed -i 's/0.0.1/${{env.RELEASE_VER}}/g' helm/robusta/Chart.yaml
+          sed -i "s/0.0.0/$RELEASE_VER/g" src/robusta/_version.py helm/robusta/Chart.yaml helm/robusta/values.yaml
+          sed -i "s/version = \"0.0.0\"/version = \"$RELEASE_VER\"/g" pyproject.toml
+          sed -i "s/0.0.1/$RELEASE_VER/g" helm/robusta/Chart.yaml
 
       # Set up the buildx to run build for multiple platforms
       - name: Set up QEMU
@@ -79,7 +79,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build with skaffold
-        run: ./skaffold build --profile release --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
+        run: ./skaffold build --profile release --file-output=container-ids.json --tag="$RELEASE_VER"
 
       - name: Save artifact with tags of built containers
         uses: actions/upload-artifact@v4
@@ -116,7 +116,7 @@ jobs:
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           --platform linux/arm64,linux/amd64 \
           --cache-from us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta:cache \
-          --tag robustadev/robusta-runner:${{env.RELEASE_VER}} \
+          --tag "robustadev/robusta-runner:$RELEASE_VER" \
           --push \
           .
 
@@ -134,4 +134,4 @@ jobs:
       - name: Push Helm chart to OCI registry
         run: |
           helm package helm/robusta
-          helm push robusta-${{env.RELEASE_VER}}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
+          helm push "robusta-$RELEASE_VER.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"

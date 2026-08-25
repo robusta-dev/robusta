@@ -32,7 +32,7 @@ Endpoint
 
 .. robusta-code::
 
-    POST https://api.robusta.dev/webhooks?type=alert&origin=<ORIGIN>&account_id=<ACCOUNT_ID>
+    POST https://api.robusta.dev/webhooks?type=alert&origin=<ORIGIN>&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
 
 Query Parameters
 ----------------
@@ -50,7 +50,7 @@ Query Parameters
    * - ``account_id``
      - Your Robusta account ID, found in ``generated_values.yaml``.
    * - ``cluster``
-     - Optional. The cluster to associate the alert with. When set, it overrides any cluster found in the alert payload and is used for the resulting alert investigation. When omitted, the cluster is taken from the payload if present, otherwise the alert is recorded under the ``external`` cluster. Use this when your monitoring system cannot add a cluster label to the alert itself.
+     - Recommended. The cluster to file the alert under — use the exact name shown in the Robusta UI. Overrides any cluster in the alert payload. If omitted, the cluster is taken from the payload, or silently defaults to ``external``.
 
 Authentication
 --------------
@@ -69,7 +69,7 @@ Example Request
 .. robusta-code:: bash
 
     curl --location --request POST \
-      'https://api.robusta.dev/webhooks?type=alert&origin=datadog&account_id=ACCOUNT_ID' \
+      'https://api.robusta.dev/webhooks?type=alert&origin=datadog&account_id=ACCOUNT_ID&cluster=CLUSTER_NAME' \
       --header 'Authorization: Bearer API_KEY' \
       --header 'Content-Type: application/json' \
       --data-raw '{ "title": "High error rate", "severity": "high" }'

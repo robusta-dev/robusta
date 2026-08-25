@@ -16,7 +16,9 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<CLUSTER_NAME>`` with your cluster's name exactly as it appears in the Robusta UI. If ``cluster`` is omitted, alerts are filed under a generic ``external`` cluster.
 
 Configure GCP
 -------------
@@ -25,7 +27,7 @@ GCP webhook notification channels do not support custom headers in the console, 
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>&token=<ROBUSTA_API_KEY>
+    https://api.robusta.dev/webhooks?type=alert&origin=gcp&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>&token=<ROBUSTA_API_KEY>
 
 The ``token`` query parameter is accepted as an alternative to the ``Authorization`` header.
 

@@ -30,7 +30,7 @@ idna= { version = ">=3.15", optional = true }
 supabase = "2.5.1"
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.23.0" }
-Flask = { version = "^3.0.0", optional = true }
+Flask = { version = "^3.1.3", optional = true }
 werkzeug = { version = ">=3.1.6", optional = true }
 jinja2 = { version = ">=3.1.5", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
@@ -64,9 +64,10 @@ humanize = "^3.13.1"
 # we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
+# Pin to fix CVE-2026-69247 (High): cryptography Bleichenbacher oracle in PKCS#7 decryption
 # Pin to fix CVE-2026-39892 (Critical): cryptography buffer overflow with non-contiguous buffers
 # Pin to fix GHSA-537c-gmf6-5ccf (High): cryptography
-cryptography = "^48.0.1"
+cryptography = "^50.0.0"
 # PDF renderer for KRR/Popeye scan reports (BSD-3-Clause; replaced LGPL-licensed fpdf2)
 reportlab = "^5.0.0"
 attrs = "^23.1.0"
