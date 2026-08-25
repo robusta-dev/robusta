@@ -17,6 +17,7 @@ from supabase import create_client
 from supabase.lib.client_options import SyncClientOptions as ClientOptions
 
 from robusta.core.model.cluster_status import ClusterStatus
+from robusta.core.sinks.robusta.dal.publishable_key_cache import publishable_key_cache
 from robusta.core.exceptions import SupabaseDnsException
 from robusta.core.model.env_vars import SUPABASE_TIMEOUT_SECONDS
 from robusta.core.model.helm_release import HelmRelease
@@ -91,11 +92,10 @@ class SupabaseDal(AccountResourceFetcher):
         self.account_id = account_id
         self.cluster = cluster_name
         options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
-        self.client = create_client(url, key, options)
-        self.patch_postgrest_execute()
         self.email = email
         self.password = password
-        self.user_id = self.sign_in()
+        self.__connect(options)
+        self.patch_postgrest_execute()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
         self.sink_name = sink_name
         self.persist_events = persist_events
@@ -103,6 +103,29 @@ class SupabaseDal(AccountResourceFetcher):
         ttl = int(os.environ.get("SAAS_SESSION_TOKEN_TTL_SEC", "82800"))  # 23 hours
         self.token_cache = TTLCache(maxsize=1, ttl=ttl)
         self.lock = threading.Lock()
+
+    def __connect(self, options: ClientOptions):
+        cached_key = publishable_key_cache.get_cached_key()
+        if cached_key and self.__try_key(cached_key, options):
+            return
+        if cached_key:
+            publishable_key_cache.invalidate()
+        fetched_key = publishable_key_cache.fetch_key(self.account_id, self.cluster)
+        if fetched_key and fetched_key not in (cached_key, self.key) and self.__try_key(fetched_key, options):
+            publishable_key_cache.store(fetched_key)
+            return
+        # fall back to the locally configured key; failures propagate as before
+        self.client = create_client(self.url, self.key, options)
+        self.user_id = self.sign_in()
+
+    def __try_key(self, api_key: str, options: ClientOptions) -> bool:
+        try:
+            self.client = create_client(self.url, api_key, options)
+            self.user_id = self.sign_in()
+            return True
+        except Exception as e:
+            logging.warning(f"Failed to connect to Supabase with the relay-provided api key: {e}")
+            return False
 
     def patch_postgrest_execute(self):
         # This is somewhat hacky.
