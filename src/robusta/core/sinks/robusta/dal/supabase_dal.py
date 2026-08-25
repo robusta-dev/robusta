@@ -17,9 +17,8 @@ from supabase import create_client
 from supabase.lib.client_options import SyncClientOptions as ClientOptions
 
 from robusta.core.model.cluster_status import ClusterStatus
-from robusta.core.sinks.robusta.dal.publishable_key_cache import publishable_key_cache
 from robusta.core.exceptions import SupabaseDnsException
-from robusta.core.model.env_vars import SUPABASE_TIMEOUT_SECONDS
+from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT, RUNNER_VERSION, SUPABASE_TIMEOUT_SECONDS
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -70,6 +69,26 @@ def pre_select_patched(*args, **kwargs) -> QueryArgs:
 supabase_request_builder.pre_select = pre_select_patched
 
 
+KEY_CACHE = TTLCache(maxsize=1, ttl=24 * 60 * 60)
+
+
+def fetch_supabase_api_key(account_id: str, cluster: str) -> Optional[str]:
+    params = {
+        "account_id": account_id,
+        "cluster": cluster,
+        "component": "runner",
+        "component_version": RUNNER_VERSION,
+    }
+    try:
+        url = f"{ROBUSTA_API_ENDPOINT}/api/config/supabase-keys"
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        return response.json().get("api_key")
+    except Exception as e:
+        logging.warning(f"Failed to fetch the api key from relay: {e}")
+        return None
+
+
 class SupabaseDal(AccountResourceFetcher):
     def __init__(
         self,
@@ -105,27 +124,20 @@ class SupabaseDal(AccountResourceFetcher):
         self.lock = threading.Lock()
 
     def __connect(self, options: ClientOptions):
-        cached_key = publishable_key_cache.get_cached_key()
-        if cached_key and self.__try_key(cached_key, options):
-            return
-        if cached_key:
-            publishable_key_cache.invalidate()
-        fetched_key = publishable_key_cache.fetch_key(self.account_id, self.cluster)
-        if fetched_key and fetched_key not in (cached_key, self.key) and self.__try_key(fetched_key, options):
-            publishable_key_cache.store(fetched_key)
-            return
-        # fall back to the locally configured key; failures propagate as before
-        self.client = create_client(self.url, self.key, options)
-        self.user_id = self.sign_in()
+        self.options = options
+        relay_key = fetch_supabase_api_key(self.account_id, self.cluster)
+        for key in filter(None, (KEY_CACHE.pop("key", None), relay_key)):
+            try:
+                self.__login(key, options)
+                KEY_CACHE["key"] = key
+                return
+            except Exception as e:
+                logging.warning(f"Supabase login with the relay api key failed: {e}")
+        self.__login(self.key, options)
 
-    def __try_key(self, api_key: str, options: ClientOptions) -> bool:
-        try:
-            self.client = create_client(self.url, api_key, options)
-            self.user_id = self.sign_in()
-            return True
-        except Exception as e:
-            logging.warning(f"Failed to connect to Supabase with the relay-provided api key: {e}")
-            return False
+    def __login(self, api_key: str, options: ClientOptions):
+        self.client = create_client(self.url, api_key, options)
+        self.user_id = self.sign_in()
 
     def patch_postgrest_execute(self):
         # This is somewhat hacky.
@@ -137,7 +149,7 @@ class SupabaseDal(AccountResourceFetcher):
                 if exc.code == "PGRST301" or "expired" in message.lower():
                     # JWT expired. Sign in again and retry the query
                     logging.error("JWT token expired/invalid, signing in to Supabase again")
-                    self.sign_in()
+                    self.__connect(self.options)
                     return self._original_execute(_self)
                 else:
                     raise
