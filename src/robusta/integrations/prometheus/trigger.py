@@ -1,4 +1,5 @@
 import logging
+import threading
 import time
 from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
@@ -134,19 +135,26 @@ class PrometheusAlertTriggers(BaseModel):
 class AlertEventBuilder:
     _node_name_by_ip: Dict[str, str] = {}
     _node_ip_cache_time: float = 0
+    _node_ip_cache_lock = threading.Lock()
+
+    @classmethod
+    def __node_ip_cache_expired(cls) -> bool:
+        return time.time() - cls._node_ip_cache_time > NODE_IP_CACHE_TTL_SEC
 
     @classmethod
     def __refresh_node_ip_cache(cls):
-        nodes: NodeList = NodeList.listNode().obj
-        cls._node_name_by_ip = {
-            address.address: node.metadata.name for node in nodes.items for address in node.status.addresses
-        }
-        cls._node_ip_cache_time = time.time()
+        with cls._node_ip_cache_lock:
+            if not cls.__node_ip_cache_expired():
+                return
+            nodes: NodeList = NodeList.listNode().obj
+            cls._node_name_by_ip = {
+                address.address: node.metadata.name for node in nodes.items for address in node.status.addresses
+            }
+            cls._node_ip_cache_time = time.time()
 
     @classmethod
     def __find_node_by_ip(cls, ip) -> Optional[Node]:
-        cache_expired = time.time() - cls._node_ip_cache_time > NODE_IP_CACHE_TTL_SEC
-        if cache_expired or ip not in cls._node_name_by_ip:
+        if cls.__node_ip_cache_expired() or ip not in cls._node_name_by_ip:
             cls.__refresh_node_ip_cache()
         node_name = cls._node_name_by_ip.get(ip)
         return Node().read(name=node_name) if node_name else None
