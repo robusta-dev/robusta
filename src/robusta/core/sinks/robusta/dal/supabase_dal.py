@@ -14,7 +14,7 @@ from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
 from supabase import create_client
-from supabase.lib.client_options import ClientOptions
+from supabase.lib.client_options import SyncClientOptions as ClientOptions
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.exceptions import SupabaseDnsException
@@ -400,7 +400,8 @@ class SupabaseDal(AccountResourceFetcher):
         frq: BaseFilterRequestBuilder, operator: str, criteria: str
     ) -> BaseFilterRequestBuilder:
         key, val = sanitize_param(operator), f"{criteria}"
-        frq.params = frq.params.set(key, val)
+        target = frq.request if hasattr(frq, "request") else frq
+        target.params = target.params.set(key, val)
 
         return frq
 
