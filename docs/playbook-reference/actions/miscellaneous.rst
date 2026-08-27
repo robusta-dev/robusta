@@ -8,17 +8,6 @@ ArgoCD
 
 .. robusta-action:: playbooks.robusta_playbooks.argo_cd.argo_app_sync
 
-Robusta Platform Workflows
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. robusta-action:: playbooks.robusta_playbooks.workflow_trigger.trigger_workflow on_prometheus_alert
-
-    Optionally, rate limit the action by alert label combination with the
-    ``rate_limit_labels`` and ``rate_limit_seconds`` parameters: once a
-    workflow is triggered for an alert, further alerts matching on **all** of
-    the given labels are skipped until the rate limit period passes. By
-    default no rate limit is applied.
-
 Slack-OpsGenie sync
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
