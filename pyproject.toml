@@ -30,13 +30,17 @@ idna= { version = ">=3.15", optional = true }
 supabase = "2.5.1"
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.23.0" }
-Flask = { version = "^3.0.0", optional = true }
+Flask = { version = "^3.1.3", optional = true }
 werkzeug = { version = ">=3.1.6", optional = true }
 jinja2 = { version = ">=3.1.5", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
-CairoSVG = { version = "^2.5.2", optional = true }
+# SVG -> PNG rasterizer for charts sent to chat sinks (resvg is Apache-2.0 OR MIT,
+# bindings are MIT; replaced LGPL-licensed CairoSVG)
+# Pinned to an exact version for supply-chain safety since the binding package
+# has a small maintainer base (see PR #2136 review)
+resvg-py = "0.3.4"
 # Bump to fix CVE-2026-10142, CVE-2026-10143 (High): kafka-python protocol-parser DoS
 kafka-python = { version = "^2.3.2", optional = true }
 datadog-api-client = { version = "^1.2.0", optional = true }
@@ -60,10 +64,12 @@ humanize = "^3.13.1"
 # we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
+# Pin to fix CVE-2026-69247 (High): cryptography Bleichenbacher oracle in PKCS#7 decryption
 # Pin to fix CVE-2026-39892 (Critical): cryptography buffer overflow with non-contiguous buffers
 # Pin to fix GHSA-537c-gmf6-5ccf (High): cryptography
-cryptography = "^48.0.1"
-fpdf2 = "^2.7.1"
+cryptography = "^50.0.0"
+# PDF renderer for KRR/Popeye scan reports (BSD-3-Clause; replaced LGPL-licensed fpdf2)
+reportlab = "^5.0.0"
 attrs = "^23.1.0"
 prometrix = "0.2.11"
 hikaru-model-26 = "^1.1.1"
@@ -92,13 +98,16 @@ pyasn1 = ">=0.6.4"
 filelock = ">=3.20.3"
 # Pin to fix CVE-2026-22702 (transitive via pre-commit)
 virtualenv = "^20.36.1"
-# Pillow is pulled in transitively (fpdf2, CairoSVG). Pin to fix CVE-2026-54058,
+# Pillow is used directly (MS Teams PNG->JPEG image conversion) and by reportlab.
+# Pin to fix CVE-2026-54058,
 # CVE-2026-54059, CVE-2026-54060, CVE-2026-55379, CVE-2026-55380, CVE-2026-59197,
 # CVE-2026-59199, CVE-2026-59200, CVE-2026-59204, CVE-2026-59205 (High)
 pillow = "^12.3.0"
 # click is pulled in transitively (flask, typer). Pin to fix CVE-2026-7246 (High):
 # command injection via unsanitized filename in click.edit()
 click = ">=8.3.3"
+# Used directly for the Supabase login retry (ROB-1228); was only transitive via opsgenie-sdk
+tenacity = "^9.1.2"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -138,7 +147,7 @@ types-toml = "^0.10.2"
 types-tabulate = "^0.8.10"
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "watchdog", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase", "datadog-api-client", "sentry-sdk", "poetry-core"]
+all = ["Flask", "grafana-api", "watchdog", "better-exceptions", "tabulate", "kafka-python", "prometheus-api-client", "supabase", "datadog-api-client", "sentry-sdk", "poetry-core"]
 
 [tool.poetry.group.dev.dependencies]
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }

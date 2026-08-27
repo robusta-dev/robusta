@@ -16,7 +16,9 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=pagerduty&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=pagerduty&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<CLUSTER_NAME>`` with your cluster's name exactly as it appears in the Robusta UI. If ``cluster`` is omitted, alerts are filed under a generic ``external`` cluster.
 
 Configure PagerDuty
 -------------------

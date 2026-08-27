@@ -15,7 +15,13 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=alertmanager&account_id=<ACCOUNT_ID>
+    https://api.robusta.dev/webhooks?type=alert&origin=alertmanager&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+
+Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<CLUSTER_NAME>`` with your cluster's name exactly as it appears in the Robusta UI. If ``cluster`` is omitted, alerts are filed under a generic ``external`` cluster.
+
+.. note::
+
+    Alerts can also carry the cluster as a ``cluster`` or ``cluster_name`` label (e.g. via Prometheus ``externalLabels``); the URL parameter takes precedence. The :doc:`in-cluster integration </configuration/alertmanager-integration/outofcluster-prometheus>` is a separate mechanism that routes by label only.
 
 Configure AlertManager
 ----------------------
@@ -27,7 +33,7 @@ Add a webhook receiver to ``alertmanager.yml``:
     receivers:
       - name: robusta
         webhook_configs:
-          - url: 'https://api.robusta.dev/webhooks?type=alert&origin=alertmanager&account_id=<ACCOUNT_ID>'
+          - url: 'https://api.robusta.dev/webhooks?type=alert&origin=alertmanager&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>'
             send_resolved: true
             http_config:
               authorization:

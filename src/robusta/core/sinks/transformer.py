@@ -4,8 +4,6 @@ import urllib.parse
 from typing import List, Optional, Union
 
 import markdown2
-from fpdf import FPDF
-from fpdf.fonts import FontFace
 
 try:
     from tabulate import tabulate
@@ -233,67 +231,106 @@ class Transformer:
         if not isinstance(block, ScanReportBlock):
             return block
 
-        accent_color = (140, 249, 209)
-        headers_color = (63, 63, 63)
-        table_color = (207, 215, 216)
+        # reportlab is imported lazily so the PDF toolchain is only required on the
+        # scan-report path, not for merely importing the sink layer
+        from io import BytesIO
 
-        def set_normal_test_style(pdf: FPDF):
-            pdf.set_font("", "", 8)
-            pdf.set_text_color(0, 0, 0)
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4, landscape
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-        def write_report_header(title: str, end_time, score: Union[int, str], grade: str):
-            pdf.cell(pdf.w * 0.7, 10, f"**{title}** {end_time.strftime('%b %d, %y %X')}", border=0, markdown=True)
-            if int(score) >= 0:
-                pdf.cell(pdf.w * 0.3, 10, f"**{grade}** {score}", border=0, markdown=True)
+        accent_color = colors.Color(140 / 255, 249 / 255, 209 / 255)
+        headers_color = colors.Color(63 / 255, 63 / 255, 63 / 255)
+        table_color = colors.Color(207 / 255, 215 / 255, 216 / 255)
 
-            pdf.ln(20)
+        title_style = ParagraphStyle("scan-title", fontName="Courier", fontSize=18, leading=22)
+        config_label_style = ParagraphStyle(
+            "scan-config-label", fontName="Courier", fontSize=18, leading=22, textColor=accent_color
+        )
+        section_style = ParagraphStyle(
+            "scan-section", fontName="Courier-Bold", fontSize=12, leading=14, textColor=headers_color
+        )
+        normal_style = ParagraphStyle("scan-normal", fontName="Courier", fontSize=8, leading=12)
+        heading_cell_style = ParagraphStyle(
+            "scan-heading-cell", fontName="Courier", fontSize=8, leading=12, textColor=headers_color
+        )
 
-        def write_section_header(pdf: FPDF, header: str):
-            if pdf.will_page_break(50):
-                pdf.add_page()
-
-            pdf.ln(12)
-            pdf.set_font("", "B", 12)
-            pdf.set_text_color(headers_color)
-            pdf.cell(txt=header, border=0)
-            pdf.ln(12)
-
-        def write_config(pdf: FPDF, config: str):
-            pdf.set_text_color(accent_color)
-            pdf.cell(txt="config", border=0)
-            pdf.ln(12)
-            set_normal_test_style(pdf)
-            pdf.multi_cell(w=0, txt=config, border=0)
-
-        def write_table(pdf: FPDF, rows: List[list[str]]):
-            pdf.set_draw_color(table_color)
-            set_normal_test_style(pdf)
-            with pdf.table(
-                borders_layout="INTERNAL",
-                rows=rows,
-                headings_style=FontFace(color=(headers_color)),
-                col_widths=scan.table_widths,
-                markdown=True,
-                line_height=1.5 * pdf.font_size,
-            ):
-                pass
+        def cell_markup(text) -> str:
+            """Escape a table cell and translate the markdown supported in scan cells
+            (**bold** and newlines) to paragraph markup."""
+            escaped = str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            bolded = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escaped, flags=re.DOTALL)
+            return bolded.replace("\n", "<br/>")
 
         scan: ScanReportBlock = block
         scan_headers = scan.table_headers
         scan_data = scan.table_data
-        pdf = FPDF(orientation="landscape", format="A4")
-        pdf.add_page()
-        pdf.set_font("courier", "", 18)
-        pdf.set_line_width(0.1)
-        pdf.c_margin = 2  # create default cell margin to add table "padding"
-
         title = f"{scan.type.capitalize()} report"
-        write_report_header(title, scan.end_time, scan.score, scan.grade)
-        write_config(pdf, scan.config)
+
+        story = []
+
+        header_cells = [Paragraph(f"<b>{cell_markup(title)}</b> {scan.end_time.strftime('%b %d, %y %X')}", title_style)]
+        header_widths = [0.7]
+        try:
+            # scan.grade also parses the score, so it must stay inside this guard
+            if int(scan.score) >= 0:
+                header_cells.append(Paragraph(f"<b>{scan.grade}</b> {scan.score}", title_style))
+                header_widths.append(0.3)
+        except (TypeError, ValueError):
+            logging.warning(f"scan report has a non-integer score {scan.score!r}; skipping the score badge")
+
+        page_width, _ = landscape(A4)
+        margin = 28  # ~10mm, matching the previous layout
+        content_width = page_width - 2 * margin
+        story.append(Table([header_cells], colWidths=[w * content_width for w in header_widths]))
+        story.append(Spacer(1, 20))
+
+        story.append(Paragraph("config", config_label_style))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(cell_markup(scan.config), normal_style))
 
         for section_name, section_data in scan_data.items():
-            rows = [scan_headers, *section_data]
-            write_section_header(pdf, section_name)
-            write_table(pdf, rows)
+            story.append(Spacer(1, 12))
+            story.append(Paragraph(cell_markup(section_name), section_style))
+            story.append(Spacer(1, 6))
 
-        return FileBlock(f"{title}.pdf", pdf.output())
+            heading_row = [Paragraph(cell_markup(header), heading_cell_style) for header in scan_headers]
+            body_rows = [
+                [Paragraph(cell_markup(cell), normal_style) for cell in row] for row in section_data
+            ]
+            width_total = sum(scan.table_widths)
+            column_widths = [w / width_total * content_width for w in scan.table_widths]
+            # splitInRow lets a single row taller than the page (e.g. a Popeye resource
+            # with very many issues in one cell) split across pages instead of raising
+            table = Table(
+                [heading_row, *body_rows],
+                colWidths=column_widths,
+                repeatRows=1,
+                splitByRow=1,
+                splitInRow=1,
+            )
+            table.setStyle(
+                TableStyle(
+                    [
+                        ("INNERGRID", (0, 0), (-1, -1), 0.3, table_color),
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ]
+                )
+            )
+            story.append(table)
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=margin,
+            rightMargin=margin,
+            topMargin=margin,
+            bottomMargin=margin,
+            title=title,
+        )
+        doc.build(story)
+        return FileBlock(f"{title}.pdf", buffer.getvalue())

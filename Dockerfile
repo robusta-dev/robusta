@@ -80,10 +80,16 @@ WORKDIR /app
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
-    && apt-get install -y --no-install-recommends git openssh-client curl libcairo2 apt-transport-https \
+    && apt-get install -y --no-install-recommends git openssh-client curl fonts-dejavu-core apt-transport-https \
     && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
     && rm -rf /var/lib/apt/lists/*
 
+RUN echo 'deb http://deb.debian.org/debian forky main' > /etc/apt/sources.list.d/forky.list \
+    && printf 'Package: libssh2-1t64 libattr1 libacl1\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends libssh2-1t64 libattr1 libacl1 \
+    && rm -f /etc/apt/sources.list.d/forky.list /etc/apt/preferences.d/99-forky \
+    && rm -rf /var/lib/apt/lists/*
 
 # Patching CVE-2024-32002
 RUN git config --global core.symlinks false
