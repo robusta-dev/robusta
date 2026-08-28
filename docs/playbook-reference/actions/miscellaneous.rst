@@ -38,3 +38,8 @@ Stress Testing and Chaos Engineering
 Adding Slack user/group mentions to k8s/Prometheus events
 ---------------------------------------------------------
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.mention_enricher
+
+Robusta Platform Triggered Workflows
+---------------------------------------------------------
+
+.. robusta-action:: playbooks.robusta_playbooks.workflow_trigger.trigger_workflow on_prometheus_alert
