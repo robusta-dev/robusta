@@ -121,7 +121,9 @@ def node_status_enricher(event: NodeEvent):
 @action
 def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     """
-    Gets the dmesg from a node
+    Get the kernel ring buffer messages (dmesg) from the event's node.
+
+    The output is attached to the finding as a file named ``dmesg.log``.
     """
     node = event.get_node()
     if not node:

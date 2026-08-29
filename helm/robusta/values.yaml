@@ -107,6 +107,7 @@ lightActions:
 - delete_job
 - list_resource_names
 - node_dmesg_enricher
+- pod_dmesg_enricher
 - status_enricher
 - krr_scan
 - popeye_scan
