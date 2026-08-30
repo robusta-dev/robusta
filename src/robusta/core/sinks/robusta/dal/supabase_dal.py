@@ -17,7 +17,7 @@ from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
 from supabase import create_client
 from supabase.lib.client_options import SyncClientOptions as ClientOptions
-from tenacity import RetryCallState, Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import RetryCallState, Retrying, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.exceptions import SupabaseDnsException
@@ -83,6 +83,19 @@ supabase_request_builder.pre_select = pre_select_patched
 KEY_CACHE = TTLCache(maxsize=1, ttl=24 * 60 * 60)
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, max=4),
+    retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout)),
+    reraise=True,
+)
+def _request_supabase_api_key(params: dict) -> Optional[str]:
+    url = f"{ROBUSTA_API_ENDPOINT}/api/config/supabase-keys"
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    return response.json().get("api_key")
+
+
 def fetch_supabase_api_key(account_id: str, cluster: str) -> Optional[str]:
     params = {
         "account_id": account_id,
@@ -91,10 +104,7 @@ def fetch_supabase_api_key(account_id: str, cluster: str) -> Optional[str]:
         "component_version": RUNNER_VERSION,
     }
     try:
-        url = f"{ROBUSTA_API_ENDPOINT}/api/config/supabase-keys"
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        return response.json().get("api_key")
+        return _request_supabase_api_key(params)
     except Exception as e:
         logging.warning(f"Failed to fetch the api key from relay: {e}")
         return None
