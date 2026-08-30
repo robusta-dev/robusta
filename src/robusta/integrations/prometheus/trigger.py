@@ -1,9 +1,12 @@
 import logging
+import threading
+import time
 from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Job, Node, NodeList, StatefulSet
 from pydantic.main import BaseModel
 
+from robusta.core.model.env_vars import NODE_IP_CACHE_TTL_SEC
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.reporting.base import Finding
@@ -130,15 +133,31 @@ class PrometheusAlertTriggers(BaseModel):
 
 
 class AlertEventBuilder:
+    _node_name_by_ip: Dict[str, str] = {}
+    _node_ip_cache_time: float = 0
+    _node_ip_cache_lock = threading.Lock()
+
+    @classmethod
+    def __node_ip_cache_expired(cls) -> bool:
+        return time.time() - cls._node_ip_cache_time > NODE_IP_CACHE_TTL_SEC
+
+    @classmethod
+    def __refresh_node_ip_cache(cls):
+        with cls._node_ip_cache_lock:
+            if not cls.__node_ip_cache_expired():
+                return
+            nodes: NodeList = NodeList.listNode().obj
+            cls._node_name_by_ip = {
+                address.address: node.metadata.name for node in nodes.items for address in node.status.addresses
+            }
+            cls._node_ip_cache_time = time.time()
+
     @classmethod
     def __find_node_by_ip(cls, ip) -> Optional[Node]:
-        nodes: NodeList = NodeList.listNode().obj
-        for node in nodes.items:
-            addresses = [a.address for a in node.status.addresses]
-            logging.info(f"node {node.metadata.name} has addresses {addresses}")
-            if ip in addresses:
-                return node
-        return None
+        if cls.__node_ip_cache_expired() or ip not in cls._node_name_by_ip:
+            cls.__refresh_node_ip_cache()
+        node_name = cls._node_name_by_ip.get(ip)
+        return Node().read(name=node_name) if node_name else None
 
     @classmethod
     def __load_node(cls, alert: PrometheusAlert, node_name: str) -> Optional[Node]:
