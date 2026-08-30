@@ -129,6 +129,11 @@ Click a sink for setup instructions.
         :link: pushover
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Plivo
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: plivo
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` ServiceNow
         :class-card: sd-bg-light sd-bg-text-light
         :link: ServiceNow
