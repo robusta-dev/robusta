@@ -82,6 +82,9 @@ RUN apt-get update \
     && pip3 install --no-cache-dir --upgrade pip \
     && apt-get install -y --no-install-recommends git openssh-client curl fonts-dejavu-core apt-transport-https \
     && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
+    # Upgrade openssl to 3.5.7 (trixie-security) for CVE-2026-14456, CVE-2026-14457,
+    # CVE-2026-18798, CVE-2026-54874, CVE-2026-63072, CVE-2026-63075, CVE-2026-63076 (High)
+    && apt-get install -y --no-install-recommends libssl3t64 openssl openssl-provider-legacy \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo 'deb http://deb.debian.org/debian forky main' > /etc/apt/sources.list.d/forky.list \
@@ -100,7 +103,8 @@ RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools-65.5.1.dist-info
 
 # Patching CVE-2026-24049 (High): wheel path traversal vulnerability
 # Patching CVE-2026-23949 (High): jaraco.context path traversal vulnerability (vendored in setuptools)
-RUN pip3 install --no-cache-dir "wheel>=0.46.2" "setuptools>=80.10.1" \
+# Patching CVE-2026-59890 (Medium): setuptools MANIFEST.in exclusion bypass in sdist
+RUN pip3 install --no-cache-dir "wheel>=0.46.2" "setuptools>=83.0.0" \
     && rm -rf /usr/local/lib/python3.11/site-packages/setuptools/_vendor/wheel-0.45.1.dist-info
 
 COPY --from=builder /app/venv /venv
