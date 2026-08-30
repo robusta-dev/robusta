@@ -1,7 +1,7 @@
 import threading
 import time
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic.main import BaseModel
 
@@ -73,6 +73,19 @@ class TopServiceResolver:
                     max_length = match_length
 
         return longest_match
+
+    @classmethod
+    def guess_workload_from_labels(cls, labels: Dict[Any, Any] = None) -> Optional[TopLevelResource]:
+        if not labels or "namespace" not in labels:
+            return None
+        namespace = labels["namespace"]
+        relevant_label_keys = ["job_name", "deployment", "statefulset", "daemonset", "pod"]
+        for label in relevant_label_keys:
+            if not label in labels:
+                continue
+            resource_type = label.capitalize() if label != "job_name" else "Job"
+            return TopLevelResource(name=labels[label], namespace=namespace, resource_type=resource_type)
+        return None
 
     @classmethod
     def add_cached_resource(cls, resource: TopLevelResource):
