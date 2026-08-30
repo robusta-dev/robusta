@@ -27,9 +27,18 @@ class TelegramClient:
         response = requests.post(url, json=message_json)
 
         if response.status_code != 200:
-            logging.error(
-                f"Failed to send telegram message: chat_id - {self.chat_id} reason - {response.reason} {response.text}"
+            logging.warning(
+                f"Failed to send telegram message with Markdown parse_mode: chat_id - {self.chat_id} "
+                f"reason - {response.reason} {response.text}. Retrying without parse_mode."
             )
+            # Retry without parse_mode to handle messages with unescaped Markdown characters
+            message_json.pop("parse_mode", None)
+            response = requests.post(url, json=message_json)
+
+            if response.status_code != 200:
+                logging.error(
+                    f"Failed to send telegram message: chat_id - {self.chat_id} reason - {response.reason} {response.text}"
+                )
 
     def send_file(self, file_name: str, contents: bytes):
         file_type = "Photo" if is_image(file_name) else "Document"
