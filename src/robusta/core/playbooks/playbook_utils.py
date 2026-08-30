@@ -33,7 +33,8 @@ def replace_env_vars_values(values: Dict) -> Dict:
             env_var_value = replace_env_vars_values(value)
             if env_var_value:
                 values[key] = env_var_value
-
+        elif isinstance(value, list):
+            values[key] = [replace_env_vars_values(iter) for iter in value]
     return values
 
 
