@@ -107,6 +107,8 @@ pillow = "^12.3.0"
 # click is pulled in transitively (flask, typer). Pin to fix CVE-2026-7246 (High):
 # command injection via unsanitized filename in click.edit()
 click = ">=8.3.3"
+# Used directly for the Supabase login retry (ROB-1228); was only transitive via opsgenie-sdk
+tenacity = "^9.1.2"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"

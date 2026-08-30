@@ -15,6 +15,21 @@ Example playbook configuration::
       - trigger_workflow:
           workflow_id: "b7f9d2e4-1234-4c56-9abc-0123456789ab"
           api_key: "{{ env.ROBUSTA_PLATFORM_API_KEY }}"
+
+Optionally, rate limit the action by alert label combination. Below, once a
+workflow is triggered for an alert, further alerts matching on BOTH
+``alertname`` and ``pod`` are skipped for ``rate_limit_seconds``
+(default: 900)::
+
+    customPlaybooks:
+    - triggers:
+      - on_prometheus_alert: {}
+      actions:
+      - trigger_workflow:
+          workflow_id: "b7f9d2e4-1234-4c56-9abc-0123456789ab"
+          api_key: "{{ env.ROBUSTA_PLATFORM_API_KEY }}"
+          rate_limit_labels: ["alertname", "pod"]
+          rate_limit_seconds: 3600
 """
 
 import json
@@ -23,7 +38,7 @@ from typing import List, Optional, Union
 
 import requests
 from pydantic.v1 import SecretStr
-from robusta.api import ActionException, ActionParams, ErrorCodes, PrometheusKubernetesAlert, action
+from robusta.api import ActionException, ActionParams, ErrorCodes, PrometheusKubernetesAlert, RateLimiter, action
 
 
 class TriggerWorkflowParams(ActionParams):
@@ -43,6 +58,14 @@ class TriggerWorkflowParams(ActionParams):
         workflow definition. Set False to always use the workflow's
         configured cluster.
     :var timeout: (optional) (Default: 30) Request timeout in seconds.
+    :var rate_limit_labels: (optional) Alert labels to rate limit by, e.g.
+        ``["alertname", "pod"]``. When set, alerts whose values match on ALL
+        of these labels share one rate limit bucket: after the workflow is
+        triggered once, further alerts with the same label combination are
+        skipped (with a log) until ``rate_limit_seconds`` passes. By default
+        no rate limit is applied.
+    :var rate_limit_seconds: (optional) (Default: 900) The rate limit period,
+        in seconds. Only relevant when ``rate_limit_labels`` is set.
     """
 
     workflow_id: Union[str, List[str]]
@@ -52,6 +75,8 @@ class TriggerWorkflowParams(ActionParams):
     origin: str = "robusta-runner"
     route_to_alert_cluster: bool = True
     timeout: int = 30
+    rate_limit_labels: Optional[List[str]] = None
+    rate_limit_seconds: int = 900
 
 
 def build_workflow_trigger_payload(alert: PrometheusKubernetesAlert) -> dict:
@@ -68,6 +93,28 @@ def build_workflow_trigger_payload(alert: PrometheusKubernetesAlert) -> dict:
     }
 
 
+def _rate_limit_allows(
+    alert: PrometheusKubernetesAlert, params: TriggerWorkflowParams, workflow_ids: List[str]
+) -> bool:
+    """Mark this alert's rate limit bucket and return whether the action may run.
+
+    Alerts share a bucket when they match on ALL of ``params.rate_limit_labels``
+    (a label missing from the alert matches other alerts missing it too). The
+    workflow ids are part of the bucket key, so separate trigger_workflow
+    configurations don't rate limit each other.
+    """
+    label_values = ",".join(f"{label}={alert.alert.labels.get(label, '')}" for label in sorted(params.rate_limit_labels))
+    limiter_id = f"{','.join(sorted(workflow_ids))}|{label_values}"
+    if RateLimiter.mark_and_test("trigger_workflow", limiter_id, params.rate_limit_seconds):
+        return True
+
+    logging.info(
+        f"trigger_workflow: rate limited for alert {alert.alert_name} ({label_values}); "
+        f"skipping workflow(s) {workflow_ids} for {params.rate_limit_seconds} seconds since the last trigger"
+    )
+    return False
+
+
 @action
 def trigger_workflow(alert: PrometheusKubernetesAlert, params: TriggerWorkflowParams):
     """
@@ -79,6 +126,9 @@ def trigger_workflow(alert: PrometheusKubernetesAlert, params: TriggerWorkflowPa
     workflow_ids = [w.strip() for w in workflow_ids if w and w.strip()]
     if not workflow_ids:
         raise ActionException(ErrorCodes.ACTION_UNEXPECTED_ERROR, "trigger_workflow: no workflow_id provided")
+
+    if params.rate_limit_labels and not _rate_limit_allows(alert, params, workflow_ids):
+        return
 
     context = alert.get_context()
     account_id = params.account_id or context.account_id

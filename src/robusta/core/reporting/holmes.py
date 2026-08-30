@@ -57,6 +57,10 @@ class HolmesChatRequest(BaseModel):
     source_ref: Optional[str] = None
     conversation_id: Optional[str] = None
     conversation_source: Optional[str] = None
+    # URL of the surface the chat originated from (Slack thread permalink,
+    # Teams message link, platform chat/workflow-run URL). Holmes renders it
+    # into the system prompt so PRs/issues it creates link back to it.
+    conversation_link: Optional[str] = None
     is_internal: Optional[bool] = None
     meta: Optional[Dict[str, Any]] = None
 

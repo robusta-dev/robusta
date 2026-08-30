@@ -897,12 +897,13 @@ def extract_containers_k8(resource) -> List[Container]:
 
 
 def is_pod_ready(pod) -> bool:
+    # Unset until kubelet reports on the pod.
     conditions = []
     if isinstance(pod, V1Pod):
-        conditions = pod.status.conditions
+        conditions = getattr(pod.status, "conditions", None) or []
 
     if isinstance(pod, Pod):
-        conditions = pod.status.conditions
+        conditions = getattr(pod.status, "conditions", None) or []
 
     for condition in conditions:
         if condition.type == "Ready":
