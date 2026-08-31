@@ -2,7 +2,7 @@
 from contextlib import contextmanager
 from typing import ContextManager, Dict, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 persistent_data: Dict[str, BaseModel] = {}
 

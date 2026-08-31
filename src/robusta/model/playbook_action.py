@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, PrivateAttr, validator
+from pydantic.v1 import BaseModel, PrivateAttr, validator
 
 from robusta.core.playbooks.playbook_utils import replace_env_vars_values
 

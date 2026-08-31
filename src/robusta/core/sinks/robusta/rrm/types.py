@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class AccountResourceStatusInfo(BaseModel):

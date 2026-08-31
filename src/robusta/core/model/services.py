@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Union
 
 from hikaru.model.rel_1_26 import Container, Volume
 from kubernetes.client import V1Container, V1Volume
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class EnvVar(BaseModel):

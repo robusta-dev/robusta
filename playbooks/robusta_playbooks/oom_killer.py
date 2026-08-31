@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 
-import pydantic
+import pydantic.v1 as pydantic
 from hikaru.model.rel_1_26 import Node, Pod, PodList, ResourceRequirements
 
 from robusta.api import (

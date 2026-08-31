@@ -3,8 +3,8 @@ import re
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, root_validator, validator
-from pydantic.types import PositiveInt
+from pydantic.v1 import BaseModel, root_validator, validator
+from pydantic.v1.types import PositiveInt
 import pytz
 
 from robusta.core.playbooks.playbook_utils import replace_env_vars_values

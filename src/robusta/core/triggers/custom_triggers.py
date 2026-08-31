@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.triggers.container_oom_killed_trigger import ContainerOOMKilledTrigger
 from robusta.core.triggers.error_event_trigger import (

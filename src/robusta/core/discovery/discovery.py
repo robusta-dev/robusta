@@ -38,7 +38,7 @@ from kubernetes.client import (
     V1StatefulSetList,
     V1Volume,
 )
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats

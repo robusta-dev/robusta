@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Callable
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.pubsub.event_emitter import EventEmitter
 from robusta.core.reporting.base import (

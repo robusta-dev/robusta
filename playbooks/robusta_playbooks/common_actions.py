@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.api import (
     ActionParams,

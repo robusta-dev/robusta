@@ -1,7 +1,7 @@
 import hashlib
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, PrivateAttr
+from pydantic.v1 import BaseModel, PrivateAttr
 
 from robusta.core.playbooks.trigger import Trigger
 from robusta.model.playbook_action import PlaybookAction

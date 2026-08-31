@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple
 import hikaru
 from hikaru import DiffDetail, DiffType
 from hikaru.model.rel_1_26 import HikaruDocumentBase
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.model.base_params import ChartValuesFormat
 

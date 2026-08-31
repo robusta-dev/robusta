@@ -2,7 +2,7 @@ import logging
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, SecretStr, validator, Field
+from pydantic.v1 import BaseModel, SecretStr, validator, Field
 
 from robusta.integrations import openshift
 from robusta.utils.documented_pydantic import DocumentedModel

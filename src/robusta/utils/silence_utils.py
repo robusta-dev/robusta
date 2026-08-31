@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel, SecretStr, validator
+from pydantic.v1 import BaseModel, SecretStr, validator
 
 from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound
 from robusta.core.model.base_params import ActionParams

@@ -10,9 +10,9 @@ from unittest.mock import MagicMock
 
 import httpx
 import pytest
-from gotrue.errors import AuthApiError, AuthRetryableError
+from supabase_auth.errors import AuthApiError, AuthRetryableError
 from supabase import create_client
-from supabase.lib.client_options import ClientOptions
+from supabase.lib.client_options import SyncClientOptions as ClientOptions
 
 from robusta.core.exceptions import SupabaseDnsException
 from robusta.core.model.env_vars import SUPABASE_CONNECT_TIMEOUT_SECONDS, SUPABASE_TIMEOUT_SECONDS

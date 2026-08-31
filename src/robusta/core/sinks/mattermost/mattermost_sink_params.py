@@ -1,7 +1,7 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from pydantic import validator
+from pydantic.v1 import validator
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase

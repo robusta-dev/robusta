@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import SecretStr, validator
+from pydantic.v1 import SecretStr, validator
 
 from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base_params import SinkBaseParams

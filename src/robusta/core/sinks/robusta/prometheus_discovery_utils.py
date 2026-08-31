@@ -5,7 +5,7 @@ import time
 from typing import Optional
 
 from prometrix import PrometheusFlagsConnectionError, PrometheusNotFound, VictoriaMetricsNotFound
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound, NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import validator, root_validator
+from pydantic.v1 import validator, root_validator
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase

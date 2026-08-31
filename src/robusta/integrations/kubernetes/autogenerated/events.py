@@ -28,7 +28,7 @@ from hikaru.model.rel_1_26 import (
     Secret,
 )
 from hikaru.utils import Response
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from typing import Union, Optional, List
 from ..base_event import K8sBaseChangeEvent
 from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams

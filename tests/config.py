@@ -1,7 +1,7 @@
 import os.path
 from typing import Optional
 
-from pydantic import BaseSettings
+from pydantic.v1 import BaseSettings
 
 
 # these settings are loaded from three sources:

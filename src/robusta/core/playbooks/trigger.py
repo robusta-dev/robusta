@@ -1,4 +1,4 @@
-from pydantic import PrivateAttr
+from pydantic.v1 import PrivateAttr
 
 from robusta.core.playbooks.base_trigger import BaseTrigger
 from robusta.core.triggers.custom_triggers import CustomTriggers

@@ -12,7 +12,7 @@ from hikaru.crd import HikaruCRDDocumentMixin, register_crd_class
 from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
 from kubernetes import client
 from kubernetes.client import ApiException
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.model.env_vars import (
     IMAGE_REGISTRY,

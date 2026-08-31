@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Union
 
 from hikaru.model.rel_1_26 import Job
 from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.pods import ContainerResources, ResourceAttributes

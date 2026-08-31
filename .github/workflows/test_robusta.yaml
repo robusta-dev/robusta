@@ -40,8 +40,12 @@ jobs:
           poetry install --extras "all"
           # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
           pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
-          # robusta-cli is a separate project now, it needs to be installed for gen-config
-          pip install git+https://github.com/robusta-dev/robusta-cli.git
+          # robusta-cli is a separate project now, it needs to be installed for gen-config.
+          # It pins pydantic v1, so keep it in its own venv - installing it here downgrades
+          # pydantic and breaks supabase, which needs v2. Tests only run it as a command.
+          python -m venv /tmp/robusta-cli
+          /tmp/robusta-cli/bin/pip install git+https://github.com/robusta-dev/robusta-cli.git
+          echo /tmp/robusta-cli/bin >> $GITHUB_PATH
 
       # build robusta docker images for tests which run in-cluster on KIND
       - run: |-

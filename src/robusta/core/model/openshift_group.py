@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class OpenshiftGroup(BaseModel):

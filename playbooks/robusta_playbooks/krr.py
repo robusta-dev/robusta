@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector, SecurityContext, Capabilities, SeccompProfile
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
-from pydantic import BaseModel, ValidationError, validator
+from pydantic.v1 import BaseModel, ValidationError, validator
 from robusta.api import (
     IMAGE_REGISTRY,
     ActionParams,

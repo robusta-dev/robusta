@@ -9,19 +9,21 @@ from uuid import uuid4
 from cachetools import TTLCache
 import httpx
 import requests
-from gotrue.errors import AuthRetryableError
+from supabase_auth.errors import AuthRetryableError
 from postgrest._sync.request_builder import SyncQueryRequestBuilder
 from postgrest.base_request_builder import BaseFilterRequestBuilder, QueryArgs
 from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
 from supabase import create_client
-from supabase.lib.client_options import ClientOptions
-from tenacity import RetryCallState, Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+from supabase.lib.client_options import SyncClientOptions as ClientOptions
+from tenacity import RetryCallState, Retrying, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.exceptions import SupabaseDnsException
 from robusta.core.model.env_vars import (
+    ROBUSTA_API_ENDPOINT,
+    RUNNER_VERSION,
     SUPABASE_CONNECT_TIMEOUT_SECONDS,
     SUPABASE_LOGIN_RETRIES,
     SUPABASE_LOGIN_RETRY_BACKOFF_SEC,
@@ -78,6 +80,36 @@ def pre_select_patched(*args, **kwargs) -> QueryArgs:
 supabase_request_builder.pre_select = pre_select_patched
 
 
+KEY_CACHE = TTLCache(maxsize=1, ttl=24 * 60 * 60)
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, max=4),
+    retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout)),
+    reraise=True,
+)
+def _request_supabase_api_key(params: dict) -> Optional[str]:
+    url = f"{ROBUSTA_API_ENDPOINT}/api/config/supabase-keys"
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    return response.json().get("api_key")
+
+
+def fetch_supabase_api_key(account_id: str, cluster: str) -> Optional[str]:
+    params = {
+        "account_id": account_id,
+        "cluster": cluster,
+        "component": "runner",
+        "component_version": RUNNER_VERSION,
+    }
+    try:
+        return _request_supabase_api_key(params)
+    except Exception as e:
+        logging.warning(f"Failed to fetch the api key from relay: {e}")
+        return None
+
+
 class _AuthHttpClient(httpx.Client):
     """The httpx client we hand to Supabase's auth (GoTrue) sub-client.
 
@@ -111,12 +143,10 @@ class SupabaseDal(AccountResourceFetcher):
         self.account_id = account_id
         self.cluster = cluster_name
         options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
-        self.client = create_client(url, key, options)
-        self.__apply_auth_client_timeout()
-        self.patch_postgrest_execute()
         self.email = email
         self.password = password
-        self.user_id = self.sign_in()
+        self.__connect(options)
+        self.patch_postgrest_execute()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
         self.sink_name = sink_name
         self.persist_events = persist_events
@@ -124,6 +154,23 @@ class SupabaseDal(AccountResourceFetcher):
         ttl = int(os.environ.get("SAAS_SESSION_TOKEN_TTL_SEC", "82800"))  # 23 hours
         self.token_cache = TTLCache(maxsize=1, ttl=ttl)
         self.lock = threading.Lock()
+
+    def __connect(self, options: ClientOptions):
+        self.options = options
+        relay_key = fetch_supabase_api_key(self.account_id, self.cluster)
+        for key in filter(None, (KEY_CACHE.pop("key", None), relay_key)):
+            try:
+                self.__login(key, options)
+                KEY_CACHE["key"] = key
+                return
+            except Exception as e:
+                logging.warning(f"Supabase login with the relay api key failed: {e}")
+        self.__login(self.key, options)
+
+    def __login(self, api_key: str, options: ClientOptions):
+        self.client = create_client(self.url, api_key, options)
+        self.__apply_auth_client_timeout()
+        self.user_id = self.sign_in()
 
     def __apply_auth_client_timeout(self) -> None:
         """Give the auth (GoTrue) client the configured timeout, over HTTP/1.1.
@@ -182,7 +229,7 @@ class SupabaseDal(AccountResourceFetcher):
                 if exc.code == "PGRST301" or "expired" in message.lower():
                     # JWT expired. Sign in again and retry the query
                     logging.error("JWT token expired/invalid, signing in to Supabase again")
-                    self.sign_in()
+                    self.__connect(self.options)
                     return self._original_execute(_self)
                 else:
                     raise
@@ -468,7 +515,8 @@ class SupabaseDal(AccountResourceFetcher):
         frq: BaseFilterRequestBuilder, operator: str, criteria: str
     ) -> BaseFilterRequestBuilder:
         key, val = sanitize_param(operator), f"{criteria}"
-        frq.params = frq.params.set(key, val)
+        target = frq.request if hasattr(frq, "request") else frq
+        target.params = target.params.set(key, val)
 
         return frq
 

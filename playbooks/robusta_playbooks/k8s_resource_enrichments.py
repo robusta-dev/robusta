@@ -18,7 +18,7 @@ from kubernetes.client import (
     V1PodSpec,
     V1PodStatus,
 )
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from robusta.api import (
     ActionException,
     ActionParams,

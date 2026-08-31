@@ -37,7 +37,7 @@ import logging
 from typing import List, Optional, Union
 
 import requests
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 from robusta.api import ActionException, ActionParams, ErrorCodes, PrometheusKubernetesAlert, RateLimiter, action
 
 

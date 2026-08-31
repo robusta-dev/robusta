@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import yaml
 from kubernetes.client import ApiregistrationV1Api, V1APIServiceList
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from robusta.api import BaseBlock, FileBlock, MarkdownBlock, PrometheusKubernetesAlert, action
 
 

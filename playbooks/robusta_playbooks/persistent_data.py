@@ -3,7 +3,7 @@
 import logging
 from typing import Dict
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.api import DeploymentEvent, Finding, FindingType, action, get_persistent_data
 

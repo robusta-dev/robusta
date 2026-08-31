@@ -1,5 +1,5 @@
 from typing import Optional, List, Any, Dict
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from base64 import b64decode
 from datetime import datetime
 import gzip

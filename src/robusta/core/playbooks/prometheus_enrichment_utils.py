@@ -9,7 +9,7 @@ import humanize
 import pygal
 from hikaru.model.rel_1_26 import Node
 from prometrix import PrometheusQueryResult
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.model.base_params import (
     ChartValuesFormat,

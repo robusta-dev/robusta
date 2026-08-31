@@ -1,7 +1,7 @@
 import abc
 from typing import Optional, Union
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.schedule.model import DynamicDelayRepeat, FixedDelayRepeat, CronScheduleRepeat, BaseDelayRepeat

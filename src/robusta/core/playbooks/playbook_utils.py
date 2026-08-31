@@ -3,8 +3,8 @@ import os
 import re
 from typing import Dict, Optional
 
-from pydantic.main import BaseModel
-from pydantic.types import SecretStr
+from pydantic.v1.main import BaseModel
+from pydantic.v1.types import SecretStr
 
 
 def get_env_replacement(value: str) -> Optional[str]:

@@ -4,7 +4,7 @@ import time
 from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Job, Node, NodeList, StatefulSet
-from pydantic.main import BaseModel
+from pydantic.v1.main import BaseModel
 
 from robusta.core.model.env_vars import NODE_IP_CACHE_TTL_SEC
 from robusta.core.model.events import ExecutionBaseEvent

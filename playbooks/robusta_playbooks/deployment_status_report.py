@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 import requests
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 
 from robusta.api import (
     GRAFANA_RENDERER_URL,

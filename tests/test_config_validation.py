@@ -1,7 +1,7 @@
 import pytest
 import yaml
 import os
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 from robusta.core.model.runner_config import RunnerConfig
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "file_fixtures", "config_validation")

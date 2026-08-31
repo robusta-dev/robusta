@@ -1,4 +1,4 @@
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 
 from robusta.api import (
     ActionParams,

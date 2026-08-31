@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import validator
+from pydantic.v1 import validator
 
 from robusta.core.sinks.common.channel_transformer import ChannelTransformer
 from robusta.core.sinks.sink_base_params import SinkBaseParams

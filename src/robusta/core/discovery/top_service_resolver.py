@@ -3,7 +3,7 @@ import time
 from collections import defaultdict
 from typing import Dict, List, Optional
 
-from pydantic.main import BaseModel
+from pydantic.v1.main import BaseModel
 
 from robusta.core.model.env_vars import RESOURCE_UPDATES_CACHE_TTL_SEC
 

@@ -5,7 +5,7 @@ import inspect
 import os
 from typing import Callable
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class PlaybookDescription(BaseModel):

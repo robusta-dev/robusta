@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
-from pydantic.main import BaseModel
+from pydantic.v1.main import BaseModel
 from strenum import StrEnum
 
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
