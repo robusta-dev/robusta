@@ -1,7 +1,7 @@
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, Optional
 
-from pydantic.v1.main import BaseModel, Optional
+from pydantic.v1 import BaseModel
 
 
 class SinkInfo(BaseModel):
