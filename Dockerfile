@@ -84,10 +84,23 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
     && rm -rf /var/lib/apt/lists/*
 
+# Debian trixie ships no fix for libssh2/attr/acl or perl ("vulnerable, no DSA" in the
+# Debian security tracker), so the patched packages are pulled from forky with a
+# per-package pin. Nothing else is resolved against testing - the preferences file below
+# blocks every forky package except the ones named, and the sources are removed again in
+# the same layer.
+# - libssh2/libattr1/libacl1: CVE-2026-58050/58051/66032/66033/66034/66035, CVE-2026-54371,
+#   CVE-2026-54369/54370.
+# - perl-base/perl: CVE-2026-57433, CVE-2026-13221, CVE-2026-57432, CVE-2026-15534,
+#   CVE-2026-19487. forky's perl pre-depends on glibc >= 2.43, so libc6/libc-bin/
+#   libc-gconv-modules-extra/libcrypt1 come along too. git hard-depends on perl (Debian
+#   builds them from the same source with locked versions), so git/git-man/liberror-perl/
+#   perl-modules-5.42/libperl5.42 are pulled up to forky's git 2.53.0 as well - trying to
+#   pin perl-base alone makes apt remove git instead of upgrading it.
 RUN echo 'deb http://deb.debian.org/debian forky main' > /etc/apt/sources.list.d/forky.list \
-    && printf 'Package: libssh2-1t64 libattr1 libacl1\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
+    && printf 'Package: libssh2-1t64 libattr1 libacl1 perl-base perl perl-modules-5.42 libperl5.42 liberror-perl git git-man libc6 libcrypt1 libc-bin libc-gconv-modules-extra\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
     && apt-get update \
-    && apt-get install -y --no-install-recommends libssh2-1t64 libattr1 libacl1 \
+    && apt-get install -y --no-install-recommends libssh2-1t64 libattr1 libacl1 perl-base perl perl-modules-5.42 libperl5.42 liberror-perl git git-man libc6 libcrypt1 libc-bin libc-gconv-modules-extra \
     && rm -f /etc/apt/sources.list.d/forky.list /etc/apt/preferences.d/99-forky \
     && rm -rf /var/lib/apt/lists/*
 
