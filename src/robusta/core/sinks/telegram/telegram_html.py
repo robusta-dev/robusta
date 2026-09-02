@@ -109,10 +109,10 @@ def markdown_to_telegram_html(text: str) -> str:
 def table_block_to_telegram_html(block: TableBlock) -> str:
     """Render a TableBlock as a collapsible Telegram quote."""
     table_text = tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
-    body = f"<blockquote expandable><pre>{escape_telegram_html(table_text)}</pre></blockquote>"
+    body = f"<pre>{escape_telegram_html(table_text)}</pre>"
     if block.table_name:
-        return f"{markdown_to_telegram_html(block.table_name)}\n{body}"
-    return body
+        body = f"{markdown_to_telegram_html(block.table_name)}\n{body}"
+    return f"<blockquote expandable>{body}</blockquote>"
 
 
 def block_to_telegram_html(block: BaseBlock) -> str:

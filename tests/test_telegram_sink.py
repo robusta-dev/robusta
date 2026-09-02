@@ -90,6 +90,10 @@ def test_table_block_uses_expandable_blockquote_and_escapes_cells():
     assert "<pre>" in html
     assert "&amp;" in html
     assert "<b>Labels</b>" in html
+    label_at = html.find("<b>Labels</b>")
+    quote_at = html.find("<blockquote expandable>")
+    assert quote_at != -1 and label_at != -1
+    assert quote_at < label_at < html.find("</blockquote>")
 
 
 def test_should_not_send_document_for_text_under_1kb():
