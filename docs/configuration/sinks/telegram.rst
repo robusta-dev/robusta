@@ -52,9 +52,14 @@ Now we're ready to configure the Telegram sink.
             bot_token: <YOUR BOT TOKEN>
             chat_id: <CHAT ID>
             thread_id: <THREAD ID> # Optional thread (topic) ID
+            parse_mode: MarkdownV2 # Optional. "MarkdownV2" (default) or null for plain text
 .. note::
 
     If you don't want Robusta to send file attachments, set ``send_files`` to ``False`` under your Telegram sink. (True by default)
+
+.. note::
+
+    By default, Robusta formats Telegram messages using `MarkdownV2 <https://core.telegram.org/bots/api#markdownv2-style>`_, escaping special characters in your alert content so resource names containing characters like ``_`` (e.g. ``crowdsec-agent_k8vkt``) don't break message formatting. If you'd rather receive unformatted messages, set ``parse_mode`` to ``null`` to send plain text.
 
 Save the file and run
 
