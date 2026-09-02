@@ -1,13 +1,15 @@
-from enum import Enum
-
-from tabulate import tabulate
-
 from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, FindingStatus
-from robusta.core.reporting.blocks import FileBlock, MarkdownBlock, TableBlock
+from robusta.core.reporting.blocks import FileBlock
+from robusta.core.reporting.utils import is_image
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.telegram.telegram_client import TelegramClient
+from robusta.core.sinks.telegram.telegram_html import (
+    block_to_telegram_html,
+    escape_telegram_html,
+    markdown_to_telegram_html,
+    telegram_html_link,
+)
 from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
-from robusta.core.sinks.transformer import Transformer
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.INFO: "\U0001F7E2",
@@ -16,7 +18,6 @@ SEVERITY_EMOJI_MAP = {
 }
 INVESTIGATE_ICON = "\U0001F50E"
 SILENCE_ICON = "\U0001F515"
-VIDEO_ICON = "\U0001F3AC"
 
 
 class TelegramSink(SinkBase):
@@ -32,17 +33,20 @@ class TelegramSink(SinkBase):
         self.__send_telegram_message(finding, platform_enabled)
 
     def __send_telegram_message(self, finding: Finding, platform_enabled: bool):
-        self.client.send_message(self.__get_message_text(finding, platform_enabled))
-        if self.send_files:
-            for enrichment in finding.enrichments:
-                file_blocks = [block for block in enrichment.blocks if isinstance(block, FileBlock)]
-                for block in file_blocks:
+        has_graph_or_image = self.__finding_has_graph_or_image(finding)
+        self.client.send_message(
+            self.__get_message_text(finding, platform_enabled),
+            disable_links_preview=not has_graph_or_image,
+        )
+        # Tables are already in the HTML message. send_files only attaches real
+        # FileBlock images/files. When send_files is false, tables still inline
+        # (or split across sendMessage); they are never dropped or sent as .txt.
+        if not self.send_files:
+            return
+        for enrichment in finding.enrichments:
+            for block in enrichment.blocks:
+                if isinstance(block, FileBlock):
                     self.client.send_file(file_name=block.filename, contents=block.contents)
-                table_blocks = [block for block in enrichment.blocks if isinstance(block, TableBlock)]
-                for block in table_blocks:
-                    table_text = tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
-                    table_name = block.table_name if block.table_name else "table"
-                    self.client.send_file(file_name=f"{table_name}.txt", contents=table_text.encode("utf-8"))
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
         status: FindingStatus = (
@@ -56,44 +60,57 @@ class TelegramSink(SinkBase):
         if actions_content:
             message_content += actions_content
 
-        blocks = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]
+        message_content += f"<b>Source:</b> <code>{escape_telegram_html(self.cluster_name)}</code>\n\n"
 
-        # first add finding description block
         if finding.description:
-            blocks.append(MarkdownBlock(finding.description))
+            message_content += markdown_to_telegram_html(finding.description) + "\n"
 
         for enrichment in finding.enrichments:
-            blocks.extend([block for block in enrichment.blocks if self.__is_telegram_text_block(block)])
-
-        for block in blocks:
-            block_text = Transformer.to_standard_markdown([block])
-            if len(block_text) + len(message_content) >= 4096:  # telegram message size limit
-                break
-            message_content += block_text + "\n"
+            for block in enrichment.blocks:
+                if not self.__is_telegram_text_block(block):
+                    continue
+                block_text = block_to_telegram_html(block)
+                if block_text:
+                    message_content += block_text + "\n"
 
         return message_content
 
     def _get_actions_block(self, finding: Finding, platform_enabled: bool):
-        actions_content = ""
+        actions = []
         if platform_enabled:
-            actions_content += (
-                f"[{INVESTIGATE_ICON} Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)}) "
+            actions.append(
+                telegram_html_link(
+                    f"{INVESTIGATE_ICON} Investigate",
+                    finding.get_investigate_uri(self.account_id, self.cluster_name),
+                )
             )
             if finding.add_silence_url:
-                actions_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
+                actions.append(
+                    telegram_html_link(
+                        f"{SILENCE_ICON} Silence",
+                        finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
+                    )
+                )
 
         for link in finding.links:
-            actions_content = f"[{link.link_text}]({link.url})"
+            actions.append(telegram_html_link(link.link_text, link.url))
 
-        if actions_content:
-            actions_content += "\n\n"
+        if not actions:
+            return ""
 
-        return actions_content
+        return " ".join(actions) + "\n\n"
 
     @classmethod
     def __is_telegram_text_block(cls, block: BaseBlock) -> bool:
-        # enrichments text tables are too big for mobile device
-        return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
+        return not isinstance(block, FileBlock)
+
+    @classmethod
+    def __finding_has_graph_or_image(cls, finding: Finding) -> bool:
+        for enrichment in finding.enrichments:
+            for block in enrichment.blocks:
+                if isinstance(block, FileBlock) and is_image(block.filename):
+                    return True
+        return False
 
     @classmethod
     def __build_telegram_title(
@@ -101,4 +118,4 @@ class TelegramSink(SinkBase):
     ) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
         status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
-        return f"{status_str}{icon} {severity.name} - *{title}*\n\n"
+        return f"{status_str}{icon} {severity.name} - <b>{escape_telegram_html(title)}</b>\n\n"
