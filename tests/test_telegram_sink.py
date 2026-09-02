@@ -75,6 +75,13 @@ def test_markdown_to_telegram_html_escapes_user_text_and_applies_formatting():
     assert "<script>" not in html
 
 
+def test_markdown_code_span_keeps_literal_asterisks():
+    html = markdown_to_telegram_html("use `*pod*` not *pod*")
+    assert "<code>*pod*</code>" in html
+    assert "<code><b>pod</b></code>" not in html
+    assert "<b>pod</b>" in html
+
+
 def test_table_block_uses_expandable_blockquote_and_escapes_cells():
     block = TableBlock(rows=[["cpu", "80% & idle"]], headers=["name", "value"], table_name="*Labels*")
     html = table_block_to_telegram_html(block)
@@ -103,6 +110,17 @@ def test_split_telegram_html_splits_over_limit_and_reopens_tags():
     assert chunks[0].startswith("<blockquote expandable>")
     assert chunks[0].endswith("</blockquote>") or "</pre>" in chunks[0]
     assert any("<blockquote expandable>" in chunk for chunk in chunks[1:])
+
+
+def test_split_telegram_html_does_not_split_named_entities():
+    # content_limit is TELEGRAM_MESSAGE_CHAR_LIMIT - 80; land inside &amp;
+    prefix = "x" * (TELEGRAM_MESSAGE_CHAR_LIMIT - 80 - 1)
+    html = prefix + "&amp;tail" + "y" * 50
+    chunks = split_telegram_html(html)
+    assert len(chunks) >= 2
+    assert all("&amp" not in chunk or "&amp;" in chunk for chunk in chunks)
+    assert "".join(chunks) == html
+    assert not any(chunk.endswith("&") or chunk.endswith("&a") or chunk.endswith("&am") for chunk in chunks)
 
 
 @patch("robusta.core.sinks.telegram.telegram_client.requests.post")
@@ -246,6 +264,7 @@ def test_send_files_false_skips_fileblocks_but_still_inlines_tables():
     assert "<blockquote expandable>" in message
     assert "CrashLoopBackOff" in message
     assert ".txt" not in message
+    assert sink.client.send_message.call_args.kwargs["disable_links_preview"] is True
 
 
 def test_send_files_false_large_text_splits_sendmessage_never_txt():

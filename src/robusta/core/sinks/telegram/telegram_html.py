@@ -78,9 +78,19 @@ def markdown_to_telegram_html(text: str) -> str:
         return f"\x00MDLINK{len(md_links) - 1}\x00"
 
     escaped = _MD_LINK_PATTERN.sub(_stash_md_link, escaped)
-    escaped = _CODE_PATTERN.sub(r"<code>\1</code>", escaped)
+
+    code_spans = []
+
+    def _stash_code(match: re.Match) -> str:
+        code_spans.append(match.group(1))
+        return f"\x00CODE{len(code_spans) - 1}\x00"
+
+    escaped = _CODE_PATTERN.sub(_stash_code, escaped)
     escaped = _BOLD_DOUBLE_PATTERN.sub(r"<b>\1</b>", escaped)
     escaped = _BOLD_SINGLE_PATTERN.sub(r"<b>\1</b>", escaped)
+
+    for index, code_text in enumerate(code_spans):
+        escaped = escaped.replace(f"\x00CODE{index}\x00", f"<code>{code_text}</code>")
 
     for index, (link_text, url) in enumerate(md_links):
         # link_text and url were escaped with quote=False; re-escape the href.
@@ -155,23 +165,38 @@ def _open_tag_stack(html_text: str) -> List[str]:
     return stack
 
 
+def _avoid_split_inside_entity(text: str, index: int) -> int:
+    """Backtrack so `&amp;` / `&lt;` / `&#123;` are not split across chunks."""
+    if index <= 0 or index >= len(text):
+        return index
+    amp = text.rfind("&", 0, index)
+    if amp == -1:
+        return index
+    semicolon = text.find(";", amp, min(len(text), amp + 16))
+    if semicolon == -1:
+        return amp
+    if amp < index <= semicolon:
+        return amp
+    return index
+
+
 def _find_split_index(text: str, limit: int) -> int:
-    """Choose a split index at or before limit that is not inside an HTML tag."""
+    """Choose a split index at or before limit that is not inside a tag or entity."""
     if len(text) <= limit:
         return len(text)
     window = text[:limit]
     last_open = window.rfind("<")
     last_close = window.rfind(">")
     if last_open > last_close:
-        return last_open if last_open > 0 else limit
+        return _avoid_split_inside_entity(text, last_open if last_open > 0 else limit)
 
     newline = window.rfind("\n")
     if newline >= limit // 4:
-        return newline + 1
+        return _avoid_split_inside_entity(text, newline + 1)
     space = window.rfind(" ")
     if space >= limit // 4:
-        return space + 1
-    return limit
+        return _avoid_split_inside_entity(text, space + 1)
+    return _avoid_split_inside_entity(text, limit)
 
 
 def split_telegram_html(text: str, limit: int = TELEGRAM_MESSAGE_CHAR_LIMIT) -> List[str]:

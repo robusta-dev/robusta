@@ -33,7 +33,7 @@ class TelegramSink(SinkBase):
         self.__send_telegram_message(finding, platform_enabled)
 
     def __send_telegram_message(self, finding: Finding, platform_enabled: bool):
-        has_graph_or_image = self.__finding_has_graph_or_image(finding)
+        has_graph_or_image = self.send_files and self.__finding_has_graph_or_image(finding)
         self.client.send_message(
             self.__get_message_text(finding, platform_enabled),
             disable_links_preview=not has_graph_or_image,
