@@ -1,3 +1,4 @@
+{{- if .Values.kubewatch.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,5 +8,6 @@ data:
   .kubewatch.yaml: |-
     handler:
       cloudevent:
-        url: "http://{{ include "robusta.fullname" . }}-runner:80/api/handle"
+        url: {{ default (printf "http://%s-runner:80/api/handle" (include "robusta.fullname" .)) .Values.kubewatch.overrideUrl | quote }}
 {{ toYaml .Values.kubewatch.config | indent 4 }}
+{{- end }}
