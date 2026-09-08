@@ -22,6 +22,7 @@
    read-only-service-account
    rbac-namespace-scoping
    node-selector
+   health-probes
    proxies
    privacy-and-security
    installation-faq

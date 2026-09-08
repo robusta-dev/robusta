@@ -49,6 +49,10 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.kubewatch.imageName }}
         {{- end }}
         imagePullPolicy: {{ .Values.kubewatch.imagePullPolicy }}
+        ports:
+          - name: metrics
+            containerPort: 2112
+            protocol: TCP
         env:
           - name: KW_CONFIG
             value: /config
@@ -66,6 +70,18 @@ spec:
         {{- with .Values.kubewatch.securityContext.container }}
         securityContext:
         {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.kubewatch.startupProbe }}
+        startupProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.kubewatch.livenessProbe }}
+        livenessProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.kubewatch.readinessProbe }}
+        readinessProbe:
+        {{- toYaml . | nindent 10 }}
         {{- end }}
         resources:
           requests:
