@@ -67,6 +67,18 @@ spec:
         securityContext:
         {{- toYaml . | nindent 12 }}
         {{- end }}
+        {{- with .Values.kubewatch.startupProbe }}
+        startupProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.kubewatch.livenessProbe }}
+        livenessProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.kubewatch.readinessProbe }}
+        readinessProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
         resources:
           requests:
             cpu: {{ .Values.kubewatch.resources.requests.cpu }}

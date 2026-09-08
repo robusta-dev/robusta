@@ -197,6 +197,18 @@ spec:
           {{- with .Values.runner.extraVolumeMounts }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
+        {{- with .Values.runner.startupProbe }}
+        startupProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.runner.livenessProbe }}
+        livenessProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.runner.readinessProbe }}
+        readinessProbe:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
         lifecycle:
           preStop:
             exec:
