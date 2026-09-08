@@ -104,6 +104,10 @@ spec:
           {{- toYaml . | nindent 12 }}
         {{- end }}
         {{- end }}
+        ports:
+          - name: http
+            containerPort: 5000
+            protocol: TCP
         env:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml

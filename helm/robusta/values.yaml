@@ -651,13 +651,13 @@ kubewatch:
       memory: 512Mi
     limits:
       cpu: ~
-  # health probes, rendered only when set. ports must be numeric - the container declares no named ports
+  # health probes, rendered only when set. reference the container port by name
   # /metrics is served as soon as the process is up, before the watch loop syncs
   # e.g.
   # livenessProbe:
   #   httpGet:
   #     path: /metrics
-  #     port: 2112
+  #     port: metrics
   #   periodSeconds: 30
   startupProbe: {}
   livenessProbe: {}
@@ -752,14 +752,14 @@ runner:
       memory: 1024Mi
     limits:
       cpu: ~
-  # health probes, rendered only when set. ports must be numeric - the container declares no named ports
+  # health probes, rendered only when set. reference the container port by name
   # /metrics is up whenever the web server is; /healthz additionally reflects sink health, so it
   # suits readiness but will restart the pod on a transient sink outage if used for liveness
   # e.g.
   # livenessProbe:
   #   httpGet:
   #     path: /metrics
-  #     port: 5000
+  #     port: http
   #   periodSeconds: 30
   startupProbe: {}
   livenessProbe: {}
