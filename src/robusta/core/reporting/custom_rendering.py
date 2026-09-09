@@ -37,6 +37,15 @@ def charts_style(
         opacity_hover=".9",
         transition="400ms ease-in",
         colors=graph_colors,
+        # pygal's own default font stack ("Consolas, Liberation Mono, Menlo, Courier,
+        # monospace") has no match in our chart-rendering image (only fonts-dejavu-core is
+        # installed there), and resvg does exact font-family matching with no fontconfig-style
+        # generic-family fallback - so with the default, resvg silently drops every
+        # title/axis/legend text element while still drawing the plotted lines. "DejaVu Sans
+        # Mono" is the font we know that package provides. Setting it here propagates to every
+        # *_font_family Style attribute (title/legend/label/tooltip/...), since pygal's
+        # Style.__init__ defaults each of those to font_family when unset.
+        font_family="DejaVu Sans Mono",
     )
 
 
@@ -50,15 +59,15 @@ class PlotCustomCSS:
                   {{ id }}.title {
                     fill: #11383A;
                   }
-    
+
                   {{ id }}.legends .legend text {
                     fill: #3f3f3f;
                   }
-              
+
                   {{ id }}.axis.y text {
                     fill: #3f3f3f;
                   }
-    
+
                   {{ id }}.axis.x text {
                     fill: #3f3f3f;
                   }
