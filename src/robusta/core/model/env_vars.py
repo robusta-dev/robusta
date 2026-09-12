@@ -112,6 +112,23 @@ DISABLE_FINDINGS_PERSISTENCE = load_bool("DISABLE_FINDINGS_PERSISTENCE", False)
 DISABLE_DISCOVERY = load_bool("DISABLE_DISCOVERY", False)
 DISABLE_RESOURCE_WATCH_PERSISTENCE = load_bool("DISABLE_RESOURCE_WATCH_PERSISTENCE", False)
 
+# Namespace-scoped runner settings (see docs: "RBAC: Namespace-Scoped Runner").
+# All defaults keep today's cluster-wide behavior.
+# When set, cluster stats count workloads only in this namespace and the node count is reported as 1.
+CLUSTER_STATS_NAMESPACE = os.environ.get("CLUSTER_STATS_NAMESPACE", "")
+# Disable auto-discovery of in-cluster Prometheus/Alertmanager services (requires
+# prometheus_url / alertmanager_url in globalConfig for those integrations to work).
+DISABLE_PROMETHEUS_DISCOVERY = load_bool("DISABLE_PROMETHEUS_DISCOVERY", False)
+DISABLE_ALERTMANAGER_DISCOVERY = load_bool("DISABLE_ALERTMANAGER_DISCOVERY", False)
+# Limit Holmes service auto-discovery to a single namespace. Empty = all namespaces.
+HOLMES_DISCOVERY_NAMESPACE = os.environ.get("HOLMES_DISCOVERY_NAMESPACE", "")
+# Declare the cluster provider explicitly (e.g. "EKS", "OpenShift") instead of detecting it from nodes.
+CLUSTER_PROVIDER_OVERRIDE = os.environ.get("CLUSTER_PROVIDER", "")
+# Where namespace metadata (labels/annotations used by sink scopes) is read from:
+# "cluster" (default) lists all namespaces, "namespaced" reads only INSTALLATION_NAMESPACE,
+# "disabled" makes no API call and namespace metadata is empty.
+NAMESPACE_DATA_MODE = os.environ.get("NAMESPACE_DATA_MODE", "cluster").lower()
+
 # When true, logs are emitted as JSON (one object per line) instead of the default
 # colored text format. Useful for log scrapers like Filebeat. Defaults to false.
 ENABLE_JSON_LOGS_FORMAT = load_bool("ENABLE_JSON_LOGS_FORMAT", False)

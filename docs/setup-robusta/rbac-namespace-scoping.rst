@@ -152,7 +152,8 @@ Example global instruction:
 Notes on the runner
 -------------------
 
-The Robusta runner remains cluster-wide. To reduce the runner's permissions, use
-:ref:`a read-only ClusterRole <read-only-service-account>` via ``runner.overrideClusterRoles``.
-Fully scoping the runner to a subset of namespaces is not supported, because the runner watches
-cluster-wide resources and events to function.
+By default the Robusta runner remains cluster-wide. To reduce the runner's permissions, use
+:ref:`a read-only ClusterRole <read-only-service-account>` via ``runner.overrideClusterRoles``,
+or run the runner itself with a namespace-scoped service account — see
+:ref:`RBAC: Namespace-Scoped Runner <rbac-namespace-scoped-runner>` (requires disabling discovery,
+playbooks and the kubewatch forwarder).

@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from kubernetes import client
 from kubernetes.client import V1ServiceList
@@ -7,13 +8,18 @@ from kubernetes.client.models.v1_service import V1Service
 from robusta.core.model.env_vars import CLUSTER_DOMAIN
 
 
-def find_service_url(label_selector):
+def find_service_url(label_selector: str, namespace: Optional[str] = None):
     """
-    Get the url of an in-cluster service with a specific label
+    Get the url of an in-cluster service with a specific label.
+    When a namespace is given, only that namespace is searched (usable with a namespace-scoped
+    service account); otherwise all namespaces are searched.
     """
     # we do it this way because there is a weird issue with hikaru's ServiceList.listServiceForAllNamespaces()
     v1 = client.CoreV1Api()
-    svc_list: V1ServiceList = v1.list_service_for_all_namespaces(label_selector=label_selector)
+    if namespace:
+        svc_list: V1ServiceList = v1.list_namespaced_service(namespace, label_selector=label_selector)
+    else:
+        svc_list: V1ServiceList = v1.list_service_for_all_namespaces(label_selector=label_selector)
     if not svc_list.items:
         return None
     svc: V1Service = svc_list.items[0]

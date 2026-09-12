@@ -35,16 +35,17 @@ def main():
     loader = ConfigLoader(registry, event_handler)
     sink_registry = registry.get_sinks()
     ui_sink_enabled = "robusta_ui_sink" in sink_registry.get_all()
-    if ui_sink_enabled or ENABLE_TELEMETRY:
-        if not ENABLE_TELEMETRY:
-            logging.warning("Telemetry could not be disabled when Robusta UI is used.")
+    if ENABLE_TELEMETRY:
         TelemetryService(
             endpoint=ROBUSTA_TELEMETRY_ENDPOINT,
             periodic_time_sec=TELEMETRY_PERIODIC_SEC,
             registry=registry,
         )
     else:
-        logging.info("Telemetry is disabled.")
+        if ui_sink_enabled:
+            logging.warning("Telemetry is disabled (ENABLE_TELEMETRY=false) while the Robusta UI sink is enabled.")
+        else:
+            logging.info("Telemetry is disabled.")
 
     Web.init(event_handler, loader)
 

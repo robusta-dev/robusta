@@ -14,7 +14,13 @@ from prometrix.connect.custom_connect import CustomPrometheusConnect
 
 from robusta.core.exceptions import NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
-from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
+from robusta.core.model.env_vars import (
+    DISABLE_ALERTMANAGER_DISCOVERY,
+    DISABLE_PROMETHEUS_DISCOVERY,
+    HOLMES_DISCOVERY_NAMESPACE,
+    PROMETHEUS_SSL_ENABLED,
+    SERVICE_CACHE_TTL_SEC,
+)
 from robusta.utils.service_discovery import find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
@@ -113,17 +119,17 @@ class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=5, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
-    def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
+    def find_url(cls, selectors: List[str], error_msg: str, namespace: Optional[str] = None) -> Optional[str]:
         """
         Try to autodiscover the url of an in-cluster service
         """
-        cache_key = ",".join(selectors)
+        cache_key = ",".join(selectors) + (f"|{namespace}" if namespace else "")
         cached_value = cls.cache.get(cache_key)
         if cached_value:
             return cached_value
 
         for label_selector in selectors:
-            service_url = find_service_url(label_selector)
+            service_url = find_service_url(label_selector, namespace=namespace)
             if service_url:
                 cls.cache[cache_key] = service_url
                 return service_url
@@ -135,6 +141,9 @@ class ServiceDiscovery:
 class PrometheusDiscovery(ServiceDiscovery):
     @classmethod
     def find_prometheus_url(cls) -> Optional[str]:
+        if DISABLE_PROMETHEUS_DISCOVERY:
+            logging.debug("Prometheus auto-discovery is disabled (DISABLE_PROMETHEUS_DISCOVERY)")
+            return None
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
@@ -154,6 +163,9 @@ class PrometheusDiscovery(ServiceDiscovery):
 
     @classmethod
     def find_vm_url(cls) -> Optional[str]:
+        if DISABLE_PROMETHEUS_DISCOVERY:
+            logging.debug("Victoria Metrics auto-discovery is disabled (DISABLE_PROMETHEUS_DISCOVERY)")
+            return None
         return super().find_url(
             selectors=[
                 "app.kubernetes.io/name=vmsingle",
@@ -168,6 +180,9 @@ class PrometheusDiscovery(ServiceDiscovery):
 class AlertManagerDiscovery(ServiceDiscovery):
     @classmethod
     def find_alert_manager_url(cls) -> Optional[str]:
+        if DISABLE_ALERTMANAGER_DISCOVERY:
+            logging.debug("Alertmanager auto-discovery is disabled (DISABLE_ALERTMANAGER_DISCOVERY)")
+            return None
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-alertmanager",
@@ -195,4 +210,5 @@ class HolmesDiscovery(ServiceDiscovery):
         return super().find_url(
             selectors=["app=holmes"],
             error_msg="Holmes url could not be found.",
+            namespace=HOLMES_DISCOVERY_NAMESPACE or None,
         )

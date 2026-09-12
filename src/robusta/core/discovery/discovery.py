@@ -4,7 +4,7 @@ import threading
 import time
 from collections import defaultdict
 from concurrent.futures.process import BrokenProcessPool, ProcessPoolExecutor
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 import dpath.util
 import prometheus_client
 from hikaru.model.rel_1_26 import (
@@ -44,6 +44,7 @@ from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
 from robusta.core.model.env_vars import (
     ARGO_ROLLOUTS,
+    CLUSTER_STATS_NAMESPACE,
     DISABLE_HELM_MONITORING,
     DISCOVERY_BATCH_SIZE,
     DISCOVERY_MAX_BATCHES,
@@ -778,62 +779,53 @@ class Discovery:
             raise e
 
     @staticmethod
+    def __count_stat(kind: str, list_for_all_namespaces: Callable, list_namespaced: Callable) -> int:
+        try:
+            if CLUSTER_STATS_NAMESPACE:
+                res = list_namespaced(CLUSTER_STATS_NAMESPACE, limit=1, _continue=None)
+            else:
+                res = list_for_all_namespaces(limit=1, _continue=None)
+            remaining = res.metadata.remaining_item_count or 0
+            return remaining + len(res.items)
+        except Exception:
+            logging.error(f"Failed to count {kind}", exc_info=True)
+            return -1
+
+    @staticmethod
     def discover_stats() -> ClusterStats:
-        deploy_count = -1
-        sts_count = -1
-        dms_count = -1
-        rs_count = -1
-        pod_count = -1
+        apps_v1 = client.AppsV1Api()
+        core_v1 = client.CoreV1Api()
+        batch_v1 = client.BatchV1Api()
+        deploy_count = Discovery.__count_stat(
+            "deployments", apps_v1.list_deployment_for_all_namespaces, apps_v1.list_namespaced_deployment
+        )
+        sts_count = Discovery.__count_stat(
+            "statefulsets", apps_v1.list_stateful_set_for_all_namespaces, apps_v1.list_namespaced_stateful_set
+        )
+        dms_count = Discovery.__count_stat(
+            "daemonsets", apps_v1.list_daemon_set_for_all_namespaces, apps_v1.list_namespaced_daemon_set
+        )
+        rs_count = Discovery.__count_stat(
+            "replicasets", apps_v1.list_replica_set_for_all_namespaces, apps_v1.list_namespaced_replica_set
+        )
+        pod_count = Discovery.__count_stat(
+            "pods", core_v1.list_pod_for_all_namespaces, core_v1.list_namespaced_pod
+        )
+        job_count = Discovery.__count_stat(
+            "jobs", batch_v1.list_job_for_all_namespaces, batch_v1.list_namespaced_job
+        )
+
         node_count = -1
-        job_count = -1
-        try:
-            deps: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces(limit=1, _continue=None)
-            remaining = deps.metadata.remaining_item_count or 0
-            deploy_count = remaining + len(deps.items)
-        except Exception:
-            logging.error("Failed to count deployments", exc_info=True)
-
-        try:
-            sts: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces(limit=1, _continue=None)
-            remaining = sts.metadata.remaining_item_count or 0
-            sts_count = remaining + len(sts.items)
-        except Exception:
-            logging.error("Failed to count statefulsets", exc_info=True)
-
-        try:
-            dms: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces(limit=1, _continue=None)
-            remaining = dms.metadata.remaining_item_count or 0
-            dms_count = remaining + len(dms.items)
-        except Exception:
-            logging.error("Failed to count daemonsets", exc_info=True)
-
-        try:
-            rs: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces(limit=1, _continue=None)
-            remaining = rs.metadata.remaining_item_count or 0
-            rs_count = remaining + len(rs.items)
-        except Exception:
-            logging.error("Failed to count replicasets", exc_info=True)
-
-        try:
-            pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(limit=1, _continue=None)
-            remaining = pods.metadata.remaining_item_count or 0
-            pod_count = remaining + len(pods.items)
-        except Exception:
-            logging.error("Failed to count pods", exc_info=True)
-
-        try:
-            nodes: V1NodeList = client.CoreV1Api().list_node(limit=1, _continue=None)
-            remaining = nodes.metadata.remaining_item_count or 0
-            node_count = remaining + len(nodes.items)
-        except Exception:
-            logging.error("Failed to count nodes", exc_info=True)
-
-        try:
-            jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces(limit=1, _continue=None)
-            remaining = jobs.metadata.remaining_item_count or 0
-            job_count = remaining + len(jobs.items)
-        except Exception:
-            logging.error("Failed to count jobs", exc_info=True)
+        if CLUSTER_STATS_NAMESPACE:
+            # nodes are cluster-scoped and cannot be listed by a namespace-scoped service account
+            node_count = 1
+        else:
+            try:
+                nodes: V1NodeList = core_v1.list_node(limit=1, _continue=None)
+                remaining = nodes.metadata.remaining_item_count or 0
+                node_count = remaining + len(nodes.items)
+            except Exception:
+                logging.error("Failed to count nodes", exc_info=True)
 
         k8s_version: str = None
         try:
