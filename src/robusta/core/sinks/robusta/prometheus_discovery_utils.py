@@ -73,6 +73,10 @@ class PrometheusDiscoveryUtils:
             value = query_result.vector_result[0]["value"]["value"]
             return_value = float("%.2f" % float(value))
             return return_value if return_value >= 0 else None
+        except NoPrometheusUrlFound:
+            # no Prometheus configured (e.g. discovery disabled without prometheus_url) - nothing to query
+            logging.debug("No Prometheus url found - skipping prometheus query.")
+            return
         except:
             logging.exception("PrometheusDiscoveryUtils failed to get prometheus results.")
             return

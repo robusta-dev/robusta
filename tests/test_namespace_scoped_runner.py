@@ -169,3 +169,20 @@ def test_namespace_data_namespaced():
         core.read_namespace.assert_called_once_with("robusta")
         core.list_namespace.assert_not_called()
     get_all_namespace_data.cache_clear()
+
+
+def test_prometheus_value_query_quiet_when_no_prometheus_url():
+    from robusta.core.exceptions import NoPrometheusUrlFound
+    from robusta.core.sinks.robusta.prometheus_discovery_utils import PrometheusDiscoveryUtils
+
+    stub = MagicMock()
+    stub.get_global_config.return_value = {}
+    with patch(
+        "robusta.core.sinks.robusta.prometheus_discovery_utils.run_prometheus_query",
+        side_effect=NoPrometheusUrlFound("no url"),
+    ), patch("robusta.core.sinks.robusta.prometheus_discovery_utils.logging") as mock_logging:
+        result = PrometheusDiscoveryUtils._get_query_prometheus_value(stub, query="up")
+
+    assert result is None
+    mock_logging.exception.assert_not_called()
+    mock_logging.debug.assert_called_once()
