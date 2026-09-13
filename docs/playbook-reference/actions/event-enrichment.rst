@@ -20,6 +20,8 @@ These actions can add context to any node-related event, be it from ``on_prometh
 
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_graph_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_dmesg_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.node_cpu_analysis.node_cpu_enricher
 
 .. .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_health_watcher
@@ -41,6 +43,8 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_node_graph_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
+
+.. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_dmesg_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.image_pull_backoff_enricher.image_pull_backoff_reporter
 
