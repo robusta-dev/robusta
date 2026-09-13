@@ -6,22 +6,61 @@ RBAC: Namespace-Scoped HolmesGPT
 By default, HolmesGPT uses cluster-wide RBAC: the chart creates a ``ClusterRole`` and binds it with a
 ``ClusterRoleBinding``, so Holmes can read resources in every namespace.
 
-To restrict Holmes to a specific set of namespaces you can create your own ``RoleBinding`` objects that
-**reuse the ServiceAccount and ClusterRole the chart already creates**, and remove the cluster-wide binding.
-You do not need to create a ServiceAccount or ClusterRole yourself.
+There are two ways to restrict it, depending on what you need:
+
+- **Scope Holmes to its own installation namespace** (e.g. one Holmes + runner instance per
+  namespace) — set ``holmes.namespaceScopedRBAC: true``. Fully Helm-managed, nothing to delete
+  after upgrades, and multiple installs in different namespaces cannot collide. See
+  :ref:`Option 1 <holmes-namespace-scoped-rbac>`.
+- **Grant one Holmes access to a set of other namespaces** — create your own ``RoleBinding``
+  objects that reuse the chart's ClusterRole, and remove the cluster-wide binding. See
+  :ref:`Option 2 <holmes-rolebindings-manual>`.
+
+.. _holmes-namespace-scoped-rbac:
+
+Option 1 — scope Holmes to its own namespace (``namespaceScopedRBAC``)
+----------------------------------------------------------------------
+
+Set in your Helm values:
+
+.. code-block:: yaml
+
+    holmes:
+      namespaceScopedRBAC: true
+
+Instead of ``<release>-holmes-cluster-role`` (ClusterRole) + ClusterRoleBinding, the chart renders
+``<release>-holmes-role`` — a namespaced ``Role`` with the same rules — bound by a ``RoleBinding``
+in the release namespace. Holmes can then only read namespaced resources in the namespace it is
+installed in. Because everything rendered is namespaced:
+
+- ``helm upgrade`` manages the RBAC end to end — there is no ClusterRoleBinding to delete, ever.
+- Multiple Holmes installs in different namespaces cannot collide on cluster-scoped RBAC names,
+  even with identical release names.
+
+This pairs with the runner's ``runner.rbac.namespaceScoped: true`` for a fully namespace-scoped
+Robusta install — see :ref:`RBAC: Namespace-Scoped Runner <rbac-namespace-scoped-runner>`, which
+also covers the runner-side environment variables, disabling playbooks and kubewatch, and
+verification.
 
 .. note::
 
-   To scope Holmes to **its own installation namespace only** (e.g. one Holmes + runner instance per
-   namespace), newer Holmes charts support ``holmes.namespaceScopedRBAC: true``, which renders a
-   namespaced ``Role`` + ``RoleBinding`` instead of the ClusterRole + ClusterRoleBinding — fully
-   Helm-managed, nothing to delete after upgrades, and no cluster-scoped name collisions between
-   installs. See :ref:`RBAC: Namespace-Scoped Runner <rbac-namespace-scoped-runner>` for the runner
-   half of that setup. The manual approach below remains the way to grant one Holmes access to a
-   *set* of other namespaces.
+   ``namespaceScopedRBAC`` requires a Holmes chart **newer than 0.41.0**. If the Robusta chart
+   version you run still bundles an older Holmes chart, use Option 2 below, or set
+   ``holmes.createServiceAccount: false`` + ``holmes.customServiceAccountName`` and manage the
+   namespaced RBAC yourself.
+
+.. _holmes-rolebindings-manual:
+
+Option 2 — grant one Holmes access to a set of namespaces
+---------------------------------------------------------
+
+To give a single Holmes instance access to specific namespaces (rather than its own only), create
+your own ``RoleBinding`` objects that **reuse the ServiceAccount and ClusterRole the chart already
+creates**, and remove the cluster-wide binding. You do not need to create a ServiceAccount or
+ClusterRole yourself.
 
 What the chart already creates
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 With the default values, the Holmes chart creates these objects (``<release>`` is your Helm release name,
 usually ``robusta``, in the release namespace):
@@ -44,7 +83,7 @@ usually ``robusta``, in the release namespace):
      - Grants the ClusterRole **cluster-wide** — this is what makes Holmes see every namespace
 
 Reuse the ServiceAccount and ClusterRole; replace the binding
--------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Step 1 — Create a ``RoleBinding`` in each namespace Holmes should access. It binds the **existing**
 ServiceAccount to the **existing** ClusterRole, but a ``RoleBinding`` only grants those rules inside its own
@@ -87,7 +126,7 @@ Holmes now has read access only in the namespaces where you created a RoleBindin
    the deletion/RoleBindings through your GitOps/post-render tooling.
 
 How it works
-------------
+~~~~~~~~~~~~
 
 In Kubernetes RBAC a ``ClusterRole`` is only a set of permissions. On its own it grants nothing — the
 **binding type** decides where those permissions apply:
@@ -125,7 +164,7 @@ request, the authorizer checks all ClusterRoleBindings plus the RoleBindings in 
    ``nodes`` is cluster-scoped. A real ``kubectl get nodes`` (empty namespace) matches no binding and is denied.
 
 Verifying the scope
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -149,7 +188,7 @@ instructions are account-level and are injected into Holmes' system prompt for e
 in the Robusta UI (HolmesGPT settings → global instructions). Keep the list in sync with the namespaces you
 bound above.
 
-Example global instruction:
+Example global instruction (Option 2, one Holmes with a fixed namespace list):
 
 .. code-block:: text
 
@@ -158,6 +197,18 @@ Example global instruction:
     Do not run cluster-wide queries such as `kubectl get pods -A`, `kubectl get nodes`, or
     `kubectl get namespaces` — they will be denied. If something you need is in another namespace, report
     that it is outside your permitted scope instead of retrying.
+
+Because global instructions are **account-level** (shared by every cluster and instance in the
+account), a fixed namespace list only works when all your instances share the same scope. With
+multiple namespace-scoped instances (Option 1), phrase the instruction generically instead:
+
+.. code-block:: text
+
+    Each HolmesGPT instance in this account has namespace-scoped RBAC, limited to the namespace it is
+    installed in. Always scope kubectl queries to your own namespace with `-n`. Do not run cluster-wide
+    queries such as `kubectl get pods -A`, `kubectl get nodes`, or `kubectl get namespaces` — they will
+    be denied. If something you need is in another namespace, report that it is outside your permitted
+    scope instead of retrying.
 
 Notes on the runner
 -------------------
