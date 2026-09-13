@@ -1,3 +1,4 @@
+{{- if .Values.kubewatch.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,3 +10,4 @@ data:
       cloudevent:
         url: "http://{{ include "robusta.fullname" . }}-runner:80/api/handle"
 {{ toYaml .Values.kubewatch.config | indent 4 }}
+{{- end }} # kubewatch.enabled

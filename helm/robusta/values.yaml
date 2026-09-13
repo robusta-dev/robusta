@@ -640,6 +640,10 @@ image:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
+  # set false to not deploy kubewatch at all (no Deployment, ConfigMap or RBAC).
+  # Kubernetes change tracking and on_kubernetes_* triggers will not work without it.
+  # Used with namespace-scoped runner installs - see docs: "RBAC: Namespace-Scoped Runner".
+  enabled: true
   image: ~ # image can be used to override image.registry/imageName
   imageName: kubewatch:v2.16.1
   imagePullPolicy: IfNotPresent

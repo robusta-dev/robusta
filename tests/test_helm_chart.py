@@ -122,6 +122,41 @@ def test_playbooks_enabled_by_default():
     assert "WeeklyKRRScan" in names
 
 
+def render_forwarder_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
+    cmd = [
+        "helm",
+        "template",
+        str(CHART_PATH),
+        "--set",
+        "clusterName=test",
+        "--set",
+        "sinksConfig[0].file_sink.name=test",
+        "-s",
+        "templates/forwarder.yaml",
+        "-s",
+        "templates/forwarder-service-account.yaml",
+        "-s",
+        "templates/kubewatch-configmap.yaml",
+    ] + (extra_args or [])
+    output = subprocess.check_output(cmd, text=True)
+    return [doc for doc in yaml.safe_load_all(output) if doc]
+
+
+def test_kubewatch_enabled_by_default():
+    docs = render_forwarder_chart()
+    assert get_doc(docs, "Deployment", "forwarder") is not None
+    assert get_doc(docs, "Service", "forwarder") is not None
+    assert get_doc(docs, "ConfigMap", "kubewatch-config") is not None
+    assert get_doc(docs, "ServiceAccount", "forwarder-service-account") is not None
+    assert get_doc(docs, "ClusterRole", "forwarder-cluster-role") is not None
+    assert get_doc(docs, "ClusterRoleBinding", "forwarder-cluster-role-binding") is not None
+
+
+def test_kubewatch_disabled_removes_everything():
+    docs = render_forwarder_chart(["--set", "kubewatch.enabled=false"])
+    assert docs == [], f"kubewatch.enabled=false should render no forwarder resources, got: {docs}"
+
+
 def test_override_cluster_roles_still_replaces_rules():
     docs = render_chart(
         [

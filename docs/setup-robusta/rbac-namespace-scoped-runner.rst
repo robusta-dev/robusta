@@ -196,33 +196,9 @@ playbooks, and set the environment variables:
     #   prometheus_url: "http://prometheus.monitoring.svc.cluster.local:9090"
     #   alertmanager_url: "http://alertmanager.monitoring.svc.cluster.local:9093"
 
-    # disable kubewatch (see the section below)
+    # don't deploy the kubewatch forwarder at all (see the section below)
     kubewatch:
-      createServiceAccount: false
-      customServiceAccount: robusta-runner-scoped
-      config:
-        namespace: "robusta"
-        resource:
-          deployment: false
-          replicationcontroller: false
-          replicaset: false
-          daemonset: false
-          statefulset: false
-          services: false
-          pod: false
-          job: false
-          node: false
-          hpa: false
-          clusterrole: false
-          clusterrolebinding: false
-          serviceaccount: false
-          persistentvolume: false
-          namespace: false
-          configmap: false
-          secret: false
-          event: false
-          coreevent: false
-          ingress: false
+      enabled: false
 
 Install into the same namespace the RBAC was created in:
 
@@ -237,26 +213,10 @@ Disabling kubewatch
 -------------------
 
 The kubewatch forwarder is a separate Deployment with its own cluster-wide ``ClusterRole`` — it is
-what watches the API server for changes. The chart currently has no ``kubewatch.enabled`` flag, so
-the values above neutralize it instead:
-
-- ``kubewatch.createServiceAccount: false`` removes its ServiceAccount, ClusterRole and
-  ClusterRoleBinding.
-- ``kubewatch.customServiceAccount`` points the pod at the scoped service account so it can still
-  start.
-- Turning off every entry under ``kubewatch.config.resource`` (and scoping
-  ``kubewatch.config.namespace``) stops it from watching anything.
-
-The forwarder pod still runs, idle. To remove it completely, scale it down after installing:
-
-.. code-block:: bash
-
-    kubectl scale deployment robusta-forwarder -n robusta --replicas=0
-
-.. warning::
-
-    ``helm upgrade`` resets the forwarder to 1 replica (the chart hardcodes it) — re-run the scale
-    command after each upgrade, or manage it via your GitOps tooling.
+what watches the API server for changes and feeds them to the runner. ``kubewatch.enabled: false``
+removes it entirely: the Deployment, Service, ConfigMap, ServiceAccount, ClusterRole and
+ClusterRoleBinding are not rendered. Kubernetes change tracking and ``on_kubernetes_*`` triggers do
+not work without it (which is consistent with this setup — playbooks are disabled anyway).
 
 Verifying the scope
 -------------------
