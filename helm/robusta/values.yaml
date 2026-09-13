@@ -763,6 +763,13 @@ runner:
     # Setting true removes the runner Role and disables the
     # NodeFSSpaceAlerts and WeeklyKRRScan playbooks
     disableCreateFromServiceAccount: false
+    # Namespace-scoped runner: render the runner RBAC as a namespaced Role + RoleBinding
+    # (no ClusterRole / ClusterRoleBinding), limiting the runner to the release namespace.
+    # Also presets the scoped-mode env vars (DISABLE_DISCOVERY, CLUSTER_STATS_NAMESPACE,
+    # NAMESPACE_DATA_MODE, HOLMES_DISCOVERY_NAMESPACE, DISABLE_PROMETHEUS_DISCOVERY,
+    # DISABLE_ALERTMANAGER_DISCOVERY) - entries in runner.additional_env_vars override them.
+    # See docs: "RBAC: Namespace-Scoped Runner". Default false = cluster-wide, as always.
+    namespaceScoped: false
   # set to override global.imagePullSecrets for the runner; leave empty to inherit the global
   imagePullSecrets: []
   extraVolumes: []

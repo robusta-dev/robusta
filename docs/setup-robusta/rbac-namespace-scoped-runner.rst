@@ -7,10 +7,13 @@ By default, the Robusta runner is a cluster-wide agent: it discovers workloads i
 reads cluster-scoped resources (nodes, namespaces, persistent volumes) and runs with a ``ClusterRole``
 bound by a ``ClusterRoleBinding``.
 
-This guide runs the runner with a **service account limited to a single namespace** — the namespace
-Robusta is installed in. All the necessary behavior changes are controlled by environment variables,
-so no Helm chart changes are required. Every variable defaults to today's cluster-wide behavior;
-nothing changes unless you opt in.
+This guide runs the runner with **access limited to a single namespace** — the namespace Robusta is
+installed in. Setting ``runner.rbac.namespaceScoped: true`` makes the chart render namespaced RBAC
+(a ``Role`` + ``RoleBinding`` instead of the ClusterRole + ClusterRoleBinding) and presets the
+runner's scoped-mode environment variables. Everything stays Helm-managed — no hand-applied RBAC —
+and because all rendered objects are namespaced, you can install **multiple independent Robusta
+instances in different namespaces** without name collisions. The default (``false``) keeps today's
+cluster-wide behavior.
 
 What works and what doesn't
 ---------------------------
@@ -30,171 +33,24 @@ The following are **not available** with a namespace-scoped service account:
 - Node-based features: node enrichments, drains, node count (reported as ``1``), auto-detection of
   the cluster provider (declare it with ``CLUSTER_PROVIDER`` instead).
 - Auto-discovery of Prometheus/Alertmanager — set ``prometheus_url`` / ``alertmanager_url``
-  explicitly, or disable the integration.
+  explicitly, or leave them unset to run without those integrations.
 
-Environment variables
----------------------
+Setup
+-----
 
-Set these on the runner via ``runner.additional_env_vars`` in your Helm values:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 30 15 55
-
-   * - Variable
-     - Default
-     - Effect
-   * - ``DISABLE_DISCOVERY``
-     - ``false``
-     - Disables the cluster-wide resource discovery loop.
-   * - ``CLUSTER_STATS_NAMESPACE``
-     - ``""``
-     - When set, cluster-status workload counts are taken from this namespace only, and the node
-       count is reported as ``1``. Also skips node listing in telemetry.
-   * - ``DISABLE_PROMETHEUS_DISCOVERY``
-     - ``false``
-     - Never search the cluster for a Prometheus/Victoria Metrics service. Set ``prometheus_url``
-       in ``globalConfig`` if you use Prometheus.
-   * - ``DISABLE_ALERTMANAGER_DISCOVERY``
-     - ``false``
-     - Never search the cluster for an Alertmanager service. Set ``alertmanager_url`` in
-       ``globalConfig`` if you use Alertmanager (e.g. for silences).
-   * - ``HOLMES_DISCOVERY_NAMESPACE``
-     - ``""``
-     - Search for the Holmes service only in this namespace (instead of all namespaces).
-       Alternatively set ``holmes_url`` in ``globalConfig``.
-   * - ``CLUSTER_PROVIDER``
-     - ``""``
-     - Declare the cluster provider instead of detecting it from nodes. One of: ``GKE``, ``AKS``,
-       ``EKS``, ``Kind``, ``Minikube``, ``RancherDesktop``, ``Kapsule``, ``Kops``,
-       ``DigitalOcean``, ``OpenShift``, ``Unknown``.
-   * - ``NAMESPACE_DATA_MODE``
-     - ``cluster``
-     - Where namespace labels/annotations (used by sink scopes) come from: ``cluster`` lists all
-       namespaces, ``namespaced`` reads only the installation namespace, ``disabled`` makes no API
-       call.
-   * - ``ENABLE_TELEMETRY``
-     - ``true``
-     - Set ``false`` to disable the telemetry thread entirely (optional).
-
-Step 1 — create the namespace-scoped service account
-----------------------------------------------------
-
-Create a ServiceAccount, Role and RoleBinding in Robusta's installation namespace (``robusta``
-below — adjust to yours). The Role covers what the scoped runner needs at runtime: counting
-workloads for cluster status, its scheduler-state ConfigMap, finding the Holmes service, and
-reading its own namespace's metadata.
-
-.. code-block:: yaml
-
-    # runner-scoped-rbac.yaml
-    apiVersion: v1
-    kind: ServiceAccount
-    metadata:
-      name: robusta-runner-scoped
-      namespace: robusta
-    ---
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: Role
-    metadata:
-      name: robusta-runner-scoped
-      namespace: robusta
-    rules:
-      # workload counts for cluster status + reading resources in this namespace from the UI
-      - apiGroups: [""]
-        resources:
-          - pods
-          - pods/status
-          - pods/log
-          - services
-          - endpoints
-          - configmaps
-          - events
-          - persistentvolumeclaims
-          - serviceaccounts
-          - replicationcontrollers
-        verbs: ["get", "list", "watch"]
-      - apiGroups: ["apps"]
-        resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
-        verbs: ["get", "list", "watch"]
-      - apiGroups: ["batch"]
-        resources: ["jobs", "cronjobs"]
-        verbs: ["get", "list", "watch"]
-      # the runner persists scheduler state in a ConfigMap named "scheduled-jobs"
-      - apiGroups: [""]
-        resources: ["configmaps"]
-        verbs: ["create", "update", "patch"]
-      # NAMESPACE_DATA_MODE=namespaced — a Role can grant `get` on the namespace it lives in
-      - apiGroups: [""]
-        resources: ["namespaces"]
-        verbs: ["get"]
-    ---
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: RoleBinding
-    metadata:
-      name: robusta-runner-scoped
-      namespace: robusta
-    roleRef:
-      apiGroup: rbac.authorization.k8s.io
-      kind: Role
-      name: robusta-runner-scoped
-    subjects:
-      - kind: ServiceAccount
-        name: robusta-runner-scoped
-        namespace: robusta
-
-.. code-block:: bash
-
-    kubectl apply -f runner-scoped-rbac.yaml
-
-.. note::
-
-    If you want manual troubleshooting from the UI to work inside the namespace (fetching logs is
-    already covered by ``pods/log`` above), you can additionally grant ``pods/exec`` (``get``,
-    ``create``) and ``create``/``delete`` on ``pods`` and ``jobs``. Leave them out for a stricter
-    setup — actions that lack permissions fail with a clear Kubernetes ``Forbidden`` error.
-
-.. note::
-
-    If you keep **Robusta-managed Prometheus alerts** (``enabledManagedConfiguration: true``)
-    instead of disabling it in step 2, also add this rule to the Role — the runner syncs
-    ``PrometheusRule`` CRs in its own namespace:
-
-    .. code-block:: yaml
-
-        - apiGroups: ["monitoring.coreos.com"]
-          resources: ["prometheusrules"]
-          verbs: ["get", "list", "create", "update", "patch", "delete"]
-
-Step 2 — Helm values
---------------------
-
-Point the chart at your service account, skip the chart's own cluster-wide RBAC, disable all
-playbooks, and set the environment variables:
+Add the following to your Helm values:
 
 .. code-block:: yaml
 
     # scoped-values.yaml
     runner:
-      # don't create the chart's ServiceAccount / ClusterRole / ClusterRoleBinding
-      createServiceAccount: false
-      # use the service account from step 1 instead
-      customServiceAccount: robusta-runner-scoped
+      rbac:
+        # renders a namespaced Role + RoleBinding (no ClusterRole/ClusterRoleBinding)
+        # and presets the scoped-mode env vars listed below
+        namespaceScoped: true
       additional_env_vars:
-        - name: DISABLE_DISCOVERY
-          value: "true"
-        - name: CLUSTER_STATS_NAMESPACE
-          value: "robusta"
-        - name: DISABLE_PROMETHEUS_DISCOVERY
-          value: "true"
-        - name: DISABLE_ALERTMANAGER_DISCOVERY
-          value: "true"
-        - name: HOLMES_DISCOVERY_NAMESPACE
-          value: "robusta"
         - name: CLUSTER_PROVIDER
           value: "EKS"          # your provider; or "OpenShift", "Unknown", ...
-        - name: NAMESPACE_DATA_MODE
-          value: "namespaced"   # or "disabled"
         - name: ENABLE_TELEMETRY
           value: "false"        # optional
 
@@ -205,7 +61,7 @@ playbooks, and set the environment variables:
 
     # Robusta-managed Prometheus alerts sync PrometheusRule CRs in the installation
     # namespace. Disable it (your generated_values.yaml may have it enabled), or keep it
-    # and grant the prometheusrules Role rule shown in step 1's note below.
+    # and grant the prometheusrules rule via runner.customClusterRoleRules (see note below).
     enabledManagedConfiguration: false
 
     # if you use Prometheus/Alertmanager, point at them explicitly instead of auto-discovery
@@ -217,14 +73,104 @@ playbooks, and set the environment variables:
     kubewatch:
       enabled: false
 
-Install into the same namespace the RBAC was created in:
+Then install:
 
 .. code-block:: bash
 
     helm upgrade --install robusta robusta/robusta \
       -f generated_values.yaml \
       -f scoped-values.yaml \
-      -n robusta
+      -n robusta --create-namespace
+
+For multiple instances, repeat per namespace with a **unique** ``clusterName`` per install (each
+instance appears as its own cluster in the Robusta platform).
+
+What ``runner.rbac.namespaceScoped`` does
+-----------------------------------------
+
+**RBAC** — instead of ``<release>-runner-cluster-role`` (ClusterRole) + ClusterRoleBinding, the
+chart renders ``<release>-runner-role`` (a namespaced ``Role`` with the same rules) bound by a
+``RoleBinding`` in the release namespace. The ServiceAccount and the namespaced create-permissions
+Role (``<release>-runner-local-role``) are unchanged. Because a Role is namespaced, multiple
+installs — even with the same release name — cannot collide on cluster-scoped RBAC objects.
+
+**Environment variables** — the flag presets these on the runner (any entry you add to
+``runner.additional_env_vars`` with the same name overrides the preset):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 32 23 45
+
+   * - Variable
+     - Preset by the flag
+     - Effect
+   * - ``DISABLE_DISCOVERY``
+     - ``true``
+     - Disables the cluster-wide resource discovery loop.
+   * - ``CLUSTER_STATS_NAMESPACE``
+     - the release namespace
+     - Cluster-status workload counts are taken from this namespace only; the node count is
+       reported as ``1`` and telemetry skips node listing.
+   * - ``NAMESPACE_DATA_MODE``
+     - ``namespaced``
+     - Namespace labels/annotations (used by sink scopes) are read only for the installation
+       namespace. Other values: ``cluster`` (all namespaces), ``disabled`` (no API call).
+   * - ``HOLMES_DISCOVERY_NAMESPACE``
+     - the release namespace
+     - Search for the Holmes service only in this namespace. Alternatively set ``holmes_url``
+       in ``globalConfig``.
+   * - ``DISABLE_PROMETHEUS_DISCOVERY``
+     - ``true``
+     - Never search the cluster for a Prometheus/Victoria Metrics service. Set ``prometheus_url``
+       in ``globalConfig`` if you use Prometheus.
+   * - ``DISABLE_ALERTMANAGER_DISCOVERY``
+     - ``true``
+     - Never search the cluster for an Alertmanager service. Set ``alertmanager_url`` in
+       ``globalConfig`` if you use Alertmanager (e.g. for silences).
+   * - ``CLUSTER_PROVIDER``
+     - not preset
+     - Declare the cluster provider instead of detecting it from nodes. One of: ``GKE``, ``AKS``,
+       ``EKS``, ``Kind``, ``Minikube``, ``RancherDesktop``, ``Kapsule``, ``Kops``,
+       ``DigitalOcean``, ``OpenShift``, ``Unknown``. Recommended — without it the provider shows
+       as ``Unknown``.
+   * - ``ENABLE_TELEMETRY``
+     - not preset
+     - Set ``false`` to disable the telemetry thread entirely (optional).
+
+.. note::
+
+    The Role carries the same rules as the default ClusterRole, so cluster-scoped entries in it
+    (``nodes``, ``persistentvolumes``, ...) are legal but grant nothing — a RoleBinding
+    structurally cannot grant cluster-scoped access. One side effect: ``kubectl auth can-i list
+    nodes -n <ns>`` may answer ``yes`` even though a real ``kubectl get nodes`` is denied; check
+    without ``-n`` (as in the verification below) for the true answer.
+
+.. note::
+
+    If you keep **Robusta-managed Prometheus alerts** (``enabledManagedConfiguration: true``),
+    also add this to your values — the runner syncs ``PrometheusRule`` CRs in its own namespace,
+    and ``customClusterRoleRules`` entries are added to the scoped Role:
+
+    .. code-block:: yaml
+
+        runner:
+          customClusterRoleRules:
+            - apiGroups: ["monitoring.coreos.com"]
+              resources: ["prometheusrules"]
+              verbs: ["get", "list", "create", "update", "patch", "delete"]
+
+Alternative: bring your own service account
+-------------------------------------------
+
+If your security process requires RBAC managed outside the chart, set
+``runner.createServiceAccount: false`` (nothing RBAC-related is rendered) plus
+``runner.customServiceAccount: <name>``, and create the ServiceAccount, a Role with the rules the
+runner needs (workload reads for cluster stats, ``configmaps`` ``get/create/update`` for the
+``scheduled-jobs`` scheduler state, ``services`` ``list`` for Holmes discovery, ``namespaces``
+``get`` for ``NAMESPACE_DATA_MODE=namespaced``) and a RoleBinding yourself. In that setup also set
+the environment variables from the table above yourself via ``runner.additional_env_vars`` — the
+presets come from ``runner.rbac.namespaceScoped``, which you may still enable together with a
+custom service account.
 
 Disabling kubewatch
 -------------------
@@ -240,7 +186,7 @@ Verifying the scope
 
 .. code-block:: bash
 
-    SA=system:serviceaccount:robusta:robusta-runner-scoped
+    SA=system:serviceaccount:robusta:robusta-runner-service-account
 
     kubectl auth can-i list pods        --as=$SA -n robusta      # -> yes
     kubectl auth can-i list pods        --as=$SA -n kube-system  # -> no
@@ -255,14 +201,15 @@ Troubleshooting
 ---------------
 
 **The runner exits with** ``configmaps "scheduled-jobs" is forbidden ... cannot get resource
-"configmaps"`` — this permission IS part of the Role in step 1, so the RoleBinding is not matching
-the pod's service account. This error is fatal (the runner restarts in a loop until fixed). Check,
-in the installation namespace:
+"configmaps"`` — the runner's service account has no ``configmaps get`` in its namespace. With
+``runner.rbac.namespaceScoped: true`` and the chart-created service account this cannot happen; it
+means a bring-your-own RoleBinding is not matching the pod's service account. This error is fatal
+(the runner restarts in a loop until fixed). Check, in the installation namespace:
 
 .. code-block:: bash
 
     NS=robusta   # your namespace
-    SA=robusta-runner-scoped   # your service account name
+    SA=robusta-runner-service-account   # your service account name
 
     # 1. which service account is the pod actually running as?
     kubectl get deployment robusta-runner -n $NS \
@@ -281,8 +228,9 @@ doesn't match the Role, or the objects were applied to a different namespace.
 **Recurring** ``prometheusrules.monitoring.coreos.com is forbidden`` **errors ("An error occurred
 while creating CR rules")** — Robusta-managed Prometheus alerts are enabled
 (``enabledManagedConfiguration: true``, often present in ``generated_values.yaml``). Either set
-``enabledManagedConfiguration: false`` as in step 2, or grant the ``prometheusrules`` Role rule
-from the note in step 1. This error is not fatal, but it repeats every sync cycle.
+``enabledManagedConfiguration: false``, or grant the ``prometheusrules`` rule via
+``runner.customClusterRoleRules`` as shown above. This error is not fatal, but it repeats every
+sync cycle.
 
 Related guides
 --------------

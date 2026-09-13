@@ -122,6 +122,53 @@ def test_playbooks_enabled_by_default():
     assert "WeeklyKRRScan" in names
 
 
+def test_namespace_scoped_rbac_renders_role_and_rolebinding():
+    docs = render_chart(["--set", "runner.rbac.namespaceScoped=true"])
+
+    assert get_doc(docs, "ClusterRole", "runner-cluster-role") is None
+    assert get_doc(docs, "ClusterRoleBinding", "runner-cluster-role-binding") is None
+
+    role = get_doc(docs, "Role", "runner-role")
+    assert role is not None
+    assert role["metadata"]["namespace"] == "default"
+    # same rule set as the ClusterRole - spot-check a core rule survived the kind switch
+    core_read = [
+        r for r in role["rules"] if "pods" in r.get("resources", []) and "list" in r.get("verbs", [])
+    ]
+    assert core_read
+
+    binding = get_doc(docs, "RoleBinding", "runner-role-binding")
+    assert binding is not None
+    assert binding["roleRef"]["kind"] == "Role"
+    assert "runner-role" in binding["roleRef"]["name"]
+    assert binding["subjects"][0]["kind"] == "ServiceAccount"
+
+    # the namespaced create Role is unaffected
+    assert get_doc(docs, "Role", "runner-local-role") is not None
+
+
+def test_namespace_scoped_rbac_sets_env_defaults():
+    docs = render_chart(["--set", "runner.rbac.namespaceScoped=true"])
+    deployment = get_doc(docs, "Deployment", "runner")
+    env = {e["name"]: e.get("value") for e in deployment["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["DISABLE_DISCOVERY"] == "true"
+    assert env["CLUSTER_STATS_NAMESPACE"] == "default"
+    assert env["NAMESPACE_DATA_MODE"] == "namespaced"
+    assert env["HOLMES_DISCOVERY_NAMESPACE"] == "default"
+    assert env["DISABLE_PROMETHEUS_DISCOVERY"] == "true"
+    assert env["DISABLE_ALERTMANAGER_DISCOVERY"] == "true"
+
+
+def test_default_rbac_has_no_scoped_env_or_role():
+    docs = render_chart()
+    assert get_doc(docs, "Role", "runner-role") is None
+    assert get_doc(docs, "RoleBinding", "runner-role-binding") is None
+    deployment = get_doc(docs, "Deployment", "runner")
+    env_names = {e["name"] for e in deployment["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert "DISABLE_DISCOVERY" not in env_names
+    assert "CLUSTER_STATS_NAMESPACE" not in env_names
+
+
 def render_forwarder_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
     cmd = [
         "helm",
