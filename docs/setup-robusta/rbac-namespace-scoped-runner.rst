@@ -154,6 +154,18 @@ reading its own namespace's metadata.
     ``create``) and ``create``/``delete`` on ``pods`` and ``jobs``. Leave them out for a stricter
     setup — actions that lack permissions fail with a clear Kubernetes ``Forbidden`` error.
 
+.. note::
+
+    If you keep **Robusta-managed Prometheus alerts** (``enabledManagedConfiguration: true``)
+    instead of disabling it in step 2, also add this rule to the Role — the runner syncs
+    ``PrometheusRule`` CRs in its own namespace:
+
+    .. code-block:: yaml
+
+        - apiGroups: ["monitoring.coreos.com"]
+          resources: ["prometheusrules"]
+          verbs: ["get", "list", "create", "update", "patch", "delete"]
+
 Step 2 — Helm values
 --------------------
 
@@ -190,6 +202,11 @@ playbooks, and set the environment variables:
     builtinPlaybooks: []
     customPlaybooks: []
     enablePlatformPlaybooks: false
+
+    # Robusta-managed Prometheus alerts sync PrometheusRule CRs in the installation
+    # namespace. Disable it (your generated_values.yaml may have it enabled), or keep it
+    # and grant the prometheusrules Role rule shown in step 1's note below.
+    enabledManagedConfiguration: false
 
     # if you use Prometheus/Alertmanager, point at them explicitly instead of auto-discovery
     # globalConfig:
@@ -233,6 +250,39 @@ Verifying the scope
 Then check the runner logs — there should be no recurring ``Forbidden`` (403) errors, and the
 platform should show the cluster as connected, with workload counts for the scoped namespace and a
 node count of 1.
+
+Troubleshooting
+---------------
+
+**The runner exits with** ``configmaps "scheduled-jobs" is forbidden ... cannot get resource
+"configmaps"`` — this permission IS part of the Role in step 1, so the RoleBinding is not matching
+the pod's service account. This error is fatal (the runner restarts in a loop until fixed). Check,
+in the installation namespace:
+
+.. code-block:: bash
+
+    NS=robusta   # your namespace
+    SA=robusta-runner-scoped   # your service account name
+
+    # 1. which service account is the pod actually running as?
+    kubectl get deployment robusta-runner -n $NS \
+      -o jsonpath='{.spec.template.spec.serviceAccountName}'
+
+    # 2. does the RoleBinding reference the right Role and the right subject?
+    kubectl get rolebinding -n $NS -o yaml | grep -B2 -A8 "$SA"
+
+    # 3. the direct check:
+    kubectl auth can-i get configmaps --as=system:serviceaccount:$NS:$SA -n $NS   # must be yes
+
+Common causes: the RoleBinding's ``subjects[].name`` doesn't match the ServiceAccount name used in
+``runner.customServiceAccount`` (e.g. after renaming one but not the other), the ``roleRef.name``
+doesn't match the Role, or the objects were applied to a different namespace.
+
+**Recurring** ``prometheusrules.monitoring.coreos.com is forbidden`` **errors ("An error occurred
+while creating CR rules")** — Robusta-managed Prometheus alerts are enabled
+(``enabledManagedConfiguration: true``, often present in ``generated_values.yaml``). Either set
+``enabledManagedConfiguration: false`` as in step 2, or grant the ``prometheusrules`` Role rule
+from the note in step 1. This error is not fatal, but it repeats every sync cycle.
 
 Related guides
 --------------
