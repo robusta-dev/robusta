@@ -10,6 +10,16 @@ To restrict Holmes to a specific set of namespaces you can create your own ``Rol
 **reuse the ServiceAccount and ClusterRole the chart already creates**, and remove the cluster-wide binding.
 You do not need to create a ServiceAccount or ClusterRole yourself.
 
+.. note::
+
+   To scope Holmes to **its own installation namespace only** (e.g. one Holmes + runner instance per
+   namespace), newer Holmes charts support ``holmes.namespaceScopedRBAC: true``, which renders a
+   namespaced ``Role`` + ``RoleBinding`` instead of the ClusterRole + ClusterRoleBinding — fully
+   Helm-managed, nothing to delete after upgrades, and no cluster-scoped name collisions between
+   installs. See :ref:`RBAC: Namespace-Scoped Runner <rbac-namespace-scoped-runner>` for the runner
+   half of that setup. The manual approach below remains the way to grant one Holmes access to a
+   *set* of other namespaces.
+
 What the chart already creates
 ------------------------------
 
