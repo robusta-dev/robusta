@@ -37,6 +37,11 @@ installed in. Because everything rendered is namespaced:
 - Multiple Holmes installs in different namespaces cannot collide on cluster-scoped RBAC names,
   even with identical release names.
 
+The flag also sets the ``SCOPED_NAMESPACES`` environment variable on the Holmes pod, which injects
+the access scope into Holmes' system prompt — investigations start with namespace-scoped commands
+right away, instead of Holmes trying cluster-wide queries first and learning its limits from
+``Forbidden`` errors.
+
 This pairs with the runner's ``runner.rbac.namespaceScoped: true`` for a fully namespace-scoped
 Robusta install — see :ref:`RBAC: Namespace-Scoped Runner <rbac-namespace-scoped-runner>`, which
 also covers the runner-side environment variables, disabling playbooks and kubewatch, and
@@ -198,9 +203,14 @@ Example global instruction (Option 2, one Holmes with a fixed namespace list):
     `kubectl get namespaces` — they will be denied. If something you need is in another namespace, report
     that it is outside your permitted scope instead of retrying.
 
+With **Option 1** this is handled automatically: ``namespaceScopedRBAC`` sets the
+``SCOPED_NAMESPACES`` environment variable and the scope instructions are injected into Holmes'
+system prompt — no global instruction needed. The guidance below applies to Option 2, and to
+Option 1 on Holmes chart versions that predate ``SCOPED_NAMESPACES``.
+
 Because global instructions are **account-level** (shared by every cluster and instance in the
 account), a fixed namespace list only works when all your instances share the same scope. With
-multiple namespace-scoped instances (Option 1), phrase the instruction generically instead:
+multiple namespace-scoped instances, phrase the instruction generically instead:
 
 .. code-block:: text
 
