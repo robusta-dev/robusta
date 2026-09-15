@@ -11,6 +11,7 @@ from sentry_sdk.integrations.threading import ThreadingIntegration
 from hikaru.model.rel_1_26 import NodeList
 
 from robusta.core.model.env_vars import (
+    CLUSTER_STATS_NAMESPACE,
     ENABLE_TELEMETRY,
     PROMETHEUS_ENABLED,
     ROBUSTA_TELEMETRY_ENDPOINT,
@@ -57,8 +58,12 @@ class TelemetryService:
             try:
                 tele = self.registry.get_telemetry()
 
-                current_nodes: NodeList = NodeList.listNode().obj
-                tele.nodes_count = len(current_nodes.items)
+                if CLUSTER_STATS_NAMESPACE:
+                    # nodes are cluster-scoped and cannot be listed by a namespace-scoped service account
+                    tele.nodes_count = 1
+                else:
+                    current_nodes: NodeList = NodeList.listNode().obj
+                    tele.nodes_count = len(current_nodes.items)
 
                 self.__log(tele)
 
