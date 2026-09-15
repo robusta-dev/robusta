@@ -203,6 +203,43 @@ class Discovery:
             ),
         )
 
+    # the labels the UI uses to locate the robusta-runner and Holmes deployments
+    # (fetchRobustaPods in robusta-frontend) - self-registration must match them
+    ROBUSTA_DEPLOYMENT_LABELS = (
+        ("app", "robusta-runner"),
+        ("robusta", "runner"),
+        ("app", "holmes"),
+        ("robusta", "holmes"),
+    )
+
+    @staticmethod
+    def discover_namespaced_robusta_services(namespace: str) -> List[ServiceInfo]:
+        """
+        Minimal self-registration for namespace-scoped runners (DISABLE_DISCOVERY set):
+        publish only the runner and Holmes deployments in the given namespace, so the
+        platform's agent status, pod listing and log links work without cluster-wide discovery.
+        """
+        deployments: V1DeploymentList = client.AppsV1Api().list_namespaced_deployment(namespace)
+        services: List[ServiceInfo] = []
+        for deployment in deployments.items:
+            labels = deployment.metadata.labels or {}
+            if not any(labels.get(key) == value for key, value in Discovery.ROBUSTA_DEPLOYMENT_LABELS):
+                continue
+            services.append(
+                Discovery.__create_service_info(
+                    deployment.metadata,
+                    "Deployment",
+                    extract_containers(deployment),
+                    extract_volumes(deployment),
+                    extract_total_pods(deployment),
+                    extract_ready_pods(deployment),
+                    is_helm_release=is_release_managed_by_helm(
+                        annotations=deployment.metadata.annotations, labels=deployment.metadata.labels
+                    ),
+                )
+            )
+        return services
+
     @staticmethod
     def count_resources(kind, api_group, version):
         if not api_group:

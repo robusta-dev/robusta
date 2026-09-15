@@ -21,11 +21,15 @@ What works and what doesn't
 In this mode the runner keeps working as a platform agent: it connects to the Robusta platform,
 reports cluster status (workload counts for its namespace, Kubernetes version, provider), answers
 UI requests for resources **in its namespace**, and can reach Holmes and an explicitly-configured
-Prometheus/Alertmanager.
+Prometheus/Alertmanager. The runner also **self-registers** its own and the Holmes deployments with
+the platform on the regular discovery cadence, so the UI's Agents page works — live status, pod
+states, uptime, and the log links — even though full discovery is off.
 
 The following are **not available** with a namespace-scoped service account:
 
-- Cluster-wide resource discovery (the UI's apps/nodes/namespaces inventory) — disabled via ``DISABLE_DISCOVERY``.
+- Cluster-wide resource discovery (the UI's apps/nodes/namespaces inventory) — disabled via
+  ``DISABLE_DISCOVERY``. Only the self-registered robusta-runner and Holmes deployments appear
+  under the cluster's services.
 - Kubernetes change tracking and ``on_kubernetes_*`` triggers — the kubewatch forwarder is disabled (see below).
 - Playbooks. This setup assumes **all playbooks are disabled**. Many built-in actions need
   cluster-scoped access (nodes, persistent volumes, cluster-wide events and pod listings) and will
@@ -110,7 +114,9 @@ installs — even with the same release name — cannot collide on cluster-scope
    * - ``CLUSTER_STATS_NAMESPACE``
      - the release namespace
      - Cluster-status workload counts are taken from this namespace only; the node count is
-       reported as ``1`` and telemetry skips node listing.
+       reported as ``1`` and telemetry skips node listing. Together with ``DISABLE_DISCOVERY``,
+       it also enables self-registration: the runner publishes its own and the Holmes deployments
+       from this namespace, keeping the UI's Agents page (status, pods, logs) working.
    * - ``NAMESPACE_DATA_MODE``
      - ``namespaced``
      - Namespace labels/annotations (used by sink scopes) are read only for the installation

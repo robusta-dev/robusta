@@ -186,3 +186,57 @@ def test_prometheus_value_query_quiet_when_no_prometheus_url():
     assert result is None
     mock_logging.exception.assert_not_called()
     mock_logging.debug.assert_called_once()
+
+
+def _deployment(name: str, labels: dict, replicas: int = 1, ready: int = 1):
+    from kubernetes.client import (
+        V1Container,
+        V1Deployment,
+        V1DeploymentSpec,
+        V1DeploymentStatus,
+        V1LabelSelector,
+        V1ObjectMeta,
+        V1PodSpec,
+        V1PodTemplateSpec,
+        V1ResourceRequirements,
+    )
+
+    return V1Deployment(
+        metadata=V1ObjectMeta(name=name, namespace="ns1", labels=labels, resource_version="7"),
+        spec=V1DeploymentSpec(
+            replicas=replicas,
+            selector=V1LabelSelector(match_labels=labels),
+            template=V1PodTemplateSpec(
+                metadata=V1ObjectMeta(labels=labels),
+                spec=V1PodSpec(
+                    containers=[V1Container(name="main", image="img:1", resources=V1ResourceRequirements())]
+                ),
+            ),
+        ),
+        status=V1DeploymentStatus(ready_replicas=ready),
+    )
+
+
+def test_discover_namespaced_robusta_services_self_registration():
+    deployments = MagicMock()
+    deployments.items = [
+        _deployment("robusta-runner", {"app": "robusta-runner"}),
+        _deployment("robusta-holmes", {"app": "holmes"}, replicas=2, ready=1),
+        _deployment("unrelated-app", {"app": "checkout"}),
+    ]
+    with patch("robusta.core.discovery.discovery.client") as mock_client:
+        apps = mock_client.AppsV1Api.return_value
+        apps.list_namespaced_deployment.return_value = deployments
+
+        services = Discovery.discover_namespaced_robusta_services("ns1")
+
+    apps.list_namespaced_deployment.assert_called_once_with("ns1")
+    assert [s.name for s in services] == ["robusta-runner", "robusta-holmes"]
+    for service in services:
+        assert service.namespace == "ns1"
+        assert service.service_type == "Deployment"
+    runner, holmes = services
+    assert runner.service_config.labels == {"app": "robusta-runner"}
+    assert holmes.service_config.labels == {"app": "holmes"}
+    assert holmes.total_pods == 2
+    assert holmes.ready_pods == 1
