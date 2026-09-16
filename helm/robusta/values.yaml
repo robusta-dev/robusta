@@ -33,6 +33,10 @@ clusterZone: ""
 
 global:
   clusterDomain: "cluster.local"
+  # base64 encoded CA bundle appended to the SSL trust store of the runner and
+  # Holmes. A component's own value (runner.certificate, holmes.certificate)
+  # overrides it.
+  certificate: ""
   # When true, Robusta components emit logs as JSON (one object per line) instead
   # of colored text, which is easier to index with log scrapers like Filebeat.
   # This is shared with subcharts (e.g. Holmes) automatically.

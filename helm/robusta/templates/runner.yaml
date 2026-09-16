@@ -142,7 +142,7 @@ spec:
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
-            value: {{ .Values.runner.certificate }}
+            value: {{ .Values.runner.certificate | default .Values.global.certificate }}
           - name: IMAGE_REGISTRY
             value: {{ .Values.image.registry }}
           - name: CLUSTER_DOMAIN

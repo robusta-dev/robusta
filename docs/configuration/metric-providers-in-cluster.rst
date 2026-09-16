@@ -123,3 +123,10 @@ If you have a custom Certificate Authority (CA) certificate, add one more settin
     runner:
         certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
 
+To trust the same CA in every Robusta component, including HolmesGPT, set it globally instead:
+
+.. code-block:: yaml
+
+    global:
+        certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
+
