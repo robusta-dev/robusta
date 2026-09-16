@@ -16,6 +16,7 @@ from robusta.core.discovery.utils import from_api_server_node
 from robusta.core.model.base_params import HolmesParams
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import (
+    CLUSTER_STATS_NAMESPACE,
     CLUSTER_STATUS_PERIOD_SEC,
     DISABLE_DISCOVERY,
     DISABLE_FINDINGS_PERSISTENCE,
@@ -399,6 +400,18 @@ class RobustaSink(SinkBase, EventHandler):
         
         return updated_namespaces
 
+    def __publish_scoped_services(self):
+        # publish only the robusta services - used for platform health features, like getting logs on errors
+        try:
+            services = Discovery.discover_namespaced_robusta_services(CLUSTER_STATS_NAMESPACE)
+            self.__assert_services_cache_initialized()
+            self.__publish_new_services(services)
+            RobustaSink.__save_resolver_resources(
+                list(self.__services_cache.values()), list((self.__jobs_cache or {}).values())
+            )
+        except Exception:
+            logging.error(f"Failed to publish scoped services for {self.sink_name}", exc_info=True)
+
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
         try:
@@ -654,6 +667,8 @@ class RobustaSink(SinkBase, EventHandler):
                     get_history = False
                 if discovery_results and discovery_results.helm_releases:
                     self.__send_helm_release_events(release_data=discovery_results.helm_releases)
+            elif CLUSTER_STATS_NAMESPACE:
+                self.__publish_scoped_services()
 
             duration = round(time.time() - start_t)
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)

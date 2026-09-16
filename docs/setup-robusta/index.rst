@@ -21,6 +21,7 @@
    openshift
    read-only-service-account
    rbac-namespace-scoping
+   rbac-namespace-scoped-runner
    node-selector
    proxies
    privacy-and-security
