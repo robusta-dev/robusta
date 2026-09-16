@@ -5,6 +5,8 @@ from typing import Dict, List, Optional
 
 from hikaru.model.rel_1_26 import Node, NodeList
 
+from robusta.core.model.env_vars import CLUSTER_PROVIDER_OVERRIDE
+
 
 class ClusterProviderType(str, Enum):
     GKE = "GKE"
@@ -16,6 +18,7 @@ class ClusterProviderType(str, Enum):
     Kapsule = "Kapsule"
     Kops = "Kops"
     DigitalOcean = "DigitalOcean"
+    OpenShift = "OpenShift"
     Unknown = "Unknown"
 
 
@@ -38,11 +41,26 @@ class ClusterProviderDiscovery:
     provider: ClusterProviderType = ClusterProviderType.Unknown
 
     def init_provider_discovery(self):
+        if CLUSTER_PROVIDER_OVERRIDE:
+            self.provider = self._provider_from_override(CLUSTER_PROVIDER_OVERRIDE)
+            logging.info(f"Using cluster provider from CLUSTER_PROVIDER env var: {self.provider}")
+            return
         try:
             self.provider = self._find_cluster_provider()
             logging.info(f"{self.provider} cluster discovered.")
         except Exception:
             logging.error("Error detecting cluster type", exc_info=True)
+
+    @staticmethod
+    def _provider_from_override(override: str) -> str:
+        for provider_type in ClusterProviderType:
+            if provider_type.value.lower() == override.lower():
+                return provider_type
+        logging.warning(
+            f"CLUSTER_PROVIDER value '{override}' is not one of the known providers "
+            f"({', '.join(p.value for p in ClusterProviderType)}); using it as-is."
+        )
+        return override
 
     def get_cluster_provider(self):
         return self.provider

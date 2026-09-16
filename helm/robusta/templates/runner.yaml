@@ -162,6 +162,21 @@ spec:
             value: {{ .Values.runner.customCRD | toJson | squote }}
             
           {{- end -}}
+          {{- if .Values.runner.rbac.namespaceScoped }}
+          # namespace-scoped runner defaults; entries in runner.additional_env_vars override them
+          - name: DISABLE_DISCOVERY
+            value: "true"
+          - name: CLUSTER_STATS_NAMESPACE
+            value: {{ .Release.Namespace | quote }}
+          - name: NAMESPACE_DATA_MODE
+            value: "namespaced"
+          - name: HOLMES_DISCOVERY_NAMESPACE
+            value: {{ .Release.Namespace | quote }}
+          - name: DISABLE_PROMETHEUS_DISCOVERY
+            value: "true"
+          - name: DISABLE_ALERTMANAGER_DISCOVERY
+            value: "true"
+          {{- end }}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}
