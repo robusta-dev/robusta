@@ -401,9 +401,7 @@ class RobustaSink(SinkBase, EventHandler):
         return updated_namespaces
 
     def __publish_scoped_services(self):
-        # minimal self-registration for namespace-scoped runners (DISABLE_DISCOVERY +
-        # CLUSTER_STATS_NAMESPACE): keep the runner and Holmes deployments in the platform's
-        # Services table so the UI's agent status, pod listing and log links keep working
+        # publish only the robusta services - used for platform health features, like getting logs on errors
         try:
             services = Discovery.discover_namespaced_robusta_services(CLUSTER_STATS_NAMESPACE)
             self.__assert_services_cache_initialized()
