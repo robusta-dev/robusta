@@ -155,8 +155,6 @@ class RobustaEvent:
         field_selector = f"regarding.kind={kind},regarding.name={name}"
         if namespace:
             field_selector += f",regarding.namespace={namespace}"
-            # events for a namespaced resource live in its namespace - list only there, so this
-            # also works for namespace-scoped runners that cannot list events at the cluster scope
             return EventList.listNamespacedEvent(namespace, field_selector=field_selector).obj
 
         return EventList.listEventForAllNamespaces(field_selector=field_selector).obj
