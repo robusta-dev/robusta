@@ -240,3 +240,44 @@ def test_discover_namespaced_robusta_services_self_registration():
     assert holmes.service_config.labels == {"app": "holmes"}
     assert holmes.total_pods == 2
     assert holmes.ready_pods == 1
+
+
+def test_get_resource_events_namespaced():
+    from robusta.core.playbooks.common import get_resource_events
+
+    with patch("robusta.core.playbooks.common.EventList") as mock_event_list:
+        mock_event_list.listNamespacedEvent.return_value.obj.items = []
+
+        events = get_resource_events(kind="Deployment", name="holmes", namespace="ns2")
+
+    assert events == []
+    mock_event_list.listNamespacedEvent.assert_called_once_with(
+        "ns2", field_selector="regarding.kind=Deployment,regarding.name=holmes,regarding.namespace=ns2"
+    )
+    mock_event_list.listEventForAllNamespaces.assert_not_called()
+
+
+def test_get_resource_events_cluster_scope_without_namespace():
+    from robusta.core.playbooks.common import get_resource_events
+
+    with patch("robusta.core.playbooks.common.EventList") as mock_event_list:
+        mock_event_list.listEventForAllNamespaces.return_value.obj.items = []
+
+        get_resource_events(kind="Node", name="node-1")
+
+    mock_event_list.listEventForAllNamespaces.assert_called_once_with(
+        field_selector="regarding.kind=Node,regarding.name=node-1"
+    )
+    mock_event_list.listNamespacedEvent.assert_not_called()
+
+
+def test_robusta_event_get_events_namespaced():
+    from robusta.integrations.kubernetes.custom_models import RobustaEvent
+
+    with patch("robusta.integrations.kubernetes.custom_models.EventList") as mock_event_list:
+        RobustaEvent.get_events(kind="Deployment", name="holmes", namespace="ns2")
+
+    mock_event_list.listNamespacedEvent.assert_called_once_with(
+        "ns2", field_selector="regarding.kind=Deployment,regarding.name=holmes,regarding.namespace=ns2"
+    )
+    mock_event_list.listEventForAllNamespaces.assert_not_called()

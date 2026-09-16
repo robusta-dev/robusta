@@ -166,9 +166,11 @@ Alternative: bring your own service account
 If your security process requires RBAC managed outside the chart, set
 ``runner.createServiceAccount: false`` (nothing RBAC-related is rendered) plus
 ``runner.customServiceAccount: <name>``, and create the ServiceAccount, a Role with the rules the
-runner needs (workload reads for cluster stats, ``configmaps`` ``get/create/update`` for the
-``scheduled-jobs`` scheduler state, ``services`` ``list`` for Holmes discovery, ``namespaces``
-``get`` for ``NAMESPACE_DATA_MODE=namespaced``) and a RoleBinding yourself. In that setup also set
+runner needs (workload reads for cluster stats and self-registration, ``configmaps``
+``get/create/update`` for the ``scheduled-jobs`` scheduler state, ``services`` ``list`` for Holmes
+discovery, ``namespaces`` ``get`` for ``NAMESPACE_DATA_MODE=namespaced``, and ``events``
+``get/list`` in **both** the ``""`` core and ``events.k8s.io`` API groups for resource event
+enrichment) and a RoleBinding yourself. In that setup also set
 the environment variables from the table above yourself via ``runner.additional_env_vars`` — the
 presets come from ``runner.rbac.namespaceScoped``, which you may still enable together with a
 custom service account.
