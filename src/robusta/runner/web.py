@@ -10,8 +10,11 @@ from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.clients.robusta_client import fetch_runner_info
+import hmac
+
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
-    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR, ENABLE_TELEMETRY
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR, ENABLE_TELEMETRY, \
+    RUNNER_API_TOKEN
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -23,6 +26,36 @@ from robusta.utils.task_queue import QueueMetrics, TaskQueue
 
 app = Flask(__name__)
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
+
+# /healthz must stay reachable with no credential for k8s liveness/readiness
+# probes. /metrics is served by the DispatcherMiddleware above and never
+# reaches Flask's own routing, so it is unaffected by this hook either way.
+_UNAUTHENTICATED_PATHS = {"/healthz"}
+
+
+@app.before_request
+def _require_runner_api_token():
+    if request.path in _UNAUTHENTICATED_PATHS:
+        return None
+
+    if not RUNNER_API_TOKEN:
+        # No token configured: fail closed rather than silently accepting
+        # every request, since these endpoints execute playbook actions
+        # (including destructive ones like node drain/cordon and rollout
+        # restarts) with no other authorization check. The Helm chart
+        # generates and injects RUNNER_API_TOKEN by default.
+        logging.error(
+            "RUNNER_API_TOKEN is not configured; refusing request to %s. "
+            "Set RUNNER_API_TOKEN (the Helm chart does this automatically).",
+            request.path,
+        )
+        abort(503, description="Runner API token is not configured")
+
+    auth_header = request.headers.get("Authorization", "")
+    scheme, _, presented = auth_header.partition(" ")
+    if scheme != "Bearer" or not presented or not hmac.compare_digest(presented, RUNNER_API_TOKEN):
+        abort(401, description="missing or invalid Authorization header")
+    return None
 
 
 class Web:
