@@ -87,13 +87,32 @@ def test_table_block_uses_expandable_blockquote_and_escapes_cells():
     html = table_block_to_telegram_html(block)
     assert "<blockquote expandable>" in html
     assert "</blockquote>" in html
-    assert "<pre>" in html
+    # Telegram HTML rejects <pre>/<code>/<a> inside expandable blockquotes.
+    assert "<pre>" not in html
+    assert "<code>" not in html
+    assert "<a " not in html
     assert "&amp;" in html
     assert "<b>Labels</b>" in html
     label_at = html.find("<b>Labels</b>")
     quote_at = html.find("<blockquote expandable>")
     assert quote_at != -1 and label_at != -1
     assert quote_at < label_at < html.find("</blockquote>")
+
+
+def test_table_block_label_stays_bold_text_without_nested_entities():
+    block = TableBlock(
+        rows=[["x", "y < z"]],
+        headers=["a", "b"],
+        table_name="*See `code` and [docs](https://example.com/?q=a&b=1)*",
+    )
+    html = table_block_to_telegram_html(block)
+    assert html.startswith("<blockquote expandable><b>")
+    assert "</blockquote>" in html
+    assert "<pre>" not in html
+    assert "<code>" not in html
+    assert "<a " not in html
+    assert "<b>See `code` and [docs](https://example.com/?q=a&amp;b=1)</b>" in html
+    assert "y &lt; z" in html
 
 
 def test_should_not_send_document_for_text_under_1kb():

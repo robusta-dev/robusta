@@ -107,11 +107,20 @@ def markdown_to_telegram_html(text: str) -> str:
 
 
 def table_block_to_telegram_html(block: TableBlock) -> str:
-    """Render a TableBlock as a collapsible Telegram quote."""
-    table_text = tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
-    body = f"<pre>{escape_telegram_html(table_text)}</pre>"
+    """Render a TableBlock as a collapsible Telegram quote.
+
+    Telegram HTML rejects <pre>, <code>, and <a> nested inside
+    <blockquote expandable>, so the table is escaped plain text and the
+    label is bold only.
+    """
+    body = escape_telegram_html(
+        tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
+    )
     if block.table_name:
-        body = f"{markdown_to_telegram_html(block.table_name)}\n{body}"
+        # Strip Slack-style *bold* markers; do not run markdown_to_telegram_html
+        # (it can emit <code>/<a>, which Telegram rejects inside blockquotes).
+        label = block.table_name.strip("*")
+        body = f"<b>{escape_telegram_html(label)}</b>\n{body}"
     return f"<blockquote expandable>{body}</blockquote>"
 
 
