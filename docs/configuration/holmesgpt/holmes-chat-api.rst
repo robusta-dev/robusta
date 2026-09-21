@@ -24,7 +24,7 @@ URL Parameters
      - Required
    * - ``account_id``
      - string
-     - The unique account identifier (found in your ``generated_values.yaml`` file).
+     - The unique account identifier (found in the Robusta UI under **Settings** -> **General**).
      - Yes
 
 Request Body
@@ -84,7 +84,7 @@ The following ``curl`` command demonstrates how to ask Holmes about a failing po
 
 In the command, make sure to replace the following placeholders:
 
-- ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
+- ``ACCOUNT_ID``: Your account ID, which can be found in the Robusta UI under **Settings** -> **General**.
 - ``API-KEY``: Your API Key for authentication. You can generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Robusta AI" resource and "Write" permission.
 
 Request Headers

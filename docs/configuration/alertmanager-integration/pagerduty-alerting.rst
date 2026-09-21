@@ -29,7 +29,7 @@ Step 1: Create a Robusta API Key
 
 Step 2: Get Your Account ID
 -------------------------------
-1. From your Robusta ``generated_values.yaml`` file, locate and copy the ``account_id``.
+1. In the Robusta UI, go to **Settings → General** and copy your ``account_id``.
    It will look like:
 
 .. code-block::
