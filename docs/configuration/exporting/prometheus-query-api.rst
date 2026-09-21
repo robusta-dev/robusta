@@ -28,7 +28,7 @@ Path Parameters
      - Description
    * - account_id
      - Yes
-     - Your Robusta account ID (found in generated_values.yaml as ``globalConfig.account_id``)
+     - Your Robusta account ID (found in the Robusta UI under **Settings** -> **General**)
    * - cluster_name
      - Yes
      - The name of the cluster to query (as shown in the Robusta UI)

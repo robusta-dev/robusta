@@ -20,7 +20,7 @@ Send Grafana alerts to Robusta's Timeline for visualization and AI investigation
 
 To configure it:
 
-1. Get your Robusta ``account_id`` from your ``generated_values.yaml`` file. It appears under the ``globalConfig`` section.
+1. Get your Robusta ``account_id`` from the Robusta UI under **Settings → General**.
 
 2. Create an ``api key``
 

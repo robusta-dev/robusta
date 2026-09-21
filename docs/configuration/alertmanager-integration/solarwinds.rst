@@ -17,7 +17,7 @@ Requirements
 Step 1: Get Your Account ID
 ---------------------------
 
-You can find your Robusta `account_id` in your `generated_values.yaml` file you used to install robusta.
+You can find your Robusta `account_id` in the Robusta UI under **Settings → General**.
 
 Step 2: Generate an API Token
 -----------------------------

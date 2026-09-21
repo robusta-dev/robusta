@@ -22,8 +22,7 @@ Prerequisites
 -------------
 
 * A Robusta account with API access.
-* Your Robusta ``account_id``, found in ``generated_values.yaml`` or
-  under **Settings → Workspace** in the Robusta UI.
+* Your Robusta ``account_id``, found in the Robusta UI under **Settings → General**.
 * A Robusta API key with ``Read/Write`` access to alerts, generated
   under **Settings → API Keys → New API Key**.
 * Sentry **Owner** or **Manager** role on the org (lower roles can't

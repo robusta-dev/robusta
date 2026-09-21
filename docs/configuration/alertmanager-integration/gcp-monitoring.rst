@@ -24,10 +24,7 @@ Step 1: Get Robusta Account ID and API Key
 1. In the Robusta UI, go to **Settings -> API Keys**.
 2. Click **New API Key**, select **Alerts: Write** permissions, and **Save**.
 3. Copy the generated API key — you will use it as the password for basic authentication.
-4. Find your ``account_id``:
-
-   - In Robusta, the ``account_id`` appears in your **generated_values.yaml** file (from installation), or
-   - In the Robusta UI under **Settings -> Workspace**.
+4. Find your ``account_id`` in the Robusta UI under **Settings -> General**.
 
 Step 2: Create a Webhook Notification Channel in GCP
 ----------------------------------------------------
