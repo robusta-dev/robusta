@@ -20,12 +20,6 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
    alertmanager-integration/victoria-metrics
    alertmanager-integration/customize-labels-priorities
 
-Programmatic Integration
--------------------------
-
-.. grid:: 1 1 2 3
-    :gutter: 3
-
 Prometheus & AlertManager
 --------------------------
 
@@ -66,12 +60,6 @@ Prometheus & AlertManager
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/victoria-metrics
         :link-type: doc
-
-Other
-------
-
-.. grid:: 1 1 2 3
-    :gutter: 3
 
 Advanced
 ---------

@@ -3,10 +3,6 @@
 .. toctree::
    :hidden:
 
-
-.. toctree::
-   :hidden:
-
    gitops/index
 
 .. toctree::
