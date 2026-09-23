@@ -3,7 +3,6 @@
 .. toctree::
    :hidden:
 
-   installation/index
 
 .. toctree::
    :hidden:
@@ -13,7 +12,6 @@
 .. toctree::
    :hidden:
 
-   multi-cluster
    upgrade
    tuning-performance
    json-logging
@@ -24,7 +22,5 @@
    rbac-namespace-scoped-runner
    node-selector
    proxies
-   privacy-and-security
-   installation-faq
    
    

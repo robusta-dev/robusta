@@ -11,27 +11,14 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
    :maxdepth: 1
    :hidden:
 
-   exporting/send-alerts-api
-   exporting/configuration-changes-api
-   alertmanager-integration/outofcluster-prometheus
    alertmanager-integration/alert-manager
    alertmanager-integration/eks-managed-prometheus
-   alertmanager-integration/azure-managed-prometheus
    alertmanager-integration/coralogix_managed_prometheus
    alertmanager-integration/embedded-prometheus
    alertmanager-integration/google-managed-prometheus
    alertmanager-integration/google-managed-alertmanager
-   alertmanager-integration/grafana-self-hosted
-   alertmanager-integration/grafana-cloud
    alertmanager-integration/victoria-metrics
-   alertmanager-integration/dynatrace
-   alertmanager-integration/gcp-monitoring
-   alertmanager-integration/nagios
-   alertmanager-integration/newrelic
-   alertmanager-integration/pagerduty-alerting
-   alertmanager-integration/solarwinds
    alertmanager-integration/customize-labels-priorities
-   exporting/custom-webhooks
 
 Programmatic Integration
 -------------------------
@@ -39,30 +26,11 @@ Programmatic Integration
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`code;1em;` Send Alerts API
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: exporting/send-alerts-api
-        :link-type: doc
-
-        Send alerts programmatically via the legacy ``/api/alerts`` REST endpoint.
-
-    .. grid-item-card:: :octicon:`code;1em;` Configuration Changes API
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: exporting/configuration-changes-api
-        :link-type: doc
-
-        Send configuration changes programmatically via the legacy REST endpoint.
-
 Prometheus & AlertManager
 --------------------------
 
 .. grid:: 1 1 2 3
     :gutter: 3
-
-    .. grid-item-card:: :octicon:`pulse;1em;` AlertManager - external
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/outofcluster-prometheus
-        :link-type: doc
 
     .. grid-item-card:: :octicon:`pulse;1em;` AlertManager - in-cluster
         :class-card: sd-bg-light sd-bg-text-light
@@ -72,11 +40,6 @@ Prometheus & AlertManager
     .. grid-item-card:: :octicon:`pulse;1em;` AWS Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/eks-managed-prometheus
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` Azure Managed Prometheus
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/azure-managed-prometheus
         :link-type: doc
 
     .. grid-item-card:: :octicon:`pulse;1em;` Coralogix
@@ -99,16 +62,6 @@ Prometheus & AlertManager
         :link: alertmanager-integration/google-managed-alertmanager
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`pulse;1em;` Grafana - Self-Hosted
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/grafana-self-hosted
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` Grafana Cloud
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/grafana-cloud
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`pulse;1em;` VictoriaMetrics
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/victoria-metrics
@@ -120,36 +73,6 @@ Other
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`pulse;1em;` Dynatrace
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/dynatrace
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` GCP Cloud Monitoring
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/gcp-monitoring
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` Nagios
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/nagios
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` New Relic
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/newrelic
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` PagerDuty
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/pagerduty-alerting
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` SolarWinds
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/solarwinds
-        :link-type: doc
-
 Advanced
 ---------
 
@@ -159,9 +82,4 @@ Advanced
     .. grid-item-card:: :octicon:`tools;1em;` Customize Labels & Priorities
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/customize-labels-priorities
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`plug;1em;` Other - Custom Webhooks
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: exporting/custom-webhooks
         :link-type: doc
