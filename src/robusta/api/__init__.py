@@ -191,6 +191,7 @@ from robusta.core.reporting.consts import (
     ScanType,
     SlackAnnotations,
 )
+from robusta.core.reporting.charts import BarChart, ChartStyle, TreemapChart, XYChart
 from robusta.core.reporting.custom_rendering import RendererType, charts_style, render_value
 from robusta.core.reporting.finding_subjects import KubeObjFindingSubject, PodFindingSubject
 from robusta.core.reporting.holmes import HolmesRequest, HolmesResult, HolmesResultsBlock

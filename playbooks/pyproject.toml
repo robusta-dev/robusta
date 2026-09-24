@@ -17,7 +17,6 @@ include_trailing_comma = true
 python = "^3.7.1"
 Flask = "^2.0.2"
 prometheus-api-client = "^0.5.4"
-pygal = "^3.0.0"
 tinycss = "^0.4"
 cssselect = "^1.1.0"
 rsa = "^4.8"
