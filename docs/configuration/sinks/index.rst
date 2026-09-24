@@ -39,11 +39,6 @@ Click a sink for setup instructions.
         :link: ms-teams
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Robusta UI
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: RobustaUI
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`cpu;1em;` Telegram
         :class-card: sd-bg-light sd-bg-text-light
         :link: telegram
