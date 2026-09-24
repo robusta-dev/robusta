@@ -32,6 +32,7 @@ Below there are three alternatives ways to enrich the alert with links. Apply th
     - button_enricher:
         button_text: "Playbook for ${team}"
         button_url: "https://playbook-url/team/${team}"
+        required_label: "team"
 
 
 .. code-annotations::
