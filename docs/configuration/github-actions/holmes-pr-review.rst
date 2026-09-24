@@ -41,7 +41,7 @@ Give the key a descriptive name (for example, ``HolmesGPT github action``) and c
 Step 2: Get Your Account ID and Cluster ID
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the Robusta Platform, navigate to **Settings** → **Workspace** and copy your **Account ID**.
+In the Robusta Platform, navigate to **Settings** → **General** and copy your **Account ID**.
 
 Then pick the cluster HolmesGPT should run the investigation on and copy its **Cluster ID**. Any cluster connected to your account can be used — HolmesGPT will use its data sources (logs, metrics, Kubernetes state, etc.) from that cluster when reviewing the PR.
 

@@ -7,7 +7,7 @@ Prerequisites
 -------------
 
 * A Robusta account with API access.
-* Your Robusta ``account_id``, found in ``generated_values.yaml``.
+* Your Robusta ``account_id``, found in the Robusta UI under **Settings → General**.
 * A Robusta API key with ``Read/Write`` access to alerts.
 * Grafana 9.0+ with Grafana-managed alerting enabled.
 

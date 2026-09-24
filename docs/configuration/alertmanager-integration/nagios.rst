@@ -31,7 +31,7 @@ We will configure:
 Step 1: Get Account ID and Token
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Obtain your Robusta `account_id` from your `generated_values.yaml`.
+Obtain your Robusta `account_id` from the Robusta UI under **Settings → General**.
 
 To generate an API token:
 

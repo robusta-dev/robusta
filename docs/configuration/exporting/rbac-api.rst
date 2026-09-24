@@ -28,7 +28,7 @@ Before using the RBAC API, you need:
 
 2. **Account ID**
 
-   Find at: https://platform.robusta.dev/settings#workspace
+   Find at: https://platform.robusta.dev/settings/general
 
 Authentication
 --------------
