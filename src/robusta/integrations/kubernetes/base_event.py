@@ -26,6 +26,8 @@ class K8sBaseChangeEvent(ExecutionBaseEvent):
         return Finding(
             title=title,
             aggregation_key="GenericChange",
+            subject=self.get_subject(),
+            source=self.get_source(),
         )
 
     @classmethod
