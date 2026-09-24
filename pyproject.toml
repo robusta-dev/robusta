@@ -153,8 +153,8 @@ all = ["Flask", "grafana-api", "watchdog", "better-exceptions", "tabulate", "kaf
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 sphinx-reredirects = "^0.1.1"
 freezegun = "^1.4.0"
-# Bump to fix CVE-2026-49853, CVE-2026-49855 (High) and GHSA-pw6j-qg29-8w7f (Medium)
-tornado = "^6.5.7"
+# Bump to fix CVE-2026-82397 (High)
+tornado = "^6.5.8"
 responses = "^0.25.7"
 
 [build-system]
