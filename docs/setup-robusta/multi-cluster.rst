@@ -33,9 +33,9 @@ If you lost your ``generated_values.yaml`` file, you can extract it from any clu
 
 .. code-block:: bash
 
-    helm get values -o yaml robusta | grep -v clusterName: | grep -v isSmallCluster: > generated_values.yaml
+    helm get values -o yaml robusta | grep -v clusterName: | grep -v clusterSize: | grep -v isSmallCluster: > generated_values.yaml
 
 .. note::
 
-      The above command strips the ``clusterName`` and ``isSmallCluster`` options so you don't copy them accidentally.
+      The above command strips the ``clusterName``, ``clusterSize``, and ``isSmallCluster`` options so you don't copy them accidentally.
       These options should be determined on a cluster by cluster basis.
