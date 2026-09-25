@@ -1,19 +1,24 @@
 import logging
 import os
-from typing import Union
+from typing import Optional, Union
 
 import requests
 
 from robusta.core.reporting.utils import PNG_SUFFIX, SVG_SUFFIX, convert_svg_to_png, is_image
 
 TELEGRAM_BASE_URL = os.environ.get("TELEGRAM_BASE_URL", "https://api.telegram.org")
+# guard the notification path against a slow/unreachable Telegram API hanging the sink
+TELEGRAM_REQUEST_TIMEOUT_SECONDS = 30
 
 
 class TelegramClient:
-    def __init__(self, chat_id: Union[int, str], thread_id: int, bot_token: str):
+    def __init__(
+        self, chat_id: Union[int, str], thread_id: int, bot_token: str, parse_mode: Optional[str] = "MarkdownV2"
+    ):
         self.chat_id = int(chat_id)
         self.thread_id = thread_id
         self.bot_token = bot_token
+        self.parse_mode = parse_mode
 
     def send_message(self, message: str, disable_links_preview: bool = True):
         url = f"{TELEGRAM_BASE_URL}/bot{self.bot_token}/sendMessage"
@@ -21,10 +26,11 @@ class TelegramClient:
             "chat_id": self.chat_id,
             "message_thread_id": self.thread_id,
             "disable_web_page_preview": disable_links_preview,
-            "parse_mode": "Markdown",
             "text": message,
         }
-        response = requests.post(url, json=message_json)
+        if self.parse_mode is not None:
+            message_json["parse_mode"] = self.parse_mode
+        response = requests.post(url, json=message_json, timeout=TELEGRAM_REQUEST_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             logging.error(
@@ -39,7 +45,7 @@ class TelegramClient:
             file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
 
         files = {file_type.lower(): (file_name, contents)}
-        response = requests.post(url, files=files)
+        response = requests.post(url, files=files, timeout=TELEGRAM_REQUEST_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             logging.error(
