@@ -29,6 +29,7 @@ from robusta.core.sinks.victorops import VictoropsConfigWrapper, VictoropsSink
 from robusta.core.sinks.webex import WebexSink, WebexSinkConfigWrapper
 from robusta.core.sinks.webhook import WebhookSink, WebhookSinkConfigWrapper
 from robusta.core.sinks.yamessenger import YaMessengerSink, YaMessengerSinkConfigWrapper
+from robusta.core.sinks.plivo import PlivoSink, PlivoSinkConfigWrapper
 from robusta.core.sinks.pushover import PushoverSink, PushoverSinkConfigWrapper
 from robusta.core.sinks.zulip import ZulipSink, ZulipSinkConfigWrapper
 from robusta.core.sinks.incidentio.incidentio_sink import IncidentioSink
@@ -56,6 +57,7 @@ class SinkFactory:
         FileSinkConfigWrapper: FileSink,
         MailSinkConfigWrapper: MailSink,
         PushoverSinkConfigWrapper: PushoverSink,
+        PlivoSinkConfigWrapper: PlivoSink,
         GoogleChatSinkConfigWrapper: GoogleChatSink,
         ServiceNowSinkConfigWrapper: ServiceNowSink,
         ZulipSinkConfigWrapper: ZulipSink,

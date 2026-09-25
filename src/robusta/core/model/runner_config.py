@@ -25,6 +25,7 @@ from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWr
 from robusta.core.sinks.webex.webex_sink_params import WebexSinkConfigWrapper
 from robusta.core.sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
 from robusta.core.sinks.yamessenger.yamessenger_sink_params import YaMessengerSinkConfigWrapper
+from robusta.core.sinks.plivo.plivo_sink_params import PlivoSinkConfigWrapper
 from robusta.core.sinks.pushover.pushover_sink_params import PushoverSinkConfigWrapper
 from robusta.core.sinks.zulip.zulip_sink_params import ZulipSinkConfigWrapper
 from robusta.model.alert_relabel_config import AlertRelabel
@@ -74,6 +75,7 @@ class RunnerConfig(BaseModel):
                 FileSinkConfigWrapper,
                 MailSinkConfigWrapper,
                 PushoverSinkConfigWrapper,
+                PlivoSinkConfigWrapper,
                 GoogleChatSinkConfigWrapper,
                 ServiceNowSinkConfigWrapper,
                 ZulipSinkConfigWrapper,
