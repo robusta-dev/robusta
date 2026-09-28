@@ -15,6 +15,24 @@ jobs:
       - uses: actions/setup-python@v6
       - uses: pre-commit/action@v3.0.1
 
+  # The release packages the committed helm/robusta/charts/ as-is, so a
+  # dependency bumped in Chart.yaml ships only if Chart.lock and the vendored
+  # subchart were regenerated with it.
+  helm-dependencies:
+    name: Helm dependencies match Chart.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.16.4
+      - name: Regenerate and compare
+        run: |
+          helm dependency update helm/robusta
+          git add -A helm/robusta
+          git diff --cached --exit-code --stat -I '^generated:' -- helm/robusta \
+            || { echo "::error::Run 'helm dependency update helm/robusta' and commit the result"; exit 1; }
+
   run_tests:
     needs: check
     runs-on: ubuntu-latest
