@@ -44,15 +44,13 @@ Configure Datadog
          "org": {"id": "$ORG_ID", "name": "$ORG_NAME"},
          "id": "$ID",
          "tags": "$TAGS",
-         "alert_id": "$ALERT_ID",
          "aggreg_key": "$AGGREG_KEY",
          "alert_transition": "$ALERT_TRANSITION"
        }
 
-   This is Datadog's default payload plus four fields:
+   This is Datadog's default payload plus three fields:
 
    * ``tags``: cluster, namespace, and the affected Kubernetes resource (for example ``kube_deployment``, ``kube_stateful_set`` or ``pod_name``).
-   * ``alert_id``: the monitor id, so recurring alerts from the same monitor are grouped together automatically.
    * ``aggreg_key``: links a recovery to the alert it resolves.
    * ``alert_transition``: tells Robusta whether the alert is firing or recovered.
 
