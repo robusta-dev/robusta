@@ -1,11 +1,11 @@
 import os
-import tomllib
+
+import toml
 
 
 def _poetry_dependencies():
     pyproject = os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")
-    with open(pyproject, "rb") as f:
-        return tomllib.load(f)["tool"]["poetry"]["dependencies"]
+    return toml.load(pyproject)["tool"]["poetry"]["dependencies"]
 
 
 def test_cachetools_is_a_direct_dependency():
