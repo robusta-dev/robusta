@@ -26,6 +26,7 @@ jobs:
       - uses: azure/setup-helm@v4.3.1
         with:
           version: v3.16.4
+      # `generated:` is Chart.lock's regeneration timestamp, new on every run.
       - name: Regenerate and compare
         run: |
           helm dependency update helm/robusta
