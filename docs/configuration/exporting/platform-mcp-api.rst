@@ -41,14 +41,44 @@ The key must have the **Robusta AI: Write** permission. You can generate this to
 Example Request
 ^^^^^^^^^^^^^^^
 
+A real MCP client opens every session with the standard ``initialize`` / ``notifications/initialized`` handshake before calling any tool method. The endpoint itself is stateless — it does not issue or check a session ID between requests — but showing the full sequence here keeps this example valid input for any spec-compliant MCP client, not just this server.
+
 .. robusta-code:: bash
 
     curl -X POST 'https://api.robusta.dev/api/platform-mcp' \
     --header 'Content-Type: application/json' \
+    --header 'Accept: application/json, text/event-stream' \
+    --header 'MCP-Protocol-Version: 2025-03-26' \
     --header 'Authorization: Bearer ACCOUNT_ID API-KEY' \
     --data '{
         "jsonrpc": "2.0",
         "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2025-03-26",
+            "capabilities": {},
+            "clientInfo": {"name": "example-client", "version": "1.0.0"}
+        }
+    }'
+
+    curl -X POST 'https://api.robusta.dev/api/platform-mcp' \
+    --header 'Content-Type: application/json' \
+    --header 'Accept: application/json, text/event-stream' \
+    --header 'MCP-Protocol-Version: 2025-03-26' \
+    --header 'Authorization: Bearer ACCOUNT_ID API-KEY' \
+    --data '{
+        "jsonrpc": "2.0",
+        "method": "notifications/initialized"
+    }'
+
+    curl -X POST 'https://api.robusta.dev/api/platform-mcp' \
+    --header 'Content-Type: application/json' \
+    --header 'Accept: application/json, text/event-stream' \
+    --header 'MCP-Protocol-Version: 2025-03-26' \
+    --header 'Authorization: Bearer ACCOUNT_ID API-KEY' \
+    --data '{
+        "jsonrpc": "2.0",
+        "id": 2,
         "method": "tools/list"
     }'
 
