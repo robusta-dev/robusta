@@ -147,9 +147,10 @@ def test_namespace_scoped_rbac_renders_role_and_rolebinding():
     assert get_doc(docs, "Role", "runner-local-role") is not None
 
 
-# Rules a namespace admin does not hold, so the API server rejects a Role containing them
-# ("attempting to grant RBAC permissions not currently held"), though a Role grants nothing for them.
+# Rules the built-in "admin" ClusterRole does not hold, so the API server rejects a Role containing
+# them when a namespace admin installs ("attempting to grant RBAC permissions not currently held").
 UNGRANTABLE_IN_ROLE = {
+    ("events.k8s.io", "events"),
     ("", "nodes"),
     ("", "persistentvolumes"),
     ("", "daemonsets"),
@@ -185,6 +186,11 @@ def test_namespace_scoped_role_has_no_cluster_scoped_rules(extra_args):
     assert not granted & UNGRANTABLE_IN_ROLE
     assert not any(g == "extensions" for g, _ in granted)
     assert not any("nonResourceURLs" in r for r in role["rules"])
+    for r in role["rules"]:
+        if {"pods/log", "pods/status"} & set(r["resources"]):
+            assert set(r["verbs"]) <= {"get", "list", "watch"}
+    crd_groups = {"argoproj.io", "source.toolkit.fluxcd.io", "kafka.strimzi.io", "keda.sh", "velero.io"}
+    assert not any(g in crd_groups for g, _ in granted)
     namespace_rules = [r for r in role["rules"] if "namespaces" in r["resources"]]
     assert namespace_rules == [{"apiGroups": [""], "resources": ["namespaces"], "verbs": ["get"]}]
 

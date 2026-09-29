@@ -81,7 +81,26 @@ Then install:
     helm upgrade --install robusta robusta/robusta \
       -f generated_values.yaml \
       -f scoped-values.yaml \
-      -n robusta --create-namespace
+      -n robusta --skip-crds
+
+``--skip-crds`` skips the Holmes operator CRDs bundled with the chart, which only a cluster admin
+can create (the operator is off by default). Leave out ``--create-namespace`` if the namespace
+already exists and you have no cluster access.
+
+Holmes
+^^^^^^
+
+The Holmes subchart renders its own ClusterRole and ClusterRoleBinding. Without cluster access,
+create a namespaced ServiceAccount, read-only Role and RoleBinding for it in the namespace
+(``kubectl apply -n robusta -f holmes-rbac.yaml``) and point the chart at it:
+
+.. code-block:: yaml
+
+    holmes:
+      createServiceAccount: false        # the subchart then renders no RBAC
+      customServiceAccountName: robusta-holmes-service-account
+
+Holmes can then only read the installation namespace.
 
 For multiple instances, repeat per namespace with a **unique** ``clusterName`` per install (each
 instance appears as its own cluster in the Robusta platform).
@@ -140,13 +159,15 @@ installs — even with the same release name — cannot collide on cluster-scope
 
 .. note::
 
-    The Role carries the default ClusterRole's rules **minus** entries a Role cannot grant anyway:
-    cluster-scoped resources (``nodes``, ``persistentvolumes``, CRDs, ``clusterroles``, ...),
-    resources not served from the API group they are listed under (the ``extensions`` group, ``daemonsets`` in
-    the core group) and ``nonResourceURLs``. The same filter applies to
-    ``customClusterRoleRules`` and ``overrideClusterRoles``. Kubernetes only lets you create a Role
-    whose permissions you already hold, so this keeps the chart installable by a user who is admin
-    of the namespace only, without cluster-wide rights.
+    Kubernetes only lets you create a Role whose permissions you already hold, so the Role is
+    kept within the built-in ``admin`` ClusterRole: a user who is admin of the namespace only can
+    install it. Compared with the default ClusterRole it leaves out cluster-scoped resources
+    (``nodes``, ``persistentvolumes``, CRDs, ``clusterroles``, ...), resources not served from the
+    API group they are listed under (the ``extensions`` group, ``daemonsets`` in the core group),
+    ``nonResourceURLs``, ``events.k8s.io`` events (core events are still read), writes to
+    ``pods/log`` and ``pods/status``, and the ``runner.crdPermissions`` groups (Argo, Flux, Kafka,
+    ...). The same filter applies to ``customClusterRoleRules`` and ``overrideClusterRoles``, except
+    that CRD groups you add there are kept: add the CRD reads you hold that way.
 
 .. note::
 
