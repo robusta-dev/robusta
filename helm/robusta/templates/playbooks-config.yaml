@@ -6,4 +6,4 @@ metadata:
 type: Opaque
 data:
   active_playbooks.yaml: |-
-    {{ include "robusta.configfile" . | b64enc }}
+    {{ include (ternary "robusta.configfile" "robusta.holmesOnlyConfigfile" (dig "enabled" true .Values.runner)) . | b64enc }}
