@@ -90,7 +90,7 @@ What ``runner.rbac.namespaceScoped`` does
 -----------------------------------------
 
 **RBAC** — instead of ``<release>-runner-cluster-role`` (ClusterRole) + ClusterRoleBinding, the
-chart renders ``<release>-runner-role`` (a namespaced ``Role`` with the same rules) bound by a
+chart renders ``<release>-runner-role`` (a namespaced ``Role`` with the namespaced subset of the rules) bound by a
 ``RoleBinding`` in the release namespace. The ServiceAccount and the namespaced create-permissions
 Role (``<release>-runner-local-role``) are unchanged. Because a Role is namespaced, multiple
 installs — even with the same release name — cannot collide on cluster-scoped RBAC objects.
@@ -140,11 +140,13 @@ installs — even with the same release name — cannot collide on cluster-scope
 
 .. note::
 
-    The Role carries the same rules as the default ClusterRole, so cluster-scoped entries in it
-    (``nodes``, ``persistentvolumes``, ...) are legal but grant nothing — a RoleBinding
-    structurally cannot grant cluster-scoped access. One side effect: ``kubectl auth can-i list
-    nodes -n <ns>`` may answer ``yes`` even though a real ``kubectl get nodes`` is denied; check
-    without ``-n`` (as in the verification below) for the true answer.
+    The Role carries the default ClusterRole's rules **minus** entries a Role cannot grant anyway:
+    cluster-scoped resources (``nodes``, ``persistentvolumes``, CRDs, ``clusterroles``, ...),
+    resources not served from the API group they are listed under (the ``extensions`` group, ``daemonsets`` in
+    the core group) and ``nonResourceURLs``. The same filter applies to
+    ``customClusterRoleRules`` and ``overrideClusterRoles``. Kubernetes only lets you create a Role
+    whose permissions you already hold, so this keeps the chart installable by a user who is admin
+    of the namespace only, without cluster-wide rights.
 
 .. note::
 

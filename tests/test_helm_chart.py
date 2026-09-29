@@ -147,6 +147,77 @@ def test_namespace_scoped_rbac_renders_role_and_rolebinding():
     assert get_doc(docs, "Role", "runner-local-role") is not None
 
 
+# Rules a namespace admin does not hold, so the API server rejects a Role containing them
+# ("attempting to grant RBAC permissions not currently held"), though a Role grants nothing for them.
+UNGRANTABLE_IN_ROLE = {
+    ("", "nodes"),
+    ("", "persistentvolumes"),
+    ("", "daemonsets"),
+    ("", "deployments"),
+    ("", "replicasets"),
+    ("apiextensions.k8s.io", "customresourcedefinitions"),
+    ("apiregistration.k8s.io", "apiservices"),
+    ("rbac.authorization.k8s.io", "clusterroles"),
+    ("rbac.authorization.k8s.io", "clusterrolebindings"),
+    ("policy", "podsecuritypolicies"),
+    ("gateway.networking.k8s.io", "gatewayclasses"),
+    ("keda.sh", "clustertriggerauthentications"),
+    ("external-secrets.io", "clustersecretstores"),
+}
+
+
+@pytest.mark.parametrize(
+    "extra_args",
+    [
+        [],
+        ["--set", "openshift.enabled=true"]
+        + [
+            arg
+            for crd in ["argo", "flux", "kafka", "keda", "crossplane", "istio", "gatewayApi", "velero", "externalSecrets"]
+            for arg in ["--set", f"runner.crdPermissions.{crd}=true"]
+        ],
+    ],
+)
+def test_namespace_scoped_role_has_no_cluster_scoped_rules(extra_args):
+    docs = render_chart(["--set", "runner.rbac.namespaceScoped=true"] + extra_args)
+    role = get_doc(docs, "Role", "runner-role")
+    granted = {(g, res) for r in role["rules"] for g in r["apiGroups"] for res in r["resources"]}
+    assert not granted & UNGRANTABLE_IN_ROLE
+    assert not any(g == "extensions" for g, _ in granted)
+    assert not any("nonResourceURLs" in r for r in role["rules"])
+    namespace_rules = [r for r in role["rules"] if "namespaces" in r["resources"]]
+    assert namespace_rules == [{"apiGroups": [""], "resources": ["namespaces"], "verbs": ["get"]}]
+
+
+def test_namespace_scoped_role_keeps_namespaced_rules():
+    docs = render_chart(["--set", "runner.rbac.namespaceScoped=true", "--set", "openshift.enabled=true"])
+    rules = get_doc(docs, "Role", "runner-role")["rules"]
+    assert {"apiGroups": [""], "resources": ["pods/eviction"], "verbs": ["create"]} in rules
+    apps_read = next(r for r in rules if r["apiGroups"] == ["apps"] and "list" in r["verbs"])
+    assert "deployments" in apps_read["resources"]
+    scc = next(r for r in rules if r["apiGroups"] == ["security.openshift.io"])
+    assert scc["resourceNames"]
+
+
+def test_namespace_scoped_role_filters_custom_rules():
+    docs = render_chart(
+        [
+            "--set",
+            "runner.rbac.namespaceScoped=true",
+            "--set",
+            "runner.customClusterRoleRules[0].apiGroups[0]=",
+            "--set",
+            "runner.customClusterRoleRules[0].resources[0]=nodes",
+            "--set",
+            "runner.customClusterRoleRules[0].resources[1]=secrets",
+            "--set",
+            "runner.customClusterRoleRules[0].verbs[0]=get",
+        ]
+    )
+    rules = get_doc(docs, "Role", "runner-role")["rules"]
+    assert {"apiGroups": [""], "resources": ["secrets"], "verbs": ["get"]} in rules
+
+
 def test_namespace_scoped_rbac_sets_env_defaults():
     docs = render_chart(["--set", "runner.rbac.namespaceScoped=true"])
     deployment = get_doc(docs, "Deployment", "runner")
