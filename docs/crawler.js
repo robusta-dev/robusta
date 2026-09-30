@@ -3,16 +3,16 @@ new Crawler({
   rateLimit: 8,
   maxDepth: 10,
   maxUrls: 5000,
-  startUrls: ["https://docs.robusta.dev/master/"],
+  startUrls: ["https://classic.docs.robusta.dev/master/"],
   renderJavaScript: false,
   sitemaps: [],
   ignoreCanonicalTo: false,
-  discoveryPatterns: ["https://docs.robusta.dev/master/**"],
+  discoveryPatterns: ["https://classic.docs.robusta.dev/master/**"],
   schedule: "at 13:11 on Thursday",
   actions: [
     {
       indexName: "robusta",
-      pathsToMatch: ["https://docs.robusta.dev/master/**"],
+      pathsToMatch: ["https://classic.docs.robusta.dev/master/**"],
       recordExtractor: ({ helpers, url }) => {
         return helpers
           .docsearch({
