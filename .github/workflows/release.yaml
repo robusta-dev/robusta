@@ -8,6 +8,10 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
   # ` ``  GKE_ZONE: us-central1-c   # TODO: update to cluster zone
   RELEASE_VER: ${{ github.event.release.tag_name }}
+  # A runner release ships the chart and the runner under one version. holmes-bump.yaml ships
+  # chart-only patch versions that keep an already-published RUNNER_VERSION.
+  CHART_VERSION: ${{ github.event.release.tag_name }}
+  RUNNER_VERSION: ${{ github.event.release.tag_name }}
 
 jobs:
   setup-build-publish-deploy:
@@ -45,10 +49,7 @@ jobs:
           chmod a+x skaffold
 
       - name: Update package version
-        run: |
-          sed -i "s/0.0.0/$RELEASE_VER/g" src/robusta/_version.py helm/robusta/Chart.yaml helm/robusta/values.yaml
-          sed -i "s/version = \"0.0.0\"/version = \"$RELEASE_VER\"/g" pyproject.toml
-          sed -i "s/0.0.1/$RELEASE_VER/g" helm/robusta/Chart.yaml
+        run: helm/stamp_versions.sh "$CHART_VERSION" "$RUNNER_VERSION"
 
       # Set up the buildx to run build for multiple platforms
       - name: Set up QEMU
@@ -79,7 +80,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build with skaffold
-        run: ./skaffold build --profile release --file-output=container-ids.json --tag="$RELEASE_VER"
+        run: ./skaffold build --profile release --file-output=container-ids.json --tag="$RUNNER_VERSION"
 
       - name: Save artifact with tags of built containers
         uses: actions/upload-artifact@v4
@@ -116,7 +117,7 @@ jobs:
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           --platform linux/arm64,linux/amd64 \
           --cache-from us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta:cache \
-          --tag "robustadev/robusta-runner:$RELEASE_VER" \
+          --tag "robustadev/robusta-runner:$RUNNER_VERSION" \
           --push \
           .
 
@@ -134,4 +135,4 @@ jobs:
       - name: Push Helm chart to OCI registry
         run: |
           helm package helm/robusta
-          helm push "robusta-$RELEASE_VER.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"
+          helm push "robusta-$CHART_VERSION.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"
