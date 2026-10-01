@@ -106,7 +106,7 @@ Set the ``SLACK_FORWARD_URL`` environment variable on the Robusta Runner pod to 
 
 Add the following to your ``values.yaml`` file and upgrade:
 
-.. robusta-code:: yaml
+.. code-block:: yaml
 
     runner:
         additional_env_vars:

@@ -68,7 +68,7 @@ JSON payload
 
 When ``format: json`` is set, the POST body is a JSON object with the following top-level fields:
 
-.. robusta-code:: json
+.. code-block:: json
 
     {
       "title": "CrashLoopBackOff",
