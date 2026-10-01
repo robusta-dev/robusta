@@ -3,7 +3,7 @@
 .. toctree::
    :hidden:
 
-   installation/index
+   installation/helm
 
 .. toctree::
    :hidden:
