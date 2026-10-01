@@ -1,7 +1,7 @@
 Self-Monitoring
 ======================================
 
-Robusta Metrics Graphs
+Robusta Metrics
 **************************
 
 Robusta runner supports Prometheus and exposes performance and error metrics on the `/metrics` endpoint.

@@ -11,7 +11,7 @@ Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Beca
 
 Sending Weekly KRR Scan Reports to Slack
 ===========================================
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
+You can configure scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
 
 1. Install Robusta with Helm to your cluster and configure Slack sink.
 2. Create your KRR slack playbook by adding the following to ``generated_values.yaml``:
