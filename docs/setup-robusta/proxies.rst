@@ -1,7 +1,7 @@
 Deploying Behind Proxies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions below to ensure Robusta and HolmesGPT have the necessary access.
+If your Kubernetes cluster is behind an HTTP proxy or firewall, follow the instructions below to ensure Robusta has the necessary access.
 
 Configuring Proxy Settings
 ----------------------------------------
@@ -12,13 +12,6 @@ Set the ``HTTP_PROXY`` and ``HTTPS_PROXY`` environment variables in your Helm va
 
     runner:
       additional_env_vars:
-        - name: HTTP_PROXY
-          value: "http://your-proxy:port"
-        - name: HTTPS_PROXY
-          value: "http://your-proxy:port"
-
-    holmes:
-      additionalEnvVars:
         - name: HTTP_PROXY
           value: "http://your-proxy:port"
         - name: HTTPS_PROXY
@@ -67,7 +60,7 @@ Only needed for the integrations and features you actually enable.
 
 .. code-block:: text
 
-    # Error reporting (only if runner.sentry_dsn / holmes.sentryDSN is set; default points to .de.sentry.io)
+    # Error reporting (only if runner.sentry_dsn is set; default points to .de.sentry.io)
     *.sentry.io
         *.ingest.sentry.io
         *.ingest.de.sentry.io
@@ -115,8 +108,7 @@ If you mirror images to a private registry, override ``image.registry`` (and the
 
 If your private registry requires authentication, set ``global.imagePullSecrets``. This applies the
 pull secret to the runner, kubewatch, and the pods the runner launches at runtime (e.g. KRR, Popeye,
-via the runner ServiceAccount). To also cover HolmesGPT, set ``holmes.imagePullSecrets`` — HolmesGPT
-is a subchart, so set it explicitly alongside the global value:
+via the runner ServiceAccount):
 
 .. code-block:: yaml
 
@@ -124,13 +116,8 @@ is a subchart, so set it explicitly alongside the global value:
       imagePullSecrets:
         - name: my-registry-secret
 
-    # HolmesGPT is a subchart — set its pull secret as well
-    holmes:
-      imagePullSecrets:
-        - name: my-registry-secret
-
-A per-component value (e.g. ``runner.imagePullSecrets``, ``kubewatch.imagePullSecrets``,
-``holmes.imagePullSecrets``) overrides the global one for that component. Leaving
+A per-component value (e.g. ``runner.imagePullSecrets``, ``kubewatch.imagePullSecrets``)
+overrides the global one for that component. Leaving
 ``global.imagePullSecrets`` empty keeps the previous behavior.
 
 Verifying the Allowlist
