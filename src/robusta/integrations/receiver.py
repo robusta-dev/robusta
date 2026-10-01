@@ -4,6 +4,8 @@ import hmac
 import json
 import logging
 import os
+import socket
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
@@ -24,6 +26,10 @@ from robusta.core.model.env_vars import (
     SENTRY_ENABLED,
     WEBSOCKET_PING_INTERVAL,
     WEBSOCKET_PING_TIMEOUT,
+    WEBSOCKET_TCP_KEEPALIVE_COUNT,
+    WEBSOCKET_TCP_KEEPALIVE_ENABLED,
+    WEBSOCKET_TCP_KEEPALIVE_IDLE,
+    WEBSOCKET_TCP_KEEPALIVE_INTERVAL,
 )
 from robusta.core.playbooks.playbook_utils import to_safe_str
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -40,6 +46,22 @@ WEBSOCKET_RELAY_ADDRESS = os.environ.get("WEBSOCKET_RELAY_ADDRESS", "wss://relay
 RECEIVER_ENABLE_WEBSOCKET_TRACING = json.loads(os.environ.get("RECEIVER_ENABLE_WEBSOCKET_TRACING", "False").lower())
 INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3))
 WEBSOCKET_THREADPOOL_SIZE = int(os.environ.get("WEBSOCKET_THREADPOOL_SIZE", 10))
+
+
+def _get_tcp_keepalive_options() -> tuple:
+    """Build TCP keepalive socket options tuple for run_forever(sockopt=...)."""
+    # TCP_KEEPIDLE is Linux-only; macOS uses TCP_KEEPALIVE (0x10) for the same purpose
+    if sys.platform == "darwin":
+        tcp_keepalive_idle = 0x10
+    else:
+        tcp_keepalive_idle = socket.TCP_KEEPIDLE
+
+    return (
+        (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+        (socket.IPPROTO_TCP, tcp_keepalive_idle, WEBSOCKET_TCP_KEEPALIVE_IDLE),
+        (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, WEBSOCKET_TCP_KEEPALIVE_INTERVAL),
+        (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, WEBSOCKET_TCP_KEEPALIVE_COUNT),
+    )
 
 
 class ValidationResponse(BaseModel):
@@ -114,11 +136,27 @@ class ActionRequestReceiver:
 
     def run_forever(self):
         logging.info("starting relay receiver")
+        sockopt = None
+        if WEBSOCKET_TCP_KEEPALIVE_ENABLED:
+            sockopt = _get_tcp_keepalive_options()
+            logging.info(
+                f"TCP keepalive enabled: idle={WEBSOCKET_TCP_KEEPALIVE_IDLE}s, "
+                f"interval={WEBSOCKET_TCP_KEEPALIVE_INTERVAL}s, count={WEBSOCKET_TCP_KEEPALIVE_COUNT}"
+            )
+        if WEBSOCKET_PING_INTERVAL:
+            logging.info(
+                f"Websocket keepalive enabled: interval={WEBSOCKET_PING_INTERVAL}s, "
+                f"timeout={WEBSOCKET_PING_TIMEOUT}s"
+            )
         while self.active:
+            # Handles WEBSOCKET_PING_INTERVAL == 0
+            ping_timeout = WEBSOCKET_PING_TIMEOUT if WEBSOCKET_PING_INTERVAL else None
+            logging.info("relay websocket starting")
             self.ws.run_forever(
                 ping_interval=WEBSOCKET_PING_INTERVAL,
                 ping_payload="p",
-                ping_timeout=WEBSOCKET_PING_TIMEOUT,
+                ping_timeout=ping_timeout,
+                sockopt=sockopt,
             )
             logging.info("relay websocket closed")
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
@@ -175,10 +213,14 @@ class ActionRequestReceiver:
 
         if sync_response:
             http_code = 200 if response.get("success") else 500
+            logging.debug(
+                f"Sending results for `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {http_code}")
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
+            logging.debug(
+                f"After Sending results for `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {http_code}")
 
     def __exec_external_stream_request(self, action_request: ExternalActionRequest, validate_timestamp: bool):
-        logging.debug(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+        logging.debug(f"Stream Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
 
         validation_response = self.__validate_request(action_request, validate_timestamp)
         if validation_response.http_code != 200:
@@ -192,7 +234,11 @@ class ActionRequestReceiver:
                                                             action_request.body.action_params,
                                                             lambda data: self.__stream_response(request_id=action_request.request_id, data=data))
         res = "" if res.get("success") else f"event: error\ndata: {json.dumps(res)}\n\n"
+
+        logging.debug(f"Stream Sending result `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {res}")
         self.__close_stream_response(action_request.request_id, res)
+        logging.debug(
+            f"After Stream Sending result `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} - {res}")
 
     def _process_action(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
         self._executor.submit(self._process_action_sync, action, validate_timestamp)
@@ -251,12 +297,18 @@ class ActionRequestReceiver:
             return
 
         if isinstance(incoming_event, SlackActionsMessage):
+            logging.debug(
+                f"on_message got Slack callback: {len(incoming_event.actions)} action(s) from "
+                f"user={incoming_event.user.username if incoming_event.user else 'unknown'}"
+            )
             # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
             # which container the actual action details we need to run.
             # This wrapper format is part of the slack API, and cannot be changed by us.
             for slack_action_request in incoming_event.actions:
                 self._process_action(slack_action_request.value, validate_timestamp=False)
         else:
+            logging.debug(
+                f"on_message got external action request: `{incoming_event.body.action_name}` {to_safe_str(incoming_event.body.action_params)}")
             self._process_action(incoming_event, validate_timestamp=True)
 
     @staticmethod
