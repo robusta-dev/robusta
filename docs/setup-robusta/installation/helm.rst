@@ -49,3 +49,5 @@ Verify that Robusta is running and there are no errors in the logs:
     kubectl logs -n <NAMESPACE> -l app=robusta-runner
 
 Keep ``generated_values.yaml``: you pass it again on every :ref:`upgrade <Simple Upgrade>`.
+
+Next, send Prometheus alerts to Robusta: see :doc:`/configuration/index`.
