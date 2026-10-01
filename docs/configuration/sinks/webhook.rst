@@ -96,13 +96,9 @@ When ``format: json`` is set, the POST body is a JSON object with the following 
         {"name": "Runbook", "url": "https://...", "type": null},
         {"name": "Graph",   "url": "https://...", "type": "prometheus_generator_url"}
       ],
-      "investigate": "https://platform.robusta.dev/...",
-      "silence": "https://platform.robusta.dev/silences/create?...",
       "enrichments": [ ... ]
     }
 
-``investigate`` and ``silence`` are present only when the Robusta platform is enabled
-(``silence`` additionally requires ``add_silence_url`` on the finding).
 
 If the serialized payload exceeds ``size_limit``, the largest field (``enrichments``)
 is dropped first so that core metadata and ``links`` survive truncation.

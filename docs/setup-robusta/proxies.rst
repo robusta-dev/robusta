@@ -39,18 +39,12 @@ When deploying Robusta in a tightly restricted environment, the runner needs out
 Runtime
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Required whenever the runner is running. The Robusta platform addresses depend on the region your account is hosted in — select your region to see the correct values:
+Reached whenever the runner is running:
 
-.. robusta-code:: text
+.. code-block:: text
 
-    # Robusta SaaS platform (required if robusta_sink enabled)
-    *.robusta.dev
-        api.robusta.dev          # platform REST API: cluster registration, action relay, telemetry
-        relay.robusta.dev        # WebSocket relay (wss://); override with WEBSOCKET_RELAY_ADDRESS
-        platform.robusta.dev     # Robusta UI (links rendered into Slack/Teams/email)
-        sp.robusta.dev           # platform storage
-        docs.robusta.dev         # doc links embedded in notifications (not strictly required)
-    *.supabase.co                # cluster data store; exact subdomain comes from your token's store_url
+    api.robusta.dev          # anonymous telemetry; set ENABLE_TELEMETRY=false in runner.additional_env_vars to turn it off
+    docs.robusta.dev         # doc links embedded in notifications (not strictly required)
 
 Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,7 +57,6 @@ Installation
         registry-1.docker.io
         auth.docker.io
         production.cloudflare.docker.com
-    us-central1-docker.pkg.dev              # HolmesGPT MCP server images and bundled tooling
     quay.io                                 # only with bundled kube-prometheus-stack subchart
     ghcr.io                                 # only with bundled kube-prometheus-stack subchart
 
@@ -111,18 +104,8 @@ Only needed for the integrations and features you actually enable.
     botapi.messenger.yandex.net             # Yandex (override with YM_API_BASE_URL)
     # Mattermost, RocketChat, Zulip, generic Webhook, Kafka: allow the host you configured
 
-    # HolmesGPT LLM providers (only those you use)
-    api.openai.com                          # OpenAI
-    api.anthropic.com                       # Anthropic
-    *.openai.azure.com                      # Azure OpenAI (your resource subdomain)
-    login.microsoftonline.com               # Azure AD OAuth (Azure OpenAI / Azure Managed Prometheus)
-    *.amazonaws.com                         # AWS Bedrock
-        bedrock-runtime.<region>.amazonaws.com
-        sts.amazonaws.com
-    *.googleapis.com                        # Google Vertex AI / Gemini
-        aiplatform.googleapis.com
-        generativelanguage.googleapis.com
-        oauth2.googleapis.com
+    # Azure AD OAuth (only with Azure Managed Prometheus)
+    login.microsoftonline.com
 
     # Cloud / observability auth (only if you use these managed backends)
     prometheus.monitor.azure.com            # Azure Managed Prometheus query endpoint
@@ -153,94 +136,17 @@ A per-component value (e.g. ``runner.imagePullSecrets``, ``kubewatch.imagePullSe
 Verifying the Allowlist
 ----------------------------------------
 
-After applying firewall rules, you can sanity-check connectivity from inside the runner pod. Select your region to get the correct addresses:
+After applying firewall rules, you can sanity-check connectivity from inside the runner pod:
 
-.. robusta-code:: bash
+.. code-block:: bash
 
     kubectl exec -n <robusta-ns> deploy/robusta-runner -- \
-      sh -c 'for host in api.robusta.dev relay.robusta.dev platform.robusta.dev sp.robusta.dev; do
+      sh -c 'for host in api.robusta.dev docs.robusta.dev; do
         echo "== $host =="; curl -sS -o /dev/null -w "%{http_code}\n" https://$host/ || true
       done'
 
 A non-zero HTTP code (including ``401``/``404``) confirms TCP + TLS reach the host. Connection timeouts indicate the firewall is still blocking.
 
-Copying Images to a Private Image Registry
-------------------------------------------
-
-If you are running the Robusta **self-hosted platform** (the ``robusta-platform`` Helm chart) in an environment that cannot pull from public registries (Docker Hub, ``us-central1-docker.pkg.dev``, ``quay.io``), mirror the images below to your internal registry and override the registry fields in your Helm values.
-
-The list reflects the images pulled by the chart at the versions shipped in the current release. Image tags change between chart versions — re-check ``values.yaml`` of the chart version you are installing.
-
-**Images from the Robusta registry** (default: ``us-central1-docker.pkg.dev/genuine-flight-317411/devel``)
-
-.. code-block:: text
-
-    robusta-db:14.1.1            # Supabase Postgres 14 (default DB image)
-    robusta-db:15.0.0            # Supabase Postgres 15 (only if usePostgres15=true)
-    db-migration:0.0.66          # DB migration init Job
-    realtime:v2.96.0             # Robusta fork of supabase/realtime (JWT_REQUIRE_EXP)
-    platform-relay:0.22.0        # Relay (WebSocket + API)  — only if enableRelay=true
-    robusta-ui:0.2.87            # Platform UI              — only if enableRobustaUI=true
-    rbac-import:0.3.0            # Optional RBAC import CronJob (rbacImport.enabled)
-
-**Images from Docker Hub** (controlled by ``dockerRegistry``)
-
-.. code-block:: text
-
-    supabase/gotrue:v2.189.0
-    supabase/postgres-meta:v0.96.5
-    supabase/studio:2026.05.11-sha-5a5099a
-    postgrest/postgrest:v14.6
-    kong:3.9.1
-    postgres:15-alpine                  # realtime schema-init container
-    busybox:1.37                        # init containers for rest/meta/migration
-
-**Optional images** (only if the corresponding feature is enabled)
-
-.. code-block:: text
-
-    quay.io/prometheuscommunity/postgres-exporter:v0.15.0   # monitoring.postgresExporter.enabled
-
-After mirroring, point the chart at your registry by overriding the following values:
-
-.. code-block:: yaml
-
-    # Robusta-built images
-    robustaRegistry: my-registry.example.com/robusta
-
-    # Public images — value is used as a prefix, so include the trailing slash
-    dockerRegistry: my-registry.example.com/
-
-    # Subchart registries (robusta-ui and robusta-relay are dependencies)
-    robusta-ui:
-      registry: my-registry.example.com/robusta
-    robusta-relay:
-      registry: my-registry.example.com/robusta
-
-    # Monitoring image is a full path — override directly if enabled
-    monitoring:
-      postgresExporter:
-        image: my-registry.example.com/prometheuscommunity/postgres-exporter:v0.15.0
-
-    # If your registry requires auth
-    imagePullSecrets:
-      - name: my-registry-secret
-
-.. tip::
-
-    **Override the registry, not the tags.** The chart exposes per-image fields
-    (``dbImage``, ``authImage``, ``realtimeImage``, ``migrationImage``, etc.) but
-    these are intended for internal use — they pin the exact tags that have been
-    tested with the current chart version. If you pin them yourself, every chart
-    upgrade will silently roll your images back to the tags you hard-coded, and
-    you will need to bump each one by hand on every release.
-
-    For mirrored-registry setups, override only ``robustaRegistry`` /
-    ``dockerRegistry`` (and the matching subchart ``registry`` fields). The chart
-    will continue to use the image tags shipped with each version, just pulled
-    from your private registry — so ``helm upgrade`` keeps working seamlessly.
-    Your mirroring workflow only needs to re-pull the new tags from
-    ``values.yaml`` before each upgrade.
 
 Running Robusta in Air-Gapped or Offline Environments
 ------------------------------------------------------------------------------

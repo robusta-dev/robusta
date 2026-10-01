@@ -3,6 +3,11 @@
 .. toctree::
    :hidden:
 
+   installation/index
+
+.. toctree::
+   :hidden:
+
    gitops/index
 
 .. toctree::
@@ -14,8 +19,6 @@
    configuration-secrets
    openshift
    read-only-service-account
-   rbac-namespace-scoping
-   rbac-namespace-scoped-runner
    node-selector
    proxies
    

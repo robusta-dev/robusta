@@ -24,15 +24,12 @@ Example ``generated_values.yaml``:
 .. code-block:: yaml
 
     clusterName: my_cluster_name # <- This is the line to be added
-    globalConfig:
-      signing_key: xxxxxx
-      account_id: xxxxxx
     sinksConfig:
-    - robusta_sink:
-        name: robusta_ui_sink
-        token: xxxxxx
+    - slack_sink:
+        name: main_slack_sink
+        api_key: xxxxxx
+        slack_channel: xxxxxx
     enablePrometheusStack: true
-    enablePlatformPlaybooks: true
     runner:
       sendAdditionalTelemetry: true
 

@@ -6,15 +6,8 @@ Slack
 
    For new setups, we recommend connecting HolmesGPT to Slack instead of using this legacy sink.
 
-   Open the `Slack settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform to connect HolmesGPT to Slack. This adds a single HolmesGPT Slack bot that powers all of the flows below:
 
-   - **Chat** — ``@mention`` the bot in any channel to investigate issues on demand; it replies in the thread.
-   - **Alerts** — let `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ automatically investigate incoming alerts and post the findings to Slack.
-   - **Custom events** — use :ref:`Triggered Workflows <defining-playbooks>` to react to arbitrary events and notify Slack.
-
-   These are separate flows that share the same bot: chat is interactive, while Alerts Triage and Triggered Workflows run automatically.
-
-Robusta can proxy Prometheus alerts to Slack, adding powerful features like :ref:`AI investigation <AI Analysis>`, :ref:`smart grouping <notification-grouping>` and more.
+Robusta can proxy Prometheus alerts to Slack, adding powerful features like :ref:`smart grouping <notification-grouping>` and more.
 
 .. image:: /images/robusta-slack.png
    :width: 600px
@@ -31,14 +24,7 @@ Robusta can send both Prometheus alerts and direct Kubernetes notifications (pod
 Quick Start
 ------------------------------------------------
 
-**Option 1: Automatic Setup (Recommended)**
 
-Sign up for a `free Robusta account <https://platform.robusta.dev/signup>`_ and connect Slack during the signup wizard. This automatically configures Slack using our `official
-Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_.
-
-Note: Robusta can only write messages and doesn't require read permissions.
-
-**Option 2: Manual Configuration**
 
 Generate a Slack API key on your own (see :ref:`Creating Custom Slack Apps` below), then add it to your ``generated_values.yaml``:
 
@@ -52,7 +38,6 @@ Generate a Slack API key on your own (see :ref:`Creating Custom Slack Apps` belo
          slack_channel: MY SLACK CHANNEL
          max_log_file_limit_kb: <Optional> # (Default: 1000) The maximum allowed file size for "snippets" (in kilobytes) uploaded to the Slack channel. Larger files can be sent to Slack, but they may not be viewable directly within the Slack.
          channel_override: DYNAMIC SLACK CHANNEL OVERRIDE (Optional)
-         investigate_link: true/false # optional, if false no investigate links/buttons will be included in Slack messages
 
 .. warning::
 
@@ -126,7 +111,7 @@ Add the following to your ``values.yaml`` file and upgrade:
     runner:
         additional_env_vars:
         - name: SLACK_FORWARD_URL
-          value: "https://api.robusta.dev/slack/"
+          value: "https://<your-gateway>/"
 
 
 Handling Slack Rate Limits
@@ -154,24 +139,6 @@ of longer delays between a notification being generated and being delivered — 
 retry waits for the ``Retry-After`` value returned by Slack (typically a few seconds,
 but can be longer under heavy throttling).
 
-Redirect to Platform
--------------------------------------------------------------------
-
-By default, Slack notifications include buttons to view more information in the Robusta SaaS platform.
-If you don't use Robusta SaaS you can modify these links to point at Prometheus instead.
-To do so, set prefer_redirect_to_platform: false.
-
-For example:
-
-.. code-block:: yaml
-
-     sinksConfig:
-     # slack integration params
-     - slack_sink:
-         name: main_slack_sink
-         api_key: xoxb-112...
-         slack_channel: my-fallback-channel
-         prefer_redirect_to_platform: false
 
 
 Using Private Channels

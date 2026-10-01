@@ -13,7 +13,7 @@ This guide shows how to send alerts from `Google Managed Prometheus <https://clo
 
 .. note::
 
-   **Using Google Managed Alertmanager?** For Google Managed Prometheus (GMP) managed Alertmanager, see the dedicated guide: :doc:`google-managed-alertmanager`
+   **Using Google Managed Alertmanager?** For Google Managed Prometheus (GMP) managed Alertmanager, see the dedicated guide: `Google Managed Alertmanager <https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-alertmanager.html>`_
 
 For configuring metric querying from Google Managed Prometheus, see :doc:`/configuration/metric-providers-google`.
 

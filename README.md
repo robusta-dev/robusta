@@ -21,7 +21,6 @@ Compatible with kube-prometheus-stack, Prometheus Operator, and more.
 Robusta integrates with Prometheus by webhook and adds features like:
 
 * [**Smart Grouping**](https://docs.robusta.dev/master/configuration/notification-grouping.html) - reduce notification spam with Slack threads 🧵
-* [**AI Investigation**](https://docs.robusta.dev/master/configuration/holmesgpt/index.html#ai-analysis) -  Kickstart alert investigation with AI (optional)
 * [**Alert Enrichment**](https://docs.robusta.dev/master/how-it-works/index.html#automatically-investigate-a-prometheus-alert) - see pod logs and other data alongside your alerts
 * [**Self-Healing**](https://docs.robusta.dev/master/tutorials/alert-remediation.html#remediate-prometheus-alerts) - define auto-remediation rules for faster fixes
 * [**Advanced Routing**](https://docs.robusta.dev/master/notification-routing/configuring-sinks.html) based on team, namespace, and more
@@ -359,17 +358,6 @@ To get *even more* out of Robusta, we recommend creating [a free Robusta UI acco
 </table> -->
 
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
-
-## 🖥 Free Robusta UI
-Take your Kubernetes monitoring to the next level with the [Robusta SaaS platform](https://platform.robusta.dev/signup?utm_source=github&utm_medium=robusta-readme&utm_content=free_robusta_ui_section). Creating an account is free, and includes:
-
-- **AI Assistant**: Solve alerts faster with an AI assistant that highlights relevant observability data
-- **Alert Timeline**: View Prometheus alerts across multiple clusters and spot correlations with a powerful timeline view
-- **Change Tracking**: Correlate alerts with changes to your infrastructure or applications, with Robusta's automatic change tracking for Kubernetes
-
-  <a href="https://www.loom.com/share/89c7e098d9494d79895738e0b06091f0">
-      <img src="https://cdn.loom.com/sessions/thumbnails/89c7e098d9494d79895738e0b06091f0-f508768968f50b46-full-play.gif">
-  </a>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

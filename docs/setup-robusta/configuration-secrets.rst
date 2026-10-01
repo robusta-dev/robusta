@@ -42,14 +42,6 @@ Add the following to your Helm values (generated_values.yaml):
             name: my-robusta-secrets
             key: secret_grafana_key
 
-  # if you're configuring a secret for HolmesGPT it would be:
-  holmes:
-    additionalEnvVars:
-      - name: GRAFANA_KEY
-        valueFrom:
-          secretKeyRef:
-            name: my-robusta-secrets
-            key: secret_grafana_key
 
 **3. Use the Environment Variable in Robusta Config**
 
@@ -64,19 +56,3 @@ You can now reference the environment variable elsewhere in your configuration u
 
 This setup keeps sensitive values out of your Helm files and version control, while still allowing them to be dynamically injected at runtime.
 
-.. _Reading the Robusta UI Token from a secret in HolmesGPT:
-
-Using an Existing Secret for the Robusta UI Token
---------------------------------------------------------
-
-If you store the Robusta UI token in a Kubernetes secret (instead of directly in Helm values), you need to pass it to HolmesGPT:
-
-.. code-block:: yaml
-
-    holmes:
-      additionalEnvVars:
-      - name: ROBUSTA_UI_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: my-robusta-secrets  # Your existing secret
-            key: ui-token             # Your existing key

@@ -12,11 +12,8 @@ Connect your monitoring system to Robusta, to enrich alerts and apply automation
    :hidden:
 
    alertmanager-integration/alert-manager
-   alertmanager-integration/eks-managed-prometheus
-   alertmanager-integration/coralogix_managed_prometheus
    alertmanager-integration/embedded-prometheus
    alertmanager-integration/google-managed-prometheus
-   alertmanager-integration/google-managed-alertmanager
    alertmanager-integration/victoria-metrics
    alertmanager-integration/customize-labels-priorities
 
@@ -31,16 +28,6 @@ Prometheus & AlertManager
         :link: alertmanager-integration/alert-manager
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`pulse;1em;` AWS Managed Prometheus
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/eks-managed-prometheus
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` Coralogix
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/coralogix_managed_prometheus
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`pulse;1em;` Embedded Prometheus Stack
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/embedded-prometheus
@@ -49,11 +36,6 @@ Prometheus & AlertManager
     .. grid-item-card:: :octicon:`pulse;1em;` Google Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/google-managed-prometheus
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`pulse;1em;` Google Managed Alertmanager
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/google-managed-alertmanager
         :link-type: doc
 
     .. grid-item-card:: :octicon:`pulse;1em;` VictoriaMetrics
