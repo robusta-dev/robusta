@@ -90,11 +90,13 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
 @action
 def pod_dmesg_enricher(pod_event: PodEvent, params: PodRunningParams):
     """
-    Gets the dmesg from a node
+    Get the kernel ring buffer messages (dmesg) from the node that hosts the event's pod.
+
+    The output is attached to the finding as a file named ``dmesg.log``.
     """
     pod = pod_event.get_pod()
     if not pod:
-        logging.error(f"cannot run pod_node_graph_enricher on event with no pod: {pod_event}")
+        logging.error(f"cannot run pod_dmesg_enricher on event with no pod: {pod_event}")
         return
     node = pod.get_node()
     if not node:
