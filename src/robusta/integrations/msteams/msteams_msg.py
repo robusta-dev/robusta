@@ -152,12 +152,10 @@ class MsTeamsMsg:
 
     # dont include the base 64 images in the total size calculation
     def _put_text_files_data_up_to_max_limit(self, complete_card_map: map):
-        curr_images_len = 0
-        for element in self.entire_msg:
-            if isinstance(element, MsTeamsImages):
-                curr_images_len += element.get_images_len_in_bytes()
+        images_len = self.__get_images_len()
 
-        max_len_left = self.MAX_SIZE_IN_BYTES - (self.__get_current_card_len(complete_card_map) - curr_images_len)
+        def over_budget() -> int:
+            return self.MAX_SIZE_IN_BYTES - (self.__get_current_card_len(complete_card_map) - images_len)
 
         curr_line = 0
         while True:
@@ -168,19 +166,92 @@ class MsTeamsMsg:
                     continue
 
                 line = lines[len(lines) - curr_line]
-                max_len_left -= len(line)
-                if max_len_left < 0:
+                previous_text = text_element.get_text_from_block()
+                text_element.set_text_from_block(line + previous_text)
+                if over_budget() < 0:
+                    # the serialized payload went over budget with this line; revert it
+                    text_element.set_text_from_block(previous_text)
                     return
-                new_text_value = line + text_element.get_text_from_block()
-                text_element.set_text_from_block(new_text_value)
                 line_added = True
 
             if not line_added:
                 return
 
+    def _trim_card_body_up_to_max_limit(self, complete_card_map: map):
+        # The card body itself (title, markdown blocks, tables, diffs) is never budgeted,
+        # so a finding with many enrichments can exceed the webhook payload limit and
+        # Teams rejects it with RequestEntityTooLarge. Truncate body text blocks and
+        # table rows until the payload (excluding base64 images) fits the limit.
+        images_len = self.__get_images_len()
+
+        def over_budget() -> int:
+            return self.MAX_SIZE_IN_BYTES - (self.__get_current_card_len(complete_card_map) - images_len)
+
+        max_len_left = over_budget()
+        if max_len_left >= 0:
+            return
+
+        # Trim from the end of the message first, so the title and initial
+        # context stay intact when there are many enrichments.
+        for element in reversed(self.entire_msg):
+            if max_len_left >= 0:
+                break
+            if isinstance(element, MsTeamsTextBlock):
+                text = element.get_text_from_block()
+                if text:
+                    truncated, _ = self.__truncate_text(text, max_len_left)
+                    element.set_text_from_block(truncated)
+                    max_len_left = over_budget()
+            elif isinstance(element, MsTeamsTable):
+                self.__trim_table_rows(element, over_budget)
+                max_len_left = over_budget()
+
+    def __get_images_len(self) -> int:
+        return sum(
+            element.get_images_len_in_bytes() for element in self.entire_msg if isinstance(element, MsTeamsImages)
+        )
+
+    @staticmethod
+    def __json_bytes(text: str) -> int:
+        return len(json.dumps(text, ensure_ascii=True).encode("utf-8"))
+
+    @staticmethod
+    def __truncate_text(text: str, max_len_left: int, suffix: str = "\n...\n") -> (str, int):
+        # max_len_left is negative (over budget). Trim the text so the JSON-serialized
+        # result (prefix + suffix) frees exactly the needed bytes. JSON escaping (e.g.
+        # "\n" -> "\\n") and non-ASCII encoding make char-based estimates drift,
+        # so measure serialized UTF-8 bytes.
+        freed_needed = -max_len_left
+        text_json_len = MsTeamsMsg.__json_bytes(text)
+        suffix_json_len = MsTeamsMsg.__json_bytes(suffix)
+        prefix_budget = text_json_len - freed_needed - suffix_json_len
+        if prefix_budget <= 0:
+            return "", max_len_left + text_json_len
+        if prefix_budget >= text_json_len:
+            return text, max_len_left
+
+        lo, hi = 0, len(text)
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if MsTeamsMsg.__json_bytes(text[:mid]) <= prefix_budget:
+                lo = mid
+            else:
+                hi = mid - 1
+
+        new_text = text[:lo] + suffix
+        freed = text_json_len - MsTeamsMsg.__json_bytes(new_text)
+        return new_text, max_len_left + freed
+
+    def __trim_table_rows(self, table_element: MsTeamsTable, over_budget):
+        table_map = table_element.get_map_value()
+        rows = table_map.get("rows", [])
+        while rows and over_budget() < 0:
+            rows.pop()
+
     def send(self):
         try:
             complete_card_map: dict = MsTeamsCard(self.entire_msg).get_map_value()
+            self._trim_card_body_up_to_max_limit(complete_card_map)
             self._put_text_files_data_up_to_max_limit(complete_card_map)
 
             response = requests.post(self.webhook_url, json=complete_card_map)
@@ -195,4 +266,6 @@ class MsTeamsMsg:
 
     @classmethod
     def __get_current_card_len(cls, complete_card_map: dict):
-        return len(json.dumps(complete_card_map, ensure_ascii=True, indent=2))
+        # Match what the HTTP client actually sends: compact JSON, with
+        # non-ASCII characters escaped, encoded as UTF-8.
+        return len(json.dumps(complete_card_map, ensure_ascii=True).encode("utf-8"))
