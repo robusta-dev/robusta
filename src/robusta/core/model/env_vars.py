@@ -100,6 +100,15 @@ SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
 PORT = int(os.environ.get("PORT", 5000))  # PORT
 RUNNER_BIND_ADDR = os.environ.get("RUNNER_BIND_ADDR", "0.0.0.0")  # Listen address for runner
 
+# Shared secret required on the sensitive runner HTTP endpoints (/api/trigger,
+# /api/handle, /api/helm-releases, /api/playbooks/reload). These endpoints
+# accept and immediately execute playbook actions (including destructive ones
+# like node drain/cordon and rollout restarts) with no other authorization
+# check, so they must not be reachable without this token. The Helm chart
+# generates and injects a random value for this by default; set it explicitly
+# only if you manage the secret yourself.
+RUNNER_API_TOKEN = os.environ.get("RUNNER_API_TOKEN", "")
+
 # additional certificate to verify, base64 encoded.
 ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
 

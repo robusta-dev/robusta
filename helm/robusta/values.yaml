@@ -734,6 +734,13 @@ runner:
   imagePullPolicy: IfNotPresent
   revisionHistoryLimit: 10
   log_level: INFO
+  # Shared secret required on the runner's sensitive HTTP endpoints
+  # (/api/trigger, /api/handle, /api/helm-releases, /api/playbooks/reload,
+  # /api/alerts). Auto-generated and kept stable across upgrades if left
+  # unset; set this only if you need to manage the value yourself (e.g. to
+  # configure an external Alertmanager's webhook_configs authorization
+  # header to match).
+  apiToken: ~
   sentry_dsn: ""
   sendAdditionalTelemetry: false
   certificate: "" # base64 encoded
