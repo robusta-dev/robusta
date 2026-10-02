@@ -36,7 +36,7 @@ Reached whenever the runner is running:
 
 .. code-block:: text
 
-    api.robusta.dev          # anonymous telemetry; set ENABLE_TELEMETRY=false in runner.additional_env_vars to turn it off
+    api.robusta.dev          # telemetry, identified by SHA-256 hashes of the account ID and cluster name; set ENABLE_TELEMETRY=false in runner.additional_env_vars to turn it off
     docs.robusta.dev         # doc links embedded in notifications (not strictly required)
 
 Installation
