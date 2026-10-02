@@ -108,6 +108,11 @@ pillow = "^12.3.0"
 click = ">=8.3.3"
 # Used directly for the Supabase login retry (ROB-1228); was only transitive via opsgenie-sdk
 tenacity = "^9.1.2"
+# Used directly (TTLCache in runner/web.py, prometheus/utils.py,
+# kubernetes/api_client_utils.py, robusta_sink.py, supabase_dal.py); was only
+# transitive via google-auth/pyiceberg, so installs without that chain (e.g. the
+# robusta-cli venv) crash with ModuleNotFoundError (#2060)
+cachetools = "^6.2.4"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
