@@ -6,12 +6,23 @@ from robusta.integrations.common.requests import HttpMethod, check_response_succ
 
 _API_PREFIX = "api/v4"
 
+
 class MattermostClient:
     channel_id: str
     bot_id: str
     team_id: Optional[str]
+    user_agent: Optional[str]
 
-    def __init__(self, url: str, token: str, token_id: str, channel_name: str, team: Optional[str], team_id: Optional[str]):
+    def __init__(
+        self,
+        url: str,
+        token: str,
+        token_id: str,
+        channel_name: str,
+        team: Optional[str],
+        team_id: Optional[str],
+        user_agent: Optional[str],
+    ):
         """
         Set the Mattermost webhook url.
         """
@@ -19,12 +30,15 @@ class MattermostClient:
         self.token = token
         self.token_id = token_id
         self.team_id = team_id
+        self.user_agent = user_agent
         self.is_admin = self.is_admin_bot()
         self._init_setup(channel_name, team)
 
     def _send_mattermost_request(self, url: str, method: HttpMethod, **kwargs):
         headers = kwargs.pop("headers", {})
         headers["Authorization"] = f"Bearer {self.token}"
+        if self.user_agent:
+            headers["User-Agent"] = self.user_agent
         return process_request(url, method, headers=headers, **kwargs)
 
     def _get_full_mattermost_url(self, endpoint: str) -> str:

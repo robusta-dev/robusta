@@ -16,10 +16,13 @@ class MattermostSink(SinkBase):
             token_id=sink_config.mattermost_sink.token_id,
             team=sink_config.mattermost_sink.team,
             team_id=sink_config.mattermost_sink.team_id,
+            user_agent=sink_config.mattermost_sink.user_agent,
         )
         self.sender = MattermostSender(
-            cluster_name=self.cluster_name, account_id=self.account_id, client=client,
-            sink_params=sink_config.mattermost_sink
+            cluster_name=self.cluster_name,
+            account_id=self.account_id,
+            client=client,
+            sink_params=sink_config.mattermost_sink,
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
