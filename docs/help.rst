@@ -167,12 +167,12 @@ Issues after installation when pods are running but not working correctly.
                         limits:
                           memory: 1Gi
 
-        If using a test cluster like Kind/Colima, re-install Robusta with the ``isSmallCluster=true`` property.
+        If using a test cluster like Kind/Colima, re-install Robusta with ``clusterSize=small``.
         If you're also using Robusta's kube-prometheus-stack, add the lines involving prometheusSpec.
 
         .. code-block:: bash
 
-                helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true \
+                helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set clusterSize=small \
                     --set kube-prometheus-stack.prometheus.prometheusSpec.retentionSize=9GB \
                     --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
                     --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
