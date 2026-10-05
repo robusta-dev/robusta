@@ -70,6 +70,8 @@ WORKDIR /app
 # Install necessary packages for the runtime environment
 # We're installing here libexpat1, to upgrade the package to include a fix to 3 high CVEs. CVE-2024-45491,CVE-2024-45490,CVE-2024-45492
 # Patching glibc for CVE-2026-0861, CVE-2026-0915, CVE-2025-15281
+# Patching pcre2 for CVE-2026-89161, CVE-2026-89157 (High), CVE-2026-89160, CVE-2026-89158,
+# CVE-2026-89156 (Medium) - fixed in trixie-security 10.46-1~deb13u3
 # We install openssh-client rather than the "ssh" metapackage: only the ssh *client* is used
 # (GIT_SSH_COMMAND when cloning playbook repos over git@). The metapackage also pulls in
 # openssh-server and openssh-sftp-server, which are never used and carry unfixed CVEs
@@ -81,7 +83,7 @@ RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && pip3 install --no-cache-dir --upgrade pip \
     && apt-get install -y --no-install-recommends git openssh-client curl fonts-dejavu-core apt-transport-https \
-    && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 \
+    && apt-get install -y --no-install-recommends libexpat1 libc6 libc-bin libcap2 libpcre2-8-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Debian trixie ships no fix for libssh2/attr/acl or perl ("vulnerable, no DSA" in the
@@ -125,7 +127,9 @@ COPY --from=builder /app /app
 # remove duplicated /app/venv - already copied to /venv
 RUN rm -rf /app/venv
 # Remove vendored wheel 0.45.1 from setuptools in venv (CVE-2026-24049)
-RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel*
+# and virtualenv's embedded wheel 0.45.1 seed, which it only uses for Python 3.8 environments
+RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel* \
+    /venv/lib/python3.11/site-packages/virtualenv/seed/wheels/embed/wheel-0.45.1-py3-none-any.whl
 
 # Set up kubectl
 # apt accepts an ASCII-armored key directly via signed-by, so there is no need for
