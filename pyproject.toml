@@ -94,6 +94,8 @@ h2 = "^4.3.0"
 # Pin to fix CVE-2026-30922 (transitive via google-auth)
 # Bump to fix CVE-2026-59885, CVE-2026-59886 (High)
 pyasn1 = ">=0.6.4"
+# Pin to fix CVE-2026-63374 (Critical) + CVE-2026-64847 (Medium) (transitive via httpx)
+anyio = "^4.14.2"
 # Pin to fix CVE-2026-22701 (transitive via virtualenv/pre-commit)
 filelock = ">=3.20.3"
 # Pin to fix CVE-2026-22702 (transitive via pre-commit)
