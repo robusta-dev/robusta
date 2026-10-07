@@ -104,9 +104,19 @@ spec:
           {{- toYaml . | nindent 12 }}
         {{- end }}
         {{- end }}
+        {{- $hasPlaybooksPathOverride := false }}
+        {{- if kindIs "slice" .Values.runner.additional_env_vars }}
+        {{- range .Values.runner.additional_env_vars }}
+        {{- if eq .name "PLAYBOOKS_CONFIG_FILE_PATH" }}
+        {{- $hasPlaybooksPathOverride = true }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
         env:
+          {{- if not $hasPlaybooksPathOverride }}
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
+          {{- end }}
           - name: RELEASE_NAME
             value: {{ include "robusta.fullname" .| quote }}
           {{- if .Values.runner.customServiceAccount }}

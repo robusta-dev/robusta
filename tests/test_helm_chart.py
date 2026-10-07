@@ -217,3 +217,39 @@ def test_override_cluster_roles_still_replaces_rules():
     )
     cluster_role = get_doc(docs, "ClusterRole", "runner-cluster-role")
     assert cluster_role["rules"] == [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}]
+
+
+@pytest.mark.parametrize(
+    "additional_vars, expected",
+    [
+        ([], {"name": "PLAYBOOKS_CONFIG_FILE_PATH", "value": "/etc/robusta/config/active_playbooks.yaml"}),
+        (
+            [{"name": "UNRELATED", "value": "kept"}],
+            {"name": "PLAYBOOKS_CONFIG_FILE_PATH", "value": "/etc/robusta/config/active_playbooks.yaml"},
+        ),
+        (
+            [{"name": "PLAYBOOKS_CONFIG_FILE_PATH", "value": "/etc/robusta/config/custom_playbooks.yaml"}],
+            {"name": "PLAYBOOKS_CONFIG_FILE_PATH", "value": "/etc/robusta/config/custom_playbooks.yaml"},
+        ),
+        (
+            [
+                {
+                    "name": "PLAYBOOKS_CONFIG_FILE_PATH",
+                    "valueFrom": {"configMapKeyRef": {"name": "paths", "key": "playbooks"}},
+                }
+            ],
+            {
+                "name": "PLAYBOOKS_CONFIG_FILE_PATH",
+                "valueFrom": {"configMapKeyRef": {"name": "paths", "key": "playbooks"}},
+            },
+        ),
+    ],
+)
+def test_playbooks_path_env_has_one_effective_value(tmp_path, additional_vars, expected):
+    values_path = tmp_path / "values.yaml"
+    values_path.write_text(yaml.safe_dump({"runner": {"additional_env_vars": additional_vars}}))
+    deployment = get_doc(render_chart(["-f", str(values_path)]), "Deployment", "runner")
+    env_vars = deployment["spec"]["template"]["spec"]["containers"][0]["env"]
+    assert [entry for entry in env_vars if entry["name"] == "PLAYBOOKS_CONFIG_FILE_PATH"] == [expected]
+    for entry in additional_vars:
+        assert entry in env_vars
