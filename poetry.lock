@@ -35,13 +35,13 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.12.0"
+version = "4.14.2"
 description = "High-level concurrency and networking framework on top of asyncio or Trio"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 files = [
-    {file = "anyio-4.12.0-py3-none-any.whl", hash = "sha256:dad2376a628f98eeca4881fc56cd06affd18f659b17a747d3ff0307ced94b1bb"},
-    {file = "anyio-4.12.0.tar.gz", hash = "sha256:73c693b567b0c55130c104d0b43a9baf3aa6a31fc6110116509f27bf75e21ec0"},
+    {file = "anyio-4.14.2-py3-none-any.whl", hash = "sha256:9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"},
+    {file = "anyio-4.14.2.tar.gz", hash = "sha256:cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f"},
 ]
 
 [package.dependencies]
@@ -50,7 +50,7 @@ idna = ">=2.8"
 typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 
 [package.extras]
-trio = ["trio (>=0.31.0)", "trio (>=0.32.0)"]
+trio = ["trio (>=0.32.0)"]
 
 [[package]]
 name = "appdirs"
@@ -5063,4 +5063,4 @@ all = ["Flask", "better-exceptions", "datadog-api-client", "grafana-api", "kafka
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "d26e2c3e4ba616e8d100adcbf2fa139985d7360ae6bf50c93818f9a8a45be1d8"
+content-hash = "463efd97f18d2785fc4ea58905340d4848ff02e431fb02dd60018d76a5f37b72"
