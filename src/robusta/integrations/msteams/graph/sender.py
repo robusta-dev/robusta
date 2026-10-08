@@ -32,7 +32,7 @@ class MsTeamsGraphSender:
                 f"Teams rejected finding {finding.title} with images ({response.status_code} "
                 f"{self.client.error_message(response)}), sending it without them"
             )
-            response = self.client.post_channel_message(team_id, channel_id, msg.without_images(message))
+            response = self.client.post_channel_message(team_id, channel_id, MsTeamsGraphMsg.without_images(message))
 
         if not response.ok:
             logging.error(

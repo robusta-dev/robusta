@@ -2,8 +2,6 @@ import json
 import logging
 from typing import List
 
-import requests
-
 from robusta.core.reporting import (
     BaseBlock,
     CallbackBlock,
@@ -37,11 +35,10 @@ class MsTeamsMsg:
     # a safe zone of less then 28K
     MAX_SIZE_IN_BYTES = 1024 * 20
 
-    def __init__(self, webhook_url: str, prefer_redirect_to_platform: bool):
+    def __init__(self, prefer_redirect_to_platform: bool):
         self.entire_msg: List[MsTeamsBase] = []
         self.current_section: List[MsTeamsBase] = []
         self.text_file_containers = []
-        self.webhook_url = webhook_url
         self.prefer_redirect_to_platform = prefer_redirect_to_platform
 
     def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
@@ -222,20 +219,6 @@ class MsTeamsMsg:
         complete_card_map: dict = MsTeamsCard(self.entire_msg).get_map_value()
         self._put_text_files_data_up_to_max_limit(complete_card_map)
         return complete_card_map
-
-    def send(self):
-        try:
-            complete_card_map: dict = self.build_card()
-
-            response = requests.post(self.webhook_url, json=complete_card_map)
-            if response.status_code not in [200, 201]:
-                logging.error(f"Error sending to ms teams json: {complete_card_map} error: {response.reason}")
-
-            if response.text and "error" in response.text.lower():  # teams error indication is in the text only :(
-                logging.error(f"Failed to send message to teams. error: {response.text} message: {complete_card_map}")
-
-        except Exception as e:
-            logging.error(f"error sending message to msteams\ne={e}\n")
 
     @classmethod
     def __get_current_card_len(cls, complete_card_map: dict):

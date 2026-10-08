@@ -1,4 +1,7 @@
+import logging
 from typing import Optional
+
+import requests
 
 from robusta.core.reporting import Finding
 from robusta.core.sinks.msteams.msteams_webhook_tranformer import MsTeamsWebhookUrlTransformer
@@ -49,7 +52,20 @@ class MsTeamsSender:
         if send_files is None:
             send_files = not _is_power_automate_url(webhook_url)
 
-        msg = MsTeamsMsg(webhook_url, prefer_redirect_to_platform)
+        msg = MsTeamsMsg(prefer_redirect_to_platform)
         msg.write_title_and_desc(platform_enabled, finding, cluster_name, account_id)
         msg.write_enrichments(finding.enrichments, send_files)
-        msg.send()
+        cls.__send(webhook_url, msg.build_card())
+
+    @staticmethod
+    def __send(webhook_url: str, card: dict):
+        try:
+            response = requests.post(webhook_url, json=card)
+            if response.status_code not in [200, 201]:
+                logging.error(f"Error sending to ms teams json: {card} error: {response.reason}")
+
+            if response.text and "error" in response.text.lower():  # teams error indication is in the text only :(
+                logging.error(f"Failed to send message to teams. error: {response.text} message: {card}")
+
+        except Exception as e:
+            logging.error(f"error sending message to msteams\ne={e}\n")

@@ -29,7 +29,7 @@ class MsTeamsGraphMsg(MsTeamsMsg):
     """
 
     def __init__(self, prefer_redirect_to_platform: bool):
-        super().__init__(webhook_url="", prefer_redirect_to_platform=prefer_redirect_to_platform)
+        super().__init__(prefer_redirect_to_platform)
         self.hosted_contents: List[dict] = []
 
     def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
