@@ -30,7 +30,15 @@ and messages are posted as that user.
 3. Under **Certificates & secrets**, create a client secret (or enable **Allow public client flows** under **Authentication** and leave ``client_secret`` empty).
 4. Create a service user, for example ``robusta-alerts@yourcompany.onmicrosoft.com``. ROPC does not support interactive MFA,
    so exclude this user from MFA / Conditional Access policies that require it.
-5. Add the service user as a member of every team Robusta should post to.
+   When creating it, uncheck **Require this user to change their password when they first sign in**. Otherwise the sign-in fails with ``AADSTS50055`` (password expired).
+5. Give the service user a Microsoft Teams license. Without one, Graph rejects every message with ``403 Failed to get license information for the user``.
+
+   a. Open the `Microsoft 365 admin center <https://admin.cloud.microsoft/?#/homepage>`_.
+   b. Go to **Users** > **Active users**, and select the service user.
+   c. Click **Manage product licenses**, and assign a license that includes **Microsoft Teams**.
+
+   A new license can take a few minutes to take effect.
+6. Add the service user as a member of every team Robusta should post to.
 
 Get the team and channel ids
 ------------------------------------------------
@@ -179,3 +187,33 @@ Example — route by a namespace annotation, then by an alert label, drop if nei
       name: payments
       annotations:
         example.com/teams-channel: "19:abc123@thread.tacv2"
+
+Troubleshooting
+------------------------------------------------
+
+Errors are logged by the Robusta runner.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Error
+     - Fix
+   * - ``AADSTS50055`` (password is expired)
+     - The service user still has to change its first password. Sign in once as the user and set a new password,
+       or reset it with **Require this user to change their password when they first sign in** unchecked.
+   * - ``AADSTS50076`` / ``AADSTS50079`` (MFA required)
+     - Exclude the service user from security defaults, Conditional Access policies and per-user MFA that require MFA.
+       The user's **Sign-in logs** in Entra ID show which policy required it.
+   * - ``AADSTS50126``
+     - Wrong ``username`` or ``password``.
+   * - ``AADSTS7000218``
+     - Set ``client_secret``, or enable **Allow public client flows** on the app registration.
+   * - ``AADSTS65001``
+     - Grant admin consent for the ``ChannelMessage.Send`` permission.
+   * - ``403 Failed to get license information for the user``
+     - Assign the service user a license that includes Microsoft Teams (step 5 above).
+   * - Any other ``403`` when posting
+     - Add the service user as a member of the team. For private or shared channels, also add it to the channel.
+   * - ``404`` when posting
+     - Check the team id and the channel id.
