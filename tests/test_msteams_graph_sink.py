@@ -38,8 +38,8 @@ def make_params(**overrides) -> MsTeamsGraphSinkParams:
         client_id="client",
         username="robusta@example.onmicrosoft.com",
         password="secret",
-        team_id=TEAM,
-        channel_id=DEFAULT_CHANNEL,
+        default_team_id=TEAM,
+        default_channel_id=DEFAULT_CHANNEL,
     )
     values.update(overrides)
     return MsTeamsGraphSinkParams(**values)

@@ -14,9 +14,9 @@ class MsTeamsGraphSinkParams(SinkBaseParams):
     client_secret: Optional[SecretStr] = None
     username: str
     password: SecretStr
-    # Default destination. Overrides may resolve to "<channel_id>" (in team_id) or "<team_id>/<channel_id>"
-    team_id: str
-    channel_id: str
+    # Used when no override resolves. Overrides may resolve to "<channel_id>" (in default_team_id) or "<team_id>/<channel_id>"
+    default_team_id: str
+    default_channel_id: str
     channel_override: Optional[str] = None
     namespace_channel_override: Optional[str] = None
     send_to_default_if_missing: bool = True

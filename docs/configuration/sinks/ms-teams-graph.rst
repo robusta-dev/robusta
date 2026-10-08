@@ -67,8 +67,9 @@ Configuring the sink
             client_secret: "{{ env.TEAMS_CLIENT_SECRET }}"
             username: robusta-alerts@yourcompany.onmicrosoft.com
             password: "{{ env.TEAMS_PASSWORD }}"
-            team_id: <TEAM_ID>
-            channel_id: "19:abc123@thread.tacv2"
+            # where notifications go when no channel routing applies (see Dynamic Channel Routing)
+            default_team_id: <TEAM_ID>
+            default_channel_id: "19:abc123@thread.tacv2"
 
         runner:
           additional_env_vars:
@@ -107,12 +108,13 @@ Configuration parameters
    * - ``username`` / ``password``
      - *(required)*
      - The service user Robusta signs in as and posts as.
-   * - ``team_id``
+   * - ``default_team_id``
      - *(required)*
-     - Default team id.
-   * - ``channel_id``
+     - Team of the default channel. Also the team of override values that are only a channel id.
+   * - ``default_channel_id``
      - *(required)*
-     - Default channel id, in ``team_id``.
+     - Channel in ``default_team_id`` that notifications go to when no override is configured, or when an override
+       doesn't resolve and ``send_to_default_if_missing`` is ``true``.
    * - ``channel_override``
      - *(none)*
      - Template resolved against the finding subject labels/annotations to route to a different channel.
@@ -145,12 +147,12 @@ The sink routes each notification with two optional override fields, evaluated i
 2. ``channel_override`` — resolved against the finding's **subject** labels and annotations
    (for Prometheus alerts, the alert labels and annotations). Same behavior as Slack's ``channel_override``.
 
-If neither produces a channel, ``send_to_default_if_missing`` decides whether the notification goes to the default
-channel or is dropped.
+If neither produces a channel, ``send_to_default_if_missing`` decides whether the notification goes to
+``default_channel_id`` or is dropped.
 
 The resolved value can be:
 
-- a channel id (``19:abc123@thread.tacv2``, or URL-encoded), posted in ``team_id``, or
+- a channel id (``19:abc123@thread.tacv2``, or URL-encoded), posted in ``default_team_id``, or
 - ``<team_id>/<channel_id>``, to post in another team.
 
 Both override fields use the same template syntax as Slack:
@@ -174,7 +176,7 @@ Example — route by a namespace annotation, then by an alert label, drop if nei
     sinksConfig:
     - ms_teams_graph_sink:
         name: teams_graph_sink
-        # ... credentials, team_id and channel_id as above
+        # ... credentials, default_team_id and default_channel_id as above
         namespace_channel_override: "${annotations.example.com/teams-channel}"
         channel_override: "${labels.teams_channel}"
         send_to_default_if_missing: false

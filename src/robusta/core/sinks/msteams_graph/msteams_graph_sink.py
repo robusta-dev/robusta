@@ -46,14 +46,14 @@ class MsTeamsGraphSink(SinkBase):
         channel = resolve_destination_override(
             finding,
             self.cluster_name,
-            self.params.channel_id,
+            self.params.default_channel_id,
             self.params.channel_override,
             self.params.namespace_channel_override,
             self.params.send_to_default_if_missing,
         )
         if channel is None:
             return None
-        return self.split_team_and_channel(channel.strip(), self.params.team_id)
+        return self.split_team_and_channel(channel.strip(), self.params.default_team_id)
 
     @staticmethod
     def split_team_and_channel(destination: str, default_team_id: str) -> Tuple[str, str]:
