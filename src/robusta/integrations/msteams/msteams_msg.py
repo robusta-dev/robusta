@@ -184,7 +184,9 @@ class MsTeamsMsg:
             self._put_text_files_data_up_to_max_limit(complete_card_map)
 
             response = requests.post(self.webhook_url, json=complete_card_map)
-            if response.status_code not in [200, 201]:
+            # Power Automate workflow webhooks accept the payload asynchronously and return 202,
+            # while legacy Office 365 connectors return 200. Both indicate success.
+            if response.status_code not in [200, 201, 202]:
                 logging.error(f"Error sending to ms teams json: {complete_card_map} error: {response.reason}")
 
             if response.text and "error" in response.text.lower():  # teams error indication is in the text only :(
