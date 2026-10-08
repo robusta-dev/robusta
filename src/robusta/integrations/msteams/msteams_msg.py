@@ -2,9 +2,12 @@ import json
 import logging
 from typing import List
 
-import requests
-
 from robusta.core.reporting import (
+    BaseBlock,
+    CallbackBlock,
+    DividerBlock,
+    EmptyFileBlock,
+    Enrichment,
     FileBlock,
     Finding,
     FindingSeverity,
@@ -32,11 +35,10 @@ class MsTeamsMsg:
     # a safe zone of less then 28K
     MAX_SIZE_IN_BYTES = 1024 * 20
 
-    def __init__(self, webhook_url: str, prefer_redirect_to_platform: bool):
+    def __init__(self, prefer_redirect_to_platform: bool):
         self.entire_msg: List[MsTeamsBase] = []
         self.current_section: List[MsTeamsBase] = []
         self.text_file_containers = []
-        self.webhook_url = webhook_url
         self.prefer_redirect_to_platform = prefer_redirect_to_platform
 
     def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
@@ -47,14 +49,14 @@ class MsTeamsMsg:
         title = self.__build_msteams_title(title, status, finding.severity, finding.add_silence_url)
 
         block = MsTeamsTextBlock(text=f"{title}", font_size="extraLarge")
-        self.__write_to_entire_msg([block])
+        self._write_to_entire_msg([block])
         self._add_actions(platform_enabled, finding, cluster_name, account_id)
 
-        self.__write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])
+        self._write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])
 
         if finding.description is not None:
             block = MsTeamsTextBlock(text=finding.description)
-            self.__write_to_entire_msg([block])
+            self._write_to_entire_msg([block])
 
     def _add_actions(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
         actions: list[str] = []
@@ -73,7 +75,7 @@ class MsTeamsMsg:
             actions.append(action)
 
         if actions:
-            self.__write_to_entire_msg([MsTeamsTextBlock(text=" ".join(actions))])
+            self._write_to_entire_msg([MsTeamsTextBlock(text=" ".join(actions))])
 
     @classmethod
     def __build_msteams_title(
@@ -81,6 +83,40 @@ class MsTeamsMsg:
     ) -> str:
         status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
         return f"{status_str}{severity.to_emoji()} {severity.name} - **{title}**"
+
+    def write_enrichments(self, enrichments: List[Enrichment], send_files: bool):
+        for enrichment in enrichments:
+            files_blocks = [block for block in enrichment.blocks if isinstance(block, FileBlock)]
+            other_blocks = [block for block in enrichment.blocks if not isinstance(block, FileBlock)]
+
+            # Filter out all files when send_files is False to avoid 28KB payload limit
+            if not send_files:
+                files_blocks = []
+
+            for block in other_blocks:
+                self.write_block(block)
+
+            self.upload_files(files_blocks)
+            self.write_current_section()
+
+    def write_block(self, block: BaseBlock):
+        if isinstance(block, MarkdownBlock):
+            self.markdown_block(block)
+        elif isinstance(block, DividerBlock):
+            self.divider_block()
+        elif isinstance(block, HeaderBlock):
+            self.header_block(block)
+        elif isinstance(block, TableBlock):
+            self.table(block)
+        elif isinstance(block, ListBlock):
+            self.items_list(block)
+        elif isinstance(block, KubernetesDiffBlock):
+            self.diff(block)
+        elif isinstance(block, CallbackBlock):
+            logging.error("CallbackBlock not supported for msteams")
+        else:
+            if not isinstance(block, EmptyFileBlock):
+                logging.warning(f"cannot convert block of type {type(block)} to msteams format block: {block}")
 
     def write_current_section(self):
         if len(self.current_section) == 0:
@@ -92,45 +128,45 @@ class MsTeamsMsg:
         underline_block = MsTeamsColumn()
         underline_block.add_column(items=[space_block, separator_block], width_stretch=True)
 
-        self.__write_to_entire_msg([underline_block])
-        self.__write_to_entire_msg(self.current_section)
+        self._write_to_entire_msg([underline_block])
+        self._write_to_entire_msg(self.current_section)
         self.current_section = []
 
-    def __write_to_entire_msg(self, blocks: List[MsTeamsBase]):
+    def _write_to_entire_msg(self, blocks: List[MsTeamsBase]):
         self.entire_msg += blocks
 
-    def __write_to_current_section(self, blocks: List[MsTeamsBase]):
+    def _write_to_current_section(self, blocks: List[MsTeamsBase]):
         self.current_section += blocks
 
-    def __sub_section_separator(self):
+    def _sub_section_separator(self):
         if len(self.current_section) == 0:
             return
         space_block = MsTeamsTextBlock(text=" ", font_size="small")
         separator_block = MsTeamsTextBlock(text="_" * 30, font_size="small", horizontal_alignment="center")
-        self.__write_to_current_section([space_block, separator_block, space_block, space_block])
+        self._write_to_current_section([space_block, separator_block, space_block, space_block])
 
     def upload_files(self, file_blocks: List[FileBlock]):
         msteams_files = MsTeamsAdaptiveCardFiles()
         block_list: List[MsTeamsBase] = msteams_files.upload_files(file_blocks)
         if len(block_list) > 0:
-            self.__sub_section_separator()
+            self._sub_section_separator()
 
         self.text_file_containers += msteams_files.get_text_files_containers_list()
 
-        self.__write_to_current_section(block_list)
+        self._write_to_current_section(block_list)
 
     def table(self, table_block: TableBlock):
         blocks: List[MsTeamsBase] = []
         if table_block.table_name:
             blocks.append(MsTeamsTextBlock(table_block.table_name))
         blocks.append(MsTeamsTable(list(table_block.headers), table_block.render_rows(), table_block.column_width))
-        self.__write_to_current_section(blocks)
+        self._write_to_current_section(blocks)
 
     def items_list(self, block: ListBlock):
-        self.__sub_section_separator()
+        self._sub_section_separator()
         for line in block.items:
             bullet_lines = "\n- " + line + "\n"
-            self.__write_to_current_section([MsTeamsTextBlock(bullet_lines)])
+            self._write_to_current_section([MsTeamsTextBlock(bullet_lines)])
 
     def diff(self, block: KubernetesDiffBlock):
         rows = [f"*{diff.formatted_path}*: {diff.other_value} -> {diff.value}" for diff in block.diffs]
@@ -141,14 +177,14 @@ class MsTeamsMsg:
     def markdown_block(self, block: MarkdownBlock):
         if not block.text:
             return
-        self.__write_to_current_section([MsTeamsTextBlock(block.text)])
+        self._write_to_current_section([MsTeamsTextBlock(block.text)])
 
     def divider_block(self):
-        self.__write_to_current_section([MsTeamsTextBlock("\n\n")])
+        self._write_to_current_section([MsTeamsTextBlock("\n\n")])
 
     def header_block(self, block: HeaderBlock):
         current_header_string = block.text + "\n\n"
-        self.__write_to_current_section([MsTeamsTextBlock(current_header_string, font_size="large")])
+        self._write_to_current_section([MsTeamsTextBlock(current_header_string, font_size="large")])
 
     # dont include the base 64 images in the total size calculation
     def _put_text_files_data_up_to_max_limit(self, complete_card_map: map):
@@ -178,20 +214,11 @@ class MsTeamsMsg:
             if not line_added:
                 return
 
-    def send(self):
-        try:
-            complete_card_map: dict = MsTeamsCard(self.entire_msg).get_map_value()
-            self._put_text_files_data_up_to_max_limit(complete_card_map)
-
-            response = requests.post(self.webhook_url, json=complete_card_map)
-            if response.status_code not in [200, 201]:
-                logging.error(f"Error sending to ms teams json: {complete_card_map} error: {response.reason}")
-
-            if response.text and "error" in response.text.lower():  # teams error indication is in the text only :(
-                logging.error(f"Failed to send message to teams. error: {response.text} message: {complete_card_map}")
-
-        except Exception as e:
-            logging.error(f"error sending message to msteams\ne={e}\n")
+    def build_card(self) -> dict:
+        # fills the text file containers up to the size limit, so call it once per message
+        complete_card_map: dict = MsTeamsCard(self.entire_msg).get_map_value()
+        self._put_text_files_data_up_to_max_limit(complete_card_map)
+        return complete_card_map
 
     @classmethod
     def __get_current_card_len(cls, complete_card_map: dict):
