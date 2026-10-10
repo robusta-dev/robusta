@@ -1,4 +1,3 @@
-{{ if (dig "enabled" true .Values.runner) -}}
 Thank you for installing {{ .Chart.Name | title }} {{ .Chart.AppVersion }}
 
 As an open source project, we collect general usage statistics.
@@ -7,8 +6,9 @@ If you are willing to share additional data, please do so! It really help us imp
 
 You can set sendAdditionalTelemetry: true as a Helm value to send exception reports and additional data.
 This is disabled by default.
-
+{{ if (dig "enabled" true .Values.runner) }}
 To opt-out of telemetry entirely, set a ENABLE_TELEMETRY=false environment variable on the robusta-runner deployment.
+{{- end }}
 Note that if the Robusta UI is enabled, telemetry cannot be disabled even if ENABLE_TELEMETRY=false is set.
 
 {{- range .Values.sinksConfig }}
@@ -19,19 +19,4 @@ Visit the web UI at: https://platform.robusta.dev/check-connection?clusterName={
 
 {{- if .Values.rsa }}
 NOTICE: RSA is no longer used by default and can be removed from the values file
-{{- end }}
-{{- else -}}
-Thank you for installing {{ .Chart.Name | title }} {{ .Chart.AppVersion }} in Holmes-only mode (runner.enabled=false).
-
-Only HolmesGPT is installed. It connects to the Robusta platform with the token from your robusta_sink.
-The runner, kubewatch, playbooks and non-Robusta sinks are not installed, so Kubernetes pages
-(workloads, nodes, timeline, pod actions, KRR) are unavailable for this cluster in the Robusta UI.
-
-Alerts: point Alertmanager at the Robusta platform directly - the in-cluster runner endpoint does not exist.
-{{- range .Values.sinksConfig }}
-{{- if .robusta_sink }}
-
-Visit the web UI at: https://platform.robusta.dev/check-connection?clusterName={{ $.Values.clusterName }}&account={{ $.Values.globalConfig.account_id }}
-{{- end }}
-{{- end }}
 {{- end }}

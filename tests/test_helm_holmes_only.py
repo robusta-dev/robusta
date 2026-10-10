@@ -229,6 +229,5 @@ def test_runner_enabled_notes_match_golden(tmp_path, scenario):
 
 def test_holmes_only_notes(tmp_path):
     notes = render_notes(tmp_path, HOLMES_ONLY_ARGS)
-    assert "Holmes-only mode" in notes
     assert "robusta-runner" not in notes
     assert "check-connection?clusterName=golden-cluster" in notes
