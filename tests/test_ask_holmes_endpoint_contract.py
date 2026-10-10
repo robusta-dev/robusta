@@ -97,6 +97,34 @@ def test_ask_holmes_builds_finding_from_chat_result(mock_event):
     assert blocks[0].holmes_result.analysis.startswith("The pod is crash looping")
 
 
+def test_ask_holmes_keeps_chat_file_blocks(mock_event):
+    response = dict(CHAT_RESPONSE)
+    response["files"] = [{"filename": "graph.svg", "contents": "PGQA=="}]
+    with patch("robusta.core.playbooks.internal.ai_integration.requests.post") as post:
+        post.return_value = PostResponse(response)
+        ask_holmes(mock_event, make_params())
+
+    finding = mock_event.add_finding.call_args[0][0]
+    blocks = finding.enrichments[0].blocks
+    assert blocks[0].holmes_result.analysis.startswith("The pod is crash looping")
+    assert blocks[1].filename == "graph.svg"
+
+
+def test_ask_holmes_encodes_runbooks_and_sections_in_ask(mock_event):
+    params = make_params(
+        runbooks=["Check pod logs for errors"],
+        sections={"Root cause": "What caused the failure", "Remediation": "How to fix it"},
+    )
+    with patch("robusta.core.playbooks.internal.ai_integration.requests.post") as post:
+        post.return_value = PostResponse(CHAT_RESPONSE)
+        ask_holmes(mock_event, params)
+
+    body = json.loads(post.call_args[1].get("data") or post.call_args[0][1])
+    assert "Check pod logs for errors" in body["ask"]
+    assert "Root cause" in body["ask"]
+    assert "Remediation" in body["ask"]
+
+
 def test_ask_holmes_stream_uses_chat_stream(mock_event):
     params = make_params(stream=True)
     stream_context = Mock()

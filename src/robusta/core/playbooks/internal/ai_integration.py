@@ -133,6 +133,8 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
                 analysis=chat_result.analysis,
                 tool_calls=chat_result.tool_calls,
             )
+            blocks = [HolmesResultsBlock(holmes_result=holmes_result)]
+            blocks.extend(chat_result.files or [])
             title_suffix = (
                 f" on {params.resource.name}"
                 if params.resource
@@ -158,7 +160,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
                 failure=False,
             )
             finding.add_enrichment(
-                [HolmesResultsBlock(holmes_result=holmes_result)],
+                blocks,
                 enrichment_type=EnrichmentType.ai_analysis,
             )
 
@@ -189,6 +191,17 @@ def build_chat_ask(title: str, subject: dict, params: AIInvestigateParams) -> st
 
     if params.ask:
         parts.append(f"Additional context: {params.ask}")
+
+    if params.runbooks:
+        runbook_lines = "\n".join(f"- {runbook}" for runbook in params.runbooks)
+        parts.append(f"Recommended runbooks:\n{runbook_lines}")
+
+    if params.sections:
+        section_lines = "\n".join(
+            f"- {section_title}: {section_description}"
+            for section_title, section_description in params.sections.items()
+        )
+        parts.append(f"Structure the analysis with these sections:\n{section_lines}")
 
     parts.append(
         "Use your available toolsets to investigate the root cause and suggest remediations."
