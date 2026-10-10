@@ -80,19 +80,3 @@ receiver points at the runner, and rendering fails until you replace it:
                     authorization:
                       type: Bearer
                       credentials: <ROBUSTA_API_KEY>
-
-What is unavailable
--------------------
-
-Everything that the runner provides is missing on a Holmes-only cluster:
-
-- Kubernetes pages in the Robusta UI: workloads, nodes, jobs, namespaces, the change timeline and
-  KRR / Popeye scans.
-- Actions that run through the runner: pod logs and YAML for workloads, deleting pods, silences,
-  Prometheus graphs and the metrics explorer.
-- Playbooks, including alert enrichment, and all sinks other than the Robusta UI (Slack, Teams,
-  PagerDuty and others).
-- Kubernetes change tracking and ``on_kubernetes_*`` triggers, because kubewatch is not installed.
-- The Slack and Teams Holmes bots.
-
-To add these later, set ``runner.enabled: true`` and run ``helm upgrade``.
