@@ -1,0 +1,19 @@
+---
+# Source: robusta/charts/kube-prometheus-stack/templates/alertmanager/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-robusta-kube-prometheus-st-alertmanager
+  namespace: robusta
+  labels:
+    app: kube-prometheus-stack-alertmanager
+    
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: robusta
+    app.kubernetes.io/version: "72.0.1"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-72.0.1
+    release: "robusta"
+    heritage: "Helm"
+data:
+  alertmanager.yaml: "Z2xvYmFsOgogIHJlc29sdmVfdGltZW91dDogNW0KaW5oaWJpdF9ydWxlczoKLSBlcXVhbDoKICAtIG5hbWVzcGFjZQogIC0gYWxlcnRuYW1lCiAgc291cmNlX21hdGNoZXJzOgogIC0gc2V2ZXJpdHkgPSBjcml0aWNhbAogIHRhcmdldF9tYXRjaGVyczoKICAtIHNldmVyaXR5ID1+IHdhcm5pbmd8aW5mbwotIGVxdWFsOgogIC0gbmFtZXNwYWNlCiAgLSBhbGVydG5hbWUKICBzb3VyY2VfbWF0Y2hlcnM6CiAgLSBzZXZlcml0eSA9IHdhcm5pbmcKICB0YXJnZXRfbWF0Y2hlcnM6CiAgLSBzZXZlcml0eSA9IGluZm8KLSBlcXVhbDoKICAtIG5hbWVzcGFjZQogIHNvdXJjZV9tYXRjaGVyczoKICAtIGFsZXJ0bmFtZSA9IEluZm9JbmhpYml0b3IKICB0YXJnZXRfbWF0Y2hlcnM6CiAgLSBzZXZlcml0eSA9IGluZm8KLSB0YXJnZXRfbWF0Y2hlcnM6CiAgLSBhbGVydG5hbWUgPSBJbmZvSW5oaWJpdG9yCnJlY2VpdmVyczoKLSBuYW1lOiAibnVsbCIKLSBuYW1lOiByb2J1c3RhCiAgd2ViaG9va19jb25maWdzOgogIC0gc2VuZF9yZXNvbHZlZDogdHJ1ZQogICAgdXJsOiBodHRwOi8vcm9idXN0YS1ydW5uZXIucm9idXN0YS5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvYWxlcnRzCnJvdXRlOgogIGdyb3VwX2J5OgogIC0gJy4uLicKICBncm91cF9pbnRlcnZhbDogMXMKICBncm91cF93YWl0OiAxcwogIHJlY2VpdmVyOiByb2J1c3RhCiAgcmVwZWF0X2ludGVydmFsOiA0aAogIHJvdXRlczoKICAtIG1hdGNoOgogICAgICBhbGVydG5hbWU6IFdhdGNoZG9nCiAgICByZWNlaXZlcjogIm51bGwiCnRlbXBsYXRlczoKLSAvZXRjL2FsZXJ0bWFuYWdlci9jb25maWcvKi50bXBs"

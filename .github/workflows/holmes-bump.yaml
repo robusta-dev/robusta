@@ -1,0 +1,211 @@
+name: Release chart with a new Holmes
+
+# Ships a new Holmes to robusta/robusta without a runner release: the chart of the last runner
+# release, with only the holmes dependency bumped, published as the next patch chart version.
+# The runner image and RUNNER_VERSION stay those of that release, so nothing is built.
+#
+# Triggered by the Holmes release workflow after it uploads the holmes chart:
+#   POST /repos/robusta-dev/robusta/dispatches
+#   {"event_type": "holmes-released", "client_payload": {"holmes_version": "0.43.0"}}
+# or by hand from the Actions tab.
+#
+# This workflow never creates a git tag or GitHub release, so release.yaml does not run. The
+# next runner release must take a version no chart patch has used (the next minor, or a patch
+# above the last chart patch).
+
+on:
+  workflow_dispatch:
+    inputs:
+      holmes_version:
+        description: "Holmes chart version to ship, e.g. 0.43.0"
+        required: true
+      runner_version:
+        description: "Runner release to build on (default: the latest GitHub release)"
+        required: false
+        default: ""
+  repository_dispatch:
+    types: [holmes-released]
+
+concurrency:
+  group: holmes-bump
+  cancel-in-progress: false
+
+env:
+  CHART_REPO: https://robusta-charts.storage.googleapis.com
+  HOLMES_VERSION: ${{ github.event.inputs.holmes_version || github.event.client_payload.holmes_version }}
+  RUNNER_VERSION_INPUT: ${{ github.event.inputs.runner_version || github.event.client_payload.runner_version }}
+
+jobs:
+  release-chart:
+    name: Release chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    outputs:
+      chart_version: ${{ steps.versions.outputs.chart_version }}
+      runner_version: ${{ steps.versions.outputs.runner_version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.16.4
+
+      - name: Resolve versions
+        id: versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          semver='^[0-9]+\.[0-9]+\.[0-9]+$'
+          [[ "$HOLMES_VERSION" =~ $semver ]] || { echo "::error::invalid holmes version '$HOLMES_VERSION'"; exit 1; }
+
+          RUNNER_VERSION="${RUNNER_VERSION_INPUT:-$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)}"
+          [[ "$RUNNER_VERSION" =~ $semver ]] || { echo "::error::invalid runner version '$RUNNER_VERSION'"; exit 1; }
+          git rev-parse --verify --quiet "refs/tags/$RUNNER_VERSION" >/dev/null \
+            || { echo "::error::no tag $RUNNER_VERSION"; exit 1; }
+
+          helm repo add robusta "$CHART_REPO"
+          helm repo update robusta
+          published=$(helm search repo robusta/robusta --versions --devel -o json | jq -r '.[] | select(.name == "robusta/robusta") | .version')
+          helm search repo robusta/holmes --versions --devel -o json \
+            | jq -e --arg v "$HOLMES_VERSION" 'any(.[]; .name == "robusta/holmes" and .version == $v)' >/dev/null \
+            || { echo "::error::holmes chart $HOLMES_VERSION is not in $CHART_REPO"; exit 1; }
+
+          # next free patch in the runner's major.minor line, above the runner version
+          minor_line="${RUNNER_VERSION%.*}"
+          runner_patch="${RUNNER_VERSION##*.}"
+          last_patch=$(echo "$published" | grep -E "^${minor_line//./\\.}\.[0-9]+$" | sed 's/.*\.//' | sort -n | tail -1 || true)
+          last_patch=$(( ${last_patch:-$runner_patch} > runner_patch ? ${last_patch:-$runner_patch} : runner_patch ))
+          CHART_VERSION="$minor_line.$(( last_patch + 1 ))"
+          if echo "$published" | grep -qxF "$CHART_VERSION"; then
+            echo "::error::chart $CHART_VERSION is already published"; exit 1
+          fi
+
+          echo "Runner $RUNNER_VERSION + Holmes $HOLMES_VERSION -> chart $CHART_VERSION"
+          echo "RUNNER_VERSION=$RUNNER_VERSION" >> "$GITHUB_ENV"
+          echo "CHART_VERSION=$CHART_VERSION" >> "$GITHUB_ENV"
+          echo "runner_version=$RUNNER_VERSION" >> "$GITHUB_OUTPUT"
+          echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
+
+      # The scripts come from this workflow's ref; a runner tag may predate them.
+      - name: Check out the runner release
+        run: |
+          mkdir -p "$RUNNER_TEMP/release-scripts"
+          cp helm/stamp_versions.sh helm/set_holmes_version.sh "$RUNNER_TEMP/release-scripts/"
+          git checkout "refs/tags/$RUNNER_VERSION"
+
+      - name: Bump the holmes dependency
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/release-scripts/set_holmes_version.sh" "$HOLMES_VERSION"
+          helm dependency update helm/robusta
+          "$RUNNER_TEMP/release-scripts/stamp_versions.sh" "$CHART_VERSION" "$RUNNER_VERSION"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.11
+
+      # Golden renders pin the chart of master; this chart intentionally differs from them.
+      # --noconftest: tests/conftest.py needs the full runner dependencies, which these don't.
+      - name: Helm template tests
+        run: |
+          shopt -s nullglob
+          tests=(tests/test_helm*.py)
+          if (( ${#tests[@]} == 0 )); then echo "no helm template tests at $RUNNER_VERSION"; exit 0; fi
+          pip install pytest pyyaml
+          pytest "${tests[@]}" -k "not golden" --noconftest -p no:cacheprovider -v
+
+      - name: Check the packaged versions
+        run: |
+          set -euo pipefail
+          out=$(helm template robusta helm/robusta --set clusterName=test --set sinksConfig[0].file_sink.name=test --set enableHolmesGPT=true)
+          grep -q "robusta-runner:$RUNNER_VERSION\$" <<<"$out" || { echo "::error::runner image is not $RUNNER_VERSION"; exit 1; }
+          grep -q "robusta-holmes" <<<"$out" || { echo "::error::holmes is not rendered"; exit 1; }
+          test -f "helm/robusta/charts/holmes-$HOLMES_VERSION.tgz" || { echo "::error::holmes $HOLMES_VERSION is not vendored"; exit 1; }
+          grep -qx "version: $CHART_VERSION" helm/robusta/Chart.yaml
+
+      - uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ secrets.GKE_PROD_PROJECT }}
+          workload_identity_provider: 'projects/429189597230/locations/global/workloadIdentityPools/github/providers/robusta-repos' # prod
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ secrets.GKE_PROD_PROJECT }}
+
+      - name: Upload helm chart
+        run: |
+          cd helm && ./upload_chart.sh
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Helm chart to OCI registry
+        run: |
+          helm package helm/robusta
+          helm push "robusta-$CHART_VERSION.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"
+
+  # So the next runner release ships this Holmes too.
+  bump-master:
+    name: Open PR bumping holmes on master
+    needs: release-chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: master
+          # PRs opened with GITHUB_TOKEN don't trigger CI; a PAT or app token in this secret does.
+          token: ${{ secrets.HOLMES_BUMP_PR_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.16.4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.11
+
+      - name: Bump holmes and open PR
+        env:
+          GH_TOKEN: ${{ secrets.HOLMES_BUMP_PR_TOKEN || secrets.GITHUB_TOKEN }}
+          CHART_VERSION: ${{ needs.release-chart.outputs.chart_version }}
+          RUNNER_VERSION: ${{ needs.release-chart.outputs.runner_version }}
+        run: |
+          set -euo pipefail
+          helm/set_holmes_version.sh "$HOLMES_VERSION"
+          if git diff --quiet -- helm/robusta/Chart.yaml; then
+            echo "master already ships holmes $HOLMES_VERSION"; exit 0
+          fi
+          helm dependency update helm/robusta
+          pip install pytest pyyaml
+          UPDATE_HELM_GOLDEN=1 pytest tests/test_helm_holmes_only.py -k golden --noconftest -p no:cacheprovider
+          pytest tests/test_helm*.py --noconftest -p no:cacheprovider
+
+          branch="holmes-bump/$HOLMES_VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add -A helm/robusta tests/helm_golden
+          git commit -s -m "Bump holmes to $HOLMES_VERSION"
+          git push origin "$branch"
+          gh pr create --base master --head "$branch" \
+            --title "Bump holmes to $HOLMES_VERSION" \
+            --body "Holmes $HOLMES_VERSION shipped as chart $CHART_VERSION on runner $RUNNER_VERSION by the holmes-bump workflow. This PR carries it into the next runner release."

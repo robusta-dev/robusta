@@ -1,4 +1,4 @@
-Thank you for installing {{ .Chart.Name | title }} {{ .Chart.AppVersion }}
+Thank you for installing Robusta 0.0.0
 
 As an open source project, we collect general usage statistics.
 This data is extremely limited and contains only general metadata to help us understand usage patterns.
@@ -6,17 +6,9 @@ If you are willing to share additional data, please do so! It really help us imp
 
 You can set sendAdditionalTelemetry: true as a Helm value to send exception reports and additional data.
 This is disabled by default.
-{{ if (dig "enabled" true .Values.runner) }}
+
 To opt-out of telemetry entirely, set a ENABLE_TELEMETRY=false environment variable on the robusta-runner deployment.
-{{- end }}
 Note that if the Robusta UI is enabled, telemetry cannot be disabled even if ENABLE_TELEMETRY=false is set.
 
-{{- range .Values.sinksConfig }}
-{{if .robusta_sink}}
-Visit the web UI at: https://platform.robusta.dev/check-connection?clusterName={{ $.Values.clusterName }}&account={{ $.Values.globalConfig.account_id }}
-{{- end }}
-{{- end }}
+Visit the web UI at: https://platform.robusta.dev/check-connection?clusterName=golden-cluster&account=66666666-7777-8888-9999-000000000000
 
-{{- if .Values.rsa }}
-NOTICE: RSA is no longer used by default and can be removed from the values file
-{{- end }}
