@@ -130,9 +130,7 @@ COPY --from=builder /app /app
 # remove duplicated /app/venv - already copied to /venv
 RUN rm -rf /app/venv
 # Remove vendored wheel 0.45.1 from setuptools in venv (CVE-2026-24049)
-# and virtualenv's embedded wheel 0.45.1 seed, which it only uses for Python 3.8 environments
-RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel* \
-    /venv/lib/python3.11/site-packages/virtualenv/seed/wheels/embed/wheel-0.45.1-py3-none-any.whl
+RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel*
 
 # Set up kubectl
 # apt accepts an ASCII-armored key directly via signed-by, so there is no need for
