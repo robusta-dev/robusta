@@ -18,7 +18,7 @@ include_trailing_comma = true
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.12"
-setuptools = "^80.9.0"
+setuptools = "^83.0.0"
 colorlog = "^5.0.1"
 python-json-logger = "^3.0.0"
 pydantic = "^2.11.7"
