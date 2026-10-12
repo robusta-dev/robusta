@@ -1,0 +1,21 @@
+{{- /*
+Rolls the Holmes pod when the cluster name or Robusta UI token in
+robusta-playbooks-config-secret changes: Holmes reads both only at startup.
+The holmes subchart cannot see this chart's values, so this template adds the
+checksum to the subchart's podAnnotations instead. That works because Helm
+hands the subchart this same values map and renders templates deepest path
+first, so this file must stay deeper than charts/holmes/templates/holmes.yaml.
+tests/test_helm_chart.py fails if the annotation stops reaching the pod.
+*/ -}}
+{{- if .Values.enableHolmesGPT }}
+{{- $config := include "robusta.configfile" . | fromYaml }}
+{{- $tokens := list }}
+{{- range $config.sinks_config }}
+{{- with .robusta_sink }}
+{{- $tokens = append $tokens .token }}
+{{- end }}
+{{- end }}
+{{- $annotations := .Values.holmes.podAnnotations | default dict }}
+{{- $_ := set $annotations "checksum/robusta-config" (list $config.global_config.cluster_name $tokens | toJson | sha256sum) }}
+{{- $_ := set .Values.holmes "podAnnotations" $annotations }}
+{{- end }}
