@@ -11,8 +11,6 @@ RUN apt-get update \
 RUN mkdir /app
 WORKDIR /app
 
-RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key -o /app/Release.key
-
 ENV ENV_TYPE=DEV
 
 # Create and activate virtual environment
@@ -134,15 +132,13 @@ RUN rm -rf /app/venv
 RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel* \
     /venv/lib/python3.11/site-packages/virtualenv/seed/wheels/embed/wheel-0.45.1-py3-none-any.whl
 
-# Set up kubectl
-# apt accepts an ASCII-armored key directly via signed-by, so there is no need for
-# `gpg --dearmor` (and therefore no need for gnupg2 in the runtime image).
-COPY --from=builder /app/Release.key /etc/apt/keyrings/kubernetes-apt-keyring.asc
-RUN chmod 0644 /etc/apt/keyrings/kubernetes-apt-keyring.asc \
-    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends kubectl \
-    && rm -rf /var/lib/apt/lists/*
+# Set up kubectl: CVE-patched static binary (see scripts/build_go_binaries.sh).
+ARG TARGETARCH=amd64
+COPY bin/go-cve-rebuild/${TARGETARCH}/kubectl.gz bin/go-cve-rebuild/${TARGETARCH}/kubectl.gz.sha256 /tmp/
+RUN cd /tmp && sha256sum -c kubectl.gz.sha256 \
+    && gunzip kubectl.gz && mv kubectl /usr/bin/kubectl && chmod +x /usr/bin/kubectl \
+    && rm -f kubectl.gz.sha256 \
+    && kubectl version --client
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering

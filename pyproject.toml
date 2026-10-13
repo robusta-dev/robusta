@@ -83,9 +83,9 @@ requests = "^2.33.0"
 # Bump to fix certifi CVE flagged by customer scan; date-versioned, so use >= rather than caret
 certifi = ">=2026.4.22"
 regex = "2024.5.15"
-# Pin to fix CVE-2026-48526 (High) + CVE-2026-48522/48523/48525 (Medium): PyJWT
-pyjwt = "^2.13.0"
-urllib3 = "^2.7.0"
+# Pin to fix CVE-2026-102268 (Critical) + CVE-2026-102266/102267/102271-102273 (High): PyJWT
+pyjwt = "^2.14.0"
+urllib3 = "^2.8.0"
 httpx = "0.27.2"
 # realtime (supabase dependency) requires websockets.asyncio, added in websockets 13
 websockets = ">=13"
@@ -98,8 +98,8 @@ pyasn1 = ">=0.6.4"
 anyio = "^4.14.2"
 # Pin to fix CVE-2026-22701 (transitive via virtualenv/pre-commit)
 filelock = ">=3.20.3"
-# Pin to fix CVE-2026-22702 (transitive via pre-commit)
-virtualenv = "^20.36.1"
+# Pin to fix CVE-2026-102925/102930/102937 (transitive via pre-commit)
+virtualenv = "^21.7.13"
 # Pillow is used directly (MS Teams PNG->JPEG image conversion) and by reportlab.
 # Pin to fix CVE-2026-54058,
 # CVE-2026-54059, CVE-2026-54060, CVE-2026-55379, CVE-2026-55380, CVE-2026-59197,
