@@ -53,6 +53,12 @@ RUN patch "/app/venv/lib/python3.11/site-packages/kubernetes/client/configuratio
 RUN find "/app/venv/lib/python3.11/site-packages/kubernetes/client/models/" -type f -print0 | xargs -0 sed -i 's/local_vars_configuration = Configuration.get_default_copy()/local_vars_configuration = Configuration.get_default()/g'
 RUN find "/app/venv/lib/python3.11/site-packages/kubernetes/client/models/" -type f -print0 | xargs -0 sed -i 's/local_vars_configuration = Configuration()/local_vars_configuration = Configuration.get_default()/g'
 
+# kubectl: CVE-patched static binary (see scripts/build_go_binaries.sh).
+# dpkg picks the target arch without BuildKit's TARGETARCH.
+COPY bin/go-cve-rebuild /tmp/go-cve-rebuild
+RUN cd /tmp/go-cve-rebuild/$(dpkg --print-architecture) && sha256sum -c kubectl.gz.sha256 \
+    && gunzip -c kubectl.gz > /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl
+
 # Final stage
 FROM python:3.11-slim
 
@@ -132,13 +138,9 @@ RUN rm -rf /app/venv
 RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel* \
     /venv/lib/python3.11/site-packages/virtualenv/seed/wheels/embed/wheel-0.45.1-py3-none-any.whl
 
-# Set up kubectl: CVE-patched static binary (see scripts/build_go_binaries.sh).
-ARG TARGETARCH=amd64
-COPY bin/go-cve-rebuild/${TARGETARCH}/kubectl.gz bin/go-cve-rebuild/${TARGETARCH}/kubectl.gz.sha256 /tmp/
-RUN cd /tmp && sha256sum -c kubectl.gz.sha256 \
-    && gunzip kubectl.gz && mv kubectl /usr/bin/kubectl && chmod +x /usr/bin/kubectl \
-    && rm -f kubectl.gz.sha256 \
-    && kubectl version --client
+# Set up kubectl
+COPY --from=builder /usr/local/bin/kubectl /usr/bin/kubectl
+RUN kubectl version --client
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
