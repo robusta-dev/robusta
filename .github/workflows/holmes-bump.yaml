@@ -71,9 +71,7 @@ jobs:
           git rev-parse --verify --quiet "refs/tags/$RUNNER_VERSION" >/dev/null \
             || { echo "::error::no tag $RUNNER_VERSION"; exit 1; }
 
-          helm repo add robusta "$CHART_REPO"
-          helm repo update robusta
-          published=$(helm search repo robusta/robusta --versions --devel -o json | jq -r '.[] | select(.name == "robusta/robusta") | .version')
+          published=$(helm/published_chart_versions.sh)
           helm search repo robusta/holmes --versions --devel -o json \
             | jq -e --arg v "$HOLMES_VERSION" 'any(.[]; .name == "robusta/holmes" and .version == $v)' >/dev/null \
             || { echo "::error::holmes chart $HOLMES_VERSION is not in $CHART_REPO"; exit 1; }

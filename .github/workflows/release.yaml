@@ -30,6 +30,18 @@ jobs:
       - name: Get release version
         run: echo "$RELEASE_VER"
 
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.16.4
+
+      # holmes-bump.yaml publishes chart patch versions with no release tag; upload_chart.sh
+      # would silently replace one.
+      - name: Check the chart version is not published
+        run: |
+          if helm/published_chart_versions.sh | grep -qxF "$CHART_VERSION"; then
+            echo "::error::chart $CHART_VERSION is already published; release a version no chart uses"; exit 1
+          fi
+
       - uses: google-github-actions/auth@v3
         with:
           project_id: ${{ secrets.GKE_PROD_PROJECT }}
