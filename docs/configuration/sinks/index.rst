@@ -39,6 +39,11 @@ Click a sink for setup instructions.
         :link: ms-teams
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` MS-teams (Graph API)
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: ms-teams-graph
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Robusta UI
         :class-card: sd-bg-light sd-bg-text-light
         :link: RobustaUI
