@@ -194,14 +194,13 @@ jobs:
           fi
           helm dependency update helm/robusta
           pip install pytest pyyaml
-          UPDATE_HELM_GOLDEN=1 pytest tests/test_helm_holmes_only.py -k golden --noconftest -p no:cacheprovider
           pytest tests/test_helm*.py --noconftest -p no:cacheprovider
 
           branch="holmes-bump/$HOLMES_VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add -A helm/robusta tests/helm_golden
+          git add -A helm/robusta
           git commit -s -m "Bump holmes to $HOLMES_VERSION"
           git push origin "$branch"
           gh pr create --base master --head "$branch" \

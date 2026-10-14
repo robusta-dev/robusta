@@ -1161,7 +1161,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
       - name: holmes
-        image: "robustadev/holmes:0.42.0"
+        image: "robustadev/holmes:0.0.0"
         imagePullPolicy: IfNotPresent
         # Read-only root filesystem for security hardening.
         # /tmp is mounted as a writable emptyDir for ephemeral tool result files.

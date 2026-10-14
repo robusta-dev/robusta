@@ -51,10 +51,15 @@ HOLMES_ONLY_ARGS = ["-f", str(HOLMES_VALUES), "--set", "runner.enabled=false"]
 RUNNER_ONLY_KINDS_AND_NAMES = ["-runner", "kubewatch", "forwarder"]
 
 
-def normalize_runner_version(output: str) -> str:
-    # CI and releases stamp the runner version over the 0.0.0 placeholder before running tests
-    app_version = str(yaml.safe_load((CHART_PATH / "Chart.yaml").read_text())["appVersion"])
-    return output if app_version == "0.0.0" else output.replace(app_version, "0.0.0")
+def normalize_versions(output: str) -> str:
+    # CI and releases stamp the runner version over the 0.0.0 placeholder before running tests,
+    # and the holmes dependency moves with every Holmes release.
+    chart = yaml.safe_load((CHART_PATH / "Chart.yaml").read_text())
+    app_version = str(chart["appVersion"])
+    if app_version != "0.0.0":
+        output = output.replace(app_version, "0.0.0")
+    holmes_version = next(d["version"] for d in chart["dependencies"] if d["name"] == "holmes")
+    return output.replace(f"holmes:{holmes_version}", "holmes:0.0.0")
 
 
 def helm_template(args: List[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -85,7 +90,7 @@ def playbooks_config(docs: List[dict]) -> dict:
 
 @pytest.mark.parametrize("scenario", sorted(GOLDEN_SCENARIOS))
 def test_runner_enabled_render_matches_golden(scenario):
-    output = normalize_runner_version(render(GOLDEN_SCENARIOS[scenario]))
+    output = normalize_versions(render(GOLDEN_SCENARIOS[scenario]))
     golden = GOLDEN_DIR / f"{scenario}.yaml"
     if os.environ.get("UPDATE_HELM_GOLDEN"):
         golden.write_text(output)
@@ -220,7 +225,7 @@ def render_notes(tmp_path: Path, args: List[str]) -> str:
 
 @pytest.mark.parametrize("scenario", ["default", "holmes"])
 def test_runner_enabled_notes_match_golden(tmp_path, scenario):
-    output = normalize_runner_version(render_notes(tmp_path, GOLDEN_SCENARIOS[scenario]))
+    output = normalize_versions(render_notes(tmp_path, GOLDEN_SCENARIOS[scenario]))
     golden = GOLDEN_DIR / f"{scenario}.NOTES.txt"
     if os.environ.get("UPDATE_HELM_GOLDEN"):
         golden.write_text(output)
