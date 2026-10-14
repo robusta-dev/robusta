@@ -11,8 +11,6 @@ RUN apt-get update \
 RUN mkdir /app
 WORKDIR /app
 
-RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key -o /app/Release.key
-
 ENV ENV_TYPE=DEV
 
 # Create and activate virtual environment
@@ -54,6 +52,12 @@ COPY scripts/client_configuration_get_default_patch.diff /app/client_configurati
 RUN patch "/app/venv/lib/python3.11/site-packages/kubernetes/client/configuration.py" "/app/client_configuration_get_default_patch.diff"
 RUN find "/app/venv/lib/python3.11/site-packages/kubernetes/client/models/" -type f -print0 | xargs -0 sed -i 's/local_vars_configuration = Configuration.get_default_copy()/local_vars_configuration = Configuration.get_default()/g'
 RUN find "/app/venv/lib/python3.11/site-packages/kubernetes/client/models/" -type f -print0 | xargs -0 sed -i 's/local_vars_configuration = Configuration()/local_vars_configuration = Configuration.get_default()/g'
+
+# kubectl: CVE-patched static binary (see scripts/build_go_binaries.sh).
+# dpkg picks the target arch without BuildKit's TARGETARCH.
+COPY bin/go-cve-rebuild /tmp/go-cve-rebuild
+RUN cd /tmp/go-cve-rebuild/$(dpkg --print-architecture) && sha256sum -c kubectl.gz.sha256 \
+    && gunzip -c kubectl.gz > /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl
 
 # Final stage
 FROM python:3.11-slim
@@ -103,10 +107,12 @@ RUN apt-get update \
 #   pin perl-base alone makes apt remove git instead of upgrading it. trixie's
 #   libperl5.40/perl-modules-5.40 are left orphaned by the upgrade (and still carry
 #   CVE-2026-9538), so they are purged.
+# - openssh, curl, expat, util-linux, ncurses, systemd: no trixie fix.
 RUN echo 'deb http://deb.debian.org/debian forky main' > /etc/apt/sources.list.d/forky.list \
-    && printf 'Package: libssh2-1t64:any libattr1:any libacl1:any perl-base:any perl:any perl-modules-5.42:any libperl5.42:any liberror-perl:any git:any git-man:any libc6:any libcrypt1:any libc-bin:any libc-gconv-modules-extra:any\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *:any\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
+    && printf 'Package: libssh2-1t64:any libattr1:any libacl1:any perl-base:any perl:any perl-modules-5.42:any libperl5.42:any liberror-perl:any git:any git-man:any libc6:any libcrypt1:any libc-bin:any libc-gconv-modules-extra:any libexpat1:any libtinfo6:any libncursesw6:any ncurses-base:any ncurses-bin:any libsystemd0:any libudev1:any systemd-standalone-sysusers:any openssh-client:any openssh-common:any curl:any libcurl4t64:any libcurl3t64-gnutls:any libcurl4-gnutls:any libnghttp3-9:any libngtcp2-16:any libngtcp2-crypto-ossl0:any libngtcp2-crypto-gnutls8:any util-linux:any bsdutils:any mount:any libblkid1:any libmount1:any libsmartcols1:any liblastlog2-2:any libuuid1:any login:any\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *:any\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
     && apt-get update \
     && apt-get install -y --no-install-recommends libssh2-1t64 libattr1 libacl1 perl-base perl perl-modules-5.42 libperl5.42 liberror-perl git git-man libc6 libcrypt1 libc-bin libc-gconv-modules-extra \
+       libexpat1 libtinfo6 libncursesw6 ncurses-base ncurses-bin libsystemd0 libudev1 openssh-client curl libcurl4t64 libcurl3t64-gnutls util-linux bsdutils mount libblkid1 libmount1 libsmartcols1 liblastlog2-2 libuuid1 login \
     && apt-get purge -y libperl5.40 perl-modules-5.40 \
     && rm -f /etc/apt/sources.list.d/forky.list /etc/apt/preferences.d/99-forky \
     && rm -rf /var/lib/apt/lists/*
@@ -135,14 +141,8 @@ RUN rm -rf /venv/lib/python3.11/site-packages/setuptools/_vendor/wheel* \
     /venv/lib/python3.11/site-packages/virtualenv/seed/wheels/embed/wheel-0.45.1-py3-none-any.whl
 
 # Set up kubectl
-# apt accepts an ASCII-armored key directly via signed-by, so there is no need for
-# `gpg --dearmor` (and therefore no need for gnupg2 in the runtime image).
-COPY --from=builder /app/Release.key /etc/apt/keyrings/kubernetes-apt-keyring.asc
-RUN chmod 0644 /etc/apt/keyrings/kubernetes-apt-keyring.asc \
-    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends kubectl \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local/bin/kubectl /usr/bin/kubectl
+RUN kubectl version --client
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
