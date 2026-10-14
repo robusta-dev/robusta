@@ -139,3 +139,5 @@ Running Robusta in Air-Gapped or Offline Environments
 ------------------------------------------------------------------------------
 
 Contact support@robusta.dev for self-hosted deployment options that work in fully air-gapped or offline environments (private image registry, on-prem platform, no SaaS dependency).
+
+The self-hosted platform's container images are listed in its own operator documentation.
