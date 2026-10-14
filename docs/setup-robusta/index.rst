@@ -14,6 +14,7 @@
    :hidden:
 
    multi-cluster
+   holmes-only
    upgrade
    tuning-performance
    json-logging

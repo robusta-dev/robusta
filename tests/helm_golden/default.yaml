@@ -1,0 +1,836 @@
+---
+# Source: robusta/templates/forwarder-service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: robusta-forwarder-service-account
+  namespace: robusta
+---
+# Source: robusta/templates/runner-service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: robusta-runner-service-account
+  namespace: robusta
+---
+# Source: robusta/templates/playbooks-config.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: robusta-playbooks-config-secret
+  namespace: robusta
+type: Opaque
+data:
+  active_playbooks.yaml: |-
+    cGxheWJvb2tfcmVwb3M6CiAge30Kc2lua3NfY29uZmlnOgotIGZpbGVfc2luazoKICAgIG5hbWU6IHRlc3QKCmdsb2JhbF9jb25maWc6CiAgY2x1c3Rlcl9uYW1lOiB0ZXN0CiAgYWNjb3VudF9pZDogIiIKICBjaGVja19wcm9tZXRoZXVzX2ZsYWdzOiB0cnVlCiAgY3VzdG9tX2Fubm90YXRpb25zOiBbXQogIGN1c3RvbV9zZXZlcml0eV9tYXA6IHt9CiAgZ3JhZmFuYV9hcGlfa2V5OiAiIgogIGdyYWZhbmFfZGFzaGJvYXJkX3VpZDogIiIKICBncmFmYW5hX3VybDogIiIKICBwcm9tZXRoZXVzX3J1bGVfY3VzdG9tX2xhYmVsczoge30KICBwcm9tZXRoZXVzX3J1bGVfZ3JvdXBfbmFtZToga3ViZXJuZXRlcy1hcHBzCiAgcHJvbWV0aGV1c191cmw6ICIiCiAgc2lnbmluZ19rZXk6ICIiCgphbGVydF9yZWxhYmVsOgogIFtdCgpsaWdodF9hY3Rpb25zOgogIC0gcmVsYXRlZF9wb2RzCiAgLSBwcm9tZXRoZXVzX2VucmljaGVyCiAgLSBhZGRfc2lsZW5jZQogIC0gZGVsZXRlX3BvZAogIC0gZGVsZXRlX3NpbGVuY2UKICAtIGdldF9zaWxlbmNlcwogIC0gbG9nc19lbnJpY2hlcgogIC0gcG9kX2V2ZW50c19lbnJpY2hlcgogIC0gZGVwbG95bWVudF9ldmVudHNfZW5yaWNoZXIKICAtIGpvYl9ldmVudHNfZW5yaWNoZXIKICAtIGpvYl9wb2RfZW5yaWNoZXIKICAtIGdldF9yZXNvdXJjZV95YW1sCiAgLSBub2RlX2NwdV9lbnJpY2hlcgogIC0gbm9kZV9kaXNrX2FuYWx5emVyCiAgLSBub2RlX3J1bm5pbmdfcG9kc19lbnJpY2hlcgogIC0gbm9kZV9hbGxvY2F0YWJsZV9yZXNvdXJjZXNfZW5yaWNoZXIKICAtIG5vZGVfc3RhdHVzX2VucmljaGVyCiAgLSBub2RlX2dyYXBoX2VucmljaGVyCiAgLSBvb21raWxsZWRfY29udGFpbmVyX2dyYXBoX2VucmljaGVyCiAgLSBwb2Rfb29tX2tpbGxlcl9lbnJpY2hlcgogIC0gb29tX2tpbGxlcl9lbnJpY2hlcgogIC0gdm9sdW1lX2FuYWx5c2lzCiAgLSBweXRob25fcHJvZmlsZXIKICAtIHBvZF9wcwogIC0gcHl0aG9uX21lbW9yeQogIC0gZGVidWdnZXJfc3RhY2tfdHJhY2UKICAtIHB5dGhvbl9wcm9jZXNzX2luc3BlY3RvcgogIC0gcHJvbWV0aGV1c19hbGVydAogIC0gYWxlcnRtYW5hZ2VyX2FsZXJ0CiAgLSBjcmVhdGVfcHZjX3NuYXBzaG90CiAgLSByZXNvdXJjZV9ldmVudHNfZW5yaWNoZXIKICAtIGRlbGV0ZV9qb2IKICAtIGxpc3RfcmVzb3VyY2VfbmFtZXMKICAtIG5vZGVfZG1lc2dfZW5yaWNoZXIKICAtIHN0YXR1c19lbnJpY2hlcgogIC0ga3JyX3NjYW4KICAtIHBvcGV5ZV9zY2FuCiAgLSBoYW5kbGVfYWxlcnRtYW5hZ2VyX2V2ZW50CiAgLSBkcmFpbgogIC0gY29yZG9uCiAgLSB1bmNvcmRvbgogIC0gcm9sbG91dF9yZXN0YXJ0CiAgLSBhc2tfaG9sbWVzCiAgLSBwcm9tZXRoZXVzX2FsbF9hdmFpbGFibGVfbWV0cmljcwogIC0gcHJvbWV0aGV1c19nZXRfc2VyaWVzCiAgLSBwcm9tZXRoZXVzX2dldF9sYWJlbF9uYW1lcwogIC0gaG9sbWVzX2NvbnZlcnNhdGlvbgogIC0gaG9sbWVzX2lzc3VlX2NoYXQKICAtIGhvbG1lc19jaGF0CiAgLSBob2xtZXNfb2F1dGgKICAtIGxpc3RfcG9kcwogIC0ga3ViZWN0bF9kZXNjcmliZQogIC0gZmV0Y2hfcmVzb3VyY2VfeWFtbAogIC0gZmV0Y2hfcmVzb3VyY2VfZXZlbnRzCiAgLSBmZXRjaF9jcmRzCiAgLSBmZXRjaF9jcl9pbnN0YW5jZXMKCmFjdGl2ZV9wbGF5Ym9va3M6CiAgLSBhY3Rpb25zOgogICAgLSBuYW1lX3NpbGVuY2VyOgogICAgICAgIG5hbWVzOgogICAgICAgIC0gV2F0Y2hkb2cKICAgICAgICAtIEt1YmVTY2hlZHVsZXJEb3duCiAgICAgICAgLSBLdWJlQ29udHJvbGxlck1hbmFnZXJEb3duCiAgICAgICAgLSBJbmZvSW5oaWJpdG9yCiAgICBuYW1lOiBDb21tb25Qcm9tZXRoZXVzQWxlcnRzU2lsZW5jZXIKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIHN0YXR1czogYWxsCiAgLSBhY3Rpb25zOgogICAgLSBuYW1lX3NpbGVuY2VyOgogICAgICAgIG5hbWVzOgogICAgICAgIC0gZXRjZEluc3VmZmljaWVudE1lbWJlcnMKICAgICAgICAtIGV0Y2RNZW1iZXJzRG93bgogICAgICAgIC0gTm9kZUNsb2NrTm90U3luY2hyb25pc2luZwogICAgICAgIC0gUHJvbWV0aGV1c1RTREJDb21wYWN0aW9uc0ZhaWxpbmcKICAgIG5hbWU6IE1pbmlDbHVzdGVyc1Byb21ldGhldXNBbGVydHNTaWxlbmNlcgogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgazhzX3Byb3ZpZGVyczoKICAgICAgICAtIE1pbmlrdWJlCiAgICAgICAgLSBLaW5kCiAgICAgICAgLSBSYW5jaGVyRGVza3RvcAogICAgICAgIHN0YXR1czogYWxsCiAgLSBhY3Rpb25zOgogICAgLSBuYW1lX3NpbGVuY2VyOgogICAgICAgIG5hbWVzOgogICAgICAgIC0gS3ViZWxldERvd24KICAgIG5hbWU6IEdLRVByb3ZpZGVyQWxlcnRzQWxlcnRzU2lsZW5jZXIKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGs4c19wcm92aWRlcnM6CiAgICAgICAgLSBHS0UKICAgICAgICBzdGF0dXM6IGFsbAogIC0gYWN0aW9uczoKICAgIC0gc2lsZW5jZV9hbGVydDoKICAgICAgICBsb2dfc2lsZW5jZTogdHJ1ZQogICAgbmFtZTogRE9Ob2RlQWdlbnRDUFVUaHJvdHRsaW5nSGlnaEFsZXJ0U2lsZW5jZXIKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IENQVVRocm90dGxpbmdIaWdoCiAgICAgICAgazhzX3Byb3ZpZGVyczoKICAgICAgICAtIERpZ2l0YWxPY2VhbgogICAgICAgIHBvZF9uYW1lX3ByZWZpeDogZG8tbm9kZS1hZ2VudAogIC0gYWN0aW9uczoKICAgIC0gdGFyZ2V0X2Rvd25fZG5zX3NpbGVuY2VyOiB7fQogICAgbmFtZTogVGFyZ2V0RG93blNpbGVuY2VyCiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBUYXJnZXREb3duCiAgLSBhY3Rpb25zOgogICAgLSByZXBvcnRfY3Jhc2hfbG9vcDoge30KICAgIG5hbWU6IENyYXNoTG9vcEJhY2tPZmYKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wb2RfY3Jhc2hfbG9vcDoKICAgICAgICByZXN0YXJ0X3JlYXNvbjogQ3Jhc2hMb29wQmFja09mZgogIC0gYWN0aW9uczoKICAgIC0gaW1hZ2VfcHVsbF9iYWNrb2ZmX3JlcG9ydGVyOiB7fQogICAgbmFtZTogSW1hZ2VQdWxsQmFja09mZgogICAgdHJpZ2dlcnM6CiAgICAtIG9uX2ltYWdlX3B1bGxfYmFja29mZjoge30KICAtIGFjdGlvbnM6CiAgICAtIHBvZF9ldmljdGVkX2VucmljaGVyOiB7fQogICAgLSBwb2RfZXZlbnRzX2VucmljaGVyOiB7fQogICAgLSBlbnJpY2hfcG9kX3dpdGhfbm9kZV9ldmVudHM6IHt9CiAgICBuYW1lOiBQb2RFdmljdGVkCiAgICB0cmlnZ2VyczoKICAgIC0gb25fcG9kX2V2aWN0ZWQ6IHt9CiAgLSBhY3Rpb25zOgogICAgLSBmYWlsX2tycl9zY2FuOiB7fQogICAgbmFtZTogS3JySm9iRmFpbGVkCiAgICB0cmlnZ2VyczoKICAgIC0gb25fam9iX2ZhaWx1cmU6CiAgICAgICAgc2NvcGU6CiAgICAgICAgICBpbmNsdWRlOgogICAgICAgICAgLSBsYWJlbHM6CiAgICAgICAgICAgIC0gYXBwPWtyci5yb2J1c3RhLmRldgogIC0gYWN0aW9uczoKICAgIC0gcG9kX29vbV9raWxsZXJfZW5yaWNoZXI6CiAgICAgICAgYXR0YWNoX2xvZ3M6IHRydWUKICAgICAgICBjb250YWluZXJfbWVtb3J5X2dyYXBoOiB0cnVlCiAgICAgICAgZG1lc2dfbG9nOiBmYWxzZQogICAgICAgIG5vZGVfbWVtb3J5X2dyYXBoOiB0cnVlCiAgICBuYW1lOiBQb2RPT01LaWxsCiAgICBzdG9wOiB0cnVlCiAgICB0cmlnZ2VyczoKICAgIC0gb25fcG9kX29vbV9raWxsZWQ6CiAgICAgICAgcmF0ZV9saW1pdDogMzYwMAogIC0gYWN0aW9uczoKICAgIC0gbG9nc19lbnJpY2hlcjoge30KICAgIC0gcG9kX2V2ZW50c19lbnJpY2hlcjoge30KICAgIG5hbWU6IEt1YmVQb2RDcmFzaExvb3BpbmcKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IEt1YmVQb2RDcmFzaExvb3BpbmcKICAtIGFjdGlvbnM6CiAgICAtIHByb21ldGhldXNfcnVsZXNfZW5yaWNoZXI6IHt9CiAgICAtIGxvZ3NfZW5yaWNoZXI6CiAgICAgICAgZmlsdGVyX3JlZ2V4OiAuKkV2YWx1YXRpbmcgcnVsZSBmYWlsZWQuKgogICAgbmFtZTogUHJvbWV0aGV1c1J1bGVGYWlsdXJlcwogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogUHJvbWV0aGV1c1J1bGVGYWlsdXJlcwogIC0gYWN0aW9uczoKICAgIC0gY3B1X292ZXJjb21taXRlZF9lbnJpY2hlcjoge30KICAgIC0gZXh0ZXJuYWxfdmlkZW9fZW5yaWNoZXI6CiAgICAgICAgbmFtZTogQ1BVIE92ZXJjb21taXRlZAogICAgICAgIHVybDogaHR0cHM6Ly9iaXQubHkvb3ZlcmNvbW1pdC1jcHUKICAgIG5hbWU6IEt1YmVDUFVPdmVyY29tbWl0CiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBLdWJlQ1BVT3ZlcmNvbW1pdAogIC0gYWN0aW9uczoKICAgIC0gbWVtb3J5X292ZXJjb21taXRlZF9lbnJpY2hlcjoge30KICAgIC0gZXh0ZXJuYWxfdmlkZW9fZW5yaWNoZXI6CiAgICAgICAgbmFtZTogTWVtb3J5IE92ZXJjb21taXRlZAogICAgICAgIHVybDogaHR0cHM6Ly9iaXQubHkvbWVtb3J5LW92ZXJjb21taXQKICAgIG5hbWU6IEt1YmVNZW1vcnlPdmVyY29tbWl0CiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBLdWJlTWVtb3J5T3ZlcmNvbW1pdAogIC0gYWN0aW9uczoKICAgIC0gbG9nc19lbnJpY2hlcjoge30KICAgIC0gcG9kX2V2ZW50c19lbnJpY2hlcjoge30KICAgIC0gcG9kX2lzc3VlX2ludmVzdGlnYXRvcjoge30KICAgIG5hbWU6IEt1YmVQb2ROb3RSZWFkeQogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZVBvZE5vdFJlYWR5CiAgLSBhY3Rpb25zOgogICAgLSBwb2RfaXNzdWVfaW52ZXN0aWdhdG9yOiB7fQogICAgLSBwb2RfZXZlbnRzX2VucmljaGVyOiB7fQogICAgbmFtZTogS3ViZUNvbnRhaW5lcldhaXRpbmcKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IEt1YmVDb250YWluZXJXYWl0aW5nCiAgLSBhY3Rpb25zOgogICAgLSBocGFfbWlzbWF0Y2hfZW5yaWNoZXI6IHt9CiAgICBuYW1lOiBLdWJlSHBhUmVwbGljYXNNaXNtYXRjaAogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZUhwYVJlcGxpY2FzTWlzbWF0Y2gKICAtIGFjdGlvbnM6CiAgICAtIGpvYl9pbmZvX2VucmljaGVyOiB7fQogICAgLSBqb2JfZXZlbnRzX2VucmljaGVyOiB7fQogICAgLSBqb2JfcG9kX2VucmljaGVyOiB7fQogICAgbmFtZTogS3ViZUpvYkFsZXJ0cwogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZUpvYkZhaWxlZAogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IEt1YmVKb2JDb21wbGV0aW9uCiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZUpvYk5vdENvbXBsZXRlZAogIC0gYWN0aW9uczoKICAgIC0gYXBpX3NlcnZpY2Vfc3RhdHVzX2VucmljaGVyOiB7fQogICAgbmFtZTogS3ViZUFnZ3JlZ2F0ZWRBUElEb3duCiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBLdWJlQWdncmVnYXRlZEFQSURvd24KICAtIGFjdGlvbnM6CiAgICAtIG5vZGVfcG9kc19jYXBhY2l0eV9lbnJpY2hlcjoge30KICAgIC0gYWxlcnRfZXhwbGFuYXRpb25fZW5yaWNoZXI6CiAgICAgICAgYWxlcnRfZXhwbGFuYXRpb246IFRoZSBub2RlIGlzIGFwcHJvYWNoaW5nIHRoZSBtYXhpbXVtIG51bWJlciBvZiBzY2hlZHVsZWQgcG9kcy4KICAgICAgICByZWNvbW1lbmRlZF9yZXNvbHV0aW9uOiBWZXJpZnkgdGhhdCB5b3UgZGVmaW5lZCBwcm9wZXIgcmVzb3VyY2UgcmVxdWVzdHMgZm9yCiAgICAgICAgICB5b3VyIHdvcmtsb2Fkcy4gSWYgcG9kcyBjYW5ub3QgYmUgc2NoZWR1bGVkLCBhZGQgbW9yZSBub2RlcyB0byB5b3VyIGNsdXN0ZXIuCiAgICBuYW1lOiBLdWJlbGV0VG9vTWFueVBvZHMKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IEt1YmVsZXRUb29NYW55UG9kcwogIC0gYWN0aW9uczoKICAgIC0gbm9kZV9hbGxvY2F0YWJsZV9yZXNvdXJjZXNfZW5yaWNoZXI6IHt9CiAgICAtIG5vZGVfcnVubmluZ19wb2RzX2VucmljaGVyOiB7fQogICAgLSBzdGF0dXNfZW5yaWNoZXI6CiAgICAgICAgc2hvd19kZXRhaWxzOiB0cnVlCiAgICBuYW1lOiBLdWJlTm9kZU5vdFJlYWR5CiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBLdWJlTm9kZU5vdFJlYWR5CiAgLSBhY3Rpb25zOgogICAgLSByZXNvdXJjZV9ldmVudHNfZW5yaWNoZXI6IHt9CiAgICAtIG5vZGVfc3RhdHVzX2VucmljaGVyOiB7fQogICAgbmFtZTogS3ViZU5vZGVVbnJlYWNoYWJsZQogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZU5vZGVVbnJlYWNoYWJsZQogIC0gYWN0aW9uczoKICAgIC0gcmVzb3VyY2VfZXZlbnRzX2VucmljaGVyOgogICAgICAgIGRlcGVuZGVudF9wb2RfbW9kZTogdHJ1ZQogICAgLSBzdGF0ZWZ1bHNldF9yZXBsaWNhc19lbnJpY2hlcjoge30KICAgIC0gcG9kX2lzc3VlX2ludmVzdGlnYXRvcjoge30KICAgIG5hbWU6IEt1YmVTdGF0ZWZ1bFNldFJlcGxpY2FzTWlzbWF0Y2gKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IEt1YmVTdGF0ZWZ1bFNldFJlcGxpY2FzTWlzbWF0Y2gKICAtIGFjdGlvbnM6CiAgICAtIHJlbGF0ZWRfcG9kczoge30KICAgIC0gc3RhdGVmdWxzZXRfcmVwbGljYXNfZW5yaWNoZXI6IHt9CiAgICBuYW1lOiBLdWJlU3RhdGVmdWxTZXRVcGRhdGVOb3RSb2xsZWRPdXQKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IEt1YmVTdGF0ZWZ1bFNldFVwZGF0ZU5vdFJvbGxlZE91dAogIC0gYWN0aW9uczoKICAgIC0gcmVzb3VyY2VfZXZlbnRzX2VucmljaGVyOiB7fQogICAgLSByZWxhdGVkX3BvZHM6IHt9CiAgICAtIGRhZW1vbnNldF9zdGF0dXNfZW5yaWNoZXI6IHt9CiAgICBuYW1lOiBLdWJlRGFlbW9uU2V0Um9sbG91dFN0dWNrCiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBLdWJlRGFlbW9uU2V0Um9sbG91dFN0dWNrCiAgLSBhY3Rpb25zOgogICAgLSBkYWVtb25zZXRfc3RhdHVzX2VucmljaGVyOiB7fQogICAgLSBkYWVtb25zZXRfbWlzc2NoZWR1bGVkX2FuYWx5c2lzX2VucmljaGVyOiB7fQogICAgbmFtZTogSzhzTWlzc2NoZWR1bGVkCiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBLdWJlcm5ldGVzRGFlbW9uc2V0TWlzc2NoZWR1bGVkCiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZURhZW1vblNldE1pc1NjaGVkdWxlZAogIC0gYWN0aW9uczoKICAgIC0gbm9kZV9jcHVfZW5yaWNoZXI6IHt9CiAgICAtIGFsZXJ0X2dyYXBoX2VucmljaGVyOgogICAgICAgIGl0ZW1fdHlwZTogTm9kZQogICAgICAgIHJlc291cmNlX3R5cGU6IENQVQogICAgbmFtZTogSG9zdEhpZ2hDcHVMb2FkCiAgICB0cmlnZ2VyczoKICAgIC0gb25fcHJvbWV0aGV1c19hbGVydDoKICAgICAgICBhbGVydF9uYW1lOiBIb3N0SGlnaENwdUxvYWQKICAtIGFjdGlvbnM6CiAgICAtIG9vbV9raWxsZXJfZW5yaWNoZXI6IHt9CiAgICAtIGFsZXJ0X2dyYXBoX2VucmljaGVyOgogICAgICAgIGl0ZW1fdHlwZTogTm9kZQogICAgICAgIHJlc291cmNlX3R5cGU6IE1lbW9yeQogICAgbmFtZTogSG9zdE9vbUtpbGxEZXRlY3RlZAogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogSG9zdE9vbUtpbGxEZXRlY3RlZAogIC0gYWN0aW9uczoKICAgIC0gbm9kZV9kaXNrX2FuYWx5emVyOiB7fQogICAgLSBhbGVydF9ncmFwaF9lbnJpY2hlcjoKICAgICAgICBpdGVtX3R5cGU6IE5vZGUKICAgICAgICByZXNvdXJjZV90eXBlOiBEaXNrCiAgICBuYW1lOiBOb2RlRlNTcGFjZUFsZXJ0cwogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogTm9kZUZpbGVzeXN0ZW1TcGFjZUZpbGxpbmdVcAogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IE5vZGVGaWxlc3lzdGVtQWxtb3N0T3V0T2ZTcGFjZQogIC0gYWN0aW9uczoKICAgIC0gY3B1X3Rocm90dGxpbmdfYW5hbHlzaXNfZW5yaWNoZXI6IHt9CiAgICAtIGFsZXJ0X2dyYXBoX2VucmljaGVyOgogICAgICAgIGl0ZW1fdHlwZTogUG9kCiAgICAgICAgcmVzb3VyY2VfdHlwZTogQ1BVCiAgICBuYW1lOiBDUFVUaHJvdHRsaW5nSGlnaAogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogQ1BVVGhyb3R0bGluZ0hpZ2gKICAgICAgICBzdGF0dXM6IGFsbAogIC0gYWN0aW9uczoKICAgIC0gcG9kX2lzc3VlX2ludmVzdGlnYXRvcjoge30KICAgIC0gZGVwbG95bWVudF9ldmVudHNfZW5yaWNoZXI6CiAgICAgICAgaW5jbHVkZWRfdHlwZXM6CiAgICAgICAgLSBXYXJuaW5nCiAgICAtIGRlcGxveW1lbnRfZXZlbnRzX2VucmljaGVyOgogICAgICAgIGRlcGVuZGVudF9wb2RfbW9kZTogdHJ1ZQogICAgICAgIGluY2x1ZGVkX3R5cGVzOgogICAgICAgIC0gV2FybmluZwogICAgICAgIC0gTm9ybWFsCiAgICBuYW1lOiBEZXBsb3ltZW50UmVwbGljYXNNaXNtYXRjaAogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZXJuZXRlc0RlcGxveW1lbnRSZXBsaWNhc01pc21hdGNoCiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZURlcGxveW1lbnRSZXBsaWNhc01pc21hdGNoCiAgLSBhY3Rpb25zOgogICAgLSB2ZXJzaW9uX21pc21hdGNoX2VucmljaGVyOiB7fQogICAgbmFtZTogS3ViZVZlcnNpb25NaXNtYXRjaAogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogS3ViZVZlcnNpb25NaXNtYXRjaAogIC0gYWN0aW9uczoKICAgIC0gZGVmYXVsdF9lbnJpY2hlcjoge30KICAgIG5hbWU6IERlZmF1bHRQcm9tZXRoZXVzQWxlcnRFbnJpY2hlcgogICAgdHJpZ2dlcnM6CiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgc3RhdHVzOiBhbGwKICAtIGFjdGlvbnM6CiAgICAtIGFsZXJ0X2V4cGxhbmF0aW9uX2VucmljaGVyOgogICAgICAgIGFsZXJ0X2V4cGxhbmF0aW9uOiBUaGlzIGFsZXJ0IGlzIGZpcmVkIHdoZW4gdGhlIGZpbGUgc3lzdGVtIGlzIHJ1bm5pbmcgb3V0IG9mCiAgICAgICAgICBzcGFjZS4KICAgICAgICByZWNvbW1lbmRlZF9yZXNvbHV0aW9uOiBUaGlzIGlzIGEgY29tbW9uIGlzc3VlIG9uIGxvY2FsIGNsdXN0ZXJzIGFuZCB3ZSByZWNvbW1lbmQKICAgICAgICAgIGluY3JlYXNpbmcgdGhlIG5vZGUgZGlzayBzaXplIGZvciB5b3VyIGNsdXN0ZXIgdG8gcnVuIG9wdGltYWxseS4KICAgIG5hbWU6IE1pbmlDbHVzdGVyTm9kZUZTU3BhY2VBbGVydHMKICAgIHRyaWdnZXJzOgogICAgLSBvbl9wcm9tZXRoZXVzX2FsZXJ0OgogICAgICAgIGFsZXJ0X25hbWU6IE5vZGVGaWxlc3lzdGVtU3BhY2VGaWxsaW5nVXAKICAgICAgICBrOHNfcHJvdmlkZXJzOgogICAgICAgIC0gTWluaWt1YmUKICAgICAgICAtIEtpbmQKICAgICAgICAtIFJhbmNoZXJEZXNrdG9wCiAgICAtIG9uX3Byb21ldGhldXNfYWxlcnQ6CiAgICAgICAgYWxlcnRfbmFtZTogTm9kZUZpbGVzeXN0ZW1BbG1vc3RPdXRPZlNwYWNlCiAgICAgICAgazhzX3Byb3ZpZGVyczoKICAgICAgICAtIE1pbmlrdWJlCiAgICAgICAgLSBLaW5kCiAgICAgICAgLSBSYW5jaGVyRGVza3RvcAo=
+---
+# Source: robusta/templates/runner.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: robusta-runner-secret
+  namespace: robusta
+type: Opaque
+stringData:
+  SENTRY_DSN: https://18ac614b2d7fbbb3c7a7789b946506e1@o4510692373299200.ingest.de.sentry.io/4510707940982864
+---
+# Source: robusta/templates/kubewatch-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: robusta-kubewatch-config
+  namespace: robusta
+data:
+  .kubewatch.yaml: |-
+    handler:
+      cloudevent:
+        url: "http://robusta-runner:80/api/handle"
+    namespace: ""
+    resource:
+      clusterrole: true
+      clusterrolebinding: true
+      configmap: true
+      coreevent: false
+      daemonset: true
+      deployment: true
+      event: true
+      hpa: true
+      ingress: true
+      job: true
+      namespace: true
+      node: true
+      persistentvolume: true
+      pod: true
+      replicaset: true
+      replicationcontroller: false
+      secret: false
+      serviceaccount: true
+      services: true
+      statefulset: true # kubewatch.enabled
+---
+# Source: robusta/templates/forwarder-service-account.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: robusta-forwarder-cluster-role
+  namespace : robusta
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - namespaces
+      - nodes
+      - persistentvolumes
+      - pods
+      - replicasets
+      - replicationcontrollers
+      #- secrets
+      - services
+      - serviceaccounts
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - "networking.k8s.io"
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - "autoscaling"
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - "events.k8s.io"
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - clusterroles
+      - clusterrolebindings
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - deployments/scale
+      - replicasets
+      - replicasets/scale
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - deployments/scale
+      - ingresses
+      - replicasets
+      - replicasets/scale
+      - replicationcontrollers/scale
+    verbs:
+      - get
+      - list
+      - watch
+    
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+---
+# Source: robusta/templates/runner-service-account.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: robusta-runner-cluster-role
+  namespace : robusta
+rules:
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs:
+      - "list"
+      - "get"
+
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - namespaces
+      - persistentvolumes
+      - persistentvolumeclaims
+      - pods
+      - pods/status
+      - pods/log
+      - replicasets
+      - replicationcontrollers
+      - services
+      - serviceaccounts
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+
+  # create and pods/exec are namespaced - see Role below
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - persistentvolumes
+      - persistentvolumeclaims
+      - pods
+      - pods/status
+      - pods/log
+    verbs:
+      - delete
+      - patch
+      - update
+
+  - apiGroups:
+      - ""
+    resources:
+      - pods/eviction
+    verbs:
+      - create
+
+  - apiGroups:
+      - "apiregistration.k8s.io"
+    resources:
+      - apiservices
+    verbs:
+      - get
+      - list
+
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - clusterroles
+      - clusterrolebindings
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "autoscaling"
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - deployments/scale
+      - replicasets
+      - replicasets/scale
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - patch
+      - delete
+
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - statefulsets
+    verbs:
+      - patch
+
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - deployments/scale
+      - ingresses
+      - replicasets
+      - replicasets/scale
+      - replicationcontrollers/scale
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - delete
+
+  - apiGroups:
+      - "events.k8s.io"
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+    - ingresses
+    - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+    - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - "policy"
+    resources:
+    - poddisruptionbudgets
+    - podsecuritypolicies
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+    - clusterroles
+    - clusterrolebindings
+    - roles
+    - rolebindings
+    verbs:
+      - get
+      - list
+  # Argo CD and Argo Workflows
+  - apiGroups:
+    - argoproj.io
+    resources:
+    - applications
+    - applicationsets
+    - appprojects
+    - workflows
+    - workflowtemplates
+    - cronworkflows
+    - rollouts
+    - analysisruns
+    - analysistemplates
+    - experiments
+    verbs:
+    - get
+    - list
+    - watch
+  # Flux CD
+  - apiGroups:
+    - source.toolkit.fluxcd.io
+    resources:
+    - gitrepositories
+    - helmrepositories
+    - helmcharts
+    - ocirepositories
+    - buckets
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - kustomize.toolkit.fluxcd.io
+    resources:
+    - kustomizations
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - helm.toolkit.fluxcd.io
+    resources:
+    - helmreleases
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - notification.toolkit.fluxcd.io
+    resources:
+    - alerts
+    - providers
+    - receivers
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - image.toolkit.fluxcd.io
+    resources:
+    - imagepolicies
+    - imagerepositories
+    - imageupdateautomations
+    verbs:
+    - get
+    - list
+    - watch
+  # Strimzi Kafka
+  - apiGroups:
+    - kafka.strimzi.io
+    resources:
+    - kafkas
+    - kafkatopics
+    - kafkausers
+    - kafkaconnects
+    - kafkaconnectors
+    - kafkamirrormakers
+    - kafkamirrormaker2s
+    - kafkabridges
+    - kafkarebalances
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - core.strimzi.io
+    resources:
+    - strimzipodsets
+    verbs:
+    - get
+    - list
+    - watch
+  # KEDA
+  - apiGroups:
+    - keda.sh
+    resources:
+    - scaledobjects
+    - scaledjobs
+    - triggerauthentications
+    - clustertriggerauthentications
+    verbs:
+    - get
+    - list
+    - watch
+  # Crossplane
+  - apiGroups:
+    - pkg.crossplane.io
+    resources:
+    - providers
+    - configurations
+    - providerrevisions
+    - configurationrevisions
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - apiextensions.crossplane.io
+    resources:
+    - compositeresourcedefinitions
+    - compositions
+    verbs:
+    - get
+    - list
+    - watch
+  # Istio
+  - apiGroups:
+    - networking.istio.io
+    resources:
+    - virtualservices
+    - destinationrules
+    - gateways
+    - serviceentries
+    - sidecars
+    - envoyfilters
+    - workloadentries
+    - workloadgroups
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - security.istio.io
+    resources:
+    - peerauthentications
+    - requestauthentications
+    - authorizationpolicies
+    verbs:
+    - get
+    - list
+    - watch
+  # Gateway API
+  - apiGroups:
+    - gateway.networking.k8s.io
+    resources:
+    - gateways
+    - gatewayclasses
+    - httproutes
+    - grpcroutes
+    - tcproutes
+    - udproutes
+    - tlsroutes
+    - referencegrants
+    verbs:
+    - get
+    - list
+    - watch
+  # Velero
+  - apiGroups:
+    - velero.io
+    resources:
+    - backups
+    - restores
+    - schedules
+    - backupstoragelocations
+    - volumesnapshotlocations
+    - podvolumebackups
+    - podvolumerestores
+    - downloadrequests
+    - deletebackuprequests
+    - serverstatusrequests
+    verbs:
+    - get
+    - list
+    - watch
+  # External Secrets Operator
+  - apiGroups:
+    - external-secrets.io
+    resources:
+    - externalsecrets
+    - secretstores
+    - clustersecretstores
+    - clusterexternalsecrets
+    verbs:
+    - get
+    - list
+    - watch
+---
+# Source: robusta/templates/forwarder-service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: robusta-forwarder-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: robusta-forwarder-cluster-role
+subjects:
+  - kind: ServiceAccount
+    name: robusta-forwarder-service-account
+    namespace: robusta # createServiceAccount
+---
+# Source: robusta/templates/runner-service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: robusta-runner-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: robusta-runner-cluster-role
+subjects:
+  - kind: ServiceAccount
+    name: robusta-runner-service-account
+    namespace: robusta # runner.createServiceAccount
+---
+# Source: robusta/templates/runner-service-account.yaml
+# Robusta only creates resources in its own namespace
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: robusta-runner-local-role
+  namespace: robusta
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - configmaps
+      - persistentvolumeclaims
+      - secrets
+    verbs:
+      - create
+  # python client connects to exec via GET
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - get
+      - create
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - create
+---
+# Source: robusta/templates/runner-service-account.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: robusta-runner-local-role-binding
+  namespace: robusta
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: robusta-runner-local-role
+subjects:
+  - kind: ServiceAccount
+    name: robusta-runner-service-account
+    namespace: robusta
+---
+# Source: robusta/templates/forwarder.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: robusta-forwarder
+  namespace: robusta
+  labels:
+    app: robusta-forwarder
+spec:
+  selector:
+    app: robusta-forwarder
+  ports:
+    - name: forwarder-metrics
+      protocol: TCP
+      port: 80
+      targetPort: 2112
+ # kubewatch.enabled
+---
+# Source: robusta/templates/runner.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: robusta-runner
+  namespace: robusta
+  labels:
+    app: robusta-runner
+    target: robusta-runner
+spec:
+  selector:
+    app: robusta-runner
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+---
+# Source: robusta/templates/forwarder.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robusta-forwarder
+  namespace: robusta
+  labels:
+    robusta: forwarder
+spec:
+  selector:
+    matchLabels:
+      app: robusta-forwarder
+  replicas: 1
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      annotations:
+        checksum/config: 952dee87e7365c0a8059fc912592ed601d41fe58e64068bb106540cee11461b8
+      labels:
+        app: robusta-forwarder
+    spec:
+      serviceAccountName: robusta-forwarder-service-account
+      automountServiceAccountToken: true
+      containers:
+      - name: kubewatch
+        # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
+        image: robustadev/kubewatch:v2.16.1
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: KW_CONFIG
+            value: /config
+          - name: ENABLE_PPROF
+            value: "true"
+          
+          - name: ADVANCED_FILTERS
+            value: "true"
+        volumeMounts:
+          - name: robusta-kubewatch-config
+            mountPath: /config
+        securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {}
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsUser: 1000
+        resources:
+          requests:
+            cpu: 10m
+            memory: "512Mi"
+          limits:
+            memory: "512Mi"
+            
+      volumes:
+        - name:  robusta-kubewatch-config
+          configMap:
+            name: robusta-kubewatch-config
+---
+# Source: robusta/templates/runner.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robusta-runner
+  namespace: robusta
+  labels:
+    robusta: runner
+    app: robusta-runner
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: robusta-runner
+  template:
+    metadata:
+      labels:
+        app: robusta-runner
+        robustaComponent: "runner"
+    spec:
+      serviceAccountName: robusta-runner-service-account
+      automountServiceAccountToken: true
+      dnsPolicy: ClusterFirst
+      containers:
+      - name: runner
+        image: robustadev/robusta-runner:0.0.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {}
+            privileged: false
+            readOnlyRootFilesystem: false
+        env:
+          - name: PLAYBOOKS_CONFIG_FILE_PATH
+            value: /etc/robusta/config/active_playbooks.yaml
+          - name: RELEASE_NAME
+            value: "robusta"
+          - name: PROMETHEUS_ENABLED
+            value: "false"
+          - name: MANAGED_CONFIGURATION_ENABLED
+            value: "false"
+          - name: SEND_ADDITIONAL_TELEMETRY
+            value: "false"
+          - name: LOG_LEVEL
+            value: INFO
+          - name: ENABLE_JSON_LOGS_FORMAT
+            value: "false"
+          - name: INSTALLATION_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: DISABLE_HELM_MONITORING
+            value: "True"
+          - name: RUNNER_VERSION
+            value: 0.0.0
+          - name: CERTIFICATE
+            value: 
+          - name: IMAGE_REGISTRY
+            value: robustadev
+          - name: CLUSTER_DOMAIN
+            value: cluster.local
+          - name: SET_KRR_SECURITY_CONTEXT
+            value: "false"
+        envFrom:
+        - secretRef:
+            name: robusta-runner-secret
+            optional: true
+        volumeMounts:
+          - name: auth-config-secret
+            mountPath: /etc/robusta/auth
+          - name: playbooks-config-secret
+            mountPath: /etc/robusta/config
+        lifecycle:
+          preStop:
+            exec:
+              command: ["bash", "-c", "kill -SIGINT 1"]
+        resources:
+          requests:
+            cpu: 250m
+            memory: "1024Mi"
+          limits:
+            memory: "1024Mi"
+            
+      volumes:
+        - name: playbooks-config-secret
+          secret:
+            secretName: robusta-playbooks-config-secret
+            optional: true
+        - name: auth-config-secret
+          secret:
+            secretName: robusta-auth-config-secret
+            optional: true

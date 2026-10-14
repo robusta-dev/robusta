@@ -1,4 +1,4 @@
-{{- if (and .Values.openshift.enabled .Values.openshift.createPrivilegedScc) }}
+{{- if (and (dig "enabled" true .Values.runner) .Values.openshift.enabled .Values.openshift.createPrivilegedScc) }}
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
