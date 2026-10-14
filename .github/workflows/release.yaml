@@ -38,7 +38,9 @@ jobs:
       # would silently replace one.
       - name: Check the chart version is not published
         run: |
-          if helm/published_chart_versions.sh | grep -qxF "$CHART_VERSION"; then
+          set -euo pipefail
+          published=$(helm/published_chart_versions.sh)
+          if grep -qxF "$CHART_VERSION" <<<"$published"; then
             echo "::error::chart $CHART_VERSION is already published; release a version no chart uses"; exit 1
           fi
 
