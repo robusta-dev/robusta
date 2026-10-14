@@ -25,6 +25,7 @@
    Alert Routing <notification-routing/index>
    Playbooks <playbook-reference/index>
    Self-Monitoring <setup-robusta/robusta-runner-metrics>
+   Cost Savings (KRR) <configuration/resource-recommender>
 
 .. toctree::
    :maxdepth: 4

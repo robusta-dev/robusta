@@ -119,6 +119,47 @@ active_playbooks:
 {{ end }}
 
 {{/*
+Config file for a Holmes-only install (runner.enabled=false). Holmes reads its Robusta token from
+the robusta_sink and cluster_name / signing_key from global_config, so only those are kept.
+*/}}
+{{- define "robusta.holmesOnlyConfigfile" -}}
+{{- if not .Values.enableHolmesGPT }}
+{{- fail "runner.enabled=false requires enableHolmesGPT=true: with neither the runner nor Holmes there is nothing to install" }}
+{{- end }}
+{{- if .Values.enablePrometheusStack }}
+{{- $alertmanager := index .Values "kube-prometheus-stack" "alertmanager" | default dict }}
+{{- $receivers := dig "config" "receivers" list $alertmanager | toYaml }}
+{{- if contains "-runner." $receivers }}
+{{- fail "runner.enabled=false: the kube-prometheus-stack Alertmanager 'robusta' receiver still sends alerts to the runner service. Override kube-prometheus-stack.alertmanager.config.receivers to send alerts to the Robusta platform instead (see the Holmes-only install docs)" }}
+{{- end }}
+{{- end }}
+{{- $robustaSinks := list }}
+{{- if .Values.robustaApiKey }}
+{{- /* same precedence as robusta.configfile: robustaApiKey replaces sinksConfig */}}
+{{- $robustaSinks = list (dict "robusta_sink" (dict "name" "robusta_ui_sink" "token" .Values.robustaApiKey)) }}
+{{- else }}
+{{- range .Values.sinksConfig }}
+{{- if .robusta_sink }}
+{{- $robustaSinks = append $robustaSinks (dict "robusta_sink" .robusta_sink) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if not $robustaSinks }}
+{{- fail "runner.enabled=false: a robusta_sink is required in sinksConfig, Holmes uses its token to connect to the Robusta platform" }}
+{{- end }}
+global_config:
+  cluster_name: {{ required "A valid .Values.clusterName entry is required!" .Values.clusterName | toYaml }}
+  {{- with .Values.globalConfig.account_id }}
+  account_id: {{ . | toYaml }}
+  {{- end }}
+  {{- with .Values.globalConfig.signing_key }}
+  signing_key: {{ . | toYaml }}
+  {{- end }}
+sinks_config:
+{{ toYaml $robustaSinks }}
+{{ end }}
+
+{{/*
 Determine if this is a Robusta SaaS environment.
 Returns "true" if ROBUSTA_UI_DOMAIN is not set OR ends with ".robusta.dev"
 */}}

@@ -12,6 +12,7 @@ Defining Sinks
    All Sinks <../configuration/sinks/index>
    ../configuration/sinks/slack
    ../configuration/sinks/ms-teams
+   ../configuration/sinks/ms-teams-graph
    ../configuration/sinks/telegram
    ../configuration/sinks/discord
    ../configuration/sinks/DataDog

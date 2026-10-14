@@ -12,6 +12,7 @@ from robusta.core.sinks.jira.jira_sink_params import JiraSinkConfigWrapper
 from robusta.core.sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
 from robusta.core.sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 from robusta.core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper
+from robusta.core.sinks.msteams_graph.msteams_graph_sink_params import MsTeamsGraphSinkConfigWrapper
 from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
@@ -60,6 +61,7 @@ class RunnerConfig(BaseModel):
                 DataDogSinkConfigWrapper,
                 KafkaSinkConfigWrapper,
                 MsTeamsSinkConfigWrapper,
+                MsTeamsGraphSinkConfigWrapper,
                 RocketchatSinkConfigWrapper,
                 OpsGenieSinkConfigWrapper,
                 TelegramSinkConfigWrapper,
