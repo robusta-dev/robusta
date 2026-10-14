@@ -1,3 +1,28 @@
+{{- $apiTokenSecretName := printf "%s-runner-api-token" (include "robusta.fullname" .) }}
+{{- $existingApiTokenSecret := lookup "v1" "Secret" .Release.Namespace $apiTokenSecretName }}
+{{- $runnerApiToken := .Values.runner.apiToken | default "" }}
+{{- if not $runnerApiToken }}
+  {{- if $existingApiTokenSecret }}
+    {{- $runnerApiToken = index $existingApiTokenSecret.data "RUNNER_API_TOKEN" | b64dec }}
+  {{- else }}
+    {{- $runnerApiToken = randAlphaNum 32 }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $apiTokenSecretName }}
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  # Required by the runner's sensitive HTTP endpoints (/api/trigger,
+  # /api/handle, /api/helm-releases, /api/playbooks/reload, /api/alerts),
+  # which execute playbook actions (including destructive ones) with no
+  # other authorization check. Auto-generated on first install and kept
+  # stable across upgrades; override by setting runner.apiToken.
+  RUNNER_API_TOKEN: {{ $runnerApiToken | quote }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -105,6 +130,11 @@ spec:
         {{- end }}
         {{- end }}
         env:
+          - name: RUNNER_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ $apiTokenSecretName }}
+                key: RUNNER_API_TOKEN
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
           - name: RELEASE_NAME
