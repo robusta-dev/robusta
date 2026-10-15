@@ -48,5 +48,5 @@ Next Steps
 ----------
 
 - Configure :doc:`alert routing </notification-routing/index>`
-- Set up :doc:`Coralogix alerts integration </configuration/alertmanager-integration/coralogix_managed_prometheus>`
+- Set up `Coralogix alerts integration <https://docs.robusta.dev/master/configuration/alertmanager-integration/coralogix_managed_prometheus.html>`_
 - Learn about :doc:`common configuration options <metric-providers>`

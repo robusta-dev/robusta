@@ -100,9 +100,6 @@ Configuration parameters
    * - ``send_to_default_if_missing``
      - ``true``
      - When overrides don't resolve, send to ``room_id`` (``true``) or drop the finding (``false``).
-   * - ``disable_platform_links``
-     - ``false``
-     - When ``true``, omits the Robusta platform ``Investigate`` and ``Silence`` links from messages.
 
 Dynamic Room Routing
 ------------------------------------------------

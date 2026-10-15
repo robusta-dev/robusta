@@ -6,13 +6,6 @@ MS Teams
 
    For new setups, we recommend connecting HolmesGPT to MS Teams instead of using this legacy sink.
 
-   Open the `MS Teams settings page <https://platform.robusta.dev/settings/slack-and-teams>`_ in the Robusta platform to connect HolmesGPT to MS Teams. This adds a single HolmesGPT bot that powers all of the flows below:
-
-   - **Chat** — ``@mention`` the bot in any channel to investigate issues on demand; it replies in the thread.
-   - **Alerts** — let `Alerts Triage <https://platform.robusta.dev/holmes/alerts-triage>`_ automatically investigate incoming alerts and post the findings to MS Teams.
-   - **Custom events** — use :ref:`Triggered Workflows <defining-playbooks>` to react to arbitrary events and notify MS Teams.
-
-   These are separate flows that share the same bot: chat is interactive, while Alerts Triage and Triggered Workflows run automatically.
 
 Robusta can report issues and events in your Kubernetes cluster to a MS Teams webhook.
 
@@ -91,22 +84,6 @@ Example:
             webhook_url: teams-incoming-webhook  # see instructions below
             webhook_override: ${annotations.kubernetes.io/service-name}
 
-Redirect to Platform
--------------------------------------------------------------------
-
-By default, MS Teams notifications include buttons to view more information in the Robusta SaaS platform.
-If you don't use Robusta SaaS you can modify these links to point at Prometheus instead.
-To do so, set prefer_redirect_to_platform: false.
-
-For example:
-
-.. code-block:: yaml
-
-     sinks_config:
-     - ms_teams_sink:
-        name: main_ms_teams_sink
-        webhook_url: teams-incoming-webhook
-        prefer_redirect_to_platform: false
 
 File Attachments
 -------------------------------------------------------------------

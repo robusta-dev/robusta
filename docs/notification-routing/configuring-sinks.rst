@@ -13,7 +13,6 @@ Defining Sinks
    ../configuration/sinks/slack
    ../configuration/sinks/ms-teams
    ../configuration/sinks/ms-teams-graph
-   ../configuration/sinks/RobustaUI
    ../configuration/sinks/telegram
    ../configuration/sinks/discord
    ../configuration/sinks/DataDog
@@ -136,7 +135,6 @@ By default, when Robusta fails to initialize any of the Sinks, it will not start
 
 On some scenarios, you may want to ignore Sinks initialization errors.
 
-For example, if Robusta is not allowed to connect to Slack, but you still want to receive notifications on the Robusta UI.
 
 In order to enable that, add the below to ``globalConfig`` in your ``generated_values.yaml`` file:
 
