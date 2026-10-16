@@ -49,10 +49,15 @@ Example ``generated_values.yaml``:
 ..     - Requires more advanced ArgoCD functions to combine the robusta helm chart with the external ``generated_value.yaml`` file
 
 .. We'll describe the simpler option here. We're currently working on a guide for the more advanced option, contact us if you have questions.
-.. admonition:: Secrets handling
-    :class: note
+.. admonition:: Don't commit secrets in plain text
+    :class: warning
 
-    Read this guide about :ref:`Managing Secrets`.
+    The ``signing_key``, ``account_id``, and the ``robusta_sink`` ``token`` shown above are
+    sensitive. When using GitOps you typically don't want them in your Git repo as plain text.
+
+    See :ref:`Loading Robusta credentials from secrets` for a complete example that loads all three
+    from a Kubernetes Secret (compatible with SealedSecrets, External Secrets, Vault, etc.). For
+    other sensitive Helm values, see :ref:`Managing Secrets`.
 
 
 Configure ArgoCD in the UI
