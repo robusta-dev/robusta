@@ -173,6 +173,64 @@ The following triggers are available for failed Jobs:
 
 For triggers that fire on any Job change, see :ref:`Job Triggers`.
 
+Deployment Rollout Triggers
+-----------------------------
+
+The following triggers fire once per Deployment rollout, unlike :ref:`Deployment Triggers`, which fire on
+every change, including the spec change that starts a rollout:
+
+.. _on_deployment_rollout_complete:
+
+.. details:: on_deployment_rollout_complete
+
+    ``on_deployment_rollout_complete`` fires once a rollout completes: every replica runs the new pod template
+    and is available. Scaling, pausing or resuming a Deployment does not fire it. It has the following parameters:
+
+    * ``name_prefix``: Name of the Deployment (or a prefix of it)
+    * ``namespace_prefix``: Namespace the Deployment is in (or a prefix of it)
+    * ``labels_selector``: See :ref:`Common Filters`
+    * ``scope``: See :ref:`Common Filters`
+
+    Example playbook:
+
+    .. code-block:: yaml
+
+        customPlaybooks:
+        - triggers:
+          - on_deployment_rollout_complete:
+              namespace_prefix: payments
+          actions:
+          - create_finding:
+              title: "Deployment $name in namespace $namespace rolled out"
+              aggregation_key: "DeploymentRolloutComplete"
+
+    Rollouts are detected through the Deployment's ``Progressing`` condition, which Kubernetes doesn't set on
+    Deployments whose ``progressDeadlineSeconds`` is disabled (``2147483647``). The trigger never fires for those.
+
+.. _on_deployment_rollout_failure:
+
+.. details:: on_deployment_rollout_failure
+
+    ``on_deployment_rollout_failure`` fires when a rollout makes no progress for the Deployment's
+    ``progressDeadlineSeconds`` (600 seconds by default), i.e. when ``kubectl rollout status`` would report
+    ``exceeded its progress deadline``. A stuck rollout that briefly progresses and then times out again fires
+    again. It takes the same parameters as ``on_deployment_rollout_complete``.
+
+    Example playbook:
+
+    .. code-block:: yaml
+
+        customPlaybooks:
+        - triggers:
+          - on_deployment_rollout_failure: {}
+          actions:
+          - create_finding:
+              title: "Deployment $name in namespace $namespace failed to roll out"
+              aggregation_key: "DeploymentRolloutFailure"
+          - deployment_events_enricher: {}
+
+To run a Robusta Triggered Workflow on these, see :ref:`Robusta Platform Triggered Workflows`.
+
 Warning Event Triggers
 ------------------------
 
