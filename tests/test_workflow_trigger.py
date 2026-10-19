@@ -13,7 +13,10 @@ from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKu
 from hikaru.model.rel_1_26 import Node, ObjectMeta
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.trigger import Trigger
-from robusta.core.triggers.deployment_rollout_trigger import DeploymentRolloutCompleteTrigger
+from robusta.core.triggers.deployment_rollout_trigger import (
+    DeploymentRolloutCompleteTrigger,
+    DeploymentRolloutFailureTrigger,
+)
 
 from playbooks.robusta_playbooks.workflow_trigger import (
     LAST_APPLIED_ANNOTATION,
@@ -24,7 +27,14 @@ from playbooks.robusta_playbooks.workflow_trigger import (
     trigger_workflow,
     trigger_workflow_event,
 )
-from tests.test_deployment_rollout_trigger import IMAGE_ROLLOUT_COMPLETE, load_watch, make_trigger_event
+from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
+
+from tests.test_deployment_rollout_trigger import (
+    BAD_ROLLOUT_TIMED_OUT,
+    IMAGE_ROLLOUT_COMPLETE,
+    load_watch,
+    make_trigger_event,
+)
 
 CLUSTER_NAME = "prod-us-east-1"
 ACCOUNT_ID = "11111111-2222-3333-4444-555555555555"
@@ -257,15 +267,15 @@ def test_trigger_workflow_raises_when_unreachable():
         )
 
 
-def make_rollout_event(name: str = None):
+def make_rollout_event(name: str = None, index: int = IMAGE_ROLLOUT_COMPLETE, trigger_class=None):
     """The DeploymentChangeEvent the runner builds when a real rollout (busybox 1.36.1 -> 1.37.0) completes."""
     watch = load_watch()
-    obj = watch[IMAGE_ROLLOUT_COMPLETE]["object"]
-    old_obj = watch[IMAGE_ROLLOUT_COMPLETE - 1]["object"]
+    obj = watch[index]["object"]
+    old_obj = watch[index - 1]["object"]
     if name:
         obj = {**obj, "metadata": {**obj["metadata"], "name": name}}
         old_obj = {**old_obj, "metadata": {**old_obj["metadata"], "name": name}}
-    trigger = DeploymentRolloutCompleteTrigger()
+    trigger = (trigger_class or DeploymentRolloutCompleteTrigger)()
     trigger_event = make_trigger_event(obj, old_obj, "update")
     assert trigger.should_fire(trigger_event, "playbook-id", {})
     event = trigger.build_execution_event(trigger_event, {}, {})
@@ -295,6 +305,7 @@ def test_event_payload_for_rollout_complete():
         "labels": {"app": "checkout-api"},
     }
     assert event["operation"] == "update"
+    assert event["description"].startswith("Rollout of Deployment `checkout-api` in namespace `rollout-fixture` completed")
 
     resource = event["resource"]
     assert resource["kind"] == "Deployment"
@@ -400,6 +411,52 @@ def test_trigger_workflow_event_rate_limit_is_per_subject():
 
     names = [json.loads(r["body"])["event"]["subject"]["name"] for r in server.requests]
     assert names == ["checkout-api", "payments-api", "checkout-api"]
+
+
+def test_trigger_workflow_event_rate_limit_keeps_failed_and_completed_rollouts_apart():
+    failed = make_rollout_event(index=BAD_ROLLOUT_TIMED_OUT, trigger_class=DeploymentRolloutFailureTrigger)
+    with _CaptureServer() as server:
+        params = _event_params(server.url, rate_limit_seconds=600)
+        trigger_workflow_event(failed, params)
+        trigger_workflow_event(make_rollout_event(), params)
+
+    descriptions = [json.loads(r["body"])["event"]["description"] for r in server.requests]
+    assert [d.split(": ")[0].rsplit(" ", 1)[1] for d in descriptions] == ["failed", "completed"]
+
+
+def make_secret_event(data: dict, old_data: dict):
+    def secret(values):
+        return {"apiVersion": "v1", "kind": "Secret", "metadata": {"name": "ledger-db", "namespace": "shop"}, "data": values}
+
+    trigger = Trigger(on_secret_update={"change_filters": {"include": ["data"]}}).get()
+    trigger_event = K8sTriggerEvent(
+        k8s_payload=IncomingK8sEventPayload(
+            operation="update",
+            kind="Secret",
+            apiVersion="v1",
+            clusterUid="test-cluster",
+            description="A `Secret` in namespace `shop` has been `Updated`:`ledger-db`",
+            obj=secret(data),
+            oldObj=secret(old_data),
+        )
+    )
+    assert trigger.should_fire(trigger_event, "playbook-id", {})
+    event = trigger.build_execution_event(trigger_event, {}, {})
+    assert trigger.check_change_filters(event)
+    event.set_context(ExecutionContext(account_id=ACCOUNT_ID, cluster_name=CLUSTER_NAME))
+    return event
+
+
+def test_event_payload_redacts_secret_values():
+    payload = build_event_workflow_payload(make_secret_event({"password": "bmV3LXBhc3M="}, {"password": "b2xkLXBhc3M="}))
+
+    serialized = json.dumps(payload)
+    assert "bmV3LXBhc3M=" not in serialized and "b2xkLXBhc3M=" not in serialized
+    event = payload["event"]
+    # FindingSubjectType has no Secret type; the kind comes from the object
+    assert event["subject"]["kind"] == "secret"
+    assert event["resource"]["data"] == {"password": "<redacted>"}
+    assert event["diff"] == [{"path": "data.password", "type": "value_changed", "old": "<redacted>", "new": "<redacted>"}]
 
 
 def test_trigger_workflow_event_no_rate_limit_by_default():

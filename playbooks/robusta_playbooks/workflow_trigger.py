@@ -56,6 +56,7 @@ from robusta.api import (
     ActionParams,
     ErrorCodes,
     ExecutionBaseEvent,
+    FindingSubject,
     KubernetesAnyChangeEvent,
     PrometheusKubernetesAlert,
     RateLimiter,
@@ -231,10 +232,11 @@ class TriggerWorkflowEventParams(ActionParams):
         configured cluster.
     :var timeout: (optional) (Default: 30) Request timeout in seconds.
     :var rate_limit_seconds: (optional) When set, the workflow is triggered at
-        most once per period for the same subject (kind, namespace and name,
-        e.g. one Deployment); further events for it are skipped with a log.
-        Events whose subject can't be resolved (e.g. scheduled triggers) share
-        one limit. By default no rate limit is applied.
+        most once per period for the same event on the same subject (kind,
+        namespace and name, e.g. one Deployment); further events are skipped
+        with a log. A completed and a failed rollout of one Deployment are
+        limited separately. Events whose subject can't be resolved (e.g.
+        scheduled triggers) share one limit. By default no rate limit is applied.
     """
 
     workflow_id: Union[str, List[str]]
@@ -263,13 +265,31 @@ def _to_jsonable(value: Any) -> Any:
     return str(value)
 
 
+SECRET_VALUE_FIELDS = ("data", "stringData")
+REDACTED = "<redacted>"
+
+
+def _is_secret(obj: Any) -> bool:
+    return getattr(obj, "kind", None) == "Secret"
+
+
 def _resource_manifest(obj: HikaruBase) -> dict:
     manifest = obj.to_dict()
     metadata = manifest.get("metadata") or {}
     metadata.pop("managedFields", None)
     annotations = metadata.get("annotations") or {}
     annotations.pop(LAST_APPLIED_ANNOTATION, None)
+    if _is_secret(obj):
+        for field in SECRET_VALUE_FIELDS:
+            if manifest.get(field):
+                manifest[field] = {key: REDACTED for key in manifest[field]}
     return manifest
+
+
+def _subject_kind(event: ExecutionBaseEvent, subject: FindingSubject) -> Optional[str]:
+    # FindingSubjectType only names a few kinds; anything else (Secret, Service, Ingress, ...) is TYPE_NONE
+    kind = subject.subject_type.value or getattr(getattr(event, "obj", None), "kind", None)
+    return kind.lower() if kind else None
 
 
 def _diff_path(path: List[Union[str, int]]) -> str:
@@ -294,13 +314,14 @@ def build_event_workflow_payload(event: ExecutionBaseEvent) -> dict:
 
     ``alert`` is the full Prometheus alert, ``operation``/``diff`` describe a Kubernetes change (``diff``
     is present only when the trigger sets change_filters, and holds the diffs they kept), and
-    ``resource`` is the current manifest of the Kubernetes object the event is about.
+    ``resource`` is the current manifest of the Kubernetes object the event is about. Secret values
+    are redacted.
     """
     subject = event.get_subject()
     body = {
         "trigger": type(event).__name__,
         "subject": {
-            "kind": subject.subject_type.value,
+            "kind": _subject_kind(event, subject),
             "name": subject.name,
             "namespace": subject.namespace,
             "node": subject.node,
@@ -317,12 +338,13 @@ def build_event_workflow_payload(event: ExecutionBaseEvent) -> dict:
         if event.description:
             body["description"] = event.description
         if event.filtered_diffs:
+            redact = _is_secret(event.obj)
             body["diff"] = [
                 {
                     "path": _diff_path(diff.path),
                     "type": diff.diff_type.name.lower(),
-                    "old": _to_jsonable(diff.other_value),
-                    "new": _to_jsonable(diff.value),
+                    "old": REDACTED if redact else _to_jsonable(diff.other_value),
+                    "new": REDACTED if redact else _to_jsonable(diff.value),
                 }
                 for diff in event.filtered_diffs
             ]
@@ -341,8 +363,9 @@ def _subject_rate_limit_allows(
     event: ExecutionBaseEvent, params: TriggerWorkflowEventParams, workflow_ids: List[str]
 ) -> bool:
     subject = event.get_subject()
-    subject_key = f"{subject.subject_type.value}/{subject.namespace or ''}/{subject.name or ''}"
-    limiter_id = f"{','.join(sorted(workflow_ids))}|{subject_key}"
+    subject_key = f"{_subject_kind(event, subject)}/{subject.namespace or ''}/{subject.name or ''}"
+    # The description tells apart different events on one subject, e.g. a rollout that failed and then completed
+    limiter_id = f"{','.join(sorted(workflow_ids))}|{subject_key}|{getattr(event, 'description', '')}"
     if RateLimiter.mark_and_test("trigger_workflow_event", limiter_id, params.rate_limit_seconds):
         return True
 

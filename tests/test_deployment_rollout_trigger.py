@@ -17,6 +17,8 @@ from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayloa
 # of one Deployment going through: create (rollout to busybox:1.36.1) -> image update to 1.37.0 -> scale 2->4 ->
 # scale 4->2 -> image update to a tag that doesn't exist (times out) -> `kubectl rollout undo`.
 WATCH_FIXTURE = Path(__file__).parent / "file_fixtures" / "deployment_rollout_watch.jsonl"
+# The same Deployment, fully rolled out, then `kubectl rollout pause` + `kubectl rollout resume`.
+PAUSE_RESUME_FIXTURE = Path(__file__).parent / "file_fixtures" / "deployment_pause_resume_watch.jsonl"
 
 INITIAL_ROLLOUT_COMPLETE = 6
 IMAGE_ROLLOUT_COMPLETE = 15
@@ -26,8 +28,8 @@ ROLLBACK_COMPLETE = 33
 OPERATIONS = {"ADDED": "create", "MODIFIED": "update", "DELETED": "delete"}
 
 
-def load_watch() -> List[dict]:
-    with open(WATCH_FIXTURE) as f:
+def load_watch(path: Path = WATCH_FIXTURE) -> List[dict]:
+    with open(path) as f:
         return [json.loads(line) for line in f]
 
 
@@ -90,6 +92,47 @@ def test_rollout_complete_fires_once_per_rollout_and_not_on_scaling(watch):
 
 def test_rollout_failure_fires_once_when_the_deadline_is_exceeded(watch):
     assert fired_indices(DeploymentRolloutFailureTrigger(), watch) == [BAD_ROLLOUT_TIMED_OUT]
+
+
+def test_pause_and_resume_without_a_new_template_does_not_fire():
+    pause_resume = load_watch(PAUSE_RESUME_FIXTURE)
+    reasons = [
+        next(c["reason"] for c in e["object"]["status"]["conditions"] if c["type"] == "Progressing")
+        for e in pause_resume
+    ]
+    assert "DeploymentResumed" in reasons and reasons[-1] == "NewReplicaSetAvailable"
+    assert fired_indices(DeploymentRolloutCompleteTrigger(), pause_resume) == []
+
+
+def test_resumed_mid_rollout_still_fires(watch):
+    # paused while old pods still ran: completing after the resume is a real rollout
+    completed = watch[IMAGE_ROLLOUT_COMPLETE]["object"]
+    resumed = copy.deepcopy(watch[IMAGE_ROLLOUT_COMPLETE - 1]["object"])
+    progressing = next(c for c in resumed["status"]["conditions"] if c["type"] == "Progressing")
+    progressing.update(reason="DeploymentResumed", message="Deployment is resumed")
+    assert DeploymentRolloutCompleteTrigger().should_fire(make_trigger_event(completed, resumed, "update"), "id", {})
+
+
+@pytest.mark.parametrize(
+    "trigger,index,expected",
+    [
+        (
+            DeploymentRolloutCompleteTrigger(),
+            IMAGE_ROLLOUT_COMPLETE,
+            "Rollout of Deployment `checkout-api` in namespace `rollout-fixture` completed: "
+            'ReplicaSet "checkout-api-5f6b86d797" has successfully progressed.',
+        ),
+        (
+            DeploymentRolloutFailureTrigger(),
+            BAD_ROLLOUT_TIMED_OUT,
+            "Rollout of Deployment `checkout-api` in namespace `rollout-fixture` failed: "
+            'ReplicaSet "checkout-api-db4f659c4" has timed out progressing.',
+        ),
+    ],
+)
+def test_description_names_the_outcome(watch, trigger, index, expected):
+    event = make_trigger_event(watch[index]["object"], watch[index - 1]["object"], "update")
+    assert trigger.build_execution_event(event, {}, {}).description == expected
 
 
 def test_resync_with_identical_objects_does_not_fire(watch):

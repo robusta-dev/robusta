@@ -184,7 +184,8 @@ every change, including the spec change that starts a rollout:
 .. details:: on_deployment_rollout_complete
 
     ``on_deployment_rollout_complete`` fires once a rollout completes: every replica runs the new pod template
-    and is available. Scaling a Deployment does not fire it. It has the following parameters:
+    and is available. Scaling, pausing or resuming a Deployment does not fire it. The event's description says
+    which ReplicaSet rolled out. It has the following parameters:
 
     * ``name_prefix``: Name of the Deployment (or a prefix of it)
     * ``namespace_prefix``: Namespace the Deployment is in (or a prefix of it)
@@ -211,9 +212,10 @@ every change, including the spec change that starts a rollout:
 
 .. details:: on_deployment_rollout_failure
 
-    ``on_deployment_rollout_failure`` fires once when a rollout makes no progress for the Deployment's
+    ``on_deployment_rollout_failure`` fires when a rollout makes no progress for the Deployment's
     ``progressDeadlineSeconds`` (600 seconds by default), i.e. when ``kubectl rollout status`` would report
-    ``exceeded its progress deadline``. It takes the same parameters as ``on_deployment_rollout_complete``.
+    ``exceeded its progress deadline``. A stuck rollout that briefly progresses and then times out again fires
+    again. It takes the same parameters as ``on_deployment_rollout_complete``.
 
     Example playbook:
 
