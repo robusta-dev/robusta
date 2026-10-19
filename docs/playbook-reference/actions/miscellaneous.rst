@@ -43,3 +43,51 @@ Robusta Platform Triggered Workflows
 ---------------------------------------------------------
 
 .. robusta-action:: playbooks.robusta_playbooks.workflow_trigger.trigger_workflow on_prometheus_alert
+
+.. robusta-action:: playbooks.robusta_playbooks.workflow_trigger.trigger_workflow_event on_deployment_rollout_complete
+
+Run a workflow after every Deployment rollout
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Pair ``trigger_workflow_event`` with :ref:`on_deployment_rollout_complete<on_deployment_rollout_complete>`
+to have Holmes check each release once all its pods run the new version, with no CI/CD integration.
+Add :ref:`on_deployment_rollout_failure<on_deployment_rollout_failure>` to also run it when a rollout gets stuck:
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - name: "WorkflowOnRollout"
+      triggers:
+      - on_deployment_rollout_complete:
+          namespace_prefix: payments
+      - on_deployment_rollout_failure:
+          namespace_prefix: payments
+      actions:
+      - trigger_workflow_event:
+          workflow_id: "b7f9d2e4-1234-4c56-9abc-0123456789ab"
+          api_key: "{{ env.ROBUSTA_PLATFORM_API_KEY }}"
+
+The workflow receives a payload like the one below. ``trigger`` and the ``subject`` fields are handy for
+workflow filters (e.g. ``namespace`` = ``payments``). ``resource`` is the Deployment's current manifest, and
+``diff`` lists the fields that changed in this update; for the rollout triggers that is the status change
+that completed (or failed) the rollout.
+
+.. code-block:: json
+
+    {
+      "cluster_name": "prod-eu-1",
+      "event": {
+        "trigger": "DeploymentChangeEvent",
+        "subject": {"kind": "deployment", "name": "checkout-api", "namespace": "payments", "node": null,
+                    "labels": {"app": "checkout-api"}},
+        "operation": "update",
+        "description": "Deployment checkout-api ...",
+        "resource": {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"...": "..."},
+                     "spec": {"...": "..."}, "status": {"...": "..."}}
+      }
+    }
+
+Each cluster's runner triggers the workflow for its own rollouts, so a release rolled out to five clusters
+runs the workflow five times, each against its own cluster. To run it once per release, add the playbook
+only to the cluster you deploy to first. Set ``rate_limit_seconds`` to also cap how often a single
+Deployment can trigger it.

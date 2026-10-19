@@ -10,11 +10,21 @@ from robusta.api import ActionException, RateLimiter
 from robusta.core.model.events import ExecutionContext
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 
+from hikaru.model.rel_1_26 import Node, ObjectMeta
+from robusta.core.model.events import ExecutionBaseEvent
+from robusta.core.playbooks.trigger import Trigger
+from robusta.core.triggers.deployment_rollout_trigger import DeploymentRolloutCompleteTrigger
+
 from playbooks.robusta_playbooks.workflow_trigger import (
+    LAST_APPLIED_ANNOTATION,
+    TriggerWorkflowEventParams,
     TriggerWorkflowParams,
+    build_event_workflow_payload,
     build_workflow_trigger_payload,
     trigger_workflow,
+    trigger_workflow_event,
 )
+from tests.test_deployment_rollout_trigger import IMAGE_ROLLOUT_COMPLETE, load_watch, make_trigger_event
 
 CLUSTER_NAME = "prod-us-east-1"
 ACCOUNT_ID = "11111111-2222-3333-4444-555555555555"
@@ -245,3 +255,162 @@ def test_trigger_workflow_raises_when_unreachable():
                 timeout=2,
             ),
         )
+
+
+def make_rollout_event(name: str = None):
+    """The DeploymentChangeEvent the runner builds when a real rollout (busybox 1.36.1 -> 1.37.0) completes."""
+    watch = load_watch()
+    obj = watch[IMAGE_ROLLOUT_COMPLETE]["object"]
+    old_obj = watch[IMAGE_ROLLOUT_COMPLETE - 1]["object"]
+    if name:
+        obj = {**obj, "metadata": {**obj["metadata"], "name": name}}
+        old_obj = {**old_obj, "metadata": {**old_obj["metadata"], "name": name}}
+    trigger = DeploymentRolloutCompleteTrigger()
+    trigger_event = make_trigger_event(obj, old_obj, "update")
+    assert trigger.should_fire(trigger_event, "playbook-id", {})
+    event = trigger.build_execution_event(trigger_event, {}, {})
+    assert trigger.check_change_filters(event)
+    event.set_context(ExecutionContext(account_id=ACCOUNT_ID, cluster_name=CLUSTER_NAME))
+    return event
+
+
+def _event_params(url: str, **overrides) -> TriggerWorkflowEventParams:
+    return TriggerWorkflowEventParams(
+        **{"workflow_id": WORKFLOW_ID, "api_key": SecretStr(API_KEY), "url": url, **overrides}
+    )
+
+
+def test_event_payload_for_rollout_complete():
+    payload = build_event_workflow_payload(make_rollout_event())
+    json.dumps(payload)
+
+    assert payload["cluster_name"] == CLUSTER_NAME
+    event = payload["event"]
+    assert event["trigger"] == "DeploymentChangeEvent"
+    assert event["subject"] == {
+        "kind": "deployment",
+        "name": "checkout-api",
+        "namespace": "rollout-fixture",
+        "node": None,
+        "labels": {"app": "checkout-api"},
+    }
+    assert event["operation"] == "update"
+
+    resource = event["resource"]
+    assert resource["kind"] == "Deployment"
+    assert resource["spec"]["template"]["spec"]["containers"][0]["image"] == "busybox:1.37.0"
+    assert "managedFields" not in resource["metadata"]
+    assert LAST_APPLIED_ANNOTATION not in resource["metadata"].get("annotations", {})
+    progressing = next(c for c in resource["status"]["conditions"] if c["type"] == "Progressing")
+    assert progressing["reason"] == "NewReplicaSetAvailable"
+
+    # the rollout triggers set no change_filters, so no diff is computed
+    assert "diff" not in event
+
+
+def test_event_payload_diff_follows_the_triggers_change_filters():
+    watch = load_watch()
+    # the `kubectl set image` update: spec changed, status not yet observed
+    obj, old_obj = watch[IMAGE_ROLLOUT_COMPLETE - 8]["object"], watch[IMAGE_ROLLOUT_COMPLETE - 9]["object"]
+    trigger = Trigger(on_deployment_update={"change_filters": {"include": ["spec"]}}).get()
+    trigger_event = make_trigger_event(obj, old_obj, "update")
+    assert trigger.should_fire(trigger_event, "playbook-id", {})
+    event = trigger.build_execution_event(trigger_event, {}, {})
+    assert trigger.check_change_filters(event)
+    event.set_context(ExecutionContext(account_id=ACCOUNT_ID, cluster_name=CLUSTER_NAME))
+
+    payload = build_event_workflow_payload(event)
+    json.dumps(payload)
+    assert payload["event"]["diff"] == [
+        {
+            "path": "spec.template.spec.containers[0].image",
+            "type": "value_changed",
+            "old": "busybox:1.36.1",
+            "new": "busybox:1.37.0",
+        }
+    ]
+
+
+def test_trigger_workflow_event_posts_rollout_to_webhooks_endpoint():
+    with _CaptureServer() as server:
+        trigger_workflow_event(make_rollout_event(), _event_params(server.url))
+
+    assert len(server.requests) == 1
+    request = server.requests[0]
+    query = parse_qs(urlparse(request["path"]).query)
+    assert query["account_id"] == [ACCOUNT_ID]
+    assert query["workflow_id"] == [WORKFLOW_ID]
+    assert query["origin"] == ["robusta-runner"]
+    assert query["cluster"] == [CLUSTER_NAME]
+    assert query["type"] == ["change"]
+    assert request["headers"]["Authorization"] == f"Bearer {API_KEY}"
+    assert json.loads(request["body"])["event"]["subject"]["name"] == "checkout-api"
+
+
+def test_trigger_workflow_event_cluster_routing_opt_out():
+    with _CaptureServer() as server:
+        trigger_workflow_event(make_rollout_event(), _event_params(server.url, route_to_event_cluster=False))
+
+    assert "cluster" not in parse_qs(urlparse(server.requests[0]["path"]).query)
+
+
+def test_trigger_workflow_event_from_alert_sends_the_alert():
+    alert = make_alert()
+    alert.node = Node(metadata=ObjectMeta(name=NODE_CORDONED_ALERT["labels"]["node"], labels={"zone": "a"}))
+    with _CaptureServer() as server:
+        trigger_workflow_event(alert, _event_params(server.url))
+
+    request = server.requests[0]
+    assert parse_qs(urlparse(request["path"]).query)["type"] == ["alert"]
+    event = json.loads(request["body"])["event"]
+    assert event["trigger"] == "PrometheusKubernetesAlert"
+    assert event["alert"]["labels"] == NODE_CORDONED_ALERT["labels"]
+    assert event["subject"]["kind"] == "node"
+    assert event["subject"]["name"] == NODE_CORDONED_ALERT["labels"]["node"]
+    assert event["resource"]["metadata"]["labels"] == {"zone": "a"}
+
+
+def test_trigger_workflow_event_from_event_without_a_resource():
+    scheduled = ExecutionBaseEvent(named_sinks=[])
+    scheduled.set_context(ExecutionContext(account_id=ACCOUNT_ID, cluster_name=CLUSTER_NAME))
+    with _CaptureServer() as server:
+        trigger_workflow_event(scheduled, _event_params(server.url))
+
+    request = server.requests[0]
+    assert parse_qs(urlparse(request["path"]).query)["type"] == ["event"]
+    body = json.loads(request["body"])
+    assert body == {
+        "cluster_name": CLUSTER_NAME,
+        "event": {
+            "trigger": "ExecutionBaseEvent",
+            "subject": {"kind": None, "name": "Unresolved", "namespace": None, "node": None, "labels": {}},
+        },
+    }
+
+
+def test_trigger_workflow_event_rate_limit_is_per_subject():
+    with _CaptureServer() as server:
+        params = _event_params(server.url, rate_limit_seconds=600)
+        trigger_workflow_event(make_rollout_event(), params)
+        trigger_workflow_event(make_rollout_event(), params)  # same Deployment: skipped
+        trigger_workflow_event(make_rollout_event(name="payments-api"), params)  # another Deployment: sent
+        for key in RateLimiter.limiter_map:
+            RateLimiter.limiter_map[key] -= 601
+        trigger_workflow_event(make_rollout_event(), params)  # period expired: sent
+
+    names = [json.loads(r["body"])["event"]["subject"]["name"] for r in server.requests]
+    assert names == ["checkout-api", "payments-api", "checkout-api"]
+
+
+def test_trigger_workflow_event_no_rate_limit_by_default():
+    with _CaptureServer() as server:
+        for _ in range(3):
+            trigger_workflow_event(make_rollout_event(), _event_params(server.url))
+
+    assert len(server.requests) == 3
+
+
+def test_trigger_workflow_event_raises_on_http_error():
+    with _CaptureServer(status_code=403) as server:
+        with pytest.raises(ActionException):
+            trigger_workflow_event(make_rollout_event(), _event_params(server.url))
