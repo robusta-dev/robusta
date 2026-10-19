@@ -82,7 +82,7 @@ filters kept.
         "subject": {"kind": "deployment", "name": "checkout-api", "namespace": "payments", "node": null,
                     "labels": {"app": "checkout-api", "team": "payments"}},
         "operation": "update",
-        "description": "Rollout of Deployment `checkout-api` in namespace `payments` completed: ReplicaSet \"checkout-api-5f6b86d797\" has successfully progressed.",
+        "description": "Rollout of Deployment `checkout-api` in namespace `payments` completed",
         "resource": {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"...": "..."},
                      "spec": {"...": "..."}, "status": {"...": "..."}}
       }

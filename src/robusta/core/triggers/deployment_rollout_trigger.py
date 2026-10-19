@@ -100,12 +100,9 @@ class _DeploymentRolloutTrigger(DeploymentUpdateTrigger):
     ) -> Optional[ExecutionBaseEvent]:
         exec_event = super().build_execution_event(event, sink_findings, build_context)
         if isinstance(exec_event, DeploymentChangeEvent):
+            # Names the outcome only, so it is the same for every rollout of one Deployment
             meta = exec_event.obj.metadata
-            condition = get_progressing_condition(exec_event.obj)
-            exec_event.description = (
-                f"Rollout of Deployment `{meta.name}` in namespace `{meta.namespace}` {self.outcome}"
-                + (f": {condition.message}" if condition and condition.message else "")
-            )
+            exec_event.description = f"Rollout of Deployment `{meta.name}` in namespace `{meta.namespace}` {self.outcome}"
         return exec_event
 
 

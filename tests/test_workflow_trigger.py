@@ -32,6 +32,7 @@ from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayloa
 from tests.test_deployment_rollout_trigger import (
     BAD_ROLLOUT_TIMED_OUT,
     IMAGE_ROLLOUT_COMPLETE,
+    INITIAL_ROLLOUT_COMPLETE,
     load_watch,
     make_trigger_event,
 )
@@ -421,7 +422,16 @@ def test_trigger_workflow_event_rate_limit_keeps_failed_and_completed_rollouts_a
         trigger_workflow_event(make_rollout_event(), params)
 
     descriptions = [json.loads(r["body"])["event"]["description"] for r in server.requests]
-    assert [d.split(": ")[0].rsplit(" ", 1)[1] for d in descriptions] == ["failed", "completed"]
+    assert [d.rsplit(" ", 1)[1] for d in descriptions] == ["failed", "completed"]
+
+
+def test_trigger_workflow_event_rate_limit_spans_rollouts_of_one_deployment():
+    with _CaptureServer() as server:
+        params = _event_params(server.url, rate_limit_seconds=600)
+        trigger_workflow_event(make_rollout_event(index=INITIAL_ROLLOUT_COMPLETE), params)
+        trigger_workflow_event(make_rollout_event(index=IMAGE_ROLLOUT_COMPLETE), params)  # next release: skipped
+
+    assert len(server.requests) == 1
 
 
 def make_secret_event(data: dict, old_data: dict):

@@ -119,14 +119,12 @@ def test_resumed_mid_rollout_still_fires(watch):
         (
             DeploymentRolloutCompleteTrigger(),
             IMAGE_ROLLOUT_COMPLETE,
-            "Rollout of Deployment `checkout-api` in namespace `rollout-fixture` completed: "
-            'ReplicaSet "checkout-api-5f6b86d797" has successfully progressed.',
+            "Rollout of Deployment `checkout-api` in namespace `rollout-fixture` completed",
         ),
         (
             DeploymentRolloutFailureTrigger(),
             BAD_ROLLOUT_TIMED_OUT,
-            "Rollout of Deployment `checkout-api` in namespace `rollout-fixture` failed: "
-            'ReplicaSet "checkout-api-db4f659c4" has timed out progressing.',
+            "Rollout of Deployment `checkout-api` in namespace `rollout-fixture` failed",
         ),
     ],
 )

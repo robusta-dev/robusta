@@ -184,8 +184,7 @@ every change, including the spec change that starts a rollout:
 .. details:: on_deployment_rollout_complete
 
     ``on_deployment_rollout_complete`` fires once a rollout completes: every replica runs the new pod template
-    and is available. Scaling, pausing or resuming a Deployment does not fire it. The event's description says
-    which ReplicaSet rolled out. It has the following parameters:
+    and is available. Scaling, pausing or resuming a Deployment does not fire it. It has the following parameters:
 
     * ``name_prefix``: Name of the Deployment (or a prefix of it)
     * ``namespace_prefix``: Namespace the Deployment is in (or a prefix of it)
