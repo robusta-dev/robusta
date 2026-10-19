@@ -68,9 +68,10 @@ Add :ref:`on_deployment_rollout_failure<on_deployment_rollout_failure>` to also 
           api_key: "{{ env.ROBUSTA_PLATFORM_API_KEY }}"
 
 The workflow receives a payload like the one below. ``trigger`` and the ``subject`` fields are handy for
-workflow filters (e.g. ``namespace`` = ``payments``). ``resource`` is the Deployment's current manifest, and
-``diff`` lists the fields that changed in this update; for the rollout triggers that is the status change
-that completed (or failed) the rollout.
+workflow filters (e.g. ``namespace`` = ``payments``), and ``resource`` is the Deployment's current manifest:
+its ``status.conditions`` say whether the rollout completed or failed. With triggers that set
+``change_filters`` (e.g. ``on_deployment_update``), the payload also carries a ``diff`` of the fields those
+filters kept.
 
 .. code-block:: json
 
@@ -79,9 +80,9 @@ that completed (or failed) the rollout.
       "event": {
         "trigger": "DeploymentChangeEvent",
         "subject": {"kind": "deployment", "name": "checkout-api", "namespace": "payments", "node": null,
-                    "labels": {"app": "checkout-api"}},
+                    "labels": {"app": "checkout-api", "team": "payments"}},
         "operation": "update",
-        "description": "Deployment checkout-api ...",
+        "description": "A `Deployment` in namespace `payments` has been `Updated`:`checkout-api`",
         "resource": {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"...": "..."},
                      "spec": {"...": "..."}, "status": {"...": "..."}}
       }
