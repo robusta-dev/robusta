@@ -16,6 +16,7 @@ from robusta.core.playbooks.trigger import Trigger
 from robusta.core.triggers.deployment_rollout_trigger import (
     DeploymentRolloutCompleteTrigger,
     DeploymentRolloutFailureTrigger,
+    get_rollout_revision,
 )
 
 from playbooks.robusta_playbooks.workflow_trigger import (
@@ -33,6 +34,7 @@ from tests.test_deployment_rollout_trigger import (
     BAD_ROLLOUT_TIMED_OUT,
     IMAGE_ROLLOUT_COMPLETE,
     INITIAL_ROLLOUT_COMPLETE,
+    ROLLBACK_COMPLETE,
     load_watch,
     make_trigger_event,
 )
@@ -320,6 +322,46 @@ def test_event_payload_for_rollout_complete():
     assert "diff" not in event
 
 
+@pytest.mark.parametrize(
+    "index,trigger_class,expected",
+    [
+        (
+            IMAGE_ROLLOUT_COMPLETE,
+            DeploymentRolloutCompleteTrigger,
+            {"revision": "2", "replicaset": "checkout-api-5f6b86d797", "images": {"app": "busybox:1.37.0"}},
+        ),
+        (
+            BAD_ROLLOUT_TIMED_OUT,
+            DeploymentRolloutFailureTrigger,
+            {
+                "revision": "3",
+                "replicaset": "checkout-api-db4f659c4",
+                "images": {"app": "busybox:0.0.0-does-not-exist"},
+            },
+        ),
+        # `rollout undo` reuses the old ReplicaSet under a new revision number
+        (
+            ROLLBACK_COMPLETE,
+            DeploymentRolloutCompleteTrigger,
+            {"revision": "4", "replicaset": "checkout-api-5f6b86d797", "images": {"app": "busybox:1.37.0"}},
+        ),
+    ],
+)
+def test_event_payload_names_the_revision_that_fired(index, trigger_class, expected):
+    payload = build_event_workflow_payload(make_rollout_event(index=index, trigger_class=trigger_class))
+    assert payload["event"]["rollout"] == expected
+
+
+def test_rollout_revision_without_progressing_condition():
+    deployment = make_rollout_event().obj
+    deployment.status.conditions = [c for c in deployment.status.conditions if c.type != "Progressing"]
+    assert get_rollout_revision(deployment) == {
+        "revision": "2",
+        "replicaset": None,
+        "images": {"app": "busybox:1.37.0"},
+    }
+
+
 def test_event_payload_diff_follows_the_triggers_change_filters():
     watch = load_watch()
     # the `kubectl set image` update: spec changed, status not yet observed
@@ -333,6 +375,8 @@ def test_event_payload_diff_follows_the_triggers_change_filters():
 
     payload = build_event_workflow_payload(event)
     json.dumps(payload)
+    # the controller hasn't synced the new template yet: its revision and ReplicaSet don't exist
+    assert payload["event"]["rollout"] == {"revision": None, "replicaset": None, "images": {"app": "busybox:1.37.0"}}
     assert payload["event"]["diff"] == [
         {
             "path": "spec.template.spec.containers[0].image",
@@ -380,6 +424,7 @@ def test_trigger_workflow_event_from_alert_sends_the_alert():
     assert event["subject"]["kind"] == "node"
     assert event["subject"]["name"] == NODE_CORDONED_ALERT["labels"]["node"]
     assert event["resource"]["metadata"]["labels"] == {"zone": "a"}
+    assert "rollout" not in event
 
 
 def test_trigger_workflow_event_from_event_without_a_resource():
