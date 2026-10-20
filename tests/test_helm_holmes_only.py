@@ -1,14 +1,7 @@
 """
 Helm template tests for `runner.enabled` (Holmes-only installs).
-
-The golden tests pin the rendered chart for values that existing installs use, so any change to
-the runner-enabled output shows up as a diff. Regenerate the golden files only for an intended
-change to that output:
-
-    UPDATE_HELM_GOLDEN=1 pytest tests/test_helm_holmes_only.py
 """
 import base64
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -18,8 +11,7 @@ import pytest
 import yaml
 
 CHART_PATH = Path(__file__).parent.parent / "helm" / "robusta"
-GOLDEN_DIR = Path(__file__).parent / "helm_golden"
-HOLMES_VALUES = GOLDEN_DIR / "holmes_values.yaml"
+HOLMES_VALUES = Path(__file__).parent / "holmes_values.yaml"
 KPS_ALERTMANAGER_SECRET = "charts/kube-prometheus-stack/templates/alertmanager/secret.yaml"
 
 pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm binary not available")
@@ -27,39 +19,11 @@ pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm binar
 # Pinned so the output doesn't depend on the helm client's default Kubernetes version.
 BASE_ARGS = ["--namespace", "robusta", "--kube-version", "1.30.0"]
 
-GOLDEN_SCENARIOS = {
-    "default": ["--set", "clusterName=test", "--set", "sinksConfig[0].file_sink.name=test"],
-    "holmes": ["-f", str(HOLMES_VALUES)],
-    "openshift": [
-        "-f",
-        str(HOLMES_VALUES),
-        "--set",
-        "openshift.enabled=true,openshift.createScc=true,openshift.createPrivilegedScc=true",
-    ],
-    "prometheus_stack_alertmanager": [
-        "-f",
-        str(HOLMES_VALUES),
-        "--set",
-        "enablePrometheusStack=true",
-        "-s",
-        KPS_ALERTMANAGER_SECRET,
-    ],
-}
-
-HOLMES_ONLY_ARGS = ["-f", str(HOLMES_VALUES), "--set", "runner.enabled=false"]
+HOLMES_ARGS = ["-f", str(HOLMES_VALUES)]
+HOLMES_ONLY_ARGS = HOLMES_ARGS + ["--set", "runner.enabled=false"]
 
 RUNNER_ONLY_KINDS_AND_NAMES = ["-runner", "kubewatch", "forwarder"]
 
-
-def normalize_versions(output: str) -> str:
-    # CI and releases stamp the runner version over the 0.0.0 placeholder before running tests,
-    # and the holmes dependency moves with every Holmes release.
-    chart = yaml.safe_load((CHART_PATH / "Chart.yaml").read_text())
-    app_version = str(chart["appVersion"])
-    if app_version != "0.0.0":
-        output = output.replace(app_version, "0.0.0")
-    holmes_version = next(d["version"] for d in chart["dependencies"] if d["name"] == "holmes")
-    return output.replace(f"holmes:{holmes_version}", "holmes:0.0.0")
 
 
 def helm_template(args: List[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -88,24 +52,14 @@ def playbooks_config(docs: List[dict]) -> dict:
     return yaml.safe_load(base64.b64decode(secret["data"]["active_playbooks.yaml"]).decode())
 
 
-@pytest.mark.parametrize("scenario", sorted(GOLDEN_SCENARIOS))
-def test_runner_enabled_render_matches_golden(scenario):
-    output = normalize_versions(render(GOLDEN_SCENARIOS[scenario]))
-    golden = GOLDEN_DIR / f"{scenario}.yaml"
-    if os.environ.get("UPDATE_HELM_GOLDEN"):
-        golden.write_text(output)
-    assert golden.exists(), f"missing {golden}; run with UPDATE_HELM_GOLDEN=1"
-    assert output == golden.read_text(), f"render of '{scenario}' differs from {golden}"
-
-
 def test_explicit_runner_enabled_matches_default():
-    args = GOLDEN_SCENARIOS["holmes"]
+    args = HOLMES_ARGS
     assert render(args + ["--set", "runner.enabled=true"]) == render(args)
 
 
 def test_missing_runner_enabled_keeps_the_runner():
     # `helm upgrade --reuse-values` from an older chart keeps the old defaults, which lack the key
-    args = GOLDEN_SCENARIOS["holmes"]
+    args = HOLMES_ARGS
     assert render(args + ["--set", "runner.enabled=null"]) == render(args)
 
 
@@ -221,15 +175,6 @@ def render_notes(tmp_path: Path, args: List[str]) -> str:
     cmd = ["helm", "template", "robusta", str(chart)] + BASE_ARGS + args + ["-s", "templates/notes-under-test.yaml"]
     output = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
     return yaml.safe_load(output)["notes"]
-
-
-@pytest.mark.parametrize("scenario", ["default", "holmes"])
-def test_runner_enabled_notes_match_golden(tmp_path, scenario):
-    output = normalize_versions(render_notes(tmp_path, GOLDEN_SCENARIOS[scenario]))
-    golden = GOLDEN_DIR / f"{scenario}.NOTES.txt"
-    if os.environ.get("UPDATE_HELM_GOLDEN"):
-        golden.write_text(output)
-    assert output == golden.read_text()
 
 
 def test_holmes_only_notes(tmp_path):

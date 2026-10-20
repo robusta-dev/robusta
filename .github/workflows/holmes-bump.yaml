@@ -111,7 +111,6 @@ jobs:
         with:
           python-version: 3.11
 
-      # Golden renders pin the chart of master; this chart intentionally differs from them.
       # --noconftest: tests/conftest.py needs the full runner dependencies, which these don't.
       - name: Helm template tests
         run: |
@@ -119,7 +118,7 @@ jobs:
           tests=(tests/test_helm*.py)
           if (( ${#tests[@]} == 0 )); then echo "no helm template tests at $RUNNER_VERSION"; exit 0; fi
           pip install pytest pyyaml
-          pytest "${tests[@]}" -k "not golden" --noconftest -p no:cacheprovider -v
+          pytest "${tests[@]}" --noconftest -p no:cacheprovider -v
 
       - name: Check the packaged versions
         run: |
