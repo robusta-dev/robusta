@@ -50,6 +50,7 @@ from typing import Any, List, Optional, Union
 
 import requests
 from hikaru import HikaruBase
+from hikaru.model.rel_1_26 import Deployment
 from pydantic.v1 import SecretStr
 from robusta.api import (
     ActionException,
@@ -63,6 +64,7 @@ from robusta.api import (
     action,
 )
 from robusta.core.model.events import ExecutionContext
+from robusta.core.triggers.deployment_rollout_trigger import get_rollout_revision
 
 
 class TriggerWorkflowParams(ActionParams):
@@ -315,7 +317,8 @@ def build_event_workflow_payload(event: ExecutionBaseEvent) -> dict:
     ``alert`` is the full Prometheus alert, ``operation``/``diff`` describe a Kubernetes change (``diff``
     is present only when the trigger sets change_filters, and holds the diffs they kept), and
     ``resource`` is the current manifest of the Kubernetes object the event is about. Secret values
-    are redacted.
+    are redacted. For a Deployment, ``rollout`` names the revision it was on when the event fired, so the
+    workflow can still tell it apart once a newer revision rolls out.
     """
     subject = event.get_subject()
     body = {
@@ -355,6 +358,8 @@ def build_event_workflow_payload(event: ExecutionBaseEvent) -> dict:
         obj = getattr(event, "obj", None)
     if isinstance(obj, HikaruBase):
         body["resource"] = _resource_manifest(obj)
+    if isinstance(obj, Deployment):
+        body["rollout"] = get_rollout_revision(obj)
 
     return {"cluster_name": event.get_context().cluster_name, "event": body}
 
