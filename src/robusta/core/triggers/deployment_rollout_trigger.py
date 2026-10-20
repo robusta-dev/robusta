@@ -1,3 +1,4 @@
+import re
 from typing import Any, ClassVar, Dict, List, Optional
 
 from hikaru.model.rel_1_26 import Deployment, DeploymentCondition
@@ -12,12 +13,40 @@ from robusta.utils.scope import ScopeParams
 NEW_RS_AVAILABLE_REASON = "NewReplicaSetAvailable"
 TIMED_OUT_REASON = "ProgressDeadlineExceeded"
 PAUSE_REASONS = ("DeploymentPaused", "DeploymentResumed")
+REVISION_ANNOTATION = "deployment.kubernetes.io/revision"
+# Every Progressing message names the ReplicaSet:
+# `ReplicaSet "x" has successfully progressed.`, `Created new replica set "x"`
+REPLICASET_IN_MESSAGE = re.compile(r'replica ?set "([^"]+)"', re.IGNORECASE)
 
 
 def get_progressing_condition(deployment: Optional[Deployment]) -> Optional[DeploymentCondition]:
     if not deployment or not deployment.status or not deployment.status.conditions:
         return None
     return next((c for c in deployment.status.conditions if c.type == "Progressing"), None)
+
+
+def get_rollout_revision(deployment: Deployment) -> Dict[str, Any]:
+    """The revision a Deployment was on: its revision number, the ReplicaSet that runs it and its images.
+
+    Old ReplicaSets are kept (revisionHistoryLimit), so the ReplicaSet can still be inspected after the
+    Deployment rolls out a newer revision.
+    """
+    pod_spec = deployment.spec.template.spec if deployment.spec and deployment.spec.template else None
+    rollout = {
+        "revision": None,
+        "replicaset": None,
+        "images": {c.name: c.image for c in pod_spec.containers} if pod_spec else {},
+    }
+    # Until the controller syncs a spec change, the revision and ReplicaSet still describe the previous template
+    if not deployment.status or not _is_spec_observed(deployment):
+        return rollout
+
+    annotations = (deployment.metadata.annotations if deployment.metadata else None) or {}
+    condition = get_progressing_condition(deployment)
+    match = REPLICASET_IN_MESSAGE.search(condition.message or "") if condition else None
+    rollout["revision"] = annotations.get(REVISION_ANNOTATION)
+    rollout["replicaset"] = match.group(1) if match else None
+    return rollout
 
 
 def _is_spec_observed(deployment: Deployment) -> bool:
