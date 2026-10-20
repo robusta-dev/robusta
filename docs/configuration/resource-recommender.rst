@@ -166,6 +166,8 @@ To enable KRR security context, add the following to your ``generated_values.yam
 
 
 
+.. _krr-api:
+
 KRR API
 ======================================
 

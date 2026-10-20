@@ -6,7 +6,6 @@ from string import Template
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import humanize
-import pygal
 from hikaru.model.rel_1_26 import Node
 from prometrix import PrometheusQueryResult
 from pydantic.v1 import BaseModel
@@ -19,7 +18,8 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock, PrometheusBlockLineData
-from robusta.core.reporting.custom_rendering import PlotCustomCSS, charts_style
+from robusta.core.reporting.charts import XYChart
+from robusta.core.reporting.custom_rendering import charts_style
 from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
@@ -46,17 +46,11 @@ class PlotData:
         self,
         plot: Tuple[str, List[Tuple]],
         color: str,
-        stroke_style: Optional[Dict[str, Any]] = None,
-        stroke: Optional[bool] = True,
-        show_dots: bool = True,
-        dots_size: Optional[int] = None,
+        dasharray: Optional[str] = None,
     ):
         self.plot = plot
         self.color = color
-        self.stroke_style = stroke_style
-        self.stroke = stroke
-        self.show_dots = show_dots
-        self.dots_size = dots_size
+        self.dasharray = dasharray
 
 
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
@@ -162,7 +156,7 @@ def create_chart_from_prometheus_query(
     filter_prom_jobs: bool = False,
     hide_legends: Optional[bool] = False,
     metrics_legends_labels: Optional[List[str]] = None,
-) -> Tuple[pygal.Graph, PrometheusBlock]:
+) -> Tuple[XYChart, PrometheusBlock]:
     starts_at: datetime
     ends_at: datetime
     if not alert_starts_at:
@@ -197,7 +191,6 @@ def create_chart_from_prometheus_query(
             f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'"
         )
 
-    # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     # TODO: change min_time time before  Jan 19 3001
     HIGHEST_END = 32536799999
     LOWEST_START = 0
@@ -237,12 +230,7 @@ def create_chart_from_prometheus_query(
             min_time = min(min_time, starts_at.timestamp())
             max_time = max(max_time, ends_at.timestamp())
 
-        plot_data = PlotData(
-            plot=(label, values),
-            color="#3F3F3F",
-            show_dots=False,
-            stroke_style={"width": 8, "dasharray": "8", "linecap": "round", "linejoin": "round"},
-        )
+        plot_data = PlotData(plot=(label, values), color="#3F3F3F", dasharray="8")
         plot_data_list.append(plot_data)
 
     if min_time == HIGHEST_END:  # no data on time series
@@ -284,12 +272,7 @@ def create_chart_from_prometheus_query(
         elif line.label == "OOM Kill Time":
             value = [(line.value, max_y_value), (line.value, 0)]
 
-            plot_data = PlotData(
-                plot=(line.label, value),
-                color="#FF5959",
-                show_dots=False,
-                stroke_style={"width": 6, "dasharray": "3, 6", "linecap": "round", "linejoin": "round"},
-            )
+            plot_data = PlotData(plot=(line.label, value), color="#FF5959", dasharray="3, 6")
 
         else:
             plot_data = PlotData(plot=(line.label, value), color="#2a0065")
@@ -298,18 +281,19 @@ def create_chart_from_prometheus_query(
 
     graph_plot_color_list = [plot_data.color for plot_data in plot_data_list]
     graph_plot_color_list.extend(["#1e0047", "#2a0065"])
-    config = pygal.Config()
-    custom_css = PlotCustomCSS().get_css_file_path()
-    config.css.append(f"file://{custom_css}")
-    chart = pygal.XY(
-        config,
-        show_dots=True,
+    value_formatters = {
+        ChartValuesFormat.Plain: lambda val: str(val),
+        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
+        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
+    }
+    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
+    chart = XYChart(
         style=charts_style(graph_colors=tuple(graph_plot_color_list)),
-        truncate_legend=15,
-        include_x_axis=include_x_axis,
-        width=1280,
-        height=500,
+        title=chart_title if chart_title else promql_query,
         show_legend=hide_legends is not True,
+        value_formatter=value_formatters[chart_values_format],
+        x_value_formatter=lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M"),
     )
 
     # delta and limit line adjustment for case when there is no data
@@ -328,7 +312,7 @@ def create_chart_from_prometheus_query(
 
         # Fix for the case when the request and limit has the same value.
         # 6 pixels where chosen as minimum distance based on current width and height of the slack graph
-        delta = (chart.range[1] - chart.range[0]) * 6 / chart.config.height
+        delta = (chart.range[1] - chart.range[0]) * 6 / chart.height
         # Limit delta to a maximum of 2% of the Y-axis range (to prefent significant deviation)
         delta = min(delta, (chart.range[1] - chart.range[0]) * 0.02)
 
@@ -342,36 +326,8 @@ def create_chart_from_prometheus_query(
         else:
             # For non-percentage formats, round the Y-axis labels to the nearest whole number
             chart.y_labels = [round(i * interval) for i in range(y_axis_division)]
-
-        chart.y_labels_major = chart.y_labels
     else:
         chart.y_labels = []
-        chart.show_minor_y_labels = False
-
-    chart.show_x_guides = True
-    chart.show_y_guides = True
-    chart.spacing = 20
-    chart.margin_top = 10
-    chart.margin_bottom = 50
-    chart.x_label_rotation = 35
-    chart.truncate_label = -1
-    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
-    chart.legend_at_bottom = True
-    chart.legend_at_bottom_columns = 5
-    chart.legend_box_size = 8
-    value_formatters = {
-        ChartValuesFormat.Plain: lambda val: str(val),
-        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
-        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
-        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
-    }
-    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
-    chart.value_formatter = value_formatters[chart_values_format]
-
-    if chart_title:
-        chart.title = chart_title
-    else:
-        chart.title = promql_query
 
     # Adjust the "Limit" line's plotting data if limit and request lines are equal
     if limit_line_adjusted:
@@ -382,14 +338,7 @@ def create_chart_from_prometheus_query(
                 break
 
     for p in plot_data_list:
-        chart.add(
-            p.plot[0],
-            p.plot[1],
-            stroke_style=p.stroke_style,
-            show_dots=p.show_dots,
-            dots_size=p.dots_size,
-            stroke=p.stroke,
-        )
+        chart.add(p.plot[0], p.plot[1], dasharray=p.dasharray)
     return chart, PrometheusBlock(
         data=prometheus_query_result,
         query=promql_query,
@@ -405,7 +354,7 @@ def build_chart_from_prometheus_result(
     prometheus_query_result: PrometheusQueryResult,
     chart_title: Optional[str] = "Prometheus Chart",
     values_format: Optional[ChartValuesFormat] = None,
-) -> pygal.Graph:
+) -> XYChart:
     if prometheus_query_result.result_type != "matrix":
         raise ValueError(f"Expected 'matrix' result_type, got '{prometheus_query_result.result_type}'")
 
@@ -464,33 +413,27 @@ def build_chart_from_prometheus_result(
         min_time = min(min_time, min(series["timestamps"]))
         max_time = max(max_time, max(series["timestamps"]))
 
-        plot_data = PlotData(
-            plot=(label, values),
-            color=COLOR_PALETTE[i % len(COLOR_PALETTE)],
-            show_dots=False,
-            stroke_style={"width": 8, "dasharray": "8", "linecap": "round", "linejoin": "round"},
-        )
+        plot_data = PlotData(plot=(label, values), color=COLOR_PALETTE[i % len(COLOR_PALETTE)], dasharray="8")
         plot_data_list.append(plot_data)
 
     if min_time == HIGHEST_END:
         raise ValueError("No valid data points found in time series.")
 
-    config = pygal.Config()
-    custom_css = PlotCustomCSS().get_css_file_path()
-    config.css.append(f"file://{custom_css}")
-
     graph_colors = [plot_data.color for plot_data in plot_data_list]
     graph_colors.extend(["#1e0047", "#2a0065"])
 
-    chart = pygal.XY(
-        config,
-        show_dots=True,
+    value_formatters = {
+        ChartValuesFormat.Plain: lambda val: str(val),
+        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
+        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
+    }
+    chart = XYChart(
         style=charts_style(graph_colors=tuple(graph_colors)),
-        truncate_legend=15,
-        include_x_axis=True,
-        width=1280,
-        height=500,
+        title=chart_title,
         show_legend=True,
+        value_formatter=value_formatters.get(values_format, lambda val: str(val)),
+        x_value_formatter=lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M"),
     )
 
     chart.range = (0, max_y_value + (max_y_value * 0.2))
@@ -499,39 +442,9 @@ def build_chart_from_prometheus_result(
         chart.y_labels = [round(i * interval * 100) / 100 for i in range(5)]
     else:
         chart.y_labels = [round(i * interval) for i in range(5)]
-    chart.y_labels_major = chart.y_labels
-
-    chart.show_x_guides = True
-    chart.show_y_guides = True
-    chart.spacing = 20
-    chart.margin_top = 10
-    chart.margin_bottom = 50
-    chart.x_label_rotation = 35
-    chart.truncate_label = -1
-    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
-    chart.legend_at_bottom = True
-    chart.legend_at_bottom_columns = 5
-    chart.legend_box_size = 8
-
-    value_formatters = {
-        ChartValuesFormat.Plain: lambda val: str(val),
-        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
-        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
-        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
-    }
-    chart.value_formatter = value_formatters.get(values_format, lambda val: str(val))
-
-    chart.title = chart_title
 
     for plot_data in plot_data_list:
-        chart.add(
-            plot_data.plot[0],
-            plot_data.plot[1],
-            stroke_style=plot_data.stroke_style,
-            show_dots=plot_data.show_dots,
-            dots_size=plot_data.dots_size,
-            stroke=plot_data.stroke,
-        )
+        chart.add(plot_data.plot[0], plot_data.plot[1], dasharray=plot_data.dasharray)
 
     return chart
 

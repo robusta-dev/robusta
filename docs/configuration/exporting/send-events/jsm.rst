@@ -8,7 +8,7 @@ Prerequisites
 
 * A Jira Service Management **Premium** or **Enterprise** plan — outgoing webhook integrations are not available on lower tiers.
 * A Robusta account with API access.
-* Your Robusta ``account_id``, found in ``generated_values.yaml``.
+* Your Robusta ``account_id``, found in the Robusta UI under **Settings → General**.
 * A Robusta API key with ``Read/Write`` access to alerts, generated under **Settings → API Keys → New API Key**.
 * Admin access to Operations in Jira Service Management.
 

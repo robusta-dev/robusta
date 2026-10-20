@@ -155,6 +155,7 @@ class RobustaEvent:
         field_selector = f"regarding.kind={kind},regarding.name={name}"
         if namespace:
             field_selector += f",regarding.namespace={namespace}"
+            return EventList.listNamespacedEvent(namespace, field_selector=field_selector).obj
 
         return EventList.listEventForAllNamespaces(field_selector=field_selector).obj
 

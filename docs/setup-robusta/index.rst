@@ -14,6 +14,7 @@
    :hidden:
 
    multi-cluster
+   holmes-only
    upgrade
    tuning-performance
    json-logging
@@ -21,6 +22,7 @@
    openshift
    read-only-service-account
    rbac-namespace-scoping
+   rbac-namespace-scoped-runner
    node-selector
    proxies
    privacy-and-security

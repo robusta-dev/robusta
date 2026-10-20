@@ -144,7 +144,7 @@ Here is an example of a ``POST`` request to send a list of configuration changes
 
 In this request, replace the following placeholders:
 
-- ``ACCOUNT_ID``: Your account ID, which can be found in your ``generated_values.yaml`` file.
+- ``ACCOUNT_ID``: Your account ID, which can be found in the Robusta UI under **Settings** -> **General**.
 - ``API-KEY``: Your API Key for authentication. You can generate this token by navigating to **Settings** -> **API Keys** -> **New API Key**.
 
 Request Headers

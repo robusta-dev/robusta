@@ -1,3 +1,4 @@
+{{- if and (dig "enabled" true .Values.runner) .Values.kubewatch.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -146,3 +147,4 @@ spec:
   targetLabels:
     - target
 {{ end }}
+{{- end }} # kubewatch.enabled

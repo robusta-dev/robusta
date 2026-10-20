@@ -6,8 +6,9 @@ If you are willing to share additional data, please do so! It really help us imp
 
 You can set sendAdditionalTelemetry: true as a Helm value to send exception reports and additional data.
 This is disabled by default.
-
+{{ if (dig "enabled" true .Values.runner) }}
 To opt-out of telemetry entirely, set a ENABLE_TELEMETRY=false environment variable on the robusta-runner deployment.
+{{- end }}
 Note that if the Robusta UI is enabled, telemetry cannot be disabled even if ENABLE_TELEMETRY=false is set.
 
 {{- range .Values.sinksConfig }}

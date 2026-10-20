@@ -6,7 +6,7 @@ import typing
 from pathlib import Path
 from typing import List, Optional, Type
 
-import pydantic.fields
+import pydantic.v1.fields
 import sphinx.addnodes
 import yaml
 from docutils import nodes
@@ -148,7 +148,7 @@ class PydanticModelDirective(SphinxDirective):
         return [nodes.literal_block(text=value)]
 
     @staticmethod
-    def __get_readable_field_type(field: pydantic.fields.ModelField):
+    def __get_readable_field_type(field: ModelField):
         if typing.get_origin(field.type_) == typing.Union:
             inner_type_name = "complex"
         else:
@@ -164,19 +164,19 @@ class PydanticModelDirective(SphinxDirective):
             if inspect.isclass(field.type_) and issubclass(field.type_, BaseModel):
                 inner_type_name = "complex"
 
-        if field.shape == pydantic.fields.SHAPE_SINGLETON:
+        if field.shape == pydantic.v1.fields.SHAPE_SINGLETON:
             return inner_type_name
-        elif field.shape == pydantic.fields.SHAPE_LIST:
+        elif field.shape == pydantic.v1.fields.SHAPE_LIST:
             return f"{inner_type_name} list"
-        elif field.shape == pydantic.fields.SHAPE_DICT:
+        elif field.shape == pydantic.v1.fields.SHAPE_DICT:
             return f"{inner_type_name} dict"
         return repr(field)
 
     @staticmethod
-    def __get_sample_value(field: pydantic.fields.ModelField):
-        if field.shape == pydantic.fields.SHAPE_LIST:
+    def __get_sample_value(field: ModelField):
+        if field.shape == pydantic.v1.fields.SHAPE_LIST:
             return ["<value1>", "<value2>"]
-        elif field.shape == pydantic.fields.SHAPE_DICT:
+        elif field.shape == pydantic.v1.fields.SHAPE_DICT:
             return {"key1": "value1", "key2": "value2"}
         return "<value>"
 
