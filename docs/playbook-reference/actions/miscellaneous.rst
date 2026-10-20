@@ -69,9 +69,10 @@ Add :ref:`on_deployment_rollout_failure<on_deployment_rollout_failure>` to also 
 
 The workflow receives a payload like the one below. ``trigger`` and the ``subject`` fields are handy for
 workflow filters (e.g. ``namespace`` = ``payments``). ``description`` says whether the rollout completed or
-failed, and ``resource`` is the Deployment's current manifest (Secret values are always redacted). With triggers that set
-``change_filters`` (e.g. ``on_deployment_update``), the payload also carries a ``diff`` of the fields those
-filters kept.
+failed, and ``resource`` is the Deployment's current manifest (Secret values are always redacted).
+``rollout`` names the revision that fired: its revision number, the ReplicaSet running it and the image of
+each container. With triggers that set ``change_filters`` (e.g. ``on_deployment_update``), the payload also
+carries a ``diff`` of the fields those filters kept.
 
 .. code-block:: json
 
@@ -83,10 +84,27 @@ filters kept.
                     "labels": {"app": "checkout-api", "team": "payments"}},
         "operation": "update",
         "description": "Rollout of Deployment `checkout-api` in namespace `payments` completed",
+        "rollout": {"revision": "7", "replicaset": "checkout-api-5f6b86d797",
+                    "images": {"app": "registry.example.com/checkout-api:2.14.0"}},
         "resource": {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"...": "..."},
                      "spec": {"...": "..."}, "status": {"...": "..."}}
       }
     }
+
+The workflow's investigation looks at the cluster as it is when the run starts, not as it was when the
+rollout completed. If another rollout of the same Deployment lands in between (a quick fix-forward, or a
+``rollout undo`` right after a failure), the investigation sees the newer revision. Have the workflow
+prompt judge the revision in ``rollout`` instead. The Deployment keeps its old ReplicaSets
+(``revisionHistoryLimit``), so the ReplicaSet and its events can still be checked, though its pods are gone
+once it is scaled down. For example:
+
+.. code-block:: text
+
+    A Deployment rollout just completed or failed; the trigger payload names it in `rollout`.
+    Judge that revision: the pods of the ReplicaSet in `rollout.replicaset` running the images in
+    `rollout.images`. Check that they are running and ready, and look for restarts, warning events
+    and error logs. If the Deployment has since moved to another revision, say so, and still give
+    the verdict for the revision in the payload. End with one line: healthy / degraded / failed.
 
 Each cluster's runner triggers the workflow for its own rollouts, so a release rolled out to five clusters
 runs the workflow five times, each against its own cluster. To run it once per release, add the playbook
