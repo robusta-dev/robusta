@@ -106,8 +106,8 @@ once it is scaled down. For example:
     `rollout.images`. Check that they are running and ready, and look for restarts, warning events
     and error logs. If the Deployment has since moved to another revision, say so and judge the
     revision in the payload from what remains: the ReplicaSet's status and the events of it and
-    its pods. End with one line: healthy / degraded / failed, or unknown if what remains is not
-    enough to tell.
+    its pods. End with exactly one word, the verdict for the revision in the payload rather than the
+    current one: healthy / degraded / failed, or unknown if what remains is not enough to tell.
 
 Each cluster's runner triggers the workflow for its own rollouts, so a release rolled out to five clusters
 runs the workflow five times, each against its own cluster. To run it once per release, add the playbook
