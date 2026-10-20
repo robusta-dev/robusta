@@ -375,6 +375,8 @@ def test_event_payload_diff_follows_the_triggers_change_filters():
 
     payload = build_event_workflow_payload(event)
     json.dumps(payload)
+    # the controller hasn't synced the new template yet: its revision and ReplicaSet don't exist
+    assert payload["event"]["rollout"] == {"revision": None, "replicaset": None, "images": {"app": "busybox:1.37.0"}}
     assert payload["event"]["diff"] == [
         {
             "path": "spec.template.spec.containers[0].image",

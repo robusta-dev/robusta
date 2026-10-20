@@ -71,7 +71,8 @@ The workflow receives a payload like the one below. ``trigger`` and the ``subjec
 workflow filters (e.g. ``namespace`` = ``payments``). ``description`` says whether the rollout completed or
 failed, and ``resource`` is the Deployment's current manifest (Secret values are always redacted).
 ``rollout`` names the revision that fired: its revision number, the ReplicaSet running it and the image of
-each container. With triggers that set ``change_filters`` (e.g. ``on_deployment_update``), the payload also
+each container. On a Deployment update the controller hasn't processed yet, ``revision`` and ``replicaset``
+are ``null``, because the new revision doesn't exist yet. With triggers that set ``change_filters`` (e.g. ``on_deployment_update``), the payload also
 carries a ``diff`` of the fields those filters kept.
 
 .. code-block:: json
@@ -103,8 +104,10 @@ once it is scaled down. For example:
     A Deployment rollout just completed or failed; the trigger payload names it in `rollout`.
     Judge that revision: the pods of the ReplicaSet in `rollout.replicaset` running the images in
     `rollout.images`. Check that they are running and ready, and look for restarts, warning events
-    and error logs. If the Deployment has since moved to another revision, say so, and still give
-    the verdict for the revision in the payload. End with one line: healthy / degraded / failed.
+    and error logs. If the Deployment has since moved to another revision, say so and judge the
+    revision in the payload from what remains: the ReplicaSet's status and the events of it and
+    its pods. End with one line: healthy / degraded / failed, or unknown if what remains is not
+    enough to tell.
 
 Each cluster's runner triggers the workflow for its own rollouts, so a release rolled out to five clusters
 runs the workflow five times, each against its own cluster. To run it once per release, add the playbook
