@@ -1256,6 +1256,7 @@ spec:
     spec:
       serviceAccountName: robusta-forwarder-service-account
       automountServiceAccountToken: true
+      dnsPolicy: ClusterFirst
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
