@@ -12,7 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      # Not .python-version: setup-python has no 3.11.11 build for the Ubuntu 26.04 runners
       - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
       - uses: pre-commit/action@v3.0.1
 
   # The release packages the committed helm/robusta/charts/ as-is, so a
