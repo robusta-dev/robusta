@@ -3,6 +3,10 @@ from typing import Optional
 from pydantic.v1 import BaseModel
 
 from robusta.core.triggers.container_oom_killed_trigger import ContainerOOMKilledTrigger
+from robusta.core.triggers.deployment_rollout_trigger import (
+    DeploymentRolloutCompleteTrigger,
+    DeploymentRolloutFailureTrigger,
+)
 from robusta.core.triggers.error_event_trigger import (
     WarningEventCreateTrigger,
     WarningEventDeleteTrigger,
@@ -25,6 +29,8 @@ class CustomTriggers(BaseModel):
     on_image_pull_backoff: Optional[PodImagePullBackoffTrigger]
     on_pod_crash_loop: Optional[PodCrashLoopTrigger]
     on_job_failure: Optional[JobFailedTrigger]
+    on_deployment_rollout_complete: Optional[DeploymentRolloutCompleteTrigger]
+    on_deployment_rollout_failure: Optional[DeploymentRolloutFailureTrigger]
     on_pod_oom_killed: Optional[PodOOMKilledTrigger]
     on_pod_evicted: Optional[PodEvictedTrigger]
     on_container_oom_killed: Optional[ContainerOOMKilledTrigger]

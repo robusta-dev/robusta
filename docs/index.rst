@@ -7,17 +7,20 @@
 
    self
 
+Robusta Classic
+====================
+
+Robusta is an open source runner that monitors your Kubernetes cluster, enriches alerts with context, and sends them to your notification sinks.
+
 .. toctree::
    :maxdepth: 4
    :caption: Installation
-   :hidden:
 
    setup-robusta/index
 
 .. toctree::
    :maxdepth: 4
    :caption: Robusta Classic
-   :hidden:
 
    Send Alerts to Robusta <configuration/index>
    Connect Metrics <configuration/metric-providers>
@@ -30,7 +33,5 @@
 .. toctree::
    :maxdepth: 4
    :caption: Help
-   :hidden:
 
    help
-
