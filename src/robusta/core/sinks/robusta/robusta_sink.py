@@ -809,7 +809,8 @@ class RobustaSink(SinkBase, EventHandler):
             response = requests.post(
                 RUNNER_GET_HOLMES_SLACKBOT_INFO,
                 json=message_json,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
+                timeout=10,
             )
             response.raise_for_status()
             is_connected = bool(response.json().get("integrations"))
