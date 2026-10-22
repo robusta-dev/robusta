@@ -33,7 +33,7 @@ Obtain your Robusta ``account_id`` and create an API key:
 2. Click **New API Key**.
 3. Name the key **New Relic**, grant it **Read/Write** access to alerts, and click **Generate API Key**.
 4. Copy and securely store the generated API key — you’ll use it as a **Bearer token** in New Relic.
-5. In **Settings → Workspace**, copy your **account_id**.
+5. In **Settings → General**, copy your **account_id**.
 
 Step 2: Create a Webhook Destination in New Relic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

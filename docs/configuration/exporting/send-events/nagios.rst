@@ -7,7 +7,7 @@ Prerequisites
 -------------
 
 * A Robusta account with API access.
-* Your Robusta ``account_id``, found in ``generated_values.yaml``.
+* Your Robusta ``account_id``, found in the Robusta UI under **Settings → General**.
 * A Robusta API key with ``Read/Write`` access to alerts.
 * Shell access to your Nagios host with permission to edit ``commands.cfg`` and ``contacts.cfg``.
 

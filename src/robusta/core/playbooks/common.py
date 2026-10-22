@@ -30,7 +30,12 @@ def get_resource_events_table(
     if namespace:
         field_selector += f",regarding.namespace={namespace}"
 
-    event_list: EventList = EventList.listEventForAllNamespaces(field_selector=field_selector).obj
+    # events for a namespaced resource live in its namespace - list only there, so this
+    # also works for namespace-scoped runners that cannot list events at the cluster scope
+    if namespace:
+        event_list: EventList = EventList.listNamespacedEvent(namespace, field_selector=field_selector).obj
+    else:
+        event_list: EventList = EventList.listEventForAllNamespaces(field_selector=field_selector).obj
     if not event_list.items:
         return
 
@@ -116,6 +121,11 @@ def get_resource_events(
     if namespace:
         field_selector += f",regarding.namespace={namespace}"
 
-    event_list: EventList = EventList.listEventForAllNamespaces(field_selector=field_selector).obj
+    # events for a namespaced resource live in its namespace - list only there, so this
+    # also works for namespace-scoped runners that cannot list events at the cluster scope
+    if namespace:
+        event_list: EventList = EventList.listNamespacedEvent(namespace, field_selector=field_selector).obj
+    else:
+        event_list: EventList = EventList.listEventForAllNamespaces(field_selector=field_selector).obj
 
     return [ev for ev in event_list.items if filter_event(ev, name_substring, included_types)]

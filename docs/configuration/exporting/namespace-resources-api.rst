@@ -84,7 +84,7 @@ Replace:
 
 - ``API-KEY-HERE`` with your API Key from **Settings → API Keys → New API Key**.  
   Make sure the key has **Clusters → Read** permissions to access namespace resource data.
-- ``your-account-id`` with the ID found in ``generated_values.yaml``
+- ``your-account-id`` with the ID found in the Robusta UI under **Settings → General**
 - ``your-cluster-name`` and ``your-namespace`` accordingly
 
 Response Format

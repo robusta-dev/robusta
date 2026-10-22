@@ -7,7 +7,7 @@ Prerequisites
 -------------
 
 * A Robusta account with API access.
-* Your Robusta ``account_id``, found in ``generated_values.yaml``.
+* Your Robusta ``account_id``, found in the Robusta UI under **Settings → General**.
 * A Robusta API key with ``Read/Write`` access to alerts.
 * AWS account permissions to create Lambda functions and SNS topics.
 
@@ -16,7 +16,7 @@ Webhook URL
 
 .. robusta-code::
 
-    https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
+    https://api.robusta.dev/webhooks?type=alert&origin=aws-cloudwatch&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>
 
 Replace ``<ACCOUNT_ID>`` with your Robusta account id and ``<CLUSTER_NAME>`` with your cluster's name exactly as it appears in the Robusta UI. If ``cluster`` is omitted, alerts are filed under a generic ``external`` cluster.
 
@@ -34,7 +34,7 @@ Recipe
        import urllib.error
        import urllib.request
 
-       URL = "https://api.robusta.dev/webhooks?type=alert&origin=awscloudwatch&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>"
+       URL = "https://api.robusta.dev/webhooks?type=alert&origin=aws-cloudwatch&account_id=<ACCOUNT_ID>&cluster=<CLUSTER_NAME>"
        TIMEOUT_SECONDS = 5
 
        def lambda_handler(event, context):

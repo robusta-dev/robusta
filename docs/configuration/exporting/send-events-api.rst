@@ -48,7 +48,7 @@ Query Parameters
    * - ``origin``
      - Identifies the monitoring product. Must be one of the supported origins listed under `Integrations`_ below.
    * - ``account_id``
-     - Your Robusta account ID, found in ``generated_values.yaml``.
+     - Your Robusta account ID, found in the Robusta UI under **Settings → General**.
    * - ``cluster``
      - Recommended. The cluster to file the alert under — use the exact name shown in the Robusta UI. Overrides any cluster in the alert payload. If omitted, the cluster is taken from the payload, or silently defaults to ``external``.
 

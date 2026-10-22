@@ -24,7 +24,7 @@ Query Parameters
      - Required
    * - ``account_id``
      - string
-     - The unique account identifier (found in your ``generated_values.yaml`` file).
+     - The unique account identifier (found in the Robusta UI under **Settings** -> **General**).
      - Yes
    * - ``start_ts``
      - string
@@ -49,7 +49,7 @@ The following `curl` command demonstrates how to query aggregated alert data for
 
 In the command, make sure to replace the following placeholders:
 
-- `account_id`: Your account ID, which can be found in your `generated_values.yaml` file.
+- `account_id`: Your account ID, which can be found in the Robusta UI under **Settings** -> **General**.
 - `API-KEY`: Your API Key for authentication. Generate this token in the platform by navigating to **Settings** -> **API Keys** -> **New API Key**, and creating a key with the "Read Alerts" permission.
 
 

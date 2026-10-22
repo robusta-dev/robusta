@@ -1,3 +1,4 @@
+{{- if (dig "enabled" true .Values.runner) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,32 +44,7 @@ spec:
       securityContext:
       {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.runner.dnsConfig.enabled }}
-      {{- $policy := .Values.runner.dnsConfig.policy }}
-      {{- $hasConfig := or .Values.runner.dnsConfig.nameservers .Values.runner.dnsConfig.searches .Values.runner.dnsConfig.options }}
-
-      {{- if and (eq $policy "None") (not $hasConfig) }}
-        {{- fail "dnsConfig: when dnsPolicy is 'None', you must set at least one of nameservers, searches, or options" }}
-      {{- end }}
-      dnsPolicy: {{ $policy | quote }}
-      {{- if $hasConfig }}
-      dnsConfig:
-        {{- with .Values.runner.dnsConfig.nameservers }}
-        nameservers:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with .Values.runner.dnsConfig.searches }}
-        searches:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with .Values.runner.dnsConfig.options }}
-        options:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-      {{- end }}
-      {{ else }}
-      dnsPolicy: ClusterFirst
-      {{- end }}
+      {{- include "robusta.dnsConfig" .Values.runner.dnsConfig | nindent 6 }}
       {{- if .Values.runner.hardenedFs }}
       initContainers:
       - name: setup-venv
@@ -166,6 +142,21 @@ spec:
             value: {{ .Values.runner.customCRD | toJson | squote }}
             
           {{- end -}}
+          {{- if .Values.runner.rbac.namespaceScoped }}
+          # namespace-scoped runner defaults; entries in runner.additional_env_vars override them
+          - name: DISABLE_DISCOVERY
+            value: "true"
+          - name: CLUSTER_STATS_NAMESPACE
+            value: {{ .Release.Namespace | quote }}
+          - name: NAMESPACE_DATA_MODE
+            value: "namespaced"
+          - name: HOLMES_DISCOVERY_NAMESPACE
+            value: {{ .Release.Namespace | quote }}
+          - name: DISABLE_PROMETHEUS_DISCOVERY
+            value: "true"
+          - name: DISABLE_ALERTMANAGER_DISCOVERY
+            value: "true"
+          {{- end }}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}
@@ -375,4 +366,4 @@ type: Opaque
 stringData:
   SENTRY_DSN: {{ $sentryDsn }}
 {{- end }}
-
+{{- end }}

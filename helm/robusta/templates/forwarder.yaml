@@ -1,3 +1,4 @@
+{{- if and (dig "enabled" true .Values.runner) .Values.kubewatch.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -40,6 +41,7 @@ spec:
       securityContext:
       {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- include "robusta.dnsConfig" .Values.kubewatch.dnsConfig | nindent 6 }}
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
@@ -161,3 +163,4 @@ spec:
   targetLabels:
     - target
 {{ end }}
+{{- end }} # kubewatch.enabled

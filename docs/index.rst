@@ -23,6 +23,8 @@
 
    Overview <configuration/exporting/robusta-pro-features>
    Holmes Chat API <configuration/holmesgpt/holmes-chat-api>
+   configuration/exporting/platform-mcp-api
+   configuration/exporting/llm-models-api
    configuration/exporting/send-events-api
    configuration/exporting/alert-export-api
    configuration/exporting/alert-statistics-api
@@ -50,6 +52,7 @@
    Playbooks <playbook-reference/index>
    Self-Monitoring <setup-robusta/robusta-runner-metrics>
    Managed Prometheus Alerts <setup-robusta/alertsui>
+   Cost Savings (KRR) <configuration/resource-recommender>
    Namespace Resources API <configuration/exporting/namespace-resources-api>
    Prometheus Query API <configuration/exporting/prometheus-query-api>
 

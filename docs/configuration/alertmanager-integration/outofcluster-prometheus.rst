@@ -63,10 +63,7 @@ If you are using a third-party AlertManager and want to give it separate credent
 2. In the Robusta UI, go to **Settings → API Keys**.
 3. Click **New API Key**, select **Alerts: Write** permissions, and **Save**.
 4. Copy the generated API key.
-5. Find your ``account_id``:
-
-   - In your **generated_values.yaml** file (from installation), or
-   - In the Robusta UI under **Settings → Workspace**.
+5. Find your ``account_id`` in the Robusta UI under **Settings → General**.
 
 6. Edit the configuration for your AlertManager, using the API key in place of the signing key:
 

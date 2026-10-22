@@ -16,7 +16,7 @@ from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 
-from robusta.core.model.env_vars import NAMESPACE_DATA_TTL
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, NAMESPACE_DATA_MODE, NAMESPACE_DATA_TTL
 
 
 RUNNING_STATE = "Running"
@@ -275,12 +275,18 @@ def parse_kubernetes_datetime_to_ms(k8s_datetime: str) -> float:
 # get_namespace_labels) and just cache all namespace data.
 @cached(cache=TTLCache(maxsize=1, ttl=NAMESPACE_DATA_TTL))
 def get_all_namespace_data():
-    logging.info("(re)loading all namespace data")
+    if NAMESPACE_DATA_MODE == "disabled":
+        return {}
+    logging.info("(re)loading namespace data")
     core_v1 = core_v1_api.CoreV1Api()
     try:
+        if NAMESPACE_DATA_MODE == "namespaced":
+            # a namespace-scoped service account can `get` its own namespace but cannot `list` namespaces
+            ns = core_v1.read_namespace(INSTALLATION_NAMESPACE)
+            return {ns.metadata.name: ns.metadata}
         return {ns.metadata.name: ns.metadata for ns in core_v1.list_namespace().items}
     except ApiException:
-        logging.exception("failed to list namespaces")
+        logging.exception("failed to load namespace data")
         return {}
 
 
