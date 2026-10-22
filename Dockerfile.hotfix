@@ -1,0 +1,2 @@
+FROM robustadev/robusta-runner:0.49.0
+COPY src/robusta/core/sinks/robusta/robusta_sink.py /app/src/robusta/core/sinks/robusta/robusta_sink.py
