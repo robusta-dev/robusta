@@ -463,9 +463,18 @@ Emitted with token usage statistics.
    * - ``metadata.usage.completion_tokens``
      - integer
      - Output tokens of the last LLM call.
+   * - ``metadata.usage.total_tokens``
+     - integer
+     - Input plus output tokens of the last LLM call.
+   * - ``metadata.usage.cached_tokens``
+     - integer
+     - Optional. Input tokens of the last LLM call served from the provider's prompt cache.
    * - ``metadata.max_tokens``
      - integer
      - Context window of the model.
+   * - ``metadata.max_output_tokens``
+     - integer
+     - Maximum output tokens of the model.
 
 .. _approval-required-event:
 
