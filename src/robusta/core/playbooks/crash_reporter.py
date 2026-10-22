@@ -50,7 +50,7 @@ def send_crash_report(
 
             if not container_log:
                 log_block = EmptyFileBlock(filename=f"{pod.metadata.name}.log",
-                                           remarks=f"Logs unavailable for container: {container_status.name}")
+                                           remarks=f"No logs were written by container: {container_status.name}")
                 logging.info(
                     f"could not fetch logs from container: {container_status.name}"
                 )
