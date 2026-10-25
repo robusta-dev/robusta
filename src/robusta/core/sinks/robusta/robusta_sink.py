@@ -51,7 +51,6 @@ from cachetools import TTLCache
 
 RUNNER_GET_HOLMES_SLACKBOT_INFO = f"{ROBUSTA_API_ENDPOINT}/api/holmes/integrations/slack/runner"
 HOLMES_SLACKBOT_CACHE_TTL = int(os.getenv("HOLMES_SLACKBOT_CACHE_TTL", 15 * 60))
-HOLMES_SLACKBOT_TIMEOUT_SECONDS = 10
 
 # Define the cache with a single slot and the configured TTL
 _holmes_slackbot_cache = TTLCache(maxsize=1, ttl=HOLMES_SLACKBOT_CACHE_TTL)
@@ -816,14 +815,6 @@ class RobustaSink(SinkBase, EventHandler):
     def is_holmes_slackbot_connected(self) -> bool:
         if 'status' in _holmes_slackbot_cache:
             return _holmes_slackbot_cache['status']
-        # Called under the Slack grouping lock; never block alerts.
-        _holmes_slackbot_cache['status'] = False
-        status_check = threading.Thread(target=self.__update_holmes_slackbot_status, daemon=True)
-        status_check.start()
-        status_check.join(timeout=HOLMES_SLACKBOT_TIMEOUT_SECONDS)
-        return _holmes_slackbot_cache.get('status', False)
-
-    def __update_holmes_slackbot_status(self):
         try:
             message_json = {
                 "session_token": self.dal.get_session_token(),
@@ -833,9 +824,13 @@ class RobustaSink(SinkBase, EventHandler):
                 RUNNER_GET_HOLMES_SLACKBOT_INFO,
                 json=message_json,
                 headers={"Content-Type": "application/json"},
-                timeout=HOLMES_SLACKBOT_TIMEOUT_SECONDS,
+                timeout=10,
             )
             response.raise_for_status()
-            _holmes_slackbot_cache['status'] = bool(response.json().get("integrations"))
+            is_connected = bool(response.json().get("integrations"))
+            _holmes_slackbot_cache['status'] = is_connected
+            return is_connected
         except Exception as e:
             logging.warning(f"Failed to get holmes slackbot info {e}")
+            _holmes_slackbot_cache['status'] = False
+            return False
