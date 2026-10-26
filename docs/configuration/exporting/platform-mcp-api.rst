@@ -16,7 +16,20 @@ A standard MCP `Streamable HTTP <https://modelcontextprotocol.io/specification/2
 Enabling external access
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Cross-cluster tool calls from an external MCP client are opt-in per account. Turn on **Robusta MCP Server Enabled** under **Settings → AI Assistant → MCP Server Settings** before an API key can list or call any ``remote_*`` tool. It is off by default.
+Access from an external MCP client is opt-in per account. Turn on **Robusta MCP Server Enabled** under **Settings → MCP Server** before an API key can list or call any tool. It is off by default.
+
+Under that switch, each toolset the server exposes has its own switch (all on by default once the server is enabled):
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+
+   * - Toolset
+     - Tools
+   * - **Ask Holmes**
+     - ``ask_holmes``, ``get_holmes_answer`` — ask the Holmes agent of a cluster a question and get back its full investigation.
+   * - **Cluster tools**
+     - ``list_available_clusters`` and the ``remote_*`` tools — run one of Holmes' cluster-local tools (kubectl, Prometheus, pod logs) on a cluster and get its raw output.
 
 Authentication
 ^^^^^^^^^^^^^^
@@ -112,9 +125,48 @@ For Claude Desktop or any generic MCP client (``mcp.json``):
 What an API key can call
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An API key is treated as an external caller and can only reach the cross-cluster ``remote_*`` tools (for example, listing available clusters and dispatching a tool call to one of them). It cannot call the static Slack, Teams, or incident-triage tools — those are reserved for Holmes' own internal use of this endpoint.
+An API key is treated as an external caller and can only reach the toolsets above. It cannot call the Slack, Teams, or incident-triage tools — those are reserved for Holmes' own internal use of this endpoint.
 
 Calls run with the RBAC of the user who created the API key, not as an account-wide superuser: a key only reaches the clusters and namespaces its owner can already access. Deleting or demoting that user's access also narrows what the key can do.
+
+Asking Holmes a question
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ask_holmes`` starts a Holmes investigation on a cluster, the same way the :doc:`Holmes Chat API <../holmesgpt/holmes-chat-api>` does, and returns the answer in markdown. An investigation can take seconds or minutes, longer than most MCP clients wait for one tool call, so the call is split in two:
+
+* ``ask_holmes`` waits up to ``wait_seconds`` (default 50, at most 280) for the answer. When the answer is ready in time, the result has ``status: "completed"`` and the ``answer``; otherwise it has ``status: "running"`` and a ``conversation_id``.
+* ``get_holmes_answer`` waits on that ``conversation_id`` again, with the same ``wait_seconds``, and returns the same shape. Call it until the status is ``completed``. The investigation keeps running between calls, so a client that times out loses nothing.
+
+.. list-table::
+   :widths: 20 15 65
+   :header-rows: 1
+
+   * - Argument
+     - Required
+     - Description
+   * - ``question``
+     - Yes
+     - The question, with every detail Holmes needs (namespace, workload or pod names, time window, what was observed).
+   * - ``cluster``
+     - When more than one cluster can be asked
+     - The cluster whose Holmes answers. The error of a call without it names the clusters you can ask.
+   * - ``wait_seconds``
+     - No
+     - How long the call waits for the answer. Keep it under your MCP client's tool timeout.
+
+Both tools answer with ``{"conversation_id", "cluster", "status", "answer", "ui_link"}``; ``ui_link`` opens the conversation in the Robusta UI.
+
+.. code-block:: json
+
+    {
+      "conversation_id": "78170c9f-2403-43ac-88ed-d6d39efd90ed",
+      "cluster": "prod-eu",
+      "ui_link": "https://platform.robusta.dev/my-account/holmes/chat/78170c9f-2403-43ac-88ed-d6d39efd90ed",
+      "status": "completed",
+      "answer": "3 of the 12 pods in `checkout` restarted in the last hour ..."
+    }
+
+Only clusters whose Holmes agent takes conversations from the platform (Holmes 0.24 or later, with the conversation worker enabled) can be asked, and only those the key's owner may chat with.
 
 Rate limits and errors
 ^^^^^^^^^^^^^^^^^^^^^^^
