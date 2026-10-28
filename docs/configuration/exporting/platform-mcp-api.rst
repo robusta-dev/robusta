@@ -29,7 +29,7 @@ Under that switch, each toolset the server exposes has its own switch (all on by
    * - **Ask Holmes**
      - ``ask_holmes``, ``get_holmes_answer`` — ask the Holmes agent of a cluster a question and get back its full investigation.
    * - **Cluster tools**
-     - ``list_available_clusters`` and the ``remote_*`` tools — run one of Holmes' cluster-local tools (kubectl, Prometheus, pod logs) on a cluster and get its raw output.
+     - The ``remote_*`` tools — run one of Holmes' cluster-local tools (kubectl, Prometheus, pod logs) on a cluster and get its raw output — and ``list_available_clusters``, which lists the clusters a ``remote_*`` tool can run on for you.
 
 Authentication
 ^^^^^^^^^^^^^^
