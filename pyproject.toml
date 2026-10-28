@@ -17,7 +17,7 @@ multi_line_output = 3
 include_trailing_comma = true
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.12"
+python = ">=3.11, <3.12"
 setuptools = "^83.0.0"
 colorlog = "^5.0.1"
 python-json-logger = "^3.0.0"
@@ -70,7 +70,8 @@ cryptography = "^50.0.0"
 # PDF renderer for KRR/Popeye scan reports (BSD-3-Clause; replaced LGPL-licensed fpdf2)
 reportlab = "^5.0.0"
 attrs = "^23.1.0"
-prometrix = "0.2.11"
+# 0.2.12 drops its pillow<13 cap, needed for the Pillow 13 CVE fixes; requires prometheus-api-client >=0.7
+prometrix = "0.2.12"
 hikaru-model-26 = "^1.1.1"
 apprise = "1.6.0"
 rocketchat-api = "^1.30.0"
@@ -78,10 +79,10 @@ pydash = "8.0.0"
 # The following are added to speed up poetry dependency resolution
 botocore = "^1.42.19"
 boto3 = "^1.42.19"
-prometheus-api-client = "0.5.4"
+prometheus-api-client = "^0.7.0"
 requests = "^2.33.0"
-# Bump to fix certifi CVE flagged by customer scan; date-versioned, so use >= rather than caret
-certifi = ">=2026.4.22"
+# Bump to fix certifi CVE flagged by customer scan (GHSA-6q48-6c7w-9gw2); date-versioned, so use >= rather than caret
+certifi = ">=2026.10.18"
 regex = "2024.5.15"
 # Pin to fix CVE-2026-102268 (Critical) + CVE-2026-102266/102267/102271-102273 (High): PyJWT
 pyjwt = "^2.14.0"
@@ -89,22 +90,23 @@ urllib3 = "^2.8.0"
 httpx = "0.27.2"
 # realtime (supabase dependency) requires websockets.asyncio, added in websockets 13
 websockets = ">=13"
-# Pin to fix cve https://github.com/robusta-dev/robusta/security/dependabot/85
-h2 = "^4.3.0"
+# Pin to fix cve https://github.com/robusta-dev/robusta/security/dependabot/85 and CVE-2026-71554
+h2 = "^4.4.1"
 # Pin to fix CVE-2026-30922 (transitive via google-auth)
 # Bump to fix CVE-2026-59885, CVE-2026-59886 (High)
 pyasn1 = ">=0.6.4"
 # Pin to fix CVE-2026-63374 (Critical) + CVE-2026-64847 (Medium) (transitive via httpx)
 anyio = "^4.14.2"
-# Pin to fix CVE-2026-22701 (transitive via virtualenv/pre-commit)
-filelock = ">=3.20.3"
-# Pin to fix CVE-2026-102925/102930/102937 (transitive via pre-commit)
-virtualenv = "^21.7.13"
+# Pin to fix CVE-2026-22701 and CVE-2026-112940 (transitive via virtualenv/pre-commit)
+filelock = ">=4.2.1"
+# Pin to fix CVE-2026-102925/102930/102937, CVE-2026-113718/113722/113723/113725 (transitive via pre-commit)
+virtualenv = "^21.14.9"
 # Pillow is used directly (MS Teams PNG->JPEG image conversion) and by reportlab.
 # Pin to fix CVE-2026-54058,
 # CVE-2026-54059, CVE-2026-54060, CVE-2026-55379, CVE-2026-55380, CVE-2026-59197,
-# CVE-2026-59199, CVE-2026-59200, CVE-2026-59204, CVE-2026-59205 (High)
-pillow = "^12.3.0"
+# CVE-2026-59199, CVE-2026-59200, CVE-2026-59204, CVE-2026-59205 (High) and the
+# CVE-2026-112390..112406, 112892..112902, 96637..96778 batch fixed in 13.0.0
+pillow = "^13.0.0"
 # click is pulled in transitively (flask, typer). Pin to fix CVE-2026-7246 (High):
 # command injection via unsanitized filename in click.edit()
 click = ">=8.3.3"
@@ -137,7 +139,8 @@ sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.g
 # As it does not work witn sphynx-immaterial, we need to exclude it from the dev dependencies
 # Please, install it manually if you need to run flake8
 # flake8 = "5.0.4"
-black = "26.3.1"
+# CVE-2026-114134 (High)
+black = "26.10.1"
 mypy = "0.991"
 isort = "5.10.1"
 absolufy-imports = "^0.3.1"
