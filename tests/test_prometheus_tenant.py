@@ -1,8 +1,10 @@
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 
 from robusta.core.model.base_params import PrometheusParams
+from robusta.core.playbooks import prometheus_enrichment_utils
 from robusta.integrations.prometheus import utils
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
@@ -48,6 +50,26 @@ def test_feature_off_reads_nothing(tenant_label):
     with patch.object(utils, "PROMETHEUS_TENANT_LABEL", None):
         assert not _headers(namespace="shop")
     tenant_label.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "params_namespace, labels, expected",
+    [
+        (None, {"namespace": "shop", "pod": "web"}, "shop"),  # alert graph: namespace from the labels
+        ("billing", {"namespace": "shop"}, "billing"),  # an explicit namespace wins
+        (None, {"node": "node-1"}, None),  # node graph: default tenant
+    ],
+)
+def test_graph_enrichment_namespace(params_namespace, labels, expected):
+    params = PrometheusParams(namespace=params_namespace)
+    with patch.object(prometheus_enrichment_utils, "create_chart_from_prometheus_query") as create_chart:
+        create_chart.side_effect = Exception("stop")
+        with pytest.raises(Exception, match="stop"):
+            prometheus_enrichment_utils.create_graph_enrichment(
+                datetime.now(), labels, "up", params, 60, None, None
+            )
+    assert create_chart.call_args.args[0].namespace == expected
+    assert params.namespace == params_namespace
 
 
 def test_configured_headers_are_not_changed(tenant_label):

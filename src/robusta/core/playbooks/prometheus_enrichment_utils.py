@@ -496,6 +496,9 @@ def create_graph_enrichment(
     metrics_legends_labels: Optional[List[str]] = None,
 ) -> GraphBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
+    if not prometheus_params.namespace and labels.get("namespace"):
+        # The graph is about the namespace it fills into the query, so it picks the tenant. A copy: params are shared
+        prometheus_params = prometheus_params.copy(update={"namespace": labels["namespace"]})
     chart, prom_block = create_chart_from_prometheus_query(
         prometheus_params,
         promql_query,
