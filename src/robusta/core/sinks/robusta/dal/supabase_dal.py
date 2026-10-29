@@ -98,7 +98,11 @@ def _request_supabase_api_key(params: dict) -> Optional[str]:
 
 
 def _is_robusta_saas_url(url: str) -> bool:
-    host = (urlparse(url).hostname or "").lower()
+    try:
+        host = (urlparse(url).hostname or "").lower().rstrip(".")
+    except ValueError:
+        # Malformed (e.g. an unmatched "["): let the request fail inside the fetch's fallback rather than here.
+        return False
     return host == "robusta.dev" or host.endswith((".robusta.dev", ".supabase.co"))
 
 

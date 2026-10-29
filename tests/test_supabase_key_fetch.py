@@ -50,7 +50,12 @@ def test_retries_on_connection_error():
 
 @pytest.mark.parametrize(
     "store_url",
-    ["https://sp.robusta.dev", "https://sp.eu.robusta.dev", "https://xyzcompany.supabase.co"],
+    [
+        "https://sp.robusta.dev",
+        "https://sp.eu.robusta.dev",
+        "https://xyzcompany.supabase.co",
+        "https://sp.robusta.dev.",
+    ],
 )
 def test_fetches_from_saas_for_saas_stores(store_url):
     with patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get") as get:
@@ -68,6 +73,13 @@ def test_does_not_reach_saas_for_a_self_hosted_store(store_url):
     with patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get") as get:
         assert fetch_supabase_api_key("account-1", "cluster-1", store_url) is None
     get.assert_not_called()
+
+
+def test_malformed_endpoint_falls_back_instead_of_raising(monkeypatch):
+    monkeypatch.setattr(supabase_dal_module, "ROBUSTA_API_ENDPOINT", "https://[api.robusta.dev")
+    with patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get") as get:
+        get.side_effect = requests.exceptions.InvalidURL("bad url")
+        assert fetch_supabase_api_key("account-1", "cluster-1", SELF_HOSTED_STORE) is None
 
 
 def test_fetches_from_a_self_hosted_endpoint(monkeypatch):
