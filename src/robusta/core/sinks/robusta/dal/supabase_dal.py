@@ -101,12 +101,11 @@ def _is_robusta_saas_url(url: str) -> bool:
     try:
         host = (urlparse(url).hostname or "").lower().rstrip(".")
     except ValueError:
-        # Malformed (e.g. an unmatched "["): let the request fail inside the fetch's fallback rather than here.
         return False
     return host == "robusta.dev" or host.endswith((".robusta.dev", ".supabase.co"))
 
 
-def _relay_holds_key_for(store_url: str) -> bool:
+def should_fetch_keys_from_saas(store_url: str) -> bool:
     """Whether the relay at ROBUSTA_API_ENDPOINT can hand out an api key for this store.
 
     Robusta's SaaS relay only holds keys for Robusta's SaaS stores. A self-hosted runner
@@ -117,7 +116,7 @@ def _relay_holds_key_for(store_url: str) -> bool:
 
 
 def fetch_supabase_api_key(account_id: str, cluster: str, store_url: str) -> Optional[str]:
-    if not _relay_holds_key_for(store_url):
+    if not should_fetch_keys_from_saas(store_url):
         logging.info(
             f"Not fetching the api key from {ROBUSTA_API_ENDPOINT}: it is Robusta SaaS and the store "
             f"{store_url} is not. Using the api key from the Robusta token."
