@@ -59,7 +59,7 @@ Problems when running ``helm install`` command or installing via GitOps.
 
 .. details:: at least one sink must be defined
 
-   Verify ``sinksConfig`` is defined in your Robusta values file, with at least one sink like Slack, Teams or Robusta UI ("robusta_sink"). If it's your first time installing, the fastest solution is to start configue creation from scratch.
+   Verify ``sinksConfig`` is defined in your Robusta values file, with at least one sink like Slack or Teams. If it's your first time installing, the fastest solution is to start configue creation from scratch.
 
    .. code-block:: bash
 
@@ -115,36 +115,6 @@ Issues after installation when pods are running but not working correctly.
                 kubectl get pods -A | grep robusta-runner # get the name and the namespace of the robusta pod
                 kubectl logs -n <NAMESPACE> <ROBUSTA-RUNNER-POD-NAME> # get the logs
 
-        .. details:: Discovery Error
-
-                .. code-block::
-
-                    2023-04-17 23:37:43.019 ERROR    Discovery process internal error
-                    2023-04-17 23:37:43.022 INFO     Initialized new discovery pool
-                    2023-04-17 23:37:43.022 ERROR    Failed to run publish discovery for robusta_ui_sink
-                    Traceback (most recent call last):
-                      File "/app/src/robusta/core/sinks/robusta/robusta_sink.py", line 175, in __discover_resources
-                        results: DiscoveryResults = Discovery.discover_resources()
-                      File "/app/src/robusta/core/discovery/discovery.py", line 288, in discover_resources
-                        raise e
-                      File "/app/src/robusta/core/discovery/discovery.py", line 280, in discover_resources
-                        return future.result()
-                      File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 446, in result
-                        return self.__get_result()
-                      File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
-                        raise self._exception
-                    concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
-
-                This error might be due to memory issues. Increase the memory request in Robusta's Helm values:
-
-                .. code-block:: yaml
-
-                        runner:
-                          resources:
-                            requests:
-                              memory: 2048Mi
-                            limits:
-                              memory: 2048Mi
 
         .. details:: Blocked by firewall / HTTP proxy
 
@@ -177,38 +147,6 @@ Issues after installation when pods are running but not working correctly.
                     --set kube-prometheus-stack.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=10Gi \
                     --set kube-prometheus-stack.prometheus.prometheusSpec.resources.requests.memory=512Mi
 
-Holmes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. details:: Error in Holmes: binascii.a2b_base64(s, strict_mode=validate)
-
-        If the Holmes pod fail to start, with this exception:
-
-        .. code-block::
-
-                2024-09-20 15:37:57.961 INFO     loading config /etc/robusta/config/active_playbooks.yaml
-                Traceback (most recent call last):
-                  File "/app/server.py", line 65, in <module>
-                    dal = SupabaseDal()
-                          ^^^^^^^^^^^^^
-                  File "/app/holmes/core/supabase_dal.py", line 38, in __init__
-                    self.enabled = self.__init_config()
-                                   ^^^^^^^^^^^^^^^^^^^^
-                  File "/app/holmes/core/supabase_dal.py", line 68, in __init_config
-                    robusta_token = self.__load_robusta_config()
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                  File "/app/holmes/core/supabase_dal.py", line 61, in __load_robusta_config
-                    return RobustaToken(**json.loads(base64.b64decode(token)))
-                                                     ^^^^^^^^^^^^^^^^^^^^^^^
-                  File "/usr/local/lib/python3.11/base64.py", line 88, in b64decode
-                    return binascii.a2b_base64(s, strict_mode=validate)
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                binascii.Error: Invalid base64-encoded string: number of data characters (21) cannot be 1 more than a multiple of 4
-
-
-        It's often because the ``Robusta UI Token`` is pulled from a secret, and Holmes cannot read it.
-
-        See :ref:`Using Existing Secrets <Reading the Robusta UI Token from a secret in HolmesGPT>` to configure Holmes to read the ``token``
 
 Phase 3: Integration Issues
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -258,9 +196,6 @@ Alert Manager is not working
 
         Receiver url has namespace TBD
 
-        .. tip::
-
-            If you're using the Robusta UI, you can test alert routing by :robusta-url:`Simulating an alert <https://platform.robusta.dev/simulate-alert/>`.
 
 
 

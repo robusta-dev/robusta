@@ -360,7 +360,6 @@ Wait a few minutes (typically up to 5) for the alert to fire. This delay is due 
 
 Once the alert fires, you’ll see the ``MySqlConnectionErrors`` alert in:
 
-- The Robusta UI (if installed)
 - Slack, Microsoft Teams, or your configured destination
 
 .. image:: /images/mysql-connection-error-alert.png

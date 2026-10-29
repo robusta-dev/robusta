@@ -27,7 +27,6 @@ When Robusta has access to your metrics it can help with:
 - **Alert Enrichment** - Automatically attach relevant graphs to alerts
 - **Historical Context** - Query past data to understand trends
 - **Alert Silencing** - Create and manage silences directly from Robusta
-- **AI Insights** - Provide HolmesGPT with metrics for better root cause analysis
 
 Supported Providers
 -------------------
