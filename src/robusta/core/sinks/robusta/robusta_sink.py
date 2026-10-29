@@ -815,16 +815,16 @@ class RobustaSink(SinkBase, EventHandler):
     def is_holmes_slackbot_connected(self) -> bool:
         if 'status' in _holmes_slackbot_cache:
             return _holmes_slackbot_cache['status']
-        session_token = self.dal.get_session_token()
         try:
             message_json = {
-                "session_token": session_token,
+                "session_token": self.dal.get_session_token(),
                 "account_id": self.account_id,
             }
             response = requests.post(
                 RUNNER_GET_HOLMES_SLACKBOT_INFO,
                 json=message_json,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
+                timeout=10,
             )
             response.raise_for_status()
             is_connected = bool(response.json().get("integrations"))
