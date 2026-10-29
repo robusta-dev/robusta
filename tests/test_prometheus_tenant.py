@@ -52,16 +52,22 @@ def test_feature_off_reads_nothing(tenant_label):
     tenant_label.assert_not_called()
 
 
+POD_QUERY = 'container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod"}'
+NODE_QUERY = 'node_memory_MemAvailable_bytes{instance=~"$node_internal_ip:.*"}'
+
+
 @pytest.mark.parametrize(
-    "tenant_label_env, params_namespace, labels, expected",
+    "tenant_label_env, params_namespace, query, labels, expected",
     [
-        ("team", None, {"namespace": "shop", "pod": "web"}, "shop"),  # alert graph: namespace from the labels
-        ("team", "billing", {"namespace": "shop"}, "billing"),  # an explicit namespace wins
-        ("team", None, {"node": "node-1"}, None),  # node graph: default tenant
-        (None, None, {"namespace": "shop"}, None),  # feature off: params untouched
+        ("team", None, POD_QUERY, {"namespace": "shop", "pod": "web"}, "shop"),  # pod graph: its namespace
+        ("team", None, 'up{namespace="${namespace}"}', {"namespace": "shop"}, "shop"),  # braced placeholder
+        ("team", "billing", POD_QUERY, {"namespace": "shop"}, "billing"),  # an explicit namespace wins
+        # node graph on a node alert that carries the exporter's namespace: not about it, default tenant
+        ("team", None, NODE_QUERY, {"namespace": "monitoring", "node_internal_ip": "10.0.0.1"}, None),
+        (None, None, POD_QUERY, {"namespace": "shop"}, None),  # feature off: params untouched
     ],
 )
-def test_graph_enrichment_namespace(tenant_label_env, params_namespace, labels, expected):
+def test_graph_enrichment_namespace(tenant_label_env, params_namespace, query, labels, expected):
     params = PrometheusParams(namespace=params_namespace)
     with patch.object(prometheus_enrichment_utils, "PROMETHEUS_TENANT_LABEL", tenant_label_env), patch.object(
         prometheus_enrichment_utils, "create_chart_from_prometheus_query"
@@ -69,9 +75,26 @@ def test_graph_enrichment_namespace(tenant_label_env, params_namespace, labels, 
         create_chart.side_effect = Exception("stop")
         with pytest.raises(Exception, match="stop"):
             prometheus_enrichment_utils.create_graph_enrichment(
-                datetime.now(), labels, "up", params, 60, None, None
+                datetime.now(), labels, query, params, 60, None, None
             )
     assert create_chart.call_args.args[0].namespace == expected
+    assert params.namespace == params_namespace
+
+
+@pytest.mark.parametrize(
+    "tenant_label_env, params_namespace, namespace, expected",
+    [
+        ("team", None, "shop", "shop"),  # e.g. graph_enricher with the alert's namespace
+        ("team", "billing", "shop", "billing"),
+        ("team", None, None, None),
+        (None, None, "shop", None),
+    ],
+)
+def test_with_namespace_tenant(tenant_label_env, params_namespace, namespace, expected):
+    params = PrometheusParams(namespace=params_namespace)
+    with patch.object(prometheus_enrichment_utils, "PROMETHEUS_TENANT_LABEL", tenant_label_env):
+        result = prometheus_enrichment_utils.with_namespace_tenant(params, namespace)
+    assert result.namespace == expected
     assert params.namespace == params_namespace
 
 

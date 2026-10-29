@@ -57,12 +57,25 @@ class PlotData:
         self.dasharray = dasharray
 
 
+NAMESPACE_PLACEHOLDER = re.compile(r"\$(namespace\b|\{namespace\})")
+
+
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels: Dict[Any, Any] = defaultdict(lambda: "<missing>")
     labels.update(provided_labels)
     template = Template(promql_query_template)
     promql_query = template.safe_substitute(labels)
     return promql_query
+
+
+def with_namespace_tenant(prometheus_params: PrometheusParams, namespace: Optional[str]) -> PrometheusParams:
+    """
+    Multi-tenant Prometheus: params whose queries go to the tenant of `namespace`, unless they already name one.
+    Returns a copy, since an action reuses its params for several graphs.
+    """
+    if not PROMETHEUS_TENANT_LABEL or prometheus_params.namespace or not namespace:
+        return prometheus_params
+    return prometheus_params.copy(update={"namespace": namespace})
 
 
 def get_node_internal_ip(node: Node) -> str:
@@ -499,11 +512,11 @@ def create_graph_enrichment(
     hide_legends: Optional[bool] = False,
     metrics_legends_labels: Optional[List[str]] = None,
 ) -> GraphBlock:
+    # Only a query that fills in $namespace is about that namespace. Node queries aren't, even when the labels have
+    # one (e.g. the exporter's namespace on a node alert), so they keep the default tenant
+    if NAMESPACE_PLACEHOLDER.search(promql_query):
+        prometheus_params = with_namespace_tenant(prometheus_params, labels.get("namespace"))
     promql_query = __prepare_promql_query(labels, promql_query)
-    if PROMETHEUS_TENANT_LABEL and not prometheus_params.namespace and labels.get("namespace"):
-        # Multi-tenant Prometheus: the graph is about the namespace it fills into the query, so that namespace picks
-        # the tenant. Set on a copy, since an action reuses its params for several graphs
-        prometheus_params = prometheus_params.copy(update={"namespace": labels["namespace"]})
     chart, prom_block = create_chart_from_prometheus_query(
         prometheus_params,
         promql_query,
