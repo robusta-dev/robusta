@@ -16,6 +16,7 @@ class ZulipSink(SinkBase):
         self.bot_email = sink_config.zulip_sink.bot_email
         self.bot_api_key = sink_config.zulip_sink.bot_api_key
         self.api_url = sink_config.zulip_sink.api_url
+        self.stream_name = sink_config.zulip_sink.stream_name
 
         self.zclient = requests.Session()
         self.zclient.auth = (self.bot_email, self.bot_api_key.get_secret_value())
@@ -25,7 +26,7 @@ class ZulipSink(SinkBase):
             self.zclient.verify = False
 
         self.zulip_sender = zulip_module.ZulipSender(
-            self.api_url, self.zclient, self.account_id, self.cluster_name, self.signing_key
+            self.api_url, self.stream_name, self.zclient, self.account_id, self.cluster_name, self.signing_key
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
