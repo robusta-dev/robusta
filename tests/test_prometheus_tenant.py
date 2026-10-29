@@ -30,6 +30,15 @@ def test_tenant_from_namespace_label(tenant_label):
     assert _headers(namespace="shop") == {"X-Scope-OrgID": "corporate"}
 
 
+@pytest.mark.parametrize("label_key", ["product.productline", "example.com/productline"])
+def test_tenant_label_key_with_dots_or_prefix(label_key):
+    # The label key is used as written: dots and a DNS prefix are just part of the key
+    with patch.object(utils, "PROMETHEUS_TENANT_LABEL", label_key), patch.object(
+        utils, "get_namespace_labels", return_value={label_key: "corporate", "productline": "other"}
+    ):
+        assert _headers(namespace="shop") == {"X-Scope-OrgID": "corporate"}
+
+
 def test_tenant_replaces_configured_one_and_keeps_other_headers(tenant_label):
     headers = _headers(namespace="billing", prometheus_additional_headers={"X-Scope-OrgID": "default", "X-Other": "1"})
     assert headers == {"X-Scope-OrgID": "retail", "X-Other": "1"}
