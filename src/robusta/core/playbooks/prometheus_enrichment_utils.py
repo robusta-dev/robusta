@@ -16,7 +16,11 @@ from robusta.core.model.base_params import (
     ResourceChartItemType,
     ResourceChartResourceType,
 )
-from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from robusta.core.model.env_vars import (
+    FLOAT_PRECISION_LIMIT,
+    PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
+    PROMETHEUS_TENANT_LABEL,
+)
 from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock, PrometheusBlockLineData
 from robusta.core.reporting.charts import XYChart
 from robusta.core.reporting.custom_rendering import charts_style
@@ -53,12 +57,25 @@ class PlotData:
         self.dasharray = dasharray
 
 
+NAMESPACE_PLACEHOLDER = re.compile(r"\$(namespace\b|\{namespace\})")
+
+
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels: Dict[Any, Any] = defaultdict(lambda: "<missing>")
     labels.update(provided_labels)
     template = Template(promql_query_template)
     promql_query = template.safe_substitute(labels)
     return promql_query
+
+
+def with_namespace_tenant(prometheus_params: PrometheusParams, namespace: Optional[str]) -> PrometheusParams:
+    """
+    Multi-tenant Prometheus: params whose queries go to the tenant of `namespace`, unless they already name one.
+    Returns a copy, since an action reuses its params for several graphs.
+    """
+    if not PROMETHEUS_TENANT_LABEL or prometheus_params.namespace or not namespace:
+        return prometheus_params
+    return prometheus_params.copy(update={"namespace": namespace})
 
 
 def get_node_internal_ip(node: Node) -> str:
@@ -495,6 +512,10 @@ def create_graph_enrichment(
     hide_legends: Optional[bool] = False,
     metrics_legends_labels: Optional[List[str]] = None,
 ) -> GraphBlock:
+    # Only a query that fills in $namespace is about that namespace. Node queries aren't, even when the labels have
+    # one (e.g. the exporter's namespace on a node alert), so they keep the default tenant
+    if NAMESPACE_PLACEHOLDER.search(promql_query):
+        prometheus_params = with_namespace_tenant(prometheus_params, labels.get("namespace"))
     promql_query = __prepare_promql_query(labels, promql_query)
     chart, prom_block = create_chart_from_prometheus_query(
         prometheus_params,

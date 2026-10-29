@@ -45,6 +45,7 @@ from robusta.api import (
     get_node_internal_ip,
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
+from robusta.core.playbooks.prometheus_enrichment_utils import with_namespace_tenant
 from robusta.core.reporting import FindingSubject
 from robusta.core.reporting.base import Link, LinkType
 from robusta.core.reporting.blocks import TableBlockFormat
@@ -305,7 +306,8 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: GraphEnricherParams
     """
     promql_query = alert.get_prometheus_query()
     chart, prom_block = create_chart_from_prometheus_query(
-        params,
+        # The alert fired about its namespace, so its expression is graphed from that namespace's tenant
+        with_namespace_tenant(params, alert.alert.labels.get("namespace")),
         promql_query,
         alert.alert.startsAt,
         include_x_axis=False,
