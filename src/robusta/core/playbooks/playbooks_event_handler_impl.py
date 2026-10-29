@@ -239,6 +239,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     continue
             try:
                 if action_with_params:
+                    params.post_event_initialization(execution_event)
                     registered_action.func(execution_event, params)
                 else:
                     registered_action.func(execution_event)

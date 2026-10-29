@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic.v1 import BaseModel, SecretStr, validator, Field
 
+from robusta.core.model.env_vars import PROMETHEUS_TENANT_HEADER, PROMETHEUS_TENANT_LABEL
 from robusta.integrations import openshift
 from robusta.utils.documented_pydantic import DocumentedModel
 
@@ -65,6 +66,12 @@ class ActionParams(DocumentedModel):
     def post_initialization(self):
         """
         This function can be used to run post initialization logic on the action params
+        """
+        pass
+
+    def post_event_initialization(self, event) -> None:
+        """
+        Runs right before the action, with the event it runs on
         """
         pass
 
@@ -366,6 +373,28 @@ class PrometheusParams(ActionParams):
 
         return None
 
+    def _tenant_namespace(self, event) -> Optional[str]:
+        return event.get_subject().namespace
+
+    def post_event_initialization(self, event) -> None:
+        """
+        With PROMETHEUS_TENANT_LABEL set, sends the tenant of the action's namespace in PROMETHEUS_TENANT_HEADER.
+        Every Prometheus call made with these params gets it, since they all build their connection from them.
+        With no namespace or no label, the configured prometheus_additional_headers are used as they are.
+        """
+        if not PROMETHEUS_TENANT_LABEL:
+            return
+        from robusta.integrations.prometheus.tenant import resolve_tenant
+
+        tenant = resolve_tenant(PROMETHEUS_TENANT_LABEL, self._tenant_namespace(event))
+        if not tenant:
+            return
+        # A new dict, set last: it replaces any tenant header the request itself sent, and never changes a shared one
+        self.prometheus_additional_headers = {
+            **(self.prometheus_additional_headers or {}),
+            PROMETHEUS_TENANT_HEADER: tenant,
+        }
+
 
 class PrometheusDuration(BaseModel):
     """
@@ -401,11 +430,17 @@ class PrometheusQueryParams(PrometheusParams):
     :var promql_query: the prometheusql query you want to run
     :var duration: the duration of the query
     :var step: (str) Query resolution step width in duration format or float number of seconds - i.e 100s, 3d, 2w, 170.3
+    :var namespace: the namespace the query is about. With PROMETHEUS_TENANT_LABEL set, its label picks the tenant
     """
 
     promql_query: str
     duration: Union[PrometheusDateRange, PrometheusDuration]
     step: Optional[str]
+    namespace: Optional[str] = None
+
+    def _tenant_namespace(self, event) -> Optional[str]:
+        # prometheus_enricher runs on an event with no subject, so the UI names the namespace in the params
+        return self.namespace or super()._tenant_namespace(event)
 
 
 class TimedPrometheusParams(PrometheusParams):
