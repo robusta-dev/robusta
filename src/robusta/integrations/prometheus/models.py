@@ -193,6 +193,7 @@ class PrometheusKubernetesAlert(
         elif self.hpa:
             subject_type = FindingSubjectType.TYPE_HPA
             name = self.hpa.metadata.name
+            namespace = self.hpa.metadata.namespace
             labels = self.hpa.metadata.labels
             annotations = self.hpa.metadata.annotations
 
