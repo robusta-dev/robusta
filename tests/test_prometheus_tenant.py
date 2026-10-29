@@ -53,16 +53,19 @@ def test_feature_off_reads_nothing(tenant_label):
 
 
 @pytest.mark.parametrize(
-    "params_namespace, labels, expected",
+    "tenant_label_env, params_namespace, labels, expected",
     [
-        (None, {"namespace": "shop", "pod": "web"}, "shop"),  # alert graph: namespace from the labels
-        ("billing", {"namespace": "shop"}, "billing"),  # an explicit namespace wins
-        (None, {"node": "node-1"}, None),  # node graph: default tenant
+        ("team", None, {"namespace": "shop", "pod": "web"}, "shop"),  # alert graph: namespace from the labels
+        ("team", "billing", {"namespace": "shop"}, "billing"),  # an explicit namespace wins
+        ("team", None, {"node": "node-1"}, None),  # node graph: default tenant
+        (None, None, {"namespace": "shop"}, None),  # feature off: params untouched
     ],
 )
-def test_graph_enrichment_namespace(params_namespace, labels, expected):
+def test_graph_enrichment_namespace(tenant_label_env, params_namespace, labels, expected):
     params = PrometheusParams(namespace=params_namespace)
-    with patch.object(prometheus_enrichment_utils, "create_chart_from_prometheus_query") as create_chart:
+    with patch.object(prometheus_enrichment_utils, "PROMETHEUS_TENANT_LABEL", tenant_label_env), patch.object(
+        prometheus_enrichment_utils, "create_chart_from_prometheus_query"
+    ) as create_chart:
         create_chart.side_effect = Exception("stop")
         with pytest.raises(Exception, match="stop"):
             prometheus_enrichment_utils.create_graph_enrichment(

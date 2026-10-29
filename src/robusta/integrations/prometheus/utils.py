@@ -42,13 +42,12 @@ AWS_ASSUME_ROLE = os.environ.get("AWS_ASSUME_ROLE")
 VICTORIA_METRICS_CONFIGURED = os.environ.get("VICTORIA_METRICS_CONFIGURED", "false").lower() == "true"
 
 
-def get_prometheus_tenant(namespace: Optional[str]) -> Optional[str]:
+def get_namespace_tenant(namespace: str) -> Optional[str]:
     """
-    Multi-tenant Prometheus (e.g. Mimir): the value of the PROMETHEUS_TENANT_LABEL label of the namespace, read from
-    the cached namespace data (NAMESPACE_DATA_TTL). None when the feature is off, or there's no namespace or label.
+    Multi-tenant Prometheus (e.g. Mimir): the tenant of a namespace, which is the value of its PROMETHEUS_TENANT_LABEL
+    label, read from the cached namespace data (NAMESPACE_DATA_TTL). None when the namespace has no such label.
+    Call it only with PROMETHEUS_TENANT_LABEL set.
     """
-    if not PROMETHEUS_TENANT_LABEL or not namespace:
-        return None
     try:
         tenant = (get_namespace_labels(namespace) or {}).get(PROMETHEUS_TENANT_LABEL)
     except KeyError:  # a namespace created after the last reload, or deleted
@@ -79,12 +78,14 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
     if prometheus_params.prometheus_auth:
         baseconfig["prometheus_auth"] = prometheus_params.prometheus_auth.get_secret_value()
         
-    headers = dict(prometheus_params.prometheus_additional_headers or {})
-    tenant = get_prometheus_tenant(prometheus_params.namespace)
-    if tenant:  # replaces any tenant header from global_config or the request
-        headers[PROMETHEUS_TENANT_HEADER] = tenant
-    if headers:
-        baseconfig["headers"] = headers
+    if prometheus_params.prometheus_additional_headers:
+        baseconfig["headers"] = prometheus_params.prometheus_additional_headers
+
+    if PROMETHEUS_TENANT_LABEL and prometheus_params.namespace:
+        tenant = get_namespace_tenant(prometheus_params.namespace)
+        if tenant:
+            # A new dict that replaces any tenant header from global_config or the request, leaving theirs unchanged
+            baseconfig["headers"] = {**baseconfig.get("headers", {}), PROMETHEUS_TENANT_HEADER: tenant}
 
     # aws config
     if AWS_REGION:

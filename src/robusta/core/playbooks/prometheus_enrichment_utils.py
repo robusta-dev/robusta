@@ -16,7 +16,11 @@ from robusta.core.model.base_params import (
     ResourceChartItemType,
     ResourceChartResourceType,
 )
-from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from robusta.core.model.env_vars import (
+    FLOAT_PRECISION_LIMIT,
+    PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
+    PROMETHEUS_TENANT_LABEL,
+)
 from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock, PrometheusBlockLineData
 from robusta.core.reporting.charts import XYChart
 from robusta.core.reporting.custom_rendering import charts_style
@@ -496,8 +500,9 @@ def create_graph_enrichment(
     metrics_legends_labels: Optional[List[str]] = None,
 ) -> GraphBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
-    if not prometheus_params.namespace and labels.get("namespace"):
-        # The graph is about the namespace it fills into the query, so it picks the tenant. A copy: params are shared
+    if PROMETHEUS_TENANT_LABEL and not prometheus_params.namespace and labels.get("namespace"):
+        # Multi-tenant Prometheus: the graph is about the namespace it fills into the query, so that namespace picks
+        # the tenant. Set on a copy, since an action reuses its params for several graphs
         prometheus_params = prometheus_params.copy(update={"namespace": labels["namespace"]})
     chart, prom_block = create_chart_from_prometheus_query(
         prometheus_params,
