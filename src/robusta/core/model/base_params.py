@@ -321,6 +321,7 @@ class PrometheusParams(ActionParams):
     :var prometheus_additional_headers: additional HTTP headers (if defined) to add to every prometheus query
     :var prometheus_additional_labels: A dictionary of additional labels needed for multi-cluster prometheus
     :var add_additional_labels: adds the additional labels (if defined) to the query
+    :var namespace: the namespace the queries are about. With PROMETHEUS_TENANT_LABEL set, its label picks the tenant
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
@@ -337,6 +338,7 @@ class PrometheusParams(ActionParams):
     prometheus_additional_headers: Optional[Dict[str, str]] = None
     prometheus_additional_labels: Optional[Dict[str, str]] = None
     add_additional_labels: bool = True
+    namespace: Optional[str] = None
     prometheus_graphs_overrides: Optional[List[OverrideGraph]] = None
 
     @validator("prometheus_url", allow_reuse=True)
