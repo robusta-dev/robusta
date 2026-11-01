@@ -137,6 +137,8 @@ Asking Holmes a question
 * ``ask_holmes`` waits up to ``wait_seconds`` (default 50, at most 280) for the answer. When the answer is ready in time, the result has ``status: "completed"`` and the ``answer``; otherwise it has ``status: "running"`` and a ``conversation_id``.
 * ``get_holmes_answer`` waits on that ``conversation_id`` again, with the same ``wait_seconds``, and returns the same shape. Call it until the status is ``completed``. The investigation keeps running between calls, so a client that times out loses nothing.
 
+Questions asked this way run on the cluster's ``auto`` Holmes executor, the background pool that also runs auto-triage and bulk investigations, so they never delay a person's chat in the Robusta UI, which runs on ``manual``.
+
 .. list-table::
    :widths: 20 15 65
    :header-rows: 1
