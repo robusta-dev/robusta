@@ -27,7 +27,7 @@ Under that switch, each toolset the server exposes has its own switch (all on by
    * - Toolset
      - Tools
    * - **Ask Holmes**
-     - ``ask_holmes``, ``get_holmes_answer`` — ask the Holmes agent of a cluster a question and get back its full investigation.
+     - ``ask_holmes``, ``get_holmes_answer``, ``ask_holmes_followup``, ``stop_holmes_conversation`` — ask the Holmes agent of a cluster a question, get back its full investigation, continue it, or stop it.
    * - **Cluster tools**
      - The ``remote_*`` tools — run one of Holmes' cluster-local tools (kubectl, Prometheus, pod logs) on a cluster and get its raw output — and ``list_available_clusters``, which lists the clusters a ``remote_*`` tool can run on for you.
 
@@ -165,6 +165,11 @@ Both tools answer with ``{"conversation_id", "cluster", "status", "answer", "ui_
       "status": "completed",
       "answer": "3 of the 12 pods in `checkout` restarted in the last hour ..."
     }
+
+Two more tools work on a conversation ``ask_holmes`` started:
+
+* ``ask_holmes_followup`` takes a ``conversation_id`` and the next ``question``, and waits like ``ask_holmes``. Holmes answers with the earlier questions, its findings and tool results as context, so use it to dig into an answer or redirect the investigation instead of asking afresh. The conversation must have ended first: one still ``running`` is refused, so wait for its answer with ``get_holmes_answer`` or stop it.
+* ``stop_holmes_conversation`` ends an investigation that is still running, when its answer is no longer needed. The result has ``stopped: true`` and ``status: "stopped"``; a conversation that had already ended comes back with ``stopped: false`` and the status it ended in, and a later ``get_holmes_answer`` on a stopped conversation reports the stop instead of an answer.
 
 Only clusters whose Holmes agent takes conversations from the platform (Holmes 0.24 or later, with the conversation worker enabled) can be asked, and only those the key's owner may chat with.
 
