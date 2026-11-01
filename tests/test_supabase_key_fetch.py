@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -88,3 +89,10 @@ def test_fetches_from_a_self_hosted_endpoint(monkeypatch):
         get.return_value = _response({"api_key": "self-hosted-key"})
         assert fetch_supabase_api_key("account-1", "cluster-1", SELF_HOSTED_STORE) == "self-hosted-key"
     assert get.call_args.args[0] == "http://relay.robusta-platform.svc/api/config/supabase-keys"
+
+
+def test_skip_log_shows_only_the_store_host(caplog):
+    with caplog.at_level(logging.INFO), patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get"):
+        assert fetch_supabase_api_key("account-1", "cluster-1", "https://user:secret@db.example.internal/x?k=v") is None
+    assert "db.example.internal" in caplog.text
+    assert "secret" not in caplog.text and "k=v" not in caplog.text

@@ -97,11 +97,15 @@ def _request_supabase_api_key(params: dict) -> Optional[str]:
     return response.json().get("api_key")
 
 
-def _is_robusta_saas_url(url: str) -> bool:
+def _hostname(url: str) -> str:
     try:
-        host = (urlparse(url).hostname or "").lower().rstrip(".")
+        return (urlparse(url).hostname or "").lower().rstrip(".")
     except ValueError:
-        return False
+        return ""
+
+
+def _is_robusta_saas_url(url: str) -> bool:
+    host = _hostname(url)
     return host == "robusta.dev" or host.endswith((".robusta.dev", ".supabase.co"))
 
 
@@ -119,7 +123,7 @@ def fetch_supabase_api_key(account_id: str, cluster: str, store_url: str) -> Opt
     if not should_fetch_keys_from_saas(store_url):
         logging.info(
             f"Not fetching the api key from {ROBUSTA_API_ENDPOINT}: it is Robusta SaaS and the store "
-            f"{store_url} is not. Using the api key from the Robusta token."
+            f"host '{_hostname(store_url)}' is not. Using the api key from the Robusta token."
         )
         return None
     params = {
