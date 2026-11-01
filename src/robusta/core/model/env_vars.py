@@ -1,6 +1,5 @@
 import json
 import os
-from urllib.parse import urlsplit, urlunsplit
 
 import pytz
 
@@ -69,27 +68,7 @@ TEAMS_IMAGE_WIDTH = os.environ.get("TEAMS_IMAGE_WIDTH", "700px")
 
 ROBUSTA_UI_DOMAIN = os.environ.get("ROBUSTA_UI_DOMAIN", "https://platform.robusta.dev")
 
-
-def load_robusta_api_endpoint() -> str:
-    # Helm values generated before 2026-05 don't set ROBUSTA_API_ENDPOINT, but do set RELAY_EXTERNAL_ACTIONS_URL to
-    # "{api}/integrations/generic/actions" for the account's region or self-hosted backend. Only the relay's own URL
-    # is trusted for this: the API calls carry the runner's session token.
-    endpoint = os.environ.get("ROBUSTA_API_ENDPOINT")
-    if endpoint:
-        return endpoint
-    actions_path = "/integrations/generic/actions"
-    try:
-        actions_url = urlsplit(os.environ.get("RELAY_EXTERNAL_ACTIONS_URL", ""))
-    except ValueError:
-        actions_url = None
-    if actions_url and actions_url.scheme and actions_url.netloc and not actions_url.query and not actions_url.fragment:
-        path = actions_url.path.rstrip("/")
-        if path.endswith(actions_path):
-            return urlunsplit((actions_url.scheme, actions_url.netloc, path[: -len(actions_path)], "", ""))
-    return "https://api.robusta.dev"
-
-
-ROBUSTA_API_ENDPOINT = load_robusta_api_endpoint()
+ROBUSTA_API_ENDPOINT = os.environ.get("ROBUSTA_API_ENDPOINT", "https://api.robusta.dev")
 ROBUSTA_TELEMETRY_ENDPOINT = os.environ.get("ROBUSTA_TELEMETRY_ENDPOINT", "https://api.robusta.dev/telemetry")
 ENABLE_TELEMETRY = os.environ.get("ENABLE_TELEMETRY", "true").lower() == "true"
 SEND_ADDITIONAL_TELEMETRY = os.environ.get("SEND_ADDITIONAL_TELEMETRY", "false").lower() == "true"

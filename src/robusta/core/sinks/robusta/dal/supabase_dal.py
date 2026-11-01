@@ -3,6 +3,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 import os
+import re
 import threading
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
@@ -90,8 +91,8 @@ KEY_CACHE = TTLCache(maxsize=1, ttl=24 * 60 * 60)
     retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout)),
     reraise=True,
 )
-def _request_supabase_api_key(params: dict) -> Optional[str]:
-    url = f"{ROBUSTA_API_ENDPOINT}/api/config/supabase-keys"
+def _request_supabase_api_key(api_endpoint: str, params: dict) -> Optional[str]:
+    url = f"{api_endpoint}/api/config/supabase-keys"
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json().get("api_key")
@@ -107,6 +108,19 @@ def _hostname(url: str) -> str:
 def _is_robusta_saas_url(url: str) -> bool:
     host = _hostname(url)
     return host == "robusta.dev" or host.endswith((".robusta.dev", ".supabase.co"))
+
+
+REGIONAL_STORE_HOST = re.compile(r"sp\.([a-z0-9-]+)\.robusta\.dev")
+
+
+def _key_api_endpoint(store_url: str) -> str:
+    # The US API only holds the US store's key. Runners on Helm values generated before 2026-05 don't set
+    # ROBUSTA_API_ENDPOINT, so a regional store (sp.<region>.robusta.dev) is sent to its own region's API.
+    if _hostname(ROBUSTA_API_ENDPOINT) == "api.robusta.dev":
+        region = REGIONAL_STORE_HOST.fullmatch(_hostname(store_url))
+        if region:
+            return f"https://api.{region.group(1)}.robusta.dev"
+    return ROBUSTA_API_ENDPOINT
 
 
 def should_fetch_keys_from_saas(store_url: str) -> bool:
@@ -133,7 +147,7 @@ def fetch_supabase_api_key(account_id: str, cluster: str, store_url: str) -> Opt
         "component_version": RUNNER_VERSION,
     }
     try:
-        return _request_supabase_api_key(params)
+        return _request_supabase_api_key(_key_api_endpoint(store_url), params)
     except Exception as e:
         logging.warning(f"Failed to fetch the api key from relay: {e}")
         return None

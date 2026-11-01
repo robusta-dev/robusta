@@ -50,19 +50,39 @@ def test_retries_on_connection_error():
 
 
 @pytest.mark.parametrize(
-    "store_url",
+    "store_url,api_endpoint",
     [
-        "https://sp.robusta.dev",
-        "https://sp.eu.robusta.dev",
-        "https://xyzcompany.supabase.co",
-        "https://sp.robusta.dev.",
+        ("https://sp.robusta.dev", "https://api.robusta.dev"),
+        ("https://sp.robusta.dev.", "https://api.robusta.dev"),
+        ("https://xyzcompany.supabase.co", "https://api.robusta.dev"),
+        # values generated before 2026-05 leave the endpoint on the US default for EU/AP accounts too
+        ("https://sp.eu.robusta.dev", "https://api.eu.robusta.dev"),
+        ("https://sp.ap.robusta.dev", "https://api.ap.robusta.dev"),
+        ("https://sp.eu.robusta.dev.", "https://api.eu.robusta.dev"),
     ],
 )
-def test_fetches_from_saas_for_saas_stores(store_url):
+def test_asks_the_store_regions_api_from_the_us_default(store_url, api_endpoint):
     with patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get") as get:
         get.return_value = _response({"api_key": "sb_publishable_x"})
         assert fetch_supabase_api_key("account-1", "cluster-1", store_url) == "sb_publishable_x"
-    assert get.call_args.args[0] == "https://api.robusta.dev/api/config/supabase-keys"
+    assert get.call_args.args[0] == f"{api_endpoint}/api/config/supabase-keys"
+
+
+@pytest.mark.parametrize(
+    "configured_endpoint,store_url",
+    [
+        ("https://api.eu.robusta.dev", "https://sp.eu.robusta.dev"),
+        ("https://api.eu.robusta.dev", "https://sp.ap.robusta.dev"),
+        ("https://stg.api.robusta.dev", "https://sp.eu.robusta.dev"),
+        ("https://stg.api.robusta.dev", "https://xyzcompany.supabase.co"),
+    ],
+)
+def test_a_non_default_endpoint_is_used_as_configured(monkeypatch, configured_endpoint, store_url):
+    monkeypatch.setattr(supabase_dal_module, "ROBUSTA_API_ENDPOINT", configured_endpoint)
+    with patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get") as get:
+        get.return_value = _response({"api_key": "sb_publishable_x"})
+        fetch_supabase_api_key("account-1", "cluster-1", store_url)
+    assert get.call_args.args[0] == f"{configured_endpoint}/api/config/supabase-keys"
 
 
 @pytest.mark.parametrize(
