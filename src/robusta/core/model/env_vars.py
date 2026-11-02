@@ -49,6 +49,10 @@ PROMETHEUS_REQUEST_TIMEOUT_SECONDS = float(os.environ.get("PROMETHEUS_REQUEST_TI
 PROMETHEUS_ENABLED = os.environ.get("PROMETHEUS_ENABLED", "false").lower() == "true"
 MANAGED_CONFIGURATION_ENABLED = os.environ.get("MANAGED_CONFIGURATION_ENABLED", "false").lower() == "true"
 PROMETHEUS_SSL_ENABLED = os.environ.get("PROMETHEUS_SSL_ENABLED", "false").lower() == "true"
+# Multi-tenant Prometheus (e.g. Mimir): label on the action's namespace, sent as the tenant header.
+# Env vars, not global_config, so a request from the UI can't override them.
+PROMETHEUS_TENANT_LABEL = os.environ.get("PROMETHEUS_TENANT_LABEL")
+PROMETHEUS_TENANT_HEADER = os.environ.get("PROMETHEUS_TENANT_HEADER", "X-Scope-OrgID")
 
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600))
 
