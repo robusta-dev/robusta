@@ -61,7 +61,7 @@ def test_retries_on_connection_error():
         ("https://sp.eu.robusta.dev.", "https://api.eu.robusta.dev"),
     ],
 )
-def test_asks_the_store_regions_api_from_the_us_default(store_url, api_endpoint):
+def test_saas_store_asks_its_regions_api(store_url, api_endpoint):
     with patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get") as get:
         get.return_value = _response({"api_key": "sb_publishable_x"})
         assert fetch_supabase_api_key("account-1", "cluster-1", store_url) == "sb_publishable_x"
@@ -69,20 +69,24 @@ def test_asks_the_store_regions_api_from_the_us_default(store_url, api_endpoint)
 
 
 @pytest.mark.parametrize(
-    "configured_endpoint,store_url",
+    "configured_endpoint,store_url,api_endpoint",
     [
-        ("https://api.eu.robusta.dev", "https://sp.eu.robusta.dev"),
-        ("https://api.eu.robusta.dev", "https://sp.ap.robusta.dev"),
-        ("https://stg.api.robusta.dev", "https://sp.eu.robusta.dev"),
-        ("https://stg.api.robusta.dev", "https://xyzcompany.supabase.co"),
+        # a store in the map always asks its region's API
+        ("https://api.eu.robusta.dev", "https://sp.ap.robusta.dev", "https://api.ap.robusta.dev"),
+        ("https://stg.api.robusta.dev", "https://sp.eu.robusta.dev", "https://api.eu.robusta.dev"),
+        # any other store asks the configured endpoint
+        ("https://stg.api.robusta.dev", "https://xyzcompany.supabase.co", "https://stg.api.robusta.dev"),
+        ("https://api.eu.robusta.dev", "https://xyzcompany.supabase.co", "https://api.eu.robusta.dev"),
     ],
 )
-def test_a_non_default_endpoint_is_used_as_configured(monkeypatch, configured_endpoint, store_url):
+def test_configured_endpoint_is_used_for_stores_outside_the_map(
+    monkeypatch, configured_endpoint, store_url, api_endpoint
+):
     monkeypatch.setattr(supabase_dal_module, "ROBUSTA_API_ENDPOINT", configured_endpoint)
     with patch("robusta.core.sinks.robusta.dal.supabase_dal.requests.get") as get:
         get.return_value = _response({"api_key": "sb_publishable_x"})
         fetch_supabase_api_key("account-1", "cluster-1", store_url)
-    assert get.call_args.args[0] == f"{configured_endpoint}/api/config/supabase-keys"
+    assert get.call_args.args[0] == f"{api_endpoint}/api/config/supabase-keys"
 
 
 @pytest.mark.parametrize(
