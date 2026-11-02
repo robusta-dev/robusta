@@ -59,6 +59,10 @@ def test_retries_on_connection_error():
         ("https://sp.eu.robusta.dev", "https://api.eu.robusta.dev"),
         ("https://sp.ap.robusta.dev", "https://api.ap.robusta.dev"),
         ("https://sp.eu.robusta.dev.", "https://api.eu.robusta.dev"),
+        # tokens issued before the custom domains carry the Supabase project domain
+        ("https://xvyhpoxfmtpuqqeyqkso.supabase.co", "https://api.robusta.dev"),
+        ("https://fdeazqbagpxzlaumbahw.supabase.co", "https://api.eu.robusta.dev"),
+        ("https://xvtsnzetsdaiyobgdlic.supabase.co", "https://api.ap.robusta.dev"),
     ],
 )
 def test_saas_store_asks_its_regions_api(store_url, api_endpoint):

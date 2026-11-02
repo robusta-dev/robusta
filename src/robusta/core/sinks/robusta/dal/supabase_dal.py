@@ -112,9 +112,13 @@ def _is_robusta_saas_url(url: str) -> bool:
 # Each SaaS store's key is served by its own region's API. Helm values generated before 2026-05 leave
 # ROBUSTA_API_ENDPOINT on the US default even for EU/AP accounts.
 SAAS_STORE_KEY_ENDPOINTS = {
+    # each region's custom domain and the Supabase project domain it points to
     "sp.robusta.dev": "https://api.robusta.dev",
+    "xvyhpoxfmtpuqqeyqkso.supabase.co": "https://api.robusta.dev",
     "sp.eu.robusta.dev": "https://api.eu.robusta.dev",
+    "fdeazqbagpxzlaumbahw.supabase.co": "https://api.eu.robusta.dev",
     "sp.ap.robusta.dev": "https://api.ap.robusta.dev",
+    "xvtsnzetsdaiyobgdlic.supabase.co": "https://api.ap.robusta.dev",
 }
 
 
