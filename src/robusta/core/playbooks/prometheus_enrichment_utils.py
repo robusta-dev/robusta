@@ -57,9 +57,6 @@ class PlotData:
         self.dasharray = dasharray
 
 
-NAMESPACE_PLACEHOLDER = re.compile(r"\$(namespace\b|\{namespace\})")
-
-
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels: Dict[Any, Any] = defaultdict(lambda: "<missing>")
     labels.update(provided_labels)
@@ -514,7 +511,7 @@ def create_graph_enrichment(
 ) -> GraphBlock:
     # Only a query that fills in $namespace is about that namespace. Node queries aren't, even when the labels have
     # one (e.g. the exporter's namespace on a node alert), so they keep the default tenant
-    if NAMESPACE_PLACEHOLDER.search(promql_query):
+    if "namespace" in Template(promql_query).get_identifiers():
         prometheus_params = with_namespace_tenant(prometheus_params, labels.get("namespace"))
     promql_query = __prepare_promql_query(labels, promql_query)
     chart, prom_block = create_chart_from_prometheus_query(

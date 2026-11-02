@@ -70,6 +70,7 @@ NODE_QUERY = 'node_memory_MemAvailable_bytes{instance=~"$node_internal_ip:.*"}'
     [
         ("team", None, POD_QUERY, {"namespace": "shop", "pod": "web"}, "shop"),  # pod graph: its namespace
         ("team", None, 'up{namespace="${namespace}"}', {"namespace": "shop"}, "shop"),  # braced placeholder
+        ("team", None, 'up{label="$$namespace"}', {"namespace": "shop"}, None),  # escaped: a literal "$namespace"
         ("team", "billing", POD_QUERY, {"namespace": "shop"}, "billing"),  # an explicit namespace wins
         # node graph on a node alert that carries the exporter's namespace: not about it, default tenant
         ("team", None, NODE_QUERY, {"namespace": "monitoring", "node_internal_ip": "10.0.0.1"}, None),
