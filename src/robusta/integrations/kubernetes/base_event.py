@@ -6,6 +6,9 @@ from hikaru.meta import HikaruDocumentBase
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting import Finding, FindingSource
+from robusta.core.reporting.base import FindingSubject
+from robusta.core.reporting.consts import FindingSubjectType
+from robusta.core.reporting.finding_subjects import KubeObjFindingSubject
 
 
 @dataclass
@@ -26,6 +29,21 @@ class K8sBaseChangeEvent(ExecutionBaseEvent):
         return Finding(
             title=title,
             aggregation_key="GenericChange",
+            subject=self.get_subject(),
+            source=self.get_source(),
+        )
+
+    def get_subject(self) -> FindingSubject:
+        if not self.obj or not getattr(self.obj, "metadata", None):
+            return super().get_subject()
+
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
     @classmethod
