@@ -134,7 +134,7 @@ Asking Holmes a question
 
 ``ask_holmes`` starts a Holmes investigation on a cluster, the same way the :doc:`Holmes Chat API <../holmesgpt/holmes-chat-api>` does, and returns the answer in markdown. An investigation can take seconds or minutes, longer than most MCP clients wait for one tool call, so the call is split in two:
 
-* ``ask_holmes`` waits up to ``wait_seconds`` (default 50, at most 280) for the answer. When the answer is ready in time, the result has ``status: "completed"`` and the ``answer``; otherwise it has ``status: "running"`` and a ``conversation_id``.
+* ``ask_holmes`` waits up to ``wait_seconds`` (default 240, at most 280; pass a shorter wait when your MCP client's tool timeout is shorter) for the answer. When the answer is ready in time, the result has ``status: "completed"`` and the ``answer``; otherwise it has ``status: "running"`` and a ``conversation_id``.
 * ``get_holmes_answer`` waits on that ``conversation_id`` again, with the same ``wait_seconds``, and returns the same shape. Call it until the status is ``completed``. The investigation keeps running between calls, so a client that times out loses nothing.
 
 Questions asked this way run on the cluster's ``auto`` Holmes executor, the background pool that also runs auto-triage and bulk investigations, so they never delay a person's chat in the Robusta UI, which runs on ``manual``.
