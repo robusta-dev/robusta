@@ -58,9 +58,7 @@ jobs:
       run: |
         sudo apt-get install graphviz pandoc
         curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
-        poetry config virtualenvs.create false
-        cd docs && poetry install --no-root
-        pip install "setuptools<82"
+        docs/install.sh
 
     # see https://stackoverflow.com/a/58034787/495995 for an explanation on ${GITHUB_REF##*/}
     - name: Update docs version

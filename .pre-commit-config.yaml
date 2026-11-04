@@ -20,7 +20,6 @@ repos:
         args: [--directory, docs]
       - id: poetry-lock
         name: poetry-lock (docs)
-        pass_filenames: false
         args: [--no-update, --directory, docs]
 
   # - repo: https://github.com/ambv/black

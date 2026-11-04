@@ -11,9 +11,8 @@ RUN apt-get update \
 RUN curl -sSL https://install.python-poetry.org | python3 -
 RUN mv /root/.local/bin/poetry /usr/local/bin
 WORKDIR /robusta
-RUN poetry config virtualenvs.create false
 RUN pip install -U robusta-cli --no-cache
 COPY . /robusta/
-RUN cd docs && poetry install --no-root
+RUN docs/install.sh
 
 CMD ["./docs_autobuild.sh", "--host 0.0.0.0"]
