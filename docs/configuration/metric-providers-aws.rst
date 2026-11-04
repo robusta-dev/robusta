@@ -64,24 +64,6 @@ Quick Start
 
    .. code-block:: yaml
 
-       holmes:
-         serviceAccount:
-           annotations:
-             eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>
-         toolsets:
-           prometheus/metrics:
-             enabled: true
-             config:
-               prometheus_url:  "https://aps-example-workspace.us-east-1.amazonaws.com/workspaces/ws-12345678"
-               aws_region: us-east-1
-               aws_service_name: aps
-               prometheus_ssl_enabled: true
-               additional_labels: # Add cluster label to all queries
-                 cluster: my_cluster_name
-              # Optional: Configure cross-account role assumption for AMP
-              # Set assume_role_arn if your Prometheus workspace is in a different AWS account
-              # than the one running your Kubernetes service account.
-              # assume_role_arn: arn:aws:iam::<ACCOUNT_ID>:role/<AMP_IAM_ROLE>
 
        runnerServiceAccount:
          annotations:

@@ -37,9 +37,11 @@ Verification
 
 After configuration, verify the connection:
 
-**Using Robusta UI**:
-   
-Open the Robusta UI, navigate to any application, and check if CPU/memory graphs are displayed. If graphs appear, the integration is working correctly.
+**Check the runner logs**:
+
+.. code-block:: bash
+
+    kubectl logs -n robusta deployment/robusta-runner | grep -i prometheus
 
 Advanced Configuration
 ----------------------

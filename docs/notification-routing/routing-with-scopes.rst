@@ -277,7 +277,7 @@ Testing Alert Routing
 ----------------------
 
 .. tip::
-   Use the Robusta UI to test your alert routing rules by :robusta-url:`simulating an alert <https://platform.robusta.dev/simulate-alert/>`.
+   Test your alert routing rules by sending a test alert with ``robusta demo-alert``.
 
 Scope Reference
 -----------------

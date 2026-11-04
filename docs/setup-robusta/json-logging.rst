@@ -21,8 +21,6 @@ This single switch is shared across the Robusta components:
 * **robusta-runner** emits JSON logs.
 * **KRR** scan jobs inherit the setting from the runner (when scan results are
   pushed back over the API, which is the default).
-* **HolmesGPT** (when deployed via the chart) emits JSON logs as well — the
-  ``global`` value is passed through to the Holmes sub-chart.
 
 The default is ``false``, which preserves the existing colored text output. No
 change is needed unless you want JSON logs.

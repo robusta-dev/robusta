@@ -3,7 +3,7 @@
 .. toctree::
    :hidden:
 
-   installation/index
+   installation/helm
 
 .. toctree::
    :hidden:
@@ -13,19 +13,13 @@
 .. toctree::
    :hidden:
 
-   multi-cluster
-   holmes-only
    upgrade
    tuning-performance
    json-logging
    configuration-secrets
    openshift
    read-only-service-account
-   rbac-namespace-scoping
-   rbac-namespace-scoped-runner
    node-selector
    proxies
-   privacy-and-security
-   installation-faq
    
    

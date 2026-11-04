@@ -55,7 +55,6 @@ Once the pod has reached two restarts, you'll get notified in Slack (or whatever
     .. image:: /images/crash-report.png
 
 
-Now open the :robusta-url:`Robusta UI <https://platform.robusta.dev/>` and look for the same message there.
 
 Finally, clean up the crashing pod:
 

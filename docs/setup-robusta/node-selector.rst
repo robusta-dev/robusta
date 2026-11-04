@@ -127,8 +127,6 @@ Add the following to your Helm values:
           value: "robusta"
           effect: "NoSchedule"
           
-    holmes:
-      tolerations:  ... # copy from above
 
     runner:
       tolerations:  ... # copy from above

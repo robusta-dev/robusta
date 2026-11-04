@@ -93,6 +93,6 @@ Next Steps
 ----------
 
 - Configure :doc:`alert routing </notification-routing/index>`
-- Set up :doc:`Google Managed Alertmanager integration </configuration/alertmanager-integration/google-managed-alertmanager>` (recommended for GMP managed Alertmanager)
+- Set up `Google Managed Alertmanager integration <https://docs.robusta.dev/master/configuration/alertmanager-integration/google-managed-alertmanager.html>`_ (recommended for GMP managed Alertmanager)
 - Set up :doc:`Google Cloud alerting integration </configuration/alertmanager-integration/google-managed-prometheus>` (legacy guide)
 - Learn about :doc:`common configuration options <metric-providers>`

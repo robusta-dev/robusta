@@ -229,8 +229,6 @@ every change, including the spec change that starts a rollout:
               aggregation_key: "DeploymentRolloutFailure"
           - deployment_events_enricher: {}
 
-To run a Robusta Triggered Workflow on these, see :ref:`Robusta Platform Triggered Workflows`.
-
 Warning Event Triggers
 ------------------------
 

@@ -63,8 +63,6 @@ To investigate you look at the event log:
 
 Aha! "1 node(s) didn't match Pod's node affinity/selector." ALRIGHT!
 
-.. note::
-    You can see this event on an informative timeline in `Robusta UI <http://home.robusta.dev/?from=docs>`_. Check it out!
 
 Wait, what does it mean? 😖 (Hint: Check the YAML config for the spoiler)
 
