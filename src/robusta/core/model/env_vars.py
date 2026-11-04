@@ -36,7 +36,6 @@ SUPABASE_LOGIN_RETRY_MAX_BACKOFF_SEC = float(os.environ.get("SUPABASE_LOGIN_RETR
 # separately from SUPABASE_TIMEOUT_SECONDS so an unreachable platform fails (and retries)
 # promptly instead of parking every attempt on the full read budget.
 SUPABASE_CONNECT_TIMEOUT_SECONDS = float(os.environ.get("SUPABASE_CONNECT_TIMEOUT_SECONDS", 10))
-GRAFANA_RENDERER_URL = os.environ.get("GRAFANA_RENDERER_URL", "http://127.0.0.1:8281/render")
 RESOURCE_UPDATES_CACHE_TTL_SEC = os.environ.get("RESOURCE_UPDATES_CACHE_TTL_SEC", 120)
 INTERNAL_PLAYBOOKS_ROOT = os.environ.get("INTERNAL_PLAYBOOKS_ROOT", "/app/src/robusta/core/playbooks/internal")
 DEFAULT_TIMEZONE = pytz.timezone(os.environ.get("DEFAULT_TIMEZONE", "UTC"))
@@ -49,6 +48,10 @@ PROMETHEUS_REQUEST_TIMEOUT_SECONDS = float(os.environ.get("PROMETHEUS_REQUEST_TI
 PROMETHEUS_ENABLED = os.environ.get("PROMETHEUS_ENABLED", "false").lower() == "true"
 MANAGED_CONFIGURATION_ENABLED = os.environ.get("MANAGED_CONFIGURATION_ENABLED", "false").lower() == "true"
 PROMETHEUS_SSL_ENABLED = os.environ.get("PROMETHEUS_SSL_ENABLED", "false").lower() == "true"
+# Multi-tenant Prometheus (e.g. Mimir): label on the action's namespace, sent as the tenant header.
+# Env vars, not global_config, so a request from the UI can't override them.
+PROMETHEUS_TENANT_LABEL = os.environ.get("PROMETHEUS_TENANT_LABEL")
+PROMETHEUS_TENANT_HEADER = os.environ.get("PROMETHEUS_TENANT_HEADER", "X-Scope-OrgID")
 
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600))
 
