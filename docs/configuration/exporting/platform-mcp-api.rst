@@ -139,6 +139,8 @@ Asking Holmes a question
 
 While a call waits, the server reports each step of the investigation (the tools Holmes runs, its plan, its intermediate notes) as MCP progress notifications to a client that asked for them: a ``tools/call`` carrying ``_meta.progressToken`` and ``Accept: text/event-stream`` is answered as an event stream of ``notifications/progress`` messages ending in the result. Claude Code and the official MCP SDKs do this on their own and reset their timeouts on each notification; a client that sends no token gets a plain JSON response.
 
+A client that speaks `MCP Tasks <https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/tasks>`_ (protocol 2025-11-25, experimental) can run ``ask_holmes`` and ``ask_holmes_followup`` as tasks instead: a ``tools/call`` carrying ``task`` answers at once with a working task whose id is the ``conversation_id``, ``tasks/get`` polls it, ``tasks/result`` waits for the answer (the same result as ``get_holmes_answer``), and ``tasks/cancel`` stops it. A task is reachable by the API key that created it alone, is kept for as long as the conversation, and ``tasks/list`` is not served.
+
 Questions asked this way run on the cluster's ``auto`` Holmes executor, the background pool that also runs auto-triage and bulk investigations, so they never delay a person's chat in the Robusta UI, which runs on ``manual``.
 
 .. list-table::
