@@ -15,9 +15,13 @@ Robusta can report issues and events in your Kubernetes cluster to Telegram conv
 
 .. note::
 
-    Tables are sent as file attachments to Telegram because it's too big for most Telegram chat clients.
+    Small tables (for example Alert labels) are included in the finding message as a
+    collapsible quote, including when ``send_files`` is ``False``. If a message is
+    longer than Telegram's 4096-character limit, it is split across sequential
+    messages rather than attached as a ``.txt`` file. ``send_files`` still attaches
+    images and other ``FileBlock`` files (graphs, logs), not table text.
 
-    In addition, 2-way interactivity (``CallbackBlock``) isn't implemented yet.
+    2-way interactivity (``CallbackBlock``) isn't implemented yet.
 
 Getting your Bot token
 ------------------------------------------------
