@@ -1,0 +1,30 @@
+# Builds docs.robusta.dev. The docs tools have their own lock, so their versions never move the runner image's packages.
+[tool.poetry]
+name = "robusta-docs"
+version = "0.0.0"
+description = "The docs.robusta.dev Sphinx site"
+authors = ["Robusta <hello@robusta.dev>"]
+
+[tool.poetry.dependencies]
+python = ">=3.11, <3.12"
+# autorobusta (docs/_ext) imports the runner and its playbooks to document them
+robusta-api = { path = "..", develop = true, extras = ["all"] }
+Sphinx = "6.2.1"
+sphinx-autobuild = "^2021.3.14"
+sphinx-copybutton = "^0.4.0"
+sphinx-design = "0.5.0"
+# Builds the .md pages. 3.0.x is the last line that supports Sphinx 6; move with Sphinx.
+myst-parser = "3.0.1"
+witchhazel = "^2018.8.23"
+sphinx-autodoc-typehints = "^1.12.0"
+sphinxcontrib-images = "^0.9.4"
+jsonref = "^0.2"
+sphinxcontrib-mermaid = "^0.7.1"
+sphinxcontrib-details-directive = "^0.1.0"
+sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.git" }
+sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
+sphinx-reredirects = "^0.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

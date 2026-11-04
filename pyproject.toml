@@ -119,24 +119,10 @@ pre-commit = "^2.13.0"
 pytest = "^9.0.3"
 # Bump to fix CVE-2026-28684 (Medium, published 2026-04-20)
 python-dotenv = "^1.2.2"
-Sphinx = "6.2.1"
-#furo = "^2021.11.12"
-sphinx-autobuild = "^2021.3.14"
-sphinx-copybutton = "^0.4.0"
-sphinx-design = "0.5.0"
-# Builds the .md pages in docs/. 3.0.x is the last line that supports Sphinx 6; move with Sphinx.
-myst-parser = "3.0.1"
-witchhazel = "^2018.8.23"
-sphinx-autodoc-typehints = "^1.12.0"
-sphinxcontrib-images = "^0.9.4"
-jsonref = "^0.2"
-sphinxcontrib-mermaid = "^0.7.1"
 cssselect = "^1.1.0"
 tinycss = "^0.4"
 rsa = "^4.8"
-sphinxcontrib-details-directive = "^0.1.0"
-sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.git" }
-# TODO: Attempt to have different groups (docs, lint, etc) and install them separately
+# TODO: Attempt to have different groups (lint, etc) and install them separately
 # Flake8 5.0.4 is the last version that supports Python 3.7
 # As it does not work witn sphynx-immaterial, we need to exclude it from the dev dependencies
 # Please, install it manually if you need to run flake8
@@ -157,8 +143,6 @@ types-tabulate = "^0.8.10"
 all = ["Flask", "grafana-api", "watchdog", "better-exceptions", "tabulate", "kafka-python", "prometheus-api-client", "supabase", "datadog-api-client", "sentry-sdk", "poetry-core"]
 
 [tool.poetry.group.dev.dependencies]
-sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
-sphinx-reredirects = "^0.1.1"
 freezegun = "^1.4.0"
 # Bump to fix CVE-2026-82397 (High)
 tornado = "^6.5.8"

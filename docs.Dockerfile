@@ -1,6 +1,6 @@
 # docker build -t docs -f docs.Dockerfile .
 # docker run -it --rm -p 8000:8000 -v ${PWD}:/robusta docs
-FROM python:3.9
+FROM python:3.11
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get update \
@@ -14,6 +14,6 @@ WORKDIR /robusta
 RUN poetry config virtualenvs.create false
 RUN pip install -U robusta-cli --no-cache
 COPY . /robusta/
-RUN poetry install --extras "all"
+RUN cd docs && poetry install --no-root
 
 CMD ["./docs_autobuild.sh", "--host 0.0.0.0"]
