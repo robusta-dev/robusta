@@ -729,6 +729,26 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<8)"]
 
 [[package]]
+name = "setuptools"
+version = "81.0.0"
+description = "Easily download, build, install, upgrade, and uninstall Python packages"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "setuptools-81.0.0-py3-none-any.whl", hash = "sha256:fdd925d5c5d9f62e4b74b30d6dd7828ce236fd6ed998a08d81de62ce5a6310d6"},
+    {file = "setuptools-81.0.0.tar.gz", hash = "sha256:487b53915f52501f0a79ccfd0c02c165ffe06631443a886740b91af4b7a5845a"},
+]
+
+[package.extras]
+check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)", "ruff (>=0.13.0)"]
+core = ["importlib_metadata (>=6)", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more_itertools", "more_itertools (>=8.8)", "packaging (>=24.2)", "platformdirs (>=4.2.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
+cover = ["pytest-cov"]
+doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
+enabler = ["pytest-enabler (>=2.2)"]
+test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.7.2)", "jaraco.test (>=5.5)", "packaging (>=24.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
+type = ["importlib_metadata (>=7.0.2)", "jaraco.develop (>=7.21)", "mypy (==1.18.*)", "pytest-mypy"]
+
+[[package]]
 name = "snowballstemmer"
 version = "3.0.1"
 description = "This package provides 32 stemmers for 30 languages generated from Snowball algorithms."
@@ -983,17 +1003,18 @@ test = ["html5lib", "pytest"]
 
 [[package]]
 name = "sphinxcontrib-images"
-version = "1.0.1"
+version = "0.9.4"
 description = "Sphinx extension for thumbnails"
 optional = false
-python-versions = ">=3.9"
+python-versions = "*"
 files = [
-    {file = "sphinxcontrib_images-1.0.1-py3-none-any.whl", hash = "sha256:3cc9738dc15bacb3ab153b411a1b50dbfaa2535b49853ef3eae4d22adbbffa26"},
+    {file = "sphinxcontrib-images-0.9.4.tar.gz", hash = "sha256:f6c237d0430793e65d91dbddb13b1fb26a2cf838040a9deeb52112969fbc4a4b"},
+    {file = "sphinxcontrib_images-0.9.4-py2.py3-none-any.whl", hash = "sha256:8863e8e8533a116f45cb92523938ab25879cc31dc594f5de4c3dbd9ab3d440b0"},
 ]
 
 [package.dependencies]
 requests = ">2.2,<3"
-sphinx = ">=5.0"
+sphinx = {version = ">=2.0", markers = "python_version >= \"3.0\""}
 
 [[package]]
 name = "sphinxcontrib-jsmath"
@@ -1127,4 +1148,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.12"
-content-hash = "76efbbcce73e1afd30f2dba120e8cd552796a6f133946eab1d7fb1d82976da85"
+content-hash = "1fda64732295859e1e3d27951d1dd3b11b551f3cd341d0120477263b579c902d"
