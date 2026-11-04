@@ -122,6 +122,8 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
 def pod_ps(event: PodEvent, params: PodRunningParams):
     """
     Fetch the list of running processes in a pod.
+
+    Note: the ``pid`` column shows the global (host) PID, not the container-namespaced PID.
     """
     pod = event.get_pod()
     if not pod:
