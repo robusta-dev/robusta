@@ -4,6 +4,8 @@
 # because myst-parser needs markdown-it-py 3, which the root lock has at 4.
 set -e
 cd "$(dirname "$0")"
+# Both installs go into this project's virtualenv, never an activated one such as the runner's.
+unset VIRTUAL_ENV
 poetry env use "${PYTHON:-python3.11}" >/dev/null
 VIRTUAL_ENV=$(poetry env info --path)
 export VIRTUAL_ENV

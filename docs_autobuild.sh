@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e
+# poetry run below must use the docs project's virtualenv, not an activated one.
+unset VIRTUAL_ENV
 
 docs/install.sh
 cd docs
