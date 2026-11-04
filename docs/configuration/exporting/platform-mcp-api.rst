@@ -137,6 +137,8 @@ Asking Holmes a question
 * ``ask_holmes`` waits up to ``wait_seconds`` (default 240, at most 280; pass a shorter wait when your MCP client's tool timeout is shorter) for the answer. When the answer is ready in time, the result has ``status: "completed"`` and the ``answer``; otherwise it has ``status: "running"`` and a ``conversation_id``.
 * ``get_holmes_answer`` waits on that ``conversation_id`` again, with the same ``wait_seconds``, and returns the same shape. Call it until the status is ``completed``. The investigation keeps running between calls, so a client that times out loses nothing.
 
+While a call waits, the server reports each step of the investigation (the tools Holmes runs, its plan, its intermediate notes) as MCP progress notifications to a client that asked for them: a ``tools/call`` carrying ``_meta.progressToken`` and ``Accept: text/event-stream`` is answered as an event stream of ``notifications/progress`` messages ending in the result. Claude Code and the official MCP SDKs do this on their own and reset their timeouts on each notification; a client that sends no token gets a plain JSON response.
+
 Questions asked this way run on the cluster's ``auto`` Holmes executor, the background pool that also runs auto-triage and bulk investigations, so they never delay a person's chat in the Robusta UI, which runs on ``manual``.
 
 .. list-table::
