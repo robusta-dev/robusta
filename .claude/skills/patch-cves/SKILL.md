@@ -60,8 +60,6 @@ CVE-YYYY-YYYYY (High): Package Y - affects >=2.0.0,<2.1.0
 
 ### 3. Python Dependency Patches
 
-The docs build has its own `docs/pyproject.toml` and `docs/poetry.lock`, which the runner image never installs. An alert on a package in that lock is patched the same way, from `docs/`.
-
 Two main strategies:
 
 **Strategy A: Direct Upgrade (Preferred)**

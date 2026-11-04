@@ -15,12 +15,6 @@ repos:
         pass_filenames: false
         args:
           - --no-update
-      - id: poetry-check
-        name: poetry-check (docs)
-        args: [--directory, docs]
-      - id: poetry-lock
-        name: poetry-lock (docs)
-        args: [--no-update, --directory, docs]
 
   # - repo: https://github.com/ambv/black
   #   rev: 22.3.0
