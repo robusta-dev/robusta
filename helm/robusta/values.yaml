@@ -709,22 +709,6 @@ kubewatch:
     # Additional annotations for the ServiceAccount.
     annotations: {}
 
-# parameters for the renderer service used in robusta runner to render grafana graphs
-grafanaRenderer:
-  enableContainer: false
-  image: ~  # image can be used to override image.registry/imageName
-  imageName: grafana-renderer:7
-  imagePullPolicy: IfNotPresent
-  resources:
-    requests:
-      cpu: 100m
-      memory: 512Mi
-    limits:
-      cpu: ~
-  securityContext:
-    container:
-      privileged: false
-
 # parameters for the robusta runner service account
 runnerServiceAccount:
   # image pull secrets added to the runner service account. Any pod using the service account will get those
