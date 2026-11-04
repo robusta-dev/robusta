@@ -217,3 +217,52 @@ def test_override_cluster_roles_still_replaces_rules():
     )
     cluster_role = get_doc(docs, "ClusterRole", "runner-cluster-role")
     assert cluster_role["rules"] == [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}]
+
+
+def holmes_pod_annotations(extra_args: Optional[List[str]] = None) -> dict:
+    cmd = [
+        "helm",
+        "template",
+        str(CHART_PATH),
+        "--set",
+        "enableHolmesGPT=true",
+        "--set",
+        "clusterName=test",
+        "--set",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
+        "--set",
+        "sinksConfig[0].robusta_sink.token=token",
+        "-s",
+        "charts/holmes/templates/holmes.yaml",
+    ] + (extra_args or [])
+    docs = [doc for doc in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if doc]
+    return get_doc(docs, "Deployment", "holmes")["spec"]["template"]["metadata"]["annotations"]
+
+
+def robusta_config_checksum(extra_args: Optional[List[str]] = None) -> str:
+    return holmes_pod_annotations(extra_args)["checksum/robusta-config"]
+
+
+def test_holmes_rolls_when_its_robusta_config_changes():
+    baseline = robusta_config_checksum()
+    assert robusta_config_checksum(["--set", "clusterName=renamed"]) != baseline
+    assert robusta_config_checksum(["--set", "globalConfig.cluster_name=renamed"]) != baseline
+    assert robusta_config_checksum(["--set", "sinksConfig[0].robusta_sink.token=rotated"]) != baseline
+
+
+def test_holmes_rolls_when_the_legacy_robusta_api_key_changes():
+    # A robustaApiKey replaces sinksConfig in the rendered config.
+    legacy = ["--set", "robustaApiKey=token"]
+    assert robusta_config_checksum(legacy) != robusta_config_checksum(legacy + ["--set", "robustaApiKey=rotated"])
+
+
+def test_holmes_ignores_robusta_config_it_does_not_read():
+    baseline = robusta_config_checksum()
+    assert robusta_config_checksum(["--set", "clusterZone=zone"]) == baseline
+    assert robusta_config_checksum(["--set", "disabledPlaybooks[0]=WeeklyKRRScan"]) == baseline
+
+
+def test_holmes_robusta_config_checksum_keeps_user_pod_annotations():
+    annotations = holmes_pod_annotations(["--set", "holmes.podAnnotations.team=sre"])
+    assert annotations["team"] == "sre"
+    assert "checksum/robusta-config" in annotations
