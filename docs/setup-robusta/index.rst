@@ -24,6 +24,7 @@
    rbac-namespace-scoping
    rbac-namespace-scoped-runner
    node-selector
+   health-probes
    proxies
    privacy-and-security
    installation-faq
