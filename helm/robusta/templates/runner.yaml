@@ -1,3 +1,4 @@
+{{- if (dig "enabled" true .Values.runner) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,32 +44,7 @@ spec:
       securityContext:
       {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.runner.dnsConfig.enabled }}
-      {{- $policy := .Values.runner.dnsConfig.policy }}
-      {{- $hasConfig := or .Values.runner.dnsConfig.nameservers .Values.runner.dnsConfig.searches .Values.runner.dnsConfig.options }}
-
-      {{- if and (eq $policy "None") (not $hasConfig) }}
-        {{- fail "dnsConfig: when dnsPolicy is 'None', you must set at least one of nameservers, searches, or options" }}
-      {{- end }}
-      dnsPolicy: {{ $policy | quote }}
-      {{- if $hasConfig }}
-      dnsConfig:
-        {{- with .Values.runner.dnsConfig.nameservers }}
-        nameservers:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with .Values.runner.dnsConfig.searches }}
-        searches:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with .Values.runner.dnsConfig.options }}
-        options:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-      {{- end }}
-      {{ else }}
-      dnsPolicy: ClusterFirst
-      {{- end }}
+      {{- include "robusta.dnsConfig" .Values.runner.dnsConfig | nindent 6 }}
       {{- if .Values.runner.hardenedFs }}
       initContainers:
       - name: setup-venv
@@ -223,29 +199,8 @@ spec:
           limits:
             memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else if .Values.runner.resources.limits.memory }}{{ .Values.runner.resources.limits.memory | quote }}{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
-      {{- if .Values.grafanaRenderer.enableContainer }}
-      - name: grafana-renderer
-        {{- if .Values.grafanaRenderer.image }}
-        image: {{ .Values.grafanaRenderer.image }}
-        {{ else }}
-        image: {{ .Values.image.registry }}/{{ .Values.grafanaRenderer.imageName }}
-        {{- end }}
-        imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
-        {{- with .Values.grafanaRenderer.securityContext.container }}
-        securityContext:
-        {{- toYaml . | nindent 12 }}
-        {{- end }}
-        lifecycle:
-          preStop:
-            exec:
-              command: ["bash", "-c", "kill -SIGINT 1"]
-        resources:
-          requests:
-            cpu: {{ .Values.grafanaRenderer.resources.requests.cpu }}
-            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
-          limits:
-            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else if .Values.grafanaRenderer.resources.limits.memory }}{{ .Values.grafanaRenderer.resources.limits.memory | quote }}{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
-            {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
+      {{- if (.Values.grafanaRenderer).enableContainer }}
+      {{- fail "grafanaRenderer was removed, and the deployment_status_report and report_rendering_task actions that used it are deprecated. Remove grafanaRenderer from your values. To add graphs to alerts, use custom_graph_enricher: https://docs.robusta.dev/master/playbook-reference/actions/event-enrichment.html#custom-graph-enricher" }}
       {{- end }}
       volumes:
         - name: playbooks-config-secret
@@ -374,4 +329,4 @@ type: Opaque
 stringData:
   SENTRY_DSN: {{ $sentryDsn }}
 {{- end }}
-
+{{- end }}

@@ -246,7 +246,7 @@ Events are delivered in order as the investigation progresses. A typical stream 
 .. code-block:: text
 
     event: start_tool_calling
-    data: {"tool_call_id": "call_1", "tool_name": "kubectl_find_resource", "description": "Looking up failing pods"}
+    data: {"tool_name": "kubectl_find_resource", "id": "call_1"}
 
     event: tool_calling_result
     data: {"tool_call_id": "call_1", "name": "kubectl_find_resource", "result": {"status": "success", "data": "..."}}
@@ -255,13 +255,13 @@ Events are delivered in order as the investigation progresses. A typical stream 
     data: {"content": "I found a pod stuck in ContainerCreating state. Let me investigate further."}
 
     event: start_tool_calling
-    data: {"tool_call_id": "call_2", "tool_name": "kubectl_describe_resource", "description": "Describing pod frontend-59fbcd7965-drx6w"}
+    data: {"tool_name": "kubectl_describe_resource", "id": "call_2"}
 
     event: tool_calling_result
     data: {"tool_call_id": "call_2", "name": "kubectl_describe_resource", "result": {"status": "success", "data": "..."}}
 
     event: token_count
-    data: {"input_tokens": 1520, "output_tokens": 305}
+    data: {"metadata": {"usage": {"prompt_tokens": 1520, "completion_tokens": 305, "total_tokens": 1825}, ...}}
 
     event: ai_answer_end
     data: {"analysis": "## Investigation Summary\n\nThe pod `frontend-59fbcd7965-drx6w` is stuck ..."}
@@ -301,9 +301,8 @@ Emitted when Holmes begins executing a tool.
 .. code-block:: json
 
     {
-        "tool_call_id": "call_abc123",
         "tool_name": "kubectl_find_resource",
-        "description": "kubectl get pods -n production"
+        "id": "call_abc123"
     }
 
 .. list-table::
@@ -313,15 +312,14 @@ Emitted when Holmes begins executing a tool.
    * - Field
      - Type
      - Description
-   * - ``tool_call_id``
+   * - ``id``
      - string
-     - Unique identifier for this tool call. Use it to correlate with the corresponding ``tool_calling_result``.
+     - Unique identifier for this tool call. Matches the ``tool_call_id`` of the corresponding ``tool_calling_result``.
    * - ``tool_name``
      - string
      - Name of the tool being executed.
-   * - ``description``
-     - string
-     - Human-readable description of what the tool is doing.
+
+A human-readable description of the call (for example, the ``kubectl`` command it ran) arrives with the result, in the ``tool_calling_result`` event's ``description`` field.
 
 ``tool_calling_result``
 """""""""""""""""""""""
@@ -348,10 +346,13 @@ Emitted when a tool call completes.
      - Description
    * - ``tool_call_id``
      - string
-     - Matches the ``tool_call_id`` from the corresponding ``start_tool_calling`` event.
+     - Matches the ``id`` from the corresponding ``start_tool_calling`` event.
    * - ``name``
      - string
      - Name of the tool that was called.
+   * - ``description``
+     - string
+     - Human-readable description of the call, such as the command it ran.
    * - ``result``
      - object
      - Result object with a ``status`` field (``"success"``, ``"error"``, ``"no_data"``, or ``"approval_required"``) and either a ``data`` field (on success) or an ``error`` field (on failure).
@@ -437,8 +438,16 @@ Emitted with token usage statistics.
 .. code-block:: json
 
     {
-        "input_tokens": 1520,
-        "output_tokens": 305
+        "metadata": {
+            "usage": {
+                "prompt_tokens": 1520,
+                "completion_tokens": 305,
+                "total_tokens": 1825,
+                "cached_tokens": 0
+            },
+            "max_tokens": 1000000,
+            "max_output_tokens": 120000
+        }
     }
 
 .. list-table::
@@ -448,12 +457,24 @@ Emitted with token usage statistics.
    * - Field
      - Type
      - Description
-   * - ``input_tokens``
+   * - ``metadata.usage.prompt_tokens``
      - integer
-     - Number of input tokens consumed.
-   * - ``output_tokens``
+     - Input tokens of the last LLM call.
+   * - ``metadata.usage.completion_tokens``
      - integer
-     - Number of output tokens generated.
+     - Output tokens of the last LLM call.
+   * - ``metadata.usage.total_tokens``
+     - integer
+     - Input plus output tokens of the last LLM call.
+   * - ``metadata.usage.cached_tokens``
+     - integer
+     - Optional. Input tokens of the last LLM call served from the provider's prompt cache.
+   * - ``metadata.max_tokens``
+     - integer
+     - Context window of the model.
+   * - ``metadata.max_output_tokens``
+     - integer
+     - Maximum output tokens of the model.
 
 .. _approval-required-event:
 
@@ -516,6 +537,7 @@ Consuming the Stream
         },
         stream=True,
     )
+    response.raise_for_status()
 
     event_type = None
     for line in response.iter_lines(decode_unicode=True):

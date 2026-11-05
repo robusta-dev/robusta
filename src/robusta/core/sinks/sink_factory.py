@@ -12,6 +12,7 @@ from robusta.core.sinks.mail.mail_sink import MailSink
 from robusta.core.sinks.mail.mail_sink_params import MailSinkConfigWrapper
 from robusta.core.sinks.mattermost import MattermostSink, MattermostSinkConfigWrapper
 from robusta.core.sinks.msteams import MsTeamsSink, MsTeamsSinkConfigWrapper
+from robusta.core.sinks.msteams_graph import MsTeamsGraphSink, MsTeamsGraphSinkConfigWrapper
 from robusta.core.sinks.opsgenie import OpsGenieSink, OpsGenieSinkConfigWrapper
 from robusta.core.sinks.pagerduty import PagerdutyConfigWrapper, PagerdutySink
 from robusta.core.sinks.robusta import RobustaSink, RobustaSinkConfigWrapper
@@ -41,6 +42,7 @@ class SinkFactory:
         RocketchatSinkConfigWrapper: RocketchatSink,
         RobustaSinkConfigWrapper: RobustaSink,
         MsTeamsSinkConfigWrapper: MsTeamsSink,
+        MsTeamsGraphSinkConfigWrapper: MsTeamsGraphSink,
         KafkaSinkConfigWrapper: KafkaSink,
         DataDogSinkConfigWrapper: DataDogSink,
         DiscordSinkConfigWrapper: DiscordSink,

@@ -11,6 +11,40 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 
+{{/*
+Render dnsPolicy (+ optional dnsConfig) for a component.
+Pass the component's dnsConfig dict as the context, e.g.:
+  {{- include "robusta.dnsConfig" .Values.runner.dnsConfig | nindent 6 }}
+When disabled (or unset) it falls back to dnsPolicy: ClusterFirst.
+*/}}
+{{- define "robusta.dnsConfig" -}}
+{{- if and . .enabled -}}
+{{- $policy := default "ClusterFirst" .policy -}}
+{{- $hasConfig := or .nameservers .searches .options -}}
+{{- if and (eq $policy "None") (not .nameservers) -}}
+{{- fail "dnsConfig: when dnsPolicy is 'None', you must provide at least one nameserver (Kubernetes requires it)" -}}
+{{- end -}}
+dnsPolicy: {{ $policy | quote }}
+{{- if $hasConfig }}
+dnsConfig:
+  {{- with .nameservers }}
+  nameservers:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .searches }}
+  searches:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .options }}
+  options:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- else -}}
+dnsPolicy: ClusterFirst
+{{- end -}}
+{{- end -}}
+
 {{ define "robusta.configfile" -}}
 playbook_repos:
 {{ toYaml .Values.playbookRepos | indent 2 }}
@@ -116,6 +150,47 @@ active_playbooks:
 {{- end }}
 
 {{- end }}
+{{ end }}
+
+{{/*
+Config file for a Holmes-only install (runner.enabled=false). Holmes reads its Robusta token from
+the robusta_sink and cluster_name / signing_key from global_config, so only those are kept.
+*/}}
+{{- define "robusta.holmesOnlyConfigfile" -}}
+{{- if not .Values.enableHolmesGPT }}
+{{- fail "runner.enabled=false requires enableHolmesGPT=true: with neither the runner nor Holmes there is nothing to install" }}
+{{- end }}
+{{- if .Values.enablePrometheusStack }}
+{{- $alertmanager := index .Values "kube-prometheus-stack" "alertmanager" | default dict }}
+{{- $receivers := dig "config" "receivers" list $alertmanager | toYaml }}
+{{- if contains "-runner." $receivers }}
+{{- fail "runner.enabled=false: the kube-prometheus-stack Alertmanager 'robusta' receiver still sends alerts to the runner service. Override kube-prometheus-stack.alertmanager.config.receivers to send alerts to the Robusta platform instead (see the Holmes-only install docs)" }}
+{{- end }}
+{{- end }}
+{{- $robustaSinks := list }}
+{{- if .Values.robustaApiKey }}
+{{- /* same precedence as robusta.configfile: robustaApiKey replaces sinksConfig */}}
+{{- $robustaSinks = list (dict "robusta_sink" (dict "name" "robusta_ui_sink" "token" .Values.robustaApiKey)) }}
+{{- else }}
+{{- range .Values.sinksConfig }}
+{{- if .robusta_sink }}
+{{- $robustaSinks = append $robustaSinks (dict "robusta_sink" .robusta_sink) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if not $robustaSinks }}
+{{- fail "runner.enabled=false: a robusta_sink is required in sinksConfig, Holmes uses its token to connect to the Robusta platform" }}
+{{- end }}
+global_config:
+  cluster_name: {{ required "A valid .Values.clusterName entry is required!" .Values.clusterName | toYaml }}
+  {{- with .Values.globalConfig.account_id }}
+  account_id: {{ . | toYaml }}
+  {{- end }}
+  {{- with .Values.globalConfig.signing_key }}
+  signing_key: {{ . | toYaml }}
+  {{- end }}
+sinks_config:
+{{ toYaml $robustaSinks }}
 {{ end }}
 
 {{/*

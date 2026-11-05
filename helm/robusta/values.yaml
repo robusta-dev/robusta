@@ -662,6 +662,12 @@ kubewatch:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  dnsConfig:
+    enabled: false
+    policy: ClusterFirst
+    nameservers: []
+    searches: []
+    options: []
   # set to override global.imagePullSecrets for kubewatch; leave empty to inherit the global
   imagePullSecrets: []
   config:
@@ -703,22 +709,6 @@ kubewatch:
     # Additional annotations for the ServiceAccount.
     annotations: {}
 
-# parameters for the renderer service used in robusta runner to render grafana graphs
-grafanaRenderer:
-  enableContainer: false
-  image: ~  # image can be used to override image.registry/imageName
-  imageName: grafana-renderer:7
-  imagePullPolicy: IfNotPresent
-  resources:
-    requests:
-      cpu: 100m
-      memory: 512Mi
-    limits:
-      cpu: ~
-  securityContext:
-    container:
-      privileged: false
-
 # parameters for the robusta runner service account
 runnerServiceAccount:
   # image pull secrets added to the runner service account. Any pod using the service account will get those
@@ -729,6 +719,10 @@ runnerServiceAccount:
 
 # parameters for the robusta runner
 runner:
+  # false = Holmes-only install: no runner, kubewatch or their RBAC. Requires enableHolmesGPT: true
+  # and a robusta_sink. robusta-playbooks-config-secret is still rendered for Holmes, with only the
+  # cluster name, account id, signing key and robusta sink.
+  enabled: true
   image: ~  # image can be used to override image.registry/imageName
   imageName: robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
