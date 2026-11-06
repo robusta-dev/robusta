@@ -259,3 +259,30 @@ def test_get_png_from_graph_tool_output_types(output_type):
 
     assert name == "node_memory_used"
     assert_valid_png(contents)
+
+
+@patch("robusta.core.playbooks.internal.ai_integration.requests.post")
+def test_holmes_chat_streaming_keeps_unmatched_heredoc_in_answer(
+    mock_post, mock_event, holmes_chat_params
+):
+    """ROB-1751: an unmatched `<<` in the answer must not eat the rest of the
+    event (up to the next `>>` in conversation_history) and corrupt the JSON."""
+    history = [
+        {"role": "system", "content": 'ids look like << {"type": "issue"} >>'},
+        {"role": "assistant", "content": "answer"},
+    ]
+    answer = 'set message = <<EOT\nhello\nEOT then << {"type": "promql", "tool_call_id": "x"} >> done'
+    sse_events = [
+        create_sse_message(
+            StreamEvents.ANSWER_END.value,
+            {"analysis": answer, "conversation_history": history},
+        ),
+    ]
+    mock_post.return_value = MockResponse(sse_events)
+
+    holmes_chat(mock_event, holmes_chat_params)
+
+    assert mock_event.ws.call_count == 1
+    _, data = parse_sse_message(mock_event.ws.call_args_list[0][1]["data"])
+    assert data["analysis"] == "set message = <<EOT\nhello\nEOT then  done"
+    assert data["conversation_history"] == history

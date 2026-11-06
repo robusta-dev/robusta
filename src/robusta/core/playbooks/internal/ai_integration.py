@@ -352,9 +352,8 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                     if tool.tool_name not in GRAPH_TOOLS:
                         continue
 
-                    # removes all embedded tool calls in this case as its not supported. 
-                    holmes_result.analysis = re.sub(
-                        r"<<.*?>>", "", holmes_result.analysis
+                    holmes_result.analysis = strip_embedded_tool_calls(
+                        holmes_result.analysis
                     ).strip()
                     json_content = json.loads(tool.result["data"])
                     contents, name = get_png_from_graph_tool(json_content)
@@ -432,6 +431,31 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
         handle_holmes_error(e)
 
 
+# Embedded tool calls (<< {"type": "promql", ...} >>) are not supported when
+# graphs are rendered as images. Only the marker shape is matched: a bare `<<`
+# (a shell/Terraform heredoc, a C++ operator) must survive untouched (ROB-1751).
+EMBEDDED_TOOL_CALL_RE = re.compile(r"<<\s*\{.*?\}\s*>>", re.DOTALL)
+ANSWER_TEXT_FIELDS = ("analysis", "content")
+
+
+def strip_embedded_tool_calls(text: str) -> str:
+    return EMBEDDED_TOOL_CALL_RE.sub("", text)
+
+
+def strip_embedded_tool_calls_from_answer(
+    event_type: str, data_line: str, raw_event: str
+) -> str:
+    """Strip markers from the answer text fields only. Running the regex over
+    the raw SSE line also eats conversation_history and breaks the JSON."""
+    data = parse_sse_data(data_line)
+    if not isinstance(data, dict):
+        return raw_event
+    for field in ANSWER_TEXT_FIELDS:
+        if isinstance(data.get(field), str):
+            data[field] = strip_embedded_tool_calls(data[field])
+    return create_sse_message(event_type, data)
+
+
 def stream_and_render_graphs(url, holmes_req, event):
     with requests.post(
         url,
@@ -451,9 +475,10 @@ def stream_and_render_graphs(url, holmes_req, event):
                     continue
 
                 event_type = parse_sse_event_type(event_lines[0])
-                # removes all embedded tool calls in this case as its not supported. 
                 if event_type == StreamEvents.ANSWER_END.value:
-                    stream_event = re.sub(r"<<.*?>>", "", stream_event)
+                    stream_event = strip_embedded_tool_calls_from_answer(
+                        event_type, event_lines[1], stream_event
+                    )
 
                 if event_type != StreamEvents.TOOL_RESULT.value:
                     event.ws(data=stream_event)
