@@ -433,8 +433,9 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
 
 # Embedded tool calls (<< {"type": "promql", ...} >>) are not supported when
 # graphs are rendered as images. Only the marker shape is matched: a bare `<<`
-# (a shell/Terraform heredoc, a C++ operator) must survive untouched (ROB-1751).
-EMBEDDED_TOOL_CALL_RE = re.compile(r"<<\s*\{.*?\}\s*>>", re.DOTALL)
+# (a shell/Terraform heredoc, a C++ operator) must survive untouched, and a
+# match must not run from one marker across another (ROB-1751).
+EMBEDDED_TOOL_CALL_RE = re.compile(r"<<\s*\{(?:(?!<<|>>).)*?\}\s*>>", re.DOTALL)
 ANSWER_TEXT_FIELDS = ("analysis", "content")
 
 

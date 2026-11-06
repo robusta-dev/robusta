@@ -271,7 +271,7 @@ def test_holmes_chat_streaming_keeps_unmatched_heredoc_in_answer(
         {"role": "system", "content": 'ids look like << {"type": "issue"} >>'},
         {"role": "assistant", "content": "answer"},
     ]
-    answer = 'set message = <<EOT\nhello\nEOT then << {"type": "promql", "tool_call_id": "x"} >> done'
+    answer = 'set message = <<EOT\nhello\nEOT or << {\nx\n} then << {"type": "promql", "tool_call_id": "x"} >> done'
     sse_events = [
         create_sse_message(
             StreamEvents.ANSWER_END.value,
@@ -284,5 +284,5 @@ def test_holmes_chat_streaming_keeps_unmatched_heredoc_in_answer(
 
     assert mock_event.ws.call_count == 1
     _, data = parse_sse_message(mock_event.ws.call_args_list[0][1]["data"])
-    assert data["analysis"] == "set message = <<EOT\nhello\nEOT then  done"
+    assert data["analysis"] == "set message = <<EOT\nhello\nEOT or << {\nx\n} then  done"
     assert data["conversation_history"] == history
