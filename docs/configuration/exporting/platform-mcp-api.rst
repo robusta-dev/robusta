@@ -179,7 +179,7 @@ Two more tools work on a conversation ``ask_holmes`` started:
 * ``ask_holmes_followup`` takes a ``conversation_id`` and the next ``question``, and waits like ``ask_holmes``. Holmes answers with the earlier questions, its findings and tool results as context, so use it to dig into an answer or redirect the investigation instead of asking afresh. The conversation must have ended first: one still ``running`` is refused, so wait for its answer with ``get_holmes_answer`` or stop it.
 * ``stop_holmes_conversation`` ends an investigation that is still running, when its answer is no longer needed. The result has ``stopped: true`` and ``status: "stopped"``; a conversation that had already ended comes back with ``stopped: false`` and the status it ended in, and a later ``get_holmes_answer`` on a stopped conversation reports the stop instead of an answer.
 
-Only clusters whose Holmes agent takes conversations from the platform and reports it in its status (Holmes 0.27 or later, with the conversation worker enabled) can be asked, and only those the key's owner may chat with. Running the question on the ``auto`` pool needs Holmes 0.43 or later, which introduced named executor pools.
+Only clusters whose Holmes agent takes conversations from the platform and reports it in its status can be asked, and only those the key's owner may chat with. That status flag and the named executor pools the question runs on both arrived in Holmes 0.43, so the cluster's Holmes must be 0.43 or later with the conversation worker enabled.
 
 Rate limits and errors
 ^^^^^^^^^^^^^^^^^^^^^^^
