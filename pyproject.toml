@@ -94,7 +94,9 @@ websockets = ">=13"
 h2 = "^4.4.1"
 # Pin to fix CVE-2026-30922 (transitive via google-auth)
 # Bump to fix CVE-2026-59885, CVE-2026-59886 (High)
-pyasn1 = ">=0.6.4"
+pyasn1 = ">=0.6.5"  # CVE-2026-119194/119195/119196/119197 (High)
+# Pin to fix CVE-2026-118669 and CVE-2026-49272 (High) (transitive via requests-oauthlib)
+oauthlib = ">=4.0.1"
 # Pin to fix CVE-2026-63374 (Critical) + CVE-2026-64847 (Medium) (transitive via httpx)
 anyio = "^4.14.2"
 # Pin to fix CVE-2026-22701 and CVE-2026-112940 (transitive via virtualenv/pre-commit)
