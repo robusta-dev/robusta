@@ -54,10 +54,16 @@ extensions = [
     "sphinx_immaterial",
     "sphinxcontrib.details.directive",
     "sphinx_jinja",
+    "myst_parser",
     "sphinx_reredirects",
 ]
 
 suppress_warnings = ["autosectionlabel.*"]
+
+# MyST Markdown pages (.md): ":::{warning}" admonitions and colon-fenced sphinx_design
+# blocks, and "#some-heading" links resolving to H1-H3 headings.
+myst_enable_extensions = ["colon_fence"]
+myst_heading_anchors = 3
 
 # sphinx redirects from old docs
 
