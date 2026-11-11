@@ -273,11 +273,11 @@ Add ``prune=true`` to make the body the complete list of the account's workflows
 
     * An empty list, ``{"workflows": []}``, deletes **all** of the account's workflows.
     * There is no dry run and no confirmation.
-    * A deleted workflow stops running: events sent to its webhook URL are skipped.
+    * A deleted workflow stops running.
 
     Before the first sync with ``prune=true``, export the account with ``GET`` and commit that file, so every existing workflow is in it.
 
-A pruned workflow is deleted the same way as **Delete workflow** in the UI: its past runs and incidents are kept. Listing its ``id`` in a later ``POST`` restores it, returned in ``created``, and its webhook URL works again. So syncing the file from before a prune undoes the prune. This also restores workflows deleted in the UI.
+A pruned workflow is deleted the same way as **Delete workflow** in the UI: its past runs and incidents are kept. Listing its ``id`` in a later ``POST`` restores it, returned in ``created``. So syncing the file from before a prune undoes the prune. This also restores workflows deleted in the UI.
 
 Example: Workflows in Git
 -------------------------
@@ -315,7 +315,7 @@ To start from the workflows you already have, export them and convert the result
       -H 'Authorization: Bearer YOUR_API_KEY' \
       | yq -P '.' > robusta/triggered-workflows.yaml
 
-This is also how to move a workflow you built and tested in the UI into git: export, then commit the file. Its ``id`` stays the same, so its webhook URL does not change.
+This is also how to move a workflow you built and tested in the UI into git: export, then commit the file. Its ``id`` stays the same.
 
 Then sync the file on every merge to your main branch. A GitHub Actions example, where the job converts the YAML file to ``workflows.json`` and posts it:
 
@@ -383,6 +383,5 @@ Every error response has this shape. Validation errors (``400``, and the ``409``
 See Also
 --------
 
-* :doc:`Send Events API <send-events-api>`: send events to a workflow's webhook URL
 * :doc:`LLM Models API <llm-models-api>`: list the models you can use in ``llm``
 * :doc:`RBAC Configuration API <rbac-api>`: manage RBAC from code the same way
