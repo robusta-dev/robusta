@@ -85,7 +85,7 @@ The body of ``POST`` and the response of ``GET`` are both ``{"workflows": [ ... 
      - Required
    * - ``id``
      - uuid
-     - The workflow's ID. You choose it (for example with ``uuidgen``), and it stays the same for the life of the workflow. Posting the same ``id`` again updates that workflow instead of creating a copy. It is also part of the workflow's :ref:`webhook URL <triggered-workflows-api-webhook-url>`.
+     - The workflow's ID. You choose it (for example with ``uuidgen``), and it stays the same for the life of the workflow. Posting the same ``id`` again updates that workflow instead of creating a copy.
      - Yes
    * - ``title``
      - string
@@ -278,56 +278,6 @@ Add ``prune=true`` to make the body the complete list of the account's workflows
     Before the first sync with ``prune=true``, export the account with ``GET`` and commit that file, so every existing workflow is in it.
 
 A pruned workflow is deleted the same way as **Delete workflow** in the UI: its past runs and incidents are kept. Listing its ``id`` in a later ``POST`` restores it, returned in ``created``, and its webhook URL works again. So syncing the file from before a prune undoes the prune. This also restores workflows deleted in the UI.
-
-.. _triggered-workflows-api-webhook-url:
-
-Sending Events to a Workflow
-----------------------------
-
-Syncing a workflow does not run it. A workflow runs each time an event, such as an alert, is sent to its **webhook URL**. You point your alert source (Alertmanager, Datadog, a script) at that URL.
-
-Each workflow has its own webhook URL, built from your account ID and the workflow's ``id``:
-
-.. robusta-code::
-
-    https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=WORKFLOW_ID
-
-For example, the workflow with ``"id": "6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b"`` from the examples on this page receives events at:
-
-.. robusta-code::
-
-    https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b
-
-This is the same URL the Robusta UI shows for the workflow. The API does not return it, because you can build it yourself. Since you chose the ``id`` in your file, you know the URL before the first sync, so you can add a workflow and point your alert source at it in the same commit.
-
-Sending an event needs an API key with the **Alerts: Write** permission, usually a different key from the one that syncs workflows. Send it in an ``Authorization: Bearer`` header. For a tool that cannot set headers, add ``&token=YOUR_ALERTS_API_KEY`` to the URL instead.
-
-**Example: an Alertmanager receiver for the workflow**
-
-.. robusta-code:: yaml
-
-    receivers:
-      - name: robusta-crash-loop-triage
-        webhook_configs:
-          - url: 'https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b'
-            http_config:
-              authorization:
-                type: Bearer
-                credentials: YOUR_ALERTS_API_KEY
-
-**Example: send a test event by hand**
-
-.. robusta-code:: bash
-
-    curl --fail-with-body -sS -X POST \
-      'https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b' \
-      -H 'Authorization: Bearer YOUR_ALERTS_API_KEY' \
-      -H 'Content-Type: application/json' \
-      --data-raw '{"alertname": "KubePodCrashLooping", "severity": "critical", "pod": "checkout-7d9f8"}'
-
-This event passes both of the example workflow's filters (``alertname`` and ``severity``), so it starts an investigation. Open the workflow in the Robusta UI to see the event and its run. An event that fails a filter is recorded as skipped.
-
-See the :doc:`Send Events API <send-events-api>` for more about sending events.
 
 Example: Workflows in Git
 -------------------------
