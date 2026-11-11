@@ -29,6 +29,7 @@
    configuration/exporting/alert-export-api
    configuration/exporting/alert-statistics-api
    configuration/exporting/rbac-api
+   configuration/exporting/triggered-workflows-api
 
 .. toctree::
    :maxdepth: 4
