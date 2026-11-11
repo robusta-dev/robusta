@@ -6,6 +6,8 @@ Holmes Chat API
 
 Use this endpoint to send questions to Holmes AI for root cause analysis. You can provide alert context and Holmes will investigate and return a detailed markdown analysis.
 
+On clusters whose Holmes takes questions directly (no Robusta runner), the question runs on the cluster's ``auto`` Holmes executor, the background pool that also runs auto-triage and bulk investigations, so it never delays a person's chat in the Robusta UI. The pool can be resized per account with the ``conversation_executors`` account setting.
+
 .. _holmes-chat-api:
 
 POST https://api.robusta.dev/api/holmes/<account_id>/chat
