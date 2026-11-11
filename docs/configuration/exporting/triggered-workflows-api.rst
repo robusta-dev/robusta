@@ -206,16 +206,6 @@ Save the workflows in a JSON file, for example ``workflows.json``, in the shape 
 
 ``--data @workflows.json`` tells curl to send the contents of ``workflows.json`` as the request body. The path is relative to the folder you run ``curl`` from; for a file elsewhere, write its path after the ``@``, such as ``--data @robusta/workflows.json``.
 
-To keep the workflows in YAML instead, convert the file on the fly: ``--data @-`` makes curl read the body from its input.
-
-.. robusta-code:: bash
-
-    yq -o=json '.' workflows.yaml | curl --fail-with-body -sS -X POST \
-      'https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID' \
-      -H 'Authorization: Bearer YOUR_API_KEY' \
-      -H 'Content-Type: application/json' \
-      --data @-
-
 **Response (200 OK):**
 
 .. code-block:: json
@@ -282,42 +272,45 @@ A pruned workflow is deleted the same way as **Delete workflow** in the UI: its 
 Example: Workflows in Git
 -------------------------
 
-Keep the workflows in a YAML file in your repository:
+Keep the workflows in a JSON file in your repository, for example ``robusta/workflows.json``:
 
-.. code-block:: yaml
+.. code-block:: json
 
-    # robusta/triggered-workflows.yaml
-    workflows:
-      - id: 6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b
-        title: Pod crash loop triage
-        prompt: |
-          Investigate the crashing pod in the alert.
-          Find the root cause and suggest a fix.
-        cluster_name: prod-us-east-1
-        filters:
-          - key: alertname
-            value_regex: ^KubePodCrashLooping$
-        create_incident: true
-        daily_limit: 50
+    {
+        "workflows": [
+            {
+                "id": "6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b",
+                "title": "Pod crash loop triage",
+                "prompt": "Investigate the crashing pod in the alert. Find the root cause and suggest a fix.",
+                "cluster_name": "prod-us-east-1",
+                "filters": [
+                    {"key": "alertname", "value_regex": "^KubePodCrashLooping$"}
+                ],
+                "create_incident": true,
+                "daily_limit": 50
+            },
+            {
+                "id": "c3a8e0f2-51d4-4b9a-a7e1-6d2f8b4c9e13",
+                "title": "Failed deployment rollout",
+                "prompt": "Find why the rollout in the event failed and which change caused it.",
+                "cluster_name": "prod-us-east-1",
+                "enabled": false
+            }
+        ]
+    }
 
-      - id: c3a8e0f2-51d4-4b9a-a7e1-6d2f8b4c9e13
-        title: Failed deployment rollout
-        prompt: Find why the rollout in the event failed and which change caused it.
-        cluster_name: prod-us-east-1
-        enabled: false
-
-To start from the workflows you already have, export them and convert the result to YAML:
+To start from the workflows you already have, export them into that file:
 
 .. robusta-code:: bash
 
     curl --fail-with-body -sS \
       'https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY' \
-      | yq -P '.' > robusta/triggered-workflows.yaml
+      -o robusta/workflows.json
 
 This is also how to move a workflow you built and tested in the UI into git: export, then commit the file. Its ``id`` stays the same.
 
-Then sync the file on every merge to your main branch. A GitHub Actions example, where the job converts the YAML file to ``workflows.json`` and posts it:
+Then sync the file on every merge to your main branch. A GitHub Actions example:
 
 .. robusta-code:: yaml
 
@@ -326,7 +319,7 @@ Then sync the file on every merge to your main branch. A GitHub Actions example,
     on:
       push:
         branches: [main]
-        paths: [robusta/triggered-workflows.yaml]
+        paths: [robusta/workflows.json]
 
     jobs:
       sync:
@@ -338,12 +331,11 @@ Then sync the file on every merge to your main branch. A GitHub Actions example,
               ROBUSTA_API_KEY: ${{ secrets.ROBUSTA_API_KEY }}
               ROBUSTA_ACCOUNT_ID: ${{ vars.ROBUSTA_ACCOUNT_ID }}
             run: |
-              yq -o=json '.' robusta/triggered-workflows.yaml > workflows.json
               curl --fail-with-body -sS -X POST \
                 "https://api.robusta.dev/api/triggered-workflows?account_id=${ROBUSTA_ACCOUNT_ID}&prune=true" \
                 -H "Authorization: Bearer ${ROBUSTA_API_KEY}" \
                 -H "Content-Type: application/json" \
-                --data @workflows.json
+                --data @robusta/workflows.json
 
 ``--fail-with-body`` makes the job fail on an error and print the response, so a ``400`` shows every invalid entry in the job log. Remove ``&prune=true`` if the file should add and update workflows but never delete the ones made in the UI.
 
