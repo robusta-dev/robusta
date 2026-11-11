@@ -46,7 +46,7 @@ Send the API key as a Bearer token:
 Endpoint
 --------
 
-.. code-block:: text
+.. robusta-code::
 
     GET  https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID
     POST https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID[&prune=true]
@@ -68,7 +68,7 @@ Endpoint
      - ``POST`` only. When ``true``, every workflow of the account that is not in the body is deleted. See :ref:`Pruning <triggered-workflows-api-prune>`. Default ``false``.
      - No
 
-On a self-hosted platform, replace ``https://api.robusta.dev`` with your relay URL.
+Choose your region (US, EU or AP) in any example box on this page to switch every URL to it. On a self-hosted platform, replace ``https://api.robusta.dev`` with your relay URL.
 
 Workflow Fields
 ---------------
@@ -159,11 +159,13 @@ Returns every Triggered Workflow of the account, deleted ones excluded, ordered 
 
 **Request:**
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --fail-with-body -sS \
       'https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY'
+
+To save the response to a file you can edit and post back, add ``-o workflows.json``.
 
 **Response (200 OK):** ``{"workflows": [ ... ]}``, as in the example above.
 
@@ -192,13 +194,27 @@ The whole sync runs in one transaction: either every change is applied or none i
 
 **Request:**
 
-.. code-block:: bash
+Save the workflows in a JSON file, for example ``workflows.json``, in the shape shown under `Workflow Fields`_. Then, from the folder that holds the file, run:
+
+.. robusta-code:: bash
 
     curl --fail-with-body -sS -X POST \
       'https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID' \
       -H 'Authorization: Bearer YOUR_API_KEY' \
       -H 'Content-Type: application/json' \
       --data @workflows.json
+
+``--data @workflows.json`` tells curl to send the contents of ``workflows.json`` as the request body. The path is relative to the folder you run ``curl`` from; for a file elsewhere, write its path after the ``@``, such as ``--data @robusta/workflows.json``.
+
+To keep the workflows in YAML instead, convert the file on the fly: ``--data @-`` makes curl read the body from its input.
+
+.. robusta-code:: bash
+
+    yq -o=json '.' workflows.yaml | curl --fail-with-body -sS -X POST \
+      'https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID' \
+      -H 'Authorization: Bearer YOUR_API_KEY' \
+      -H 'Content-Type: application/json' \
+      --data @-
 
 **Response (200 OK):**
 
@@ -244,7 +260,7 @@ Pruning
 
 Add ``prune=true`` to make the body the complete list of the account's workflows:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --fail-with-body -sS -X POST \
       'https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID&prune=true' \
@@ -265,18 +281,53 @@ A pruned workflow is deleted the same way as **Delete workflow** in the UI: its 
 
 .. _triggered-workflows-api-webhook-url:
 
-Webhook URL
------------
+Sending Events to a Workflow
+----------------------------
 
-The API does not return the workflow's webhook URL, because you can build it from your account ID and the workflow's ``id``:
+Syncing a workflow does not run it. A workflow runs each time an event, such as an alert, is sent to its **webhook URL**. You point your alert source (Alertmanager, Datadog, a script) at that URL.
 
-.. code-block:: text
+Each workflow has its own webhook URL, built from your account ID and the workflow's ``id``:
+
+.. robusta-code::
 
     https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=WORKFLOW_ID
 
-Since you choose the ``id``, you know the URL before the workflow exists, and can commit the workflow and the alert source that calls it in the same change.
+For example, the workflow with ``"id": "6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b"`` from the examples on this page receives events at:
 
-Webhook calls need an API key with the **Alerts: Write** permission, sent as an ``Authorization: Bearer`` header or as a ``&token=YOUR_API_KEY`` URL parameter. See the :doc:`Send Events API <send-events-api>`.
+.. robusta-code::
+
+    https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b
+
+This is the same URL the Robusta UI shows for the workflow. The API does not return it, because you can build it yourself. Since you chose the ``id`` in your file, you know the URL before the first sync, so you can add a workflow and point your alert source at it in the same commit.
+
+Sending an event needs an API key with the **Alerts: Write** permission, usually a different key from the one that syncs workflows. Send it in an ``Authorization: Bearer`` header. For a tool that cannot set headers, add ``&token=YOUR_ALERTS_API_KEY`` to the URL instead.
+
+**Example: an Alertmanager receiver for the workflow**
+
+.. robusta-code:: yaml
+
+    receivers:
+      - name: robusta-crash-loop-triage
+        webhook_configs:
+          - url: 'https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b'
+            http_config:
+              authorization:
+                type: Bearer
+                credentials: YOUR_ALERTS_API_KEY
+
+**Example: send a test event by hand**
+
+.. robusta-code:: bash
+
+    curl --fail-with-body -sS -X POST \
+      'https://api.robusta.dev/webhooks?account_id=YOUR_ACCOUNT_ID&workflow_id=6f1c9a2e-3b7d-4e8f-9a0b-1c2d3e4f5a6b' \
+      -H 'Authorization: Bearer YOUR_ALERTS_API_KEY' \
+      -H 'Content-Type: application/json' \
+      --data-raw '{"alertname": "KubePodCrashLooping", "severity": "critical", "pod": "checkout-7d9f8"}'
+
+This event passes both of the example workflow's filters (``alertname`` and ``severity``), so it starts an investigation. Open the workflow in the Robusta UI to see the event and its run. An event that fails a filter is recorded as skipped.
+
+See the :doc:`Send Events API <send-events-api>` for more about sending events.
 
 Example: Workflows in Git
 -------------------------
@@ -307,7 +358,7 @@ Keep the workflows in a YAML file in your repository:
 
 To start from the workflows you already have, export them and convert the result to YAML:
 
-.. code-block:: bash
+.. robusta-code:: bash
 
     curl --fail-with-body -sS \
       'https://api.robusta.dev/api/triggered-workflows?account_id=YOUR_ACCOUNT_ID' \
@@ -316,9 +367,9 @@ To start from the workflows you already have, export them and convert the result
 
 This is also how to move a workflow you built and tested in the UI into git: export, then commit the file. Its ``id`` stays the same, so its webhook URL does not change.
 
-Then sync the file on every merge to your main branch. A GitHub Actions example:
+Then sync the file on every merge to your main branch. A GitHub Actions example, where the job converts the YAML file to ``workflows.json`` and posts it:
 
-.. code-block:: yaml
+.. robusta-code:: yaml
 
     # .github/workflows/robusta-triggered-workflows.yaml
     name: Sync Robusta Triggered Workflows
