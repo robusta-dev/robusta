@@ -22,8 +22,6 @@ class RobustaController:
             "--set",
             "kubewatch.resources.requests.memory=64Mi",
             "--set",
-            "grafanaRenderer.resources.requests.memory=64Mi",
-            "--set",
             "runner.resources.requests.memory=512Mi",
         ]
 

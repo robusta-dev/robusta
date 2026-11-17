@@ -25,6 +25,11 @@ RBAC
 
 * :doc:`RBAC Configuration API <rbac-api>`: Programmatically manage role-based access control configurations
 
+Triggered Workflows
+-------------------
+
+* :doc:`Triggered Workflows API <triggered-workflows-api>`: Keep Triggered Workflows in git and sync them to your account from CI
+
 .. _http-api-key-permissions:
 
 API Key Permissions
@@ -56,6 +61,10 @@ Every API key is scoped by a set of resource/action pairs, chosen when the key i
      - Read / Write
      - Read or replace the account's role-based access control configuration
      - :doc:`RBAC Configuration API <rbac-api>`
+   * - Triggered Workflows
+     - Read / Write
+     - List the account's Triggered Workflows, or create, update and delete them
+     - :doc:`Triggered Workflows API <triggered-workflows-api>`
    * - Agents
      - Read
      - Read active Kubernetes resource counts for a namespace, as shown in the UI's Namespaces tab

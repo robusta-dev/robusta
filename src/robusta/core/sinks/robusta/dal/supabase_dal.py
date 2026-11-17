@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import threading
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
 from uuid import uuid4
 from cachetools import TTLCache
 import httpx
@@ -89,14 +90,55 @@ KEY_CACHE = TTLCache(maxsize=1, ttl=24 * 60 * 60)
     retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout)),
     reraise=True,
 )
-def _request_supabase_api_key(params: dict) -> Optional[str]:
-    url = f"{ROBUSTA_API_ENDPOINT}/api/config/supabase-keys"
+def _request_supabase_api_key(api_endpoint: str, params: dict) -> Optional[str]:
+    url = f"{api_endpoint}/api/config/supabase-keys"
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json().get("api_key")
 
 
-def fetch_supabase_api_key(account_id: str, cluster: str) -> Optional[str]:
+def _hostname(url: str) -> str:
+    try:
+        return (urlparse(url).hostname or "").lower().rstrip(".")
+    except ValueError:
+        return ""
+
+
+def _is_robusta_saas_url(url: str) -> bool:
+    host = _hostname(url)
+    return host == "robusta.dev" or host.endswith((".robusta.dev", ".supabase.co"))
+
+
+# Each SaaS store's key is served by its own region's API. Helm values generated before 2026-05 leave
+# ROBUSTA_API_ENDPOINT on the US default even for EU/AP accounts.
+SAAS_STORE_KEY_ENDPOINTS = {
+    # each region's custom domain and the Supabase project domain it points to
+    "sp.robusta.dev": "https://api.robusta.dev",
+    "xvyhpoxfmtpuqqeyqkso.supabase.co": "https://api.robusta.dev",
+    "sp.eu.robusta.dev": "https://api.eu.robusta.dev",
+    "fdeazqbagpxzlaumbahw.supabase.co": "https://api.eu.robusta.dev",
+    "sp.ap.robusta.dev": "https://api.ap.robusta.dev",
+    "xvtsnzetsdaiyobgdlic.supabase.co": "https://api.ap.robusta.dev",
+}
+
+
+def should_fetch_keys_from_saas(store_url: str) -> bool:
+    """Whether the relay at ROBUSTA_API_ENDPOINT can hand out an api key for this store.
+
+    Robusta's SaaS relay only holds keys for Robusta's SaaS stores. A self-hosted runner
+    whose ROBUSTA_API_ENDPOINT was left on the SaaS default would leave the cluster for a
+    key that cannot sign in to its own store, and egress policies alert on that (ROB-1743).
+    """
+    return not _is_robusta_saas_url(ROBUSTA_API_ENDPOINT) or _is_robusta_saas_url(store_url)
+
+
+def fetch_supabase_api_key(account_id: str, cluster: str, store_url: str) -> Optional[str]:
+    if not should_fetch_keys_from_saas(store_url):
+        logging.info(
+            f"Not fetching the api key from {ROBUSTA_API_ENDPOINT}: it is Robusta SaaS and the store "
+            f"host '{_hostname(store_url)}' is not. Using the api key from the Robusta token."
+        )
+        return None
     params = {
         "account_id": account_id,
         "cluster": cluster,
@@ -104,7 +146,8 @@ def fetch_supabase_api_key(account_id: str, cluster: str) -> Optional[str]:
         "component_version": RUNNER_VERSION,
     }
     try:
-        return _request_supabase_api_key(params)
+        api_endpoint = SAAS_STORE_KEY_ENDPOINTS.get(_hostname(store_url), ROBUSTA_API_ENDPOINT)
+        return _request_supabase_api_key(api_endpoint, params)
     except Exception as e:
         logging.warning(f"Failed to fetch the api key from relay: {e}")
         return None
@@ -157,7 +200,7 @@ class SupabaseDal(AccountResourceFetcher):
 
     def __connect(self, options: ClientOptions):
         self.options = options
-        relay_key = fetch_supabase_api_key(self.account_id, self.cluster)
+        relay_key = fetch_supabase_api_key(self.account_id, self.cluster, self.url)
         for key in filter(None, (KEY_CACHE.pop("key", None), relay_key)):
             try:
                 self.__login(key, options)

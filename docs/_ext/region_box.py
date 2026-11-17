@@ -17,6 +17,23 @@ Usage in .rst::
 
     Visit :robusta-url:`our platform <https://platform.robusta.dev/signup>` today.
 
+Usage in .md (MyST)::
+
+    ```{robusta-url} https://platform.robusta.dev/account
+    ```
+
+    ```{robusta-code} bash
+    :emphasize-lines: 2
+
+    curl --location --request POST 'https://api.robusta.dev/api/alerts' \
+        --header 'Authorization: Bearer API-KEY'
+    ```
+
+    Visit {robusta-url}`our platform <https://platform.robusta.dev/signup>` today.
+
+    ```{robusta-region-picker}
+    ```
+
 The rendered HTML carries ``robusta-region-box`` (block) or
 ``robusta-region-inline`` (inline) classes; the client-side script in
 ``_static/region-selector.js`` injects the US/EU/AP selector and keeps
