@@ -16,7 +16,9 @@ A standard MCP `Streamable HTTP <https://modelcontextprotocol.io/specification/2
 Enabling external access
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Cross-cluster tool calls from an external MCP client are opt-in per account. Turn on **Robusta MCP Server Enabled** under **Settings → AI Assistant → MCP Server Settings** before an API key can list or call any ``remote_*`` tool. It is off by default.
+Cross-cluster tool calls from an external MCP client are opt-in per account. Turn on **Robusta MCP Server Enabled** under **Settings → AI → MCP Server** before an API key can list or call any ``remote_*`` tool. It is off by default.
+
+This is separate from **Settings → AI → Multi-Agent → Enable Multi Agent Investigations**, which lets Holmes in one cluster call the same tools on your other clusters during an investigation. That setting is **on** by default, and turning either one on or off doesn't change the other.
 
 Authentication
 ^^^^^^^^^^^^^^
@@ -116,6 +118,8 @@ An API key is treated as an external caller and can only reach the cross-cluster
 
 Calls run with the RBAC of the user who created the API key, not as an account-wide superuser: a key only reaches the clusters and namespaces its owner can already access. Deleting or demoting that user's access also narrows what the key can do.
 
+The ``remote_*`` tools are the toolsets that each cluster's Holmes exposes with ``expose_remotely``: by default its Kubernetes, pod logs, in-cluster Prometheus and pre-approved ``bash`` tools. Each cluster chooses its own, per toolset and per Prometheus instance, and a cluster only appears when it runs the same Holmes version as the others. The `Cross-Cluster Tools <https://holmesgpt.dev/latest/data-sources/cross-cluster-tools/>`_ page in the HolmesGPT docs lists the defaults, shows how to change them, and explains why a cluster or tool might be missing.
+
 Rate limits and errors
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -140,3 +144,4 @@ See Also
 --------
 
 * :doc:`Holmes Chat API <../holmesgpt/holmes-chat-api>` — for a single-turn "ask Holmes a question" REST API instead of a full MCP tool session.
+* `Cross-Cluster Tools <https://holmesgpt.dev/latest/data-sources/cross-cluster-tools/>`_ — which tools each cluster exposes, and how to change that.
