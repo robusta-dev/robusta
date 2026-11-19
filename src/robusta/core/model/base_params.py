@@ -349,7 +349,7 @@ class PrometheusParams(ActionParams):
         if v:
             trimmed = v.rstrip("/")
             if trimmed != v:
-                logging.info(f"Stripping trailing slash from prometheus_url: {trimmed}")
+                logging.info("Stripped trailing slash from prometheus_url")
             v = trimmed
         return v
 
