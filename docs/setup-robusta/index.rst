@@ -19,6 +19,7 @@
    tuning-performance
    json-logging
    configuration-secrets
+   env-vars
    openshift
    read-only-service-account
    rbac-namespace-scoping
