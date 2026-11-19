@@ -16,8 +16,7 @@ A standard MCP `Streamable HTTP <https://modelcontextprotocol.io/specification/2
 Enabling external access
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-<<<<<<< HEAD
-Access from an external MCP client is opt-in per account. Turn on **Robusta MCP Server Enabled** under **Settings → MCP Server** before an API key can list or call any tool. It is off by default.
+Access from an external MCP client is opt-in per account. Turn on **Robusta MCP Server Enabled** under **Settings → AI → MCP Server** before an API key can list or call any tool. It is off by default.
 
 Under that switch, each toolset the server exposes has its own switch (all on by default once the server is enabled):
 
@@ -31,11 +30,8 @@ Under that switch, each toolset the server exposes has its own switch (all on by
      - ``ask_holmes``, ``get_holmes_answer``, ``ask_holmes_followup``, ``stop_holmes_conversation`` — ask the Holmes agent of a cluster a question, get back its full investigation, continue it, or stop it.
    * - **Cluster tools**
      - The ``remote_*`` tools — run one of Holmes' cluster-local tools (kubectl, Prometheus, pod logs) on a cluster and get its raw output — and ``list_available_clusters``, which lists the clusters a ``remote_*`` tool can run on for you.
-=======
-Cross-cluster tool calls from an external MCP client are opt-in per account. Turn on **Robusta MCP Server Enabled** under **Settings → AI → MCP Server** before an API key can list or call any ``remote_*`` tool. It is off by default.
 
 This is separate from **Settings → AI → Multi-Agent → Enable Multi Agent Investigations**, which lets Holmes in one cluster call the same tools on your other clusters during an investigation. That setting is **on** by default, and turning either one on or off doesn't change the other.
->>>>>>> origin/master
 
 Authentication
 ^^^^^^^^^^^^^^
@@ -135,7 +131,8 @@ An API key is treated as an external caller and can only reach the toolsets abov
 
 Calls run with the RBAC of the user who created the API key, not as an account-wide superuser: a key only reaches the clusters and namespaces its owner can already access. Deleting or demoting that user's access also narrows what the key can do.
 
-<<<<<<< HEAD
+The ``remote_*`` tools are the toolsets that each cluster's Holmes exposes with ``expose_remotely``: by default its Kubernetes, pod logs, in-cluster Prometheus and pre-approved ``bash`` tools. Each cluster chooses its own, per toolset and per Prometheus instance, and a cluster only appears when it runs the same Holmes version as the others. The `Cross-Cluster Tools <https://holmesgpt.dev/latest/data-sources/cross-cluster-tools/>`_ page in the HolmesGPT docs lists the defaults, shows how to change them, and explains why a cluster or tool might be missing.
+
 Asking Holmes a question
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -187,9 +184,6 @@ Two more tools work on a conversation ``ask_holmes`` started:
 * ``stop_holmes_conversation`` ends an investigation that is still running, when its answer is no longer needed. The result has ``stopped: true`` and ``status: "stopped"``; a conversation that had already ended comes back with ``stopped: false`` and the status it ended in, and a later ``get_holmes_answer`` on a stopped conversation reports the stop instead of an answer.
 
 Only clusters whose Holmes agent takes conversations from the platform and reports it in its status can be asked, and only those the key's owner may chat with. That status flag and the named executor pools the question runs on both arrived in Holmes 0.43, so the cluster's Holmes must be 0.43 or later with the conversation worker enabled.
-=======
-The ``remote_*`` tools are the toolsets that each cluster's Holmes exposes with ``expose_remotely``: by default its Kubernetes, pod logs, in-cluster Prometheus and pre-approved ``bash`` tools. Each cluster chooses its own, per toolset and per Prometheus instance, and a cluster only appears when it runs the same Holmes version as the others. The `Cross-Cluster Tools <https://holmesgpt.dev/latest/data-sources/cross-cluster-tools/>`_ page in the HolmesGPT docs lists the defaults, shows how to change them, and explains why a cluster or tool might be missing.
->>>>>>> origin/master
 
 Rate limits and errors
 ^^^^^^^^^^^^^^^^^^^^^^^
