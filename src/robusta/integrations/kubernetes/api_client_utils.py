@@ -156,7 +156,7 @@ def get_pod_logs(
             _preload_content=False  # If this flag is not used, double quotes in json objects in stdout are converted
             # by the kubernetes client to single quotes, which makes json.loads() fail.
             # We therefore use this flag in order to get the raw bytes and decode the output
-        ).data.decode("utf-8")
+        ).data.decode("utf-8", errors="replace")  # logs may contain bytes that are not valid UTF-8
 
     except ApiException as e:
         if e.status != 404:
