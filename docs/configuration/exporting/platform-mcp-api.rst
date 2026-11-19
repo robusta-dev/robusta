@@ -166,14 +166,13 @@ Questions asked this way run on the cluster's ``auto`` Holmes executor, the back
      - No
      - How long the call waits for the answer. Keep it under your MCP client's tool timeout.
 
-Both tools answer with ``{"conversation_id", "cluster", "status", "answer", "ui_link"}``; ``ui_link`` opens the conversation in the Robusta UI.
+Both tools answer with ``{"conversation_id", "cluster", "status", "answer", "steps"}``. The results carry no link into the Robusta UI: the conversation is reached only through these tools.
 
 .. code-block:: json
 
     {
       "conversation_id": "78170c9f-2403-43ac-88ed-d6d39efd90ed",
       "cluster": "prod-eu",
-      "ui_link": "https://platform.robusta.dev/my-account/holmes/chat/78170c9f-2403-43ac-88ed-d6d39efd90ed",
       "status": "completed",
       "answer": "3 of the 12 pods in `checkout` restarted in the last hour ..."
     }
