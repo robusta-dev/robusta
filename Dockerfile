@@ -103,15 +103,15 @@ RUN apt-get update \
 #   CVE-2026-19487. forky's perl pre-depends on glibc >= 2.43, so libc6/libc-bin/
 #   libc-gconv-modules-extra/libcrypt1 come along too. git hard-depends on perl (Debian
 #   builds them from the same source with locked versions), so git/git-man/liberror-perl/
-#   perl-modules-5.42/libperl5.42 are pulled up to forky's git 2.53.0 as well - trying to
+#   perl-modules-5.44/libperl5.44 are pulled up to forky's git 2.53.0 as well - trying to
 #   pin perl-base alone makes apt remove git instead of upgrading it. trixie's
 #   libperl5.40/perl-modules-5.40 are left orphaned by the upgrade (and still carry
 #   CVE-2026-9538), so they are purged.
 # - openssh, curl, expat, util-linux, ncurses, systemd: no trixie fix.
 RUN echo 'deb http://deb.debian.org/debian forky main' > /etc/apt/sources.list.d/forky.list \
-    && printf 'Package: libssh2-1t64:any libattr1:any libacl1:any perl-base:any perl:any perl-modules-5.42:any libperl5.42:any liberror-perl:any git:any git-man:any libc6:any libcrypt1:any libc-bin:any libc-gconv-modules-extra:any libexpat1:any libtinfo6:any libncursesw6:any ncurses-base:any ncurses-bin:any libsystemd0:any libudev1:any systemd-standalone-sysusers:any openssh-client:any openssh-common:any curl:any libcurl4t64:any libcurl3t64-gnutls:any libcurl4-gnutls:any libnghttp3-9:any libngtcp2-16:any libngtcp2-crypto-ossl0:any libngtcp2-crypto-gnutls8:any util-linux:any bsdutils:any mount:any libblkid1:any libmount1:any libsmartcols1:any liblastlog2-2:any libuuid1:any login:any\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *:any\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
+    && printf 'Package: libssh2-1t64:any libattr1:any libacl1:any perl-base:any perl:any perl-modules-5.44:any libperl5.44:any liberror-perl:any git:any git-man:any libc6:any libcrypt1:any libc-bin:any libc-gconv-modules-extra:any libexpat1:any libtinfo6:any libncursesw6:any ncurses-base:any ncurses-bin:any libsystemd0:any libudev1:any systemd-standalone-sysusers:any openssh-client:any openssh-common:any curl:any libcurl4t64:any libcurl3t64-gnutls:any libcurl4-gnutls:any libnghttp3-9:any libngtcp2-16:any libngtcp2-crypto-ossl0:any libngtcp2-crypto-gnutls8:any util-linux:any bsdutils:any mount:any libblkid1:any libmount1:any libsmartcols1:any liblastlog2-2:any libuuid1:any login:any\nPin: release n=forky\nPin-Priority: 990\n\nPackage: *:any\nPin: release n=forky\nPin-Priority: -1\n' > /etc/apt/preferences.d/99-forky \
     && apt-get update \
-    && apt-get install -y --no-install-recommends libssh2-1t64 libattr1 libacl1 perl-base perl perl-modules-5.42 libperl5.42 liberror-perl git git-man libc6 libcrypt1 libc-bin libc-gconv-modules-extra \
+    && apt-get install -y --no-install-recommends libssh2-1t64 libattr1 libacl1 perl-base perl perl-modules-5.44 libperl5.44 liberror-perl git git-man libc6 libcrypt1 libc-bin libc-gconv-modules-extra \
        libexpat1 libtinfo6 libncursesw6 ncurses-base ncurses-bin libsystemd0 libudev1 openssh-client curl libcurl4t64 libcurl3t64-gnutls util-linux bsdutils mount libblkid1 libmount1 libsmartcols1 liblastlog2-2 libuuid1 login \
     && apt-get purge -y libperl5.40 perl-modules-5.40 \
     && rm -f /etc/apt/sources.list.d/forky.list /etc/apt/preferences.d/99-forky \
