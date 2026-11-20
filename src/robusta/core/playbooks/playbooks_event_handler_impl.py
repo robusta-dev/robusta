@@ -64,6 +64,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}",
                         exc_info=True,
                     )
+                    execution_event = None
 
                 if execution_event:  # might not exist for unsupported k8s types
                     execution_event.named_sinks = (
