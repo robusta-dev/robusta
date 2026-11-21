@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 import prometheus_client
 from prometrix import PrometheusNotFound
 
+from robusta.core.model.base_params import drop_config_only_params
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params, to_safe_str
@@ -149,6 +150,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         sync_response: bool = False,
         no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
+        action_params = drop_config_only_params(action_params)
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
@@ -372,6 +374,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     def run_external_stream_action(
         self, action_name: str, action_params: Optional[dict], ws
     ) -> Optional[Dict[str, Any]]:
+        action_params = drop_config_only_params(action_params)
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)

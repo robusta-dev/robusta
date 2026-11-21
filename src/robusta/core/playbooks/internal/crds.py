@@ -13,6 +13,7 @@ from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.reporting.blocks import FileBlock, JsonBlock
 from robusta.core.reporting.base import Finding, EnrichmentType
 from robusta.utils.error_codes import ActionException, ErrorCodes
+from pydantic.v1 import validator
 
 
 def run_kubectl_command(command: List[str]) -> str:
@@ -39,10 +40,36 @@ def run_kubectl_command(command: List[str]) -> str:
         raise e
 
 
+# kind, name and namespace are passed to kubectl as arguments. They must look like Kubernetes names, so that a
+# value can never be read by kubectl as a flag.
+KUBECTL_KIND_PATTERN = re.compile(r"[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?")
+KUBECTL_NAME_PATTERN = re.compile(r"[A-Za-z0-9]([A-Za-z0-9._:-]*[A-Za-z0-9])?")
+
+
+def validate_kubectl_argument(value: Optional[str], pattern: re.Pattern, field: str) -> Optional[str]:
+    if not value and field == "namespace":
+        return None  # an empty namespace means a cluster-scoped resource
+    if not pattern.fullmatch(value):
+        raise ValueError(f"Invalid {field}")
+    return value
+
+
 class ResourceParams(ActionParams):
     kind: str
     name: str
     namespace: Optional[str] = None
+
+    @validator("kind", allow_reuse=True)
+    def validate_kind(cls, kind: str) -> str:
+        return validate_kubectl_argument(kind, KUBECTL_KIND_PATTERN, "kind")
+
+    @validator("name", allow_reuse=True)
+    def validate_name(cls, name: str) -> str:
+        return validate_kubectl_argument(name, KUBECTL_NAME_PATTERN, "name")
+
+    @validator("namespace", allow_reuse=True)
+    def validate_namespace(cls, namespace: Optional[str]) -> Optional[str]:
+        return validate_kubectl_argument(namespace, KUBECTL_NAME_PATTERN, "namespace")
 
 @action
 def kubectl_describe(event: ExecutionBaseEvent, params: ResourceParams):
@@ -56,9 +83,10 @@ def kubectl_describe(event: ExecutionBaseEvent, params: ResourceParams):
     )
 
     try:
-        cmd = ["kubectl", "describe", params.kind, params.name]
+        cmd = ["kubectl", "describe"]
         if params.namespace:
             cmd.extend(["-n", params.namespace])
+        cmd.extend(["--", params.kind, params.name])
 
         output = run_kubectl_command(cmd)
 
@@ -91,9 +119,10 @@ def fetch_resource_yaml(event: ExecutionBaseEvent, params: ResourceParams):
     )
 
     try:
-        cmd = ["kubectl", "get", params.kind, params.name, "-o", "yaml"]
+        cmd = ["kubectl", "get", "-o", "yaml"]
         if params.namespace:
             cmd.extend(["-n", params.namespace])
+        cmd.extend(["--", params.kind, params.name])
 
         output = run_kubectl_command(cmd)
 
@@ -224,6 +253,14 @@ class CRInstancesParams(ActionParams):
     namespace: Optional[str] = None
     fields: Optional[List[str]] = None  # List of fields to return from each instance
 
+    @validator("kind", allow_reuse=True)
+    def validate_kind(cls, kind: str) -> str:
+        return validate_kubectl_argument(kind, KUBECTL_KIND_PATTERN, "kind")
+
+    @validator("namespace", allow_reuse=True)
+    def validate_namespace(cls, namespace: Optional[str]) -> Optional[str]:
+        return validate_kubectl_argument(namespace, KUBECTL_NAME_PATTERN, "namespace")
+
 @action
 def fetch_cr_instances(event: ExecutionBaseEvent, params: CRInstancesParams):
     """
@@ -236,11 +273,12 @@ def fetch_cr_instances(event: ExecutionBaseEvent, params: CRInstancesParams):
     )
 
     try:
-        cmd = ["kubectl", "get", params.kind, "-o", "json"]
+        cmd = ["kubectl", "get", "-o", "json"]
         if params.namespace:
             cmd.extend(["-n", params.namespace])
         else:
             cmd.append("--all-namespaces")
+        cmd.extend(["--", params.kind])
 
         output = run_kubectl_command(cmd)
 

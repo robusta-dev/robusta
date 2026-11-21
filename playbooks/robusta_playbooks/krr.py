@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+import re
 from pickle import NONE
 import shlex
 import uuid
@@ -30,6 +31,7 @@ from robusta.api import (
     action,
     JobEvent,
 )
+from robusta.core.model.base_params import validate_job_spec
 from robusta.core.model.env_vars import ENABLE_JSON_LOGS_FORMAT, INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, SET_KRR_SECURITY_CONTEXT, load_bool
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
@@ -136,9 +138,13 @@ class KRRParams(PrometheusParams, PodRunningParams):
     args: Optional[str] = None
     krr_args: str = ""
     timeout: int = 3600
-    krr_job_spec = {}
+    krr_job_spec: Dict[str, Any] = {}
     max_workers: int = 3
     krr_verbose: bool = False
+
+    @validator("krr_job_spec", allow_reuse=True)
+    def check_job_spec(cls, job_spec: Dict[str, Any]) -> Dict[str, Any]:
+        return validate_job_spec(job_spec)
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
@@ -158,6 +164,9 @@ class KRRParams(PrometheusParams, PodRunningParams):
     @validator("strategy", allow_reuse=True)
     def check_strategy(cls, strategy: str) -> str:
         return shlex.quote(strategy)
+
+
+HEADER_NAME_PATTERN = re.compile(r"[A-Za-z0-9-]+")
 
 
 def krr_severity_to_priority(severity: SeverityType) -> int:
@@ -181,7 +190,7 @@ def get_krr_additional_flags(params: KRRParams) -> str:
         # a label is already defined in the args
         return ""
     key, value = next(iter(params.prometheus_additional_labels.items()))
-    return f"--prometheus-label {key} -l {value}"
+    return f"--prometheus-label {shlex.quote(str(key))} -l {shlex.quote(str(value))}"
 
 
 class KRRSecret(BaseModel):
@@ -231,9 +240,9 @@ def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> str
     additional_args = []
     for secret in krr_secrets:
         if isinstance(secret, KRRSecretKeyValuePair):
-            additional_args.append(f"{secret.command_flag} '{secret.arg_key}:$({secret.env_var_name})'")
+            additional_args.append(f'{secret.command_flag} {shlex.quote(secret.arg_key + ":")}"${{{secret.env_var_name}}}"')
         else:
-            additional_args.append(f"{secret.command_flag} '$({secret.env_var_name})'")
+            additional_args.append(f'{secret.command_flag} "${{{secret.env_var_name}}}"')
 
     return " ".join(additional_args)
 
@@ -243,11 +252,11 @@ def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
     if isinstance(prom_config, AWSPrometheusConfig):
         additional_cmd_line_args += (
             "--eks-managed-prom"
-            + f" --eks-managed-prom-region {prom_config.aws_region}"
-            + f" --eks-service-name {prom_config.service_name}"
+            + f" --eks-managed-prom-region {shlex.quote(str(prom_config.aws_region))}"
+            + f" --eks-service-name {shlex.quote(str(prom_config.service_name))}"
         )
         if prom_config.assume_role_arn:
-            additional_cmd_line_args += f" --eks-assume-role {prom_config.assume_role_arn}"
+            additional_cmd_line_args += f" --eks-assume-role {shlex.quote(str(prom_config.assume_role_arn))}"
 
     return additional_cmd_line_args
 
@@ -271,7 +280,10 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
     
     if prom_config.headers:
         for header_name, header_value in prom_config.headers.items():
-                
+            # the name becomes an env var name and a secret key, so it must be a plain HTTP header token
+            if not HEADER_NAME_PATTERN.fullmatch(header_name):
+                raise ValueError(f"Illegal prometheus header name: {header_name!r}")
+
             env_var_name = f"PROMETHEUS_HEADER_{header_name.upper().replace('-', '_')}"
             secret_key = f"prometheus-header-{header_name.lower()}"
             
@@ -482,7 +494,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         if event.named_sinks:
             # Append one flag per sink
             for sink in event.named_sinks:
-                publish_scan_args += f' --named_sinks="{sink}"'
+                publish_scan_args += f" --named_sinks={shlex.quote(str(sink))}"
 
     python_command = (
         f"python krr.py {params.strategy} {publish_scan_args} {args_sanitized} {additional_flags} "
@@ -493,7 +505,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     secret: Optional[JobSecret] = None
 
     if params.prometheus_url:
-        python_command += f" -p {params.prometheus_url}"
+        python_command += f" -p {shlex.quote(params.prometheus_url)}"
 
     if IS_OPENSHIFT and params.prometheus_auth is None:
         python_command += " --openshift"

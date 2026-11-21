@@ -18,8 +18,9 @@ from hikaru.model.rel_1_26 import (
     PodSpec,
     ResourceRequirements,
 )
-from pydantic.v1 import BaseModel, ValidationError
+from pydantic.v1 import BaseModel, ValidationError, validator
 
+from robusta.core.model.base_params import validate_job_spec
 from robusta.api import (
     RUNNER_SERVICE_ACCOUNT,
     EnrichmentAnnotation,
@@ -93,7 +94,7 @@ class PopeyeParams(PodRunningParams):
     timeout = 300
     args: Optional[str] = None
     popeye_args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
-    popeye_job_spec = {}
+    popeye_job_spec: Dict[str, Any] = {}
     spinach: str = """\
 popeye:
     excludes:
@@ -113,6 +114,11 @@ popeye:
         - name: rx:kube-system
         v1/namespaces:
         - name: kube-system"""
+
+
+    @validator("popeye_job_spec", allow_reuse=True)
+    def check_job_spec(cls, job_spec: Dict[str, Any]) -> Dict[str, Any]:
+        return validate_job_spec(job_spec)
 
 
 def group_issues_list(issues: List[Issue]) -> Dict[str, GroupedIssues]:
@@ -164,7 +170,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                 command=[
                     "/bin/sh",
                     "-c",
-                    f"echo '{params.spinach}' > /tmp/spinach.yaml && popeye -f /tmp/spinach.yaml {sanitize_args} -o json --force-exit-zero",
+                    f"echo {shlex.quote(params.spinach)} > /tmp/spinach.yaml && popeye -f /tmp/spinach.yaml {sanitize_args} -o json --force-exit-zero",
                 ],
                 resources=resources,
             )

@@ -270,6 +270,55 @@ class NamespacedResourcesParams(ActionParams):
     namespace: str
 
 
+# Fields a scan job spec may set. They only affect where and how the job's pod is scheduled.
+ALLOWED_JOB_SPEC_FIELDS = frozenset(
+    {
+        "tolerations",
+        "nodeSelector",
+        "affinity",
+        "priorityClassName",
+        "imagePullSecrets",
+        "topologySpreadConstraints",
+        "schedulerName",
+    }
+)
+
+
+def validate_job_spec(job_spec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Validate the extra pod spec fields of a scan job. Only scheduling fields are accepted."""
+    if not job_spec:
+        return {}
+    unsupported = sorted(set(job_spec) - ALLOWED_JOB_SPEC_FIELDS)
+    if unsupported:
+        raise ValueError(
+            f"Unsupported job spec fields: {', '.join(map(str, unsupported))}. "
+            f"Supported fields: {', '.join(sorted(ALLOWED_JOB_SPEC_FIELDS))}"
+        )
+    return job_spec
+
+
+# Parameters that decide the identity, metadata and command line of pods the runner creates. They are taken
+# from the runner's configuration only, never from the parameters of an individual action request.
+CONFIG_ONLY_PARAMS = frozenset(
+    {
+        "serviceAccountName",
+        "service_account_name",
+        "custom_annotations",
+        # command line arguments of the KRR and Popeye scan jobs
+        "krr_args",
+        "popeye_args",
+        "args",
+    }
+)
+
+
+def drop_config_only_params(action_params: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Remove the parameters an action request may not set, so the configured values apply."""
+    if not action_params:
+        return action_params
+    return {name: value for name, value in action_params.items() if name not in CONFIG_ONLY_PARAMS}
+
+
 class PodRunningParams(ActionParams):
     """
     :var custom_annotations: custom annotations to be used for the running pod/job
