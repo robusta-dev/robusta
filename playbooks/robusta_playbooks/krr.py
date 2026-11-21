@@ -34,6 +34,7 @@ from robusta.core.model.env_vars import ENABLE_JSON_LOGS_FORMAT, INSTALLATION_NA
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
+from robusta.runner.scan_callbacks import SCAN_TOKEN_QUERY_PARAM, ScanCallbackTokens
 from robusta.utils.parsing import format_event_templated_string
 
 IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.30.0")
@@ -42,6 +43,12 @@ KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
 KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
 KRR_PUSH_SCAN: str = load_bool("KRR_PUSH_SCAN", True)
 KRR_PUBLISH_URL: str = os.getenv("KRR_PUBLISH_URL", f"http://{RELEASE_NAME}-runner.{INSTALLATION_NAMESPACE}.svc.{CLUSTER_DOMAIN}/api/trigger")
+
+
+def _scan_result_url(scan_id: str) -> str:
+    """The URL the KRR job posts its result to. The token ties the result to a scan this runner started."""
+    separator = "&" if "?" in KRR_PUBLISH_URL else "?"
+    return f"{KRR_PUBLISH_URL}{separator}{SCAN_TOKEN_QUERY_PARAM}={ScanCallbackTokens.issue(scan_id)}"
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -471,7 +478,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
 
     publish_scan_args = ""
     if KRR_PUSH_SCAN:
-        publish_scan_args = f"--publish_scan_url={KRR_PUBLISH_URL} --scan_id={scan_id} --start_time=\"{start_time}\""
+        publish_scan_args = f"--publish_scan_url={shlex.quote(_scan_result_url(scan_id))} --scan_id={scan_id} --start_time=\"{start_time}\""
         if event.named_sinks:
             # Append one flag per sink
             for sink in event.named_sinks:

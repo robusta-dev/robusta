@@ -19,10 +19,14 @@ from robusta.integrations.prometheus.models import AlertManagerEvent, Prometheus
 from robusta.integrations.prometheus.trigger import PrometheusTriggerEvent
 from robusta.model.alert_relabel_config import AlertRelabelOp
 from robusta.runner.config_loader import ConfigLoader
+from robusta.runner.scan_callbacks import SCAN_TOKEN_QUERY_PARAM, ScanCallbackTokens
 from robusta.utils.task_queue import QueueMetrics, TaskQueue
 
 app = Flask(__name__)
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
+
+# the only action the trigger endpoint runs
+SCAN_RESULT_ACTION = "process_scan"
 
 
 class Web:
@@ -141,20 +145,29 @@ class Web:
     @staticmethod
     @app.route("/api/trigger", methods=["POST"])
     def handle_manual_trigger():
+        """
+        Receives the result of a KRR scan job this runner started.
+
+        This endpoint is restricted to KRR scan results: it runs only process_scan, and only for a scan
+        whose token the runner issued when it created the job.
+        """
         data = request.get_json()
-        Web._trace_incoming("trigger", data)
-        if not data.get("action_name", None):
-            msg = f"Illegal trigger request {data}"
-            logging.error(msg)
-            return {"success": False, "msg": msg}
+        action_params = data.get("action_params")
+        if data.get("action_name") != SCAN_RESULT_ACTION or not isinstance(action_params, dict):
+            logging.warning(f"Rejected trigger request. Only {SCAN_RESULT_ACTION} is accepted on this endpoint.")
+            return abort(403)
+
+        scan_id = action_params.get("scan_id")
+        token = request.args.get(SCAN_TOKEN_QUERY_PARAM, "")
+        if not isinstance(scan_id, str) or not ScanCallbackTokens.is_valid(scan_id, token):
+            logging.warning(f"Rejected scan result with an unknown scan id or token. scan_id: {scan_id}")
+            return abort(403)
 
         return jsonify(
             Web.event_handler.run_external_action(
-                action_name=data["action_name"],
-                action_params=data.get("action_params", None),
+                action_name=SCAN_RESULT_ACTION,
+                action_params=action_params,
                 sinks=data.get("sinks", None),
-                sync_response=data.get("sync_response", False),
-                no_sinks=data.get("no_sinks", False),
             )
         )
 

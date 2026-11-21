@@ -315,14 +315,18 @@ class RobustaSink(SinkBase, EventHandler):
     def __get_events_history(self):
         try:
             logging.info("Getting events history")
-            response = WebApi.run_manual_action(
+            receiver = self.registry.get_receiver()
+            if not receiver:
+                logging.error("Error running 'event_history'. The action receiver is not initialized.")
+                return
+            # run in-process: /api/trigger is restricted to KRR scan results
+            response = receiver.event_handler.run_external_action(
                 action_name="event_history",
+                action_params={"annotation": None},
                 sinks=[self.sink_name],
-                retries=4,
-                timeout_delay=30,
             )
-            if response != 200:
-                logging.error("Error running 'event_history'.")
+            if not response or not response.get("success"):
+                logging.error(f"Error running 'event_history'. {response}")
             else:
                 logging.info("Cluster historical data sent.")
         except Exception:
