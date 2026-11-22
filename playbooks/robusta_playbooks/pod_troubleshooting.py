@@ -444,11 +444,8 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
 
     Steps:
         1. :ref:`Install Robusta <install>`
-        2. Manually trigger this action using the Robusta CLI and the pod's name:
-
-        .. code-block:: bash
-
-             robusta playbooks trigger python_debugger name=podname namespace=default
+        2. Add this action to a playbook in your Robusta configuration (``customPlaybooks``), with a trigger
+           that matches the pod, and wait for the trigger to fire.
 
         2. Follow the instructions you receive and run `kubectl port-forward`
         3. In Visual Studio Code do a Remote Attach as per the instructions
