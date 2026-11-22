@@ -16,7 +16,7 @@ from robusta.integrations.prometheus.utils import HolmesDiscovery
 
 CHART_PATH = Path(__file__).parent.parent / "helm" / "robusta"
 HOLMES_VALUES = Path(__file__).parent / "holmes_values.yaml"
-KEY_FILE = "/etc/robusta/holmes-api-key/token"
+KEY_FILE = "/var/run/secrets/holmes-api-key/token"
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +118,7 @@ def test_runner_mounts_the_holmes_chart_key():
     container = runner_container(deployment)
     assert env_value(container, "HOLMES_API_KEY_FILE") == KEY_FILE
     assert key_mounts(container) == [
-        {"name": "holmes-api-key", "mountPath": "/etc/robusta/holmes-api-key", "readOnly": True}
+        {"name": "holmes-api-key", "mountPath": "/var/run/secrets/holmes-api-key", "readOnly": True}
     ]
     # Same name the Holmes subchart's hook creates; optional so the runner
     # starts even before the Secret exists.

@@ -113,7 +113,7 @@ spec:
           {{- end }}
           {{- if include "robusta.holmesApiKey.enabled" . }}
           - name: HOLMES_API_KEY_FILE
-            value: /etc/robusta/holmes-api-key/token
+            value: /var/run/secrets/holmes-api-key/token
           {{- end }}
           {{- if .Values.scaleAlertsProcessing }}
           - name: ALERTS_WORKERS_POOL
@@ -177,7 +177,7 @@ spec:
             mountPath: /etc/robusta/config
           {{- if include "robusta.holmesApiKey.enabled" . }}
           - name: holmes-api-key
-            mountPath: /etc/robusta/holmes-api-key
+            mountPath: /var/run/secrets/holmes-api-key
             readOnly: true
           {{- end }}
           {{- if .Values.playbooksPersistentVolume }}
