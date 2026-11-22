@@ -1,13 +1,9 @@
 import hashlib
 import hmac
-import logging
 from typing import List, Optional
 from uuid import UUID
 
-import requests
 from pydantic.v1 import BaseModel
-
-from robusta.core.model.env_vars import RELAY_EXTERNAL_ACTIONS_URL
 
 
 class ActionRequestBody(BaseModel):
@@ -43,16 +39,3 @@ def sign_action_request(body: BaseModel, signing_key: str):
     request_hash = hmac.new(signing_key.encode(), format_req, hashlib.sha256).hexdigest()
     return f"v0={request_hash}"
 
-
-class OutgoingActionRequest:
-    @staticmethod
-    def send(body: ActionRequestBody, signing_key: str):
-        signature = sign_action_request(body, signing_key)
-        action_request = ExternalActionRequest(
-            signature=signature,
-            body=body,
-        )
-
-        resp = requests.post(RELAY_EXTERNAL_ACTIONS_URL, json=action_request.dict())
-        if resp.status_code != 200:
-            logging.error(f"Failed to send external action request {resp.status_code} {resp.reason}")
