@@ -783,6 +783,12 @@ runner:
     pod: {}
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
+  # See docs: "Runner Network Policy"
+  networkPolicy:
+    enabled: false
+    strict: false
+    extraIngress: []
+    extraEgress: []
   setKRRSecurityContext: false
   #Enabled custom DNS configuration for runner
   dnsConfig:

@@ -164,6 +164,52 @@ After applying firewall rules, you can sanity-check connectivity from inside the
 
 A non-zero HTTP code (including ``401``/``404``) confirms TCP + TLS reach the host. Connection timeouts indicate the firewall is still blocking.
 
+.. _runner-network-policy:
+
+Runner Network Policy
+----------------------------------------
+
+A Kubernetes NetworkPolicy is a firewall for pods: once a pod is selected by a policy, only the connections the policy allows are let through. Policies are enforced by the cluster's network plugin (Calico, Cilium, GKE Dataplane V2, OpenShift, AWS VPC CNI with policies enabled); without one they have no effect.
+
+The chart can create a NetworkPolicy for the runner in two levels:
+
+.. code-block:: yaml
+
+    runner:
+      networkPolicy:
+        enabled: true
+        strict: false   # true for the strict level
+
+**Basic** (``strict: false``) only restricts inbound traffic to the runner's port (TCP 5000) and leaves outbound traffic open, so it works on any cluster.
+
+**Strict** (``strict: true``) also limits inbound traffic to pods in the Robusta namespace, and outbound traffic to pods in the Robusta namespace (HolmesGPT, bundled Prometheus), DNS (53, 5353) and HTTPS (443, 6443 for the Kubernetes API). Standard NetworkPolicies cannot filter by hostname, so HTTPS is allowed to any address — use the :ref:`firewall-allowlist` for per-host filtering.
+
+With the strict level, allow anything outside the Robusta namespace with ``extraIngress`` and ``extraEgress`` (standard NetworkPolicy rules). For example, an Alertmanager in the ``monitoring`` namespace sending alerts and a Prometheus there being queried:
+
+.. code-block:: yaml
+
+    runner:
+      networkPolicy:
+        enabled: true
+        strict: true
+        extraIngress:
+          - from:
+              - namespaceSelector:
+                  matchLabels:
+                    kubernetes.io/metadata.name: monitoring
+            ports:
+              - port: 5000
+        extraEgress:
+          - to:
+              - namespaceSelector:
+                  matchLabels:
+                    kubernetes.io/metadata.name: monitoring
+            ports:
+              - port: 9090
+              - port: 9093
+
+Other common ``extraEgress`` additions are port 22 for git playbook repositories over SSH and port 80 for plain HTTP sinks.
+
 Copying Images to a Private Image Registry
 ------------------------------------------
 

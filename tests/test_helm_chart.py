@@ -217,3 +217,24 @@ def test_override_cluster_roles_still_replaces_rules():
     )
     cluster_role = get_doc(docs, "ClusterRole", "runner-cluster-role")
     assert cluster_role["rules"] == [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}]
+
+
+NETWORK_POLICY_ARGS = ["-s", "templates/runner-networkpolicy.yaml", "--set", "runner.networkPolicy.enabled=true"]
+
+
+def test_network_policy_disabled_by_default():
+    assert get_doc(render_chart(), "NetworkPolicy") is None
+
+
+def test_basic_network_policy_restricts_only_ingress_port():
+    policy = get_doc(render_chart(NETWORK_POLICY_ARGS), "NetworkPolicy")
+    assert policy["spec"]["policyTypes"] == ["Ingress"]
+    assert policy["spec"]["ingress"] == [{"ports": [{"port": 5000, "protocol": "TCP"}]}]
+
+
+def test_strict_network_policy_restricts_egress():
+    policy = get_doc(render_chart(NETWORK_POLICY_ARGS + ["--set", "runner.networkPolicy.strict=true"]), "NetworkPolicy")
+    egress_ports = {rule["port"] for rule in policy["spec"]["egress"][1]["ports"]}
+    assert policy["spec"]["policyTypes"] == ["Ingress", "Egress"]
+    assert policy["spec"]["ingress"][0]["from"] == [{"podSelector": {}}]
+    assert egress_ports == {53, 5353, 443, 6443}
