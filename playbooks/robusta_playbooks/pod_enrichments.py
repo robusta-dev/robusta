@@ -87,7 +87,7 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
     pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")
 
 
-@action
+@action(local_only=True)
 def pod_dmesg_enricher(pod_event: PodEvent, params: PodRunningParams):
     """
     Gets the dmesg from a node

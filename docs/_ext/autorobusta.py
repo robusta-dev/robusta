@@ -255,10 +255,16 @@ class RobustaActionDirective(SphinxDirective):
         indented_triggers = "\n".join(" " * 24 + line for line in triggers)
 
         reference_label = self.options.get("reference-label", action_definition.action_name)
-        manual_trigger_only = "manual-trigger-only" in self.options
+        manual_trigger_only = "manual-trigger-only" in self.options and not action_definition.local_only
 
         indented_cli_trigger_example = ""
-        if cli_trigger:
+        if action_definition.local_only:
+            indented_cli_trigger_example = """\
+
+                        This action runs commands in your cluster, so it runs only from playbooks defined in your Robusta configuration. It cannot be triggered manually, from Slack buttons or from the Robusta UI.
+
+            """
+        elif cli_trigger:
             indented_cli_trigger_example = f"""\
 
                         This action can be :ref:`manually triggered <Manual Triggers>` using the Robusta CLI:

@@ -118,7 +118,7 @@ def node_status_enricher(event: NodeEvent):
     event.add_enrichment([get_node_status_table_block(node)])
 
 
-@action
+@action(local_only=True)
 def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     """
     Gets the dmesg from a node

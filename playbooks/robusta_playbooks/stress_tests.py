@@ -21,7 +21,7 @@ class StressTestParams(ActionParams):
     url: str
 
 
-@action
+@action(local_only=True)
 def http_stress_test(event: ExecutionBaseEvent, action_params: StressTestParams):
     """
     Run an http stress test and send the results

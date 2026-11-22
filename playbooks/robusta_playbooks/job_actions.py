@@ -62,7 +62,7 @@ class JobParams(ActionParams):
     env: Optional[List[EnvVar]] = None
 
 
-@action
+@action(local_only=True)
 def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
     """
     Create a kubernetes job with the specified parameters

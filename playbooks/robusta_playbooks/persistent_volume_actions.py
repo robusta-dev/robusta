@@ -22,7 +22,7 @@ from robusta.api import (
 )
 
 
-@action
+@action(local_only=True)
 def volume_analysis(event: PersistentVolumeEvent):
     """
     This action shows you the files present on your persistent volume

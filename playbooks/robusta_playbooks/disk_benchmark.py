@@ -46,7 +46,7 @@ def format_float_per2(f_param):
     return "{:.2f}".format(f_param)
 
 
-@action
+@action(local_only=True)
 def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams):
     """
     Run disk benchmark in your cluster.

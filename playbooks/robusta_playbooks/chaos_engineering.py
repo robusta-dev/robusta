@@ -4,7 +4,7 @@ import time
 from robusta.api import ExecutionBaseEvent, RobustaDeployment, action
 
 
-@action
+@action(local_only=True)
 def generate_high_cpu(event: ExecutionBaseEvent):
     """
     Create a pod with high CPU on the cluster for 60 seconds.

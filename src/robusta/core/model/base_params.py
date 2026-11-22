@@ -308,6 +308,8 @@ CONFIG_ONLY_PARAMS = frozenset(
         "krr_args",
         "popeye_args",
         "args",
+        # makes pod_oom_killer_enricher start a privileged pod on the node
+        "dmesg_log",
     }
 )
 

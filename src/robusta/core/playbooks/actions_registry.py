@@ -13,11 +13,15 @@ class NotAnActionException(Exception):
 
 
 @doublewrap
-def action(func: Callable):
+def action(func: Callable, local_only: bool = False):
     """
     Decorator to mark functions as playbook actions
+
+    A local_only action runs a command in a pod or on a node. It runs only from playbooks defined in the
+    runner's own configuration, never from an action request the runner receives.
     """
     setattr(func, "_action_name", func.__name__)
+    setattr(func, "_local_only", local_only)
     return func
 
 
@@ -31,6 +35,7 @@ class Action:
 
         self.action_name = func.__name__
         self.func = func
+        self.local_only = getattr(func, "_local_only", False)
         self.event_type = self.__get_action_event_type(func)
         self.params_type = self.__get_action_params_type(func)
         self.from_params_func = None

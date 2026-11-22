@@ -29,7 +29,7 @@ class KubectlParams(PodRunningParams):
     timeout: int = 3600
 
 
-@action
+@action(local_only=True)
 def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
     """
     Runs a custom kubectl command inside a Kubernetes pod using a Job.

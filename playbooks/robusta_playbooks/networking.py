@@ -9,7 +9,7 @@ class PingParams(ActionParams):
     hostname: str
 
 
-@action
+@action(local_only=True)
 def incluster_ping(event: ExecutionBaseEvent, action_params: PingParams):
     """
     Check network connectivity in your cluster using ping.

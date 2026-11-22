@@ -57,7 +57,7 @@ class StartProfilingParams(PodRunningParams):
     include_idle: bool = False
 
 
-@action
+@action(local_only=True)
 def python_profiler(event: PodEvent, action_params: StartProfilingParams):
     """
     Attach a python profiler to a running pod, and run a profiling session for the specified duration.
@@ -118,7 +118,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         debugger.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
 
-@action
+@action(local_only=True)
 def pod_ps(event: PodEvent, params: PodRunningParams):
     """
     Fetch the list of running processes in a pod.
@@ -177,7 +177,7 @@ class PythonMemorySnapshot(BaseModel):
     overhead: int
 
 
-@action
+@action(local_only=True)
 def python_memory(event: PodEvent, params: MemoryTraceParams):
     """
     Monitor a Python process for X seconds and show memory that was allocated and not freed.
@@ -296,7 +296,7 @@ def get_debugger_warnings(data):
     return message
 
 
-@action
+@action(local_only=True)
 def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     """
     Prints a stack track of a python process and child threads
@@ -385,7 +385,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     event.add_finding(finding)
 
 
-@action
+@action(local_only=True)
 def python_process_inspector(event: PodEvent, params: DebuggerParams):
     """
 
@@ -437,7 +437,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     event.add_finding(finding)
 
 
-@action
+@action(local_only=True)
 def python_debugger(event: PodEvent, params: DebuggerParams):
     """
     Attach a python debugger to a running pod. No need to modify the application's code or restart it.

@@ -24,7 +24,7 @@ class DiskAnalyzerParams(PodRunningParams):
     show_containers: bool = False
 
 
-@action
+@action(local_only=True)
 def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     """
     Provides relevant disk information for troubleshooting disk issues.

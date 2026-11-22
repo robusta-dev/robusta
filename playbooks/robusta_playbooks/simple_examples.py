@@ -3,7 +3,7 @@ import logging
 from robusta.api import ActionParams, ExecutionBaseEvent, PodEvent, RobustaPod, action
 
 
-@action
+@action(local_only=True)
 def test_pod_orm(event: PodEvent):
     logging.info("running test_pod_orm")
     pod = event.get_pod()

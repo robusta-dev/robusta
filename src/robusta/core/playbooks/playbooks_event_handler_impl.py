@@ -155,6 +155,12 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
 
+        if action_def.local_only:
+            return self.__error_resp(
+                f"Action {action_name} runs only from playbooks in the runner configuration",
+                ErrorCodes.LOCAL_ONLY_ACTION.value,
+            )
+
         if not action_def.from_params_func:
             return self.__error_resp(
                 f"Action {action_name} cannot run using external event", ErrorCodes.NOT_EXTERNAL_ACTION.value
@@ -378,6 +384,12 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
+
+        if action_def.local_only:
+            return self.__error_resp(
+                f"Action {action_name} runs only from playbooks in the runner configuration",
+                ErrorCodes.LOCAL_ONLY_ACTION.value,
+            )
 
         if not action_def.from_params_func:
             return self.__error_resp(

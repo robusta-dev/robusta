@@ -29,7 +29,7 @@ class JavaParams(ProcessParams):
     jtk_image: str = None  # type: ignore
 
 
-@action
+@action(local_only=True)
 def java_process_inspector(event: PodEvent, params: JavaParams):
     """
     Displays all java-toolkit debugging options for every java process
@@ -70,7 +70,7 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
     event.add_finding(finding)
 
 
-@action
+@action(local_only=True)
 def pod_jmap_pid(event: PodEvent, params: JavaParams):
     """
     Runs jmap on a specific pid in your pod
@@ -80,7 +80,7 @@ def pod_jmap_pid(event: PodEvent, params: JavaParams):
     run_jdk_command_on_pid(event, params, jmap_cmd, aggregation_key, pod_jmap_pid)
 
 
-@action
+@action(local_only=True)
 def pod_jstack_pid(event: PodEvent, params: JavaParams):
     """
     Runs jstack on a specific pid in your pod
