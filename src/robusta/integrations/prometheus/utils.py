@@ -226,6 +226,32 @@ class AlertManagerDiscovery(ServiceDiscovery):
 class HolmesDiscovery(ServiceDiscovery):
     MODEL_NAME_URL = "/api/model"
 
+    @staticmethod
+    def auth_headers(extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """Headers for a request to the Holmes API, with its API key when the runner has one.
+
+        Holmes requires an API key on every endpoint except its health probes.
+        The Robusta chart mounts the Holmes chart's generated key into the
+        runner and sets HOLMES_API_KEY_FILE; the file is re-read on every call,
+        so a rotated key is picked up without a restart. HOLMES_API_KEY (inline)
+        takes precedence. With neither, no key is sent: an older Holmes that
+        does not require one keeps working.
+        """
+        headers = dict(extra or {})
+        key = os.environ.get("HOLMES_API_KEY", "").strip()
+        key_file = os.environ.get("HOLMES_API_KEY_FILE", "")
+        if not key and key_file:
+            try:
+                with open(key_file) as f:
+                    key = f.read().strip()
+            except OSError:
+                # Optional Secret volume not filled in yet: send no key and let
+                # Holmes answer 401, which the caller reports.
+                key = ""
+        if key:
+            headers["X-API-Key"] = key
+        return headers
+
     @classmethod
     def find_holmes_url(cls, holmes_url: Optional[str] = None) -> Optional[str]:
         if holmes_url:

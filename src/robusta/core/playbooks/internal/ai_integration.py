@@ -119,7 +119,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
                 f"{holmes_url}/api/stream/investigate",
                 data=holmes_req.json(),
                 stream=True,
-                headers={"Connection": "keep-alive"},
+                headers=HolmesDiscovery.auth_headers({"Connection": "keep-alive"}),
             ) as resp:
                 resp.raise_for_status()
                 for line in resp.iter_content(
@@ -131,7 +131,9 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
 
         else:
             result = requests.post(
-                f"{holmes_url}/api/investigate", data=holmes_req.json()
+                f"{holmes_url}/api/investigate",
+                data=holmes_req.json(),
+                headers=HolmesDiscovery.auth_headers(),
             )
             result.raise_for_status()
 
@@ -216,7 +218,11 @@ def holmes_conversation(event: ExecutionBaseEvent, params: HolmesConversationPar
             include_tool_calls=True,
             include_tool_call_results=True,
         )
-        result = requests.post(f"{holmes_url}/api/conversation", data=holmes_req.json())
+        result = requests.post(
+            f"{holmes_url}/api/conversation",
+            data=holmes_req.json(),
+            headers=HolmesDiscovery.auth_headers(),
+        )
         result.raise_for_status()
         holmes_result = HolmesConversationResult(**json.loads(result.text))
 
@@ -270,7 +276,11 @@ def holmes_issue_chat(event: ExecutionBaseEvent, params: HolmesIssueChatParams):
             investigation_result=params.context.investigation_result,
             issue_type=params.context.issue_type,
         )
-        result = requests.post(f"{holmes_url}/api/issue_chat", data=holmes_req.json())
+        result = requests.post(
+            f"{holmes_url}/api/issue_chat",
+            data=holmes_req.json(),
+            headers=HolmesDiscovery.auth_headers(),
+        )
         result.raise_for_status()
 
         holmes_result = HolmesChatResult(**json.loads(result.text))
@@ -332,7 +342,7 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                     url,
                     data=holmes_req.json(),
                     stream=True,
-                    headers={"Connection": "keep-alive"},
+                    headers=HolmesDiscovery.auth_headers({"Connection": "keep-alive"}),
                 ) as resp:
                     resp.raise_for_status()
                     for line in resp.iter_content(
@@ -342,7 +352,9 @@ def holmes_chat(event: ExecutionBaseEvent, params: HolmesChatParams):
                             event.ws(data=line)
                 return
 
-        result = requests.post(url, data=holmes_req.json())
+        result = requests.post(
+            url, data=holmes_req.json(), headers=HolmesDiscovery.auth_headers()
+        )
         result.raise_for_status()
         holmes_result = HolmesChatResult(**json.loads(result.text))
         holmes_result.files = []
@@ -412,6 +424,7 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
         result = requests.post(
             f"{holmes_url}/api/oauth/callback",
             json=params.dict(),
+            headers=HolmesDiscovery.auth_headers(),
             timeout=60,
         )
         result.raise_for_status()
@@ -462,7 +475,7 @@ def stream_and_render_graphs(url, holmes_req, event):
         url,
         data=holmes_req.json(),
         stream=True,
-        headers={"Connection": "keep-alive"},
+        headers=HolmesDiscovery.auth_headers({"Connection": "keep-alive"}),
     ) as resp:
         resp.raise_for_status()
         for stream_event in resp.iter_content(
