@@ -17,7 +17,8 @@ it into a Secret (its `apiAuth` values, default on) and Holmes requires it on
 every endpoint. The runner mounts the same Secret as an optional file, so it
 starts even before the Secret exists and picks the key up once it does.
 Mirrors holmes.apiAuth.enabled / holmes.apiAuth.secretName in the Holmes
-chart; the parent cannot see the subchart's defaults, hence the dig defaults.
+chart. The dig defaults match the Holmes chart's own defaults, so the runner
+is wired the same way while the vendored subchart predates `apiAuth`.
 */}}
 {{- define "robusta.holmesApiKey.enabled" -}}
 {{- $apiAuth := dig "apiAuth" dict (.Values.holmes | default dict) -}}

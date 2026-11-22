@@ -413,7 +413,9 @@ def holmes_oauth(event: ExecutionBaseEvent, params: HolmesOAuthParams):
     in Holmes. Params use extra=allow so Holmes can evolve the contract
     (e.g. add new fields) without requiring runner changes.
     """
-    holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
+    # HolmesOAuthParams has no holmes_url field: it is set only when the
+    # runner's global config has one (merged in as an extra field).
+    holmes_url = HolmesDiscovery.find_holmes_url(getattr(params, "holmes_url", None))
     if not holmes_url:
         raise ActionException(
             ErrorCodes.HOLMES_DISCOVERY_FAILED,

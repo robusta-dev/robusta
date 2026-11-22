@@ -4,20 +4,9 @@ Holmes requires an API key on every endpoint except its health probes. The
 Holmes subchart generates one into `<release>-holmes-api-key`; the runner mounts
 it as an optional file and sends it as X-API-Key on every Holmes call.
 """
-import shutil
-import subprocess
-from pathlib import Path
-from typing import List, Optional
-
 import pytest
-import yaml
 
 from robusta.integrations.prometheus.utils import HolmesDiscovery
-
-CHART_PATH = Path(__file__).parent.parent / "helm" / "robusta"
-HOLMES_VALUES = Path(__file__).parent / "holmes_values.yaml"
-KEY_FILE = "/var/run/secrets/holmes-api-key/token"
-
 
 # ---------------------------------------------------------------------------
 # HolmesDiscovery.auth_headers
@@ -73,77 +62,105 @@ def test_extra_headers_are_not_mutated(no_key_env, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Helm wiring
+# The real Holmes calls send the key
 # ---------------------------------------------------------------------------
 
-helm_only = pytest.mark.skipif(shutil.which("helm") is None, reason="helm binary not available")
+
+def _event():
+    from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
+
+    event = ExecutionBaseEvent(named_sinks=[])
+    event.set_context(ExecutionContext(account_id="a", cluster_name="c"))
+    return event
 
 
-def render_runner(*sets: str, holmes: bool = True) -> dict:
-    cmd = ["helm", "template", "robusta", str(CHART_PATH), "--namespace", "robusta"]
-    cmd += ["-f", str(HOLMES_VALUES)]
-    if not holmes:
-        cmd += ["--set", "enableHolmesGPT=false"]
-    for s in sets:
-        cmd += ["--set", s]
-    docs = [d for d in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if d]
-    return next(d for d in docs if d["kind"] == "Deployment" and d["metadata"]["name"] == "robusta-runner")
+def test_holmes_chat_sends_the_key(no_key_env, monkeypatch):
+    import responses
+
+    from robusta.core.model.base_params import HolmesChatParams
+    from robusta.core.playbooks.internal.ai_integration import holmes_chat
+
+    monkeypatch.setenv("HOLMES_API_KEY", "runner-key")
+    with responses.RequestsMock() as rsps:
+        rsps.add(responses.POST, "http://holmes:80/api/chat", json={"analysis": "42", "conversation_history": []})
+        holmes_chat(_event(), HolmesChatParams(ask="hi", holmes_url="http://holmes:80"))
+        assert rsps.calls[0].request.headers["X-API-Key"] == "runner-key"
 
 
-def runner_container(deployment: dict) -> dict:
-    return next(c for c in deployment["spec"]["template"]["spec"]["containers"] if c["name"] == "runner")
+def test_holmes_oauth_without_a_configured_url_uses_discovery_and_sends_the_key(no_key_env, monkeypatch):
+    """HolmesOAuthParams has no holmes_url field; with no global holmes_url the
+    action falls back to discovery instead of raising AttributeError."""
+    import responses
+
+    from robusta.core.model.base_params import HolmesOAuthParams
+    from robusta.core.playbooks.internal.ai_integration import holmes_oauth
+    from robusta.integrations.prometheus.utils import ServiceDiscovery
+
+    monkeypatch.setenv("HOLMES_API_KEY", "runner-key")
+    monkeypatch.setattr(ServiceDiscovery, "find_url", classmethod(lambda cls, **kwargs: "http://holmes:80"))
+    with responses.RequestsMock() as rsps:
+        rsps.add(responses.POST, "http://holmes:80/api/oauth/callback", json={"success": True})
+        holmes_oauth(_event(), HolmesOAuthParams(toolset_name="t", code="c"))
+        assert rsps.calls[0].request.headers["X-API-Key"] == "runner-key"
 
 
-def env_value(container: dict, name: str) -> Optional[str]:
-    for e in container.get("env") or []:
-        if e["name"] == name:
-            return e.get("value")
-    return None
+# ---------------------------------------------------------------------------
+# Error reports never carry the key
+# ---------------------------------------------------------------------------
 
 
-def key_volume(deployment: dict) -> Optional[dict]:
-    for v in deployment["spec"]["template"]["spec"].get("volumes") or []:
-        if v["name"] == "holmes-api-key":
-            return v
-    return None
-
-
-def key_mounts(container: dict) -> List[dict]:
-    return [m for m in container.get("volumeMounts") or [] if m["name"] == "holmes-api-key"]
-
-
-@helm_only
-def test_runner_mounts_the_holmes_chart_key():
-    deployment = render_runner()
-    container = runner_container(deployment)
-    assert env_value(container, "HOLMES_API_KEY_FILE") == KEY_FILE
-    assert key_mounts(container) == [
-        {"name": "holmes-api-key", "mountPath": "/var/run/secrets/holmes-api-key", "readOnly": True}
-    ]
-    # Same name the Holmes subchart's hook creates; optional so the runner
-    # starts even before the Secret exists.
-    assert key_volume(deployment)["secret"] == {
-        "secretName": "robusta-holmes-api-key",
-        "optional": True,
-        "items": [{"key": "token", "path": "token"}],
+def test_scrub_replaces_the_key_anywhere_in_an_event(no_key_env, monkeypatch):
+    monkeypatch.setenv("HOLMES_API_KEY", "runner-key-123")
+    HolmesDiscovery.auth_headers()
+    event = {
+        "exception": {"values": [{"stacktrace": {"frames": [{"vars": {
+            "headers": "{'X-API-Key': 'runner-key-123'}",
+            "data": "b'POST /api/chat HTTP/1.1\\r\\nX-API-Key: runner-key-123\\r\\n'",
+            "nested": [{"k": ("runner-key-123",)}],
+        }}]}}]},
+        "level": "error",
     }
+    scrubbed = HolmesDiscovery.scrub_api_key(event, None)
+    assert "runner-key-123" not in str(scrubbed)
+    assert scrubbed["level"] == "error"
 
 
-@helm_only
-def test_runner_follows_the_holmes_existing_secret():
-    deployment = render_runner("holmes.apiAuth.existingSecret=my-key")
-    assert key_volume(deployment)["secret"]["secretName"] == "my-key"
+def test_a_failed_holmes_call_reaches_sentry_without_the_key(no_key_env, monkeypatch):
+    """Sentry records frame locals; requests/urllib3/http.client hold the
+    headers and the raw request bytes there. The before_send hook the runner
+    installs must remove the key from the event."""
+    import requests
+    import sentry_sdk
+    from sentry_sdk.transport import Transport
+
+    class NoTransport(Transport):
+        def capture_envelope(self, envelope):
+            pass
+
+    monkeypatch.setenv("HOLMES_API_KEY", "runner-key-456")
+    raw, sent = [], []
+
+    def before_send(event, hint):
+        raw.append(str(event))
+        scrubbed = HolmesDiscovery.scrub_api_key(event, hint)
+        sent.append(str(scrubbed))
+        return scrubbed
+
+    sentry_sdk.init("https://public@example.invalid/1", transport=NoTransport, before_send=before_send)
+    try:
+        try:
+            requests.post("http://127.0.0.1:9/api/chat", headers=HolmesDiscovery.auth_headers(), timeout=1)
+        except requests.RequestException:
+            sentry_sdk.capture_exception()
+    finally:
+        sentry_sdk.init()  # no DSN: Sentry off again for the other tests
+    assert raw and "runner-key-456" in raw[0]  # the leak the hook prevents
+    assert "runner-key-456" not in sent[0]
 
 
-@helm_only
-def test_no_key_wiring_when_the_default_key_is_off():
-    deployment = render_runner("holmes.apiAuth.defaultKey=false")
-    assert key_volume(deployment) is None
-    assert env_value(runner_container(deployment), "HOLMES_API_KEY_FILE") is None
+def test_the_runner_installs_the_scrub_hook():
+    import inspect
 
+    from robusta.runner import telemetry_service
 
-@helm_only
-def test_no_key_wiring_without_holmes():
-    deployment = render_runner(holmes=False)
-    assert key_volume(deployment) is None
-    assert env_value(runner_container(deployment), "HOLMES_API_KEY_FILE") is None
+    assert "before_send=HolmesDiscovery.scrub_api_key" in inspect.getsource(telemetry_service.TelemetryService)

@@ -44,7 +44,7 @@ def test_external_action_request_cannot_set_config_only_params():
     assert playbook_action.action_params == {"timeout": 60}
 
 
-@pytest.mark.parametrize("action_name", ["holmes_chat", "holmes_oauth", "holmes_workload_health"])
+@pytest.mark.parametrize("action_name", ["holmes_chat", "holmes_oauth", "ask_holmes", "holmes_issue_chat"])
 def test_external_holmes_request_cannot_redirect_the_holmes_api_key(action_name):
     """The runner sends its Holmes API key to holmes_url. A request that could
     set it would receive the key, so the URL comes from the runner's config
