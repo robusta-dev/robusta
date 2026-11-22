@@ -38,4 +38,3 @@ def sign_action_request(body: BaseModel, signing_key: str):
         raise Exception("Signing key not available. Cannot sign action request")
     request_hash = hmac.new(signing_key.encode(), format_req, hashlib.sha256).hexdigest()
     return f"v0={request_hash}"
-
