@@ -1,23 +1,25 @@
 #!/bin/bash
 # Build CVE-patched Go binaries for the runner Docker image.
 #
-# kubectl: rebuilt from v1.35.9 source with Go 1.26.9, x/net v0.60.0 and
-#   x/text v0.42.0. The official v1.35.9 binary ships Go 1.26.8 / x/net v0.56.0 /
-#   x/text v0.39.0 (CVE-2026-56857/78663 Critical, CVE-2026-56866/78659/78660/
-#   78667/78669/94439/94440/97031/56851 High). Revert to the official binary once
-#   a release has them; check with:
+# kubectl: rebuilt from v1.35.10 source with Go 1.26.11, x/net v0.62.0 and
+#   x/text v0.43.0. The official v1.35.10 binary (and v1.36.6, v1.37.2) ships
+#   Go 1.26.10 / x/net v0.56.0 / x/text v0.39.0: CVE-2026-97033..97043 (97040
+#   Critical) in Go < 1.26.11, CVE-2026-78661 High in x/net < 0.62.0, and
+#   CVE-2026-56857/78663 Critical, CVE-2026-56866/78659/78660/78667/78669/94439/
+#   94440/97031/56851 High in older x/net/x/text. Revert to the official binary
+#   once a release has them; check with:
 #   go version -m <(curl -sL https://dl.k8s.io/release/<ver>/bin/linux/amd64/kubectl)
 #
-# Prerequisites: Go 1.21+ installed locally (GOTOOLCHAIN auto-downloads Go 1.26.9)
+# Prerequisites: Go 1.21+ installed locally (GOTOOLCHAIN auto-downloads Go 1.26.11)
 # Usage: ./scripts/build_go_binaries.sh
 
 set -euo pipefail
 
-export GOTOOLCHAIN=go1.26.9
+export GOTOOLCHAIN=go1.26.11
 
-KUBECTL_VERSION=v1.35.9
-X_NET_PATCHED_VERSION=v0.60.0
-X_TEXT_PATCHED_VERSION=v0.42.0
+KUBECTL_VERSION=v1.35.10
+X_NET_PATCHED_VERSION=v0.62.0
+X_TEXT_PATCHED_VERSION=v0.43.0
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 OUTDIR="$REPO_ROOT/bin/go-cve-rebuild"
