@@ -182,7 +182,7 @@ The chart can create a NetworkPolicy for the runner in two levels:
 
 **Basic** (``strict: false``) only restricts inbound traffic to the runner's port (TCP 5000) and adds no outbound restrictions, so it does not break outbound connectivity.
 
-**Strict** (``strict: true``) also limits inbound traffic to pods in the Robusta namespace, and outbound traffic to pods in the Robusta namespace, DNS (53, 5353) and HTTPS (443, 6443 for the Kubernetes API). Everything the chart bundles (kubewatch, HolmesGPT, Prometheus, Alertmanager, Grafana) stays allowed in both directions, including when moved with ``namespaceOverride``. Standard NetworkPolicies cannot filter by hostname, so HTTPS is allowed to any address — use the :ref:`firewall-allowlist` for per-host filtering.
+**Strict** (``strict: true``) also limits inbound traffic to pods in the Robusta namespace, and outbound traffic to pods in the Robusta namespace, DNS (53, 5353) and HTTPS (443, 6443 for the Kubernetes API). Everything the chart bundles (kubewatch, HolmesGPT, Prometheus, Alertmanager, Grafana) stays allowed in both directions, including when moved with ``namespaceOverride``. The Robusta platform, relay and data store are reached over HTTPS, so they stay allowed too; a self-hosted platform served over plain HTTP needs its address in ``allowedCidrs``. Standard NetworkPolicies cannot filter by hostname, so HTTPS is allowed to any address — use the :ref:`firewall-allowlist` for per-host filtering.
 
 With the strict level, allow addresses outside the cluster in both directions with ``allowedCidrs``: the runner accepts alerts from them on port 5000 and can reach them on any port. For example, an external Alertmanager and Prometheus:
 
