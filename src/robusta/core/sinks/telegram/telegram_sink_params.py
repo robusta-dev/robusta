@@ -8,7 +8,7 @@ class TelegramSinkParams(SinkBaseParams):
     bot_token: str
     chat_id: Union[int, str]
     thread_id: int = None
-    send_files: bool = True  # Change to False, to omit file attachments
+    send_files: bool = True  # Images and FileBlock files only; tables are always inline
 
     @classmethod
     def _get_sink_type(cls):
