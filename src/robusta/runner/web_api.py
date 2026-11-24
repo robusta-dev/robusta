@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 
 import requests
 
-from robusta.core.model.env_vars import PORT
+from robusta.core.model.env_vars import PORT, RUNNER_API_AUTH_HEADERS
 from robusta.core.model.helm_release import HelmRelease
 
 
@@ -17,7 +17,7 @@ class WebApi:
 
         for _ in range(retries):
             try:
-                response = requests.post(url, json=data)
+                response = requests.post(url, json=data, headers=RUNNER_API_AUTH_HEADERS)
                 status_code = response.status_code
                 if status_code == 200:
                     return response

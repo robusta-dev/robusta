@@ -15,6 +15,9 @@ Configure your AlertManager to send alerts to Robusta:
               webhook_configs:
                 - url: 'http://<helm-release-name>-runner.<namespace>.svc.cluster.local/api/alerts'
                   send_resolved: true # (3)
+                  http_config:
+                    authorization:
+                      credentials: '<account_id> <signing_key>' # (4)
             - name: 'default-receiver'
 
           route: # (1)
@@ -33,6 +36,7 @@ Configure your AlertManager to send alerts to Robusta:
         1. Put Robusta's route as the first route, to guarantee it receives alerts. If you can't do so, you must guarantee all previous routes set ``continue: true``.
         2. Keep sending alerts to receivers defined after Robusta.
         3. Important, so Robusta knows when alerts are resolved.
+        4. The runner's token, see :doc:`/setup-robusta/runner-api-authentication`.
 
     .. tab-item:: Other Prometheus Installations
 
@@ -45,6 +49,9 @@ Configure your AlertManager to send alerts to Robusta:
               webhook_configs:
                 - url: 'http://<helm-release-name>-runner.<namespace>.svc.cluster.local/api/alerts'
                   send_resolved: true # (3)
+                  http_config:
+                    authorization:
+                      credentials: '<account_id> <signing_key>' # (4)
 
           route: # (1)
             routes:
@@ -61,3 +68,4 @@ Configure your AlertManager to send alerts to Robusta:
         1. Put Robusta's route as the first route, to guarantee it receives alerts. If you can't do so, you must guarantee all previous routes set ``continue: true``.
         2. Keep sending alerts to receivers defined after Robusta.
         3. Important, so Robusta knows when alerts are resolved.
+        4. The runner's token, see :doc:`/setup-robusta/runner-api-authentication`.

@@ -733,6 +733,10 @@ runner:
   certificate: "" # base64 encoded
   createServiceAccount: true
   customServiceAccount: "" # to override the runner service account
+  # the runner API only accepts requests with "Authorization: Bearer <token>"
+  apiAuth:
+    enabled: true
+    token: "" # defaults to "<globalConfig.account_id> <globalConfig.signing_key>"
   resources:
     requests:
       cpu: 250m
@@ -825,7 +829,12 @@ kube-prometheus-stack:
           webhook_configs:
             - url: 'http://{{ .Release.Name }}-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/alerts'
               send_resolved: true
+              http_config:
+                authorization:
+                  credentials_file: /etc/alertmanager/secrets/robusta-runner-api-token/token
     alertmanagerSpec:
+      secrets:
+        - robusta-runner-api-token
       resources:
         requests:
           cpu: 50m

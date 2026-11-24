@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 import requests
 
 from robusta.api import PORT, ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
+from robusta.core.model.env_vars import RUNNER_API_AUTH_HEADERS
 from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.silence_utils import AlertManagerParams, gen_alertmanager_headers, get_alertmanager_url
 
@@ -188,7 +189,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
             ],
         }
     )
-    headers = {"Content-type": "application/json"}
+    headers = {"Content-type": "application/json", **RUNNER_API_AUTH_HEADERS}
     return requests.post(
         f"http://localhost:{PORT}/api/alerts",
         data=prometheus_event.json(),
@@ -278,7 +279,7 @@ def handle_alertmanager_event(event: ExecutionBaseEvent, alert_manager_event: Al
     Handle alert manager event, as a Robusta action.
     """
     prometheus_event = AlertManagerEvent(**alert_manager_event.event)
-    headers = {"Content-type": "application/json"}
+    headers = {"Content-type": "application/json", **RUNNER_API_AUTH_HEADERS}
     return requests.post(
         f"http://localhost:{PORT}/api/alerts",
         data=prometheus_event.json(),

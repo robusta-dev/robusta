@@ -19,6 +19,9 @@ Add the following to your Victoria Metrics Alertmanager configuration (e.g., Hel
       webhook_configs:
           - url: 'http://<ROBUSTA-HELM-RELEASE-NAME>-runner.<NAMESPACE>.svc.cluster.local/api/alerts'
           send_resolved: true # (3)
+          http_config:
+            authorization:
+              credentials: '<account_id> <signing_key>' # (4)
 
     route: # (1)
       routes:
@@ -35,6 +38,7 @@ Add the following to your Victoria Metrics Alertmanager configuration (e.g., Hel
     1. Put Robusta's route as the first route, to guarantee it receives alerts. If you can't do so, you must guarantee all previous routes has ``continue: true`` set.
     2. Keep sending alerts to receivers defined after Robusta.
     3. Important, so Robusta knows when alerts are resolved.
+    4. The runner's token, see :doc:`/setup-robusta/runner-api-authentication`.
 
 
 .. include:: ./_testing_integration.rst

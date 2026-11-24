@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import logging
 import threading
 from datetime import datetime
@@ -11,7 +12,8 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.clients.robusta_client import fetch_runner_info
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
-    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR, ENABLE_TELEMETRY
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR, ENABLE_TELEMETRY, \
+    RUNNER_API_AUTH_HEADERS, RUNNER_API_TOKEN
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -27,6 +29,24 @@ app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
 
 # the only action the trigger endpoint runs
 SCAN_RESULT_ACTION = "process_scan"
+
+# kubewatch cannot send a token, scan results carry their own
+UNAUTHENTICATED_PATHS = {"/healthz", "/api/handle", "/api/trigger"}
+API_AUTH_DOCS_URL = "https://docs.robusta.dev/master/setup-robusta/runner-api-authentication.html"
+
+
+@app.before_request
+def reject_unauthenticated_requests():
+    if not RUNNER_API_TOKEN or request.path in UNAUTHENTICATED_PATHS:
+        return None
+    authorization = request.headers.get("Authorization", "")
+    if hmac.compare_digest(authorization.encode(), RUNNER_API_AUTH_HEADERS["Authorization"].encode()):
+        return None
+    logging.warning(
+        f"Rejected unauthenticated request to {request.path} from {request.remote_addr}. "
+        f"If this request was intended, see {API_AUTH_DOCS_URL} to set its token or disable authentication."
+    )
+    return abort(401)
 
 
 class Web:

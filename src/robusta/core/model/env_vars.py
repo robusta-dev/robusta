@@ -102,6 +102,8 @@ SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
 
 PORT = int(os.environ.get("PORT", 5000))  # PORT
 RUNNER_BIND_ADDR = os.environ.get("RUNNER_BIND_ADDR", "0.0.0.0")  # Listen address for runner
+RUNNER_API_TOKEN = os.environ.get("RUNNER_API_TOKEN", "")
+RUNNER_API_AUTH_HEADERS = {"Authorization": f"Bearer {RUNNER_API_TOKEN}"}
 
 # additional certificate to verify, base64 encoded.
 ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")

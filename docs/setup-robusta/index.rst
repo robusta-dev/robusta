@@ -19,6 +19,7 @@
    tuning-performance
    json-logging
    configuration-secrets
+   runner-api-authentication
    openshift
    read-only-service-account
    rbac-namespace-scoping
