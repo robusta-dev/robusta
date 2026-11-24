@@ -22,7 +22,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       annotations:
-        checksum/api-token: {{ include (print $.Template.BasePath "/runner-api-token-secret.yaml") . | sha256sum }}
+        checksum/api-token: {{ include (print $.Template.BasePath "/api-token-secret.yaml") . | sha256sum }}
         {{- if .Values.runner.annotations}} {{ toYaml .Values.runner.annotations | nindent 8 }}
         {{- end }}
         {{- if .Values.globalConfig.custom_annotations }} {{ toYaml .Values.globalConfig.custom_annotations | nindent 8 }}
@@ -118,7 +118,7 @@ spec:
           - name: RUNNER_API_TOKEN
             valueFrom:
               secretKeyRef:
-                name: robusta-runner-api-token
+                name: robusta-api-token
                 key: token
           {{- end }}
           - name: RUNNER_VERSION

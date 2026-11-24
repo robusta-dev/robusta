@@ -831,10 +831,10 @@ kube-prometheus-stack:
               send_resolved: true
               http_config:
                 authorization:
-                  credentials_file: /etc/alertmanager/secrets/robusta-runner-api-token/token
+                  credentials_file: /etc/alertmanager/secrets/robusta-api-token/token
     alertmanagerSpec:
       secrets:
-        - robusta-runner-api-token
+        - robusta-api-token
       resources:
         requests:
           cpu: 50m

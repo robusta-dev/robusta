@@ -55,7 +55,7 @@ required when ``account_id`` or ``signing_key`` are
       apiAuth:
         token: "<your token>"
 
-The token is stored in the ``robusta-runner-api-token`` Secret. If you override
+The token is stored in the ``robusta-api-token`` Secret. If you override
 ``kube-prometheus-stack.alertmanager.alertmanagerSpec.secrets`` or the ``robusta``
 receiver, keep that Secret and the receiver's ``http_config``.
 
