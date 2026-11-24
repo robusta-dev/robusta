@@ -223,3 +223,20 @@ https://18ac614b2d7fbbb3c7a7789b946506e1@o4510692373299200.ingest.de.sentry.io/4
 {{- else -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Peers the strict runner NetworkPolicy allows: the release namespace, bundled charts moved by namespaceOverride, and allowedCidrs.
+*/}}
+{{- define "robusta.runnerNetworkPolicyPeers" -}}
+{{- $prometheusStack := index .Values "kube-prometheus-stack" -}}
+- podSelector: {}
+{{- range list $prometheusStack.namespaceOverride (dig "alertmanager" "namespaceOverride" "" $prometheusStack) (dig "grafana" "namespaceOverride" "" $prometheusStack) | compact | uniq }}
+- namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: {{ . }}
+{{- end }}
+{{- range .Values.runner.networkPolicy.allowedCidrs }}
+- ipBlock:
+    cidr: {{ . }}
+{{- end }}
+{{- end -}}

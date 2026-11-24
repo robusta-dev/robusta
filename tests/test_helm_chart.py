@@ -248,3 +248,11 @@ def test_strict_network_policy_allows_cidrs_both_ways():
     cidr_peer = {"ipBlock": {"cidr": "10.0.0.5/32"}}
     assert cidr_peer in spec["ingress"][0]["from"]
     assert cidr_peer in spec["egress"][0]["to"]
+
+
+def test_strict_network_policy_allows_bundled_charts_in_other_namespaces():
+    override_args = ["--set", "runner.networkPolicy.strict=true", "--set", "kube-prometheus-stack.namespaceOverride=monitoring"]
+    spec = get_doc(render_chart(NETWORK_POLICY_ARGS + override_args), "NetworkPolicy")["spec"]
+    bundled_peers = [{"podSelector": {}}, {"namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "monitoring"}}}]
+    assert spec["ingress"][0]["from"] == bundled_peers
+    assert spec["egress"][0]["to"] == bundled_peers
