@@ -27,10 +27,12 @@ class DeleteAlertPodParams(ActionParams):
     """
     :var rate_limit: Optional rate limit (seconds). If set, the action will only run once per period for the same alert label value.
     :var rate_limit_field: Alert label name whose value is used to build the rate limit key.
+    :var grace_period_seconds: Optional grace period (seconds) for the pod deletion. Zero means delete immediately. If not set, the pod's default grace period is used.
     """
 
     rate_limit: Optional[int] = None
     rate_limit_field: Optional[str] = None
+    grace_period_seconds: Optional[int] = None
 
 
 @action
@@ -62,4 +64,4 @@ def delete_alert_pod(event: PrometheusKubernetesAlert, params: DeleteAlertPodPar
                 logging.info(f"delete_alert_pod rate limited for {key}; skipping deletion")
                 return
 
-    pod.delete()
+    pod.delete(grace_period_seconds=params.grace_period_seconds)
