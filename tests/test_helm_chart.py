@@ -223,7 +223,9 @@ NETWORK_POLICY_ARGS = ["-s", "templates/runner-networkpolicy.yaml", "--set", "ru
 
 
 def test_network_policy_disabled_by_default():
-    assert get_doc(render_chart(), "NetworkPolicy") is None
+    cmd = ["helm", "template", str(CHART_PATH), "--set", "clusterName=test,sinksConfig[0].file_sink.name=test"]
+    full_chart = subprocess.check_output(cmd, text=True)
+    assert "kind: NetworkPolicy" not in full_chart
 
 
 def test_basic_network_policy_restricts_only_ingress_port():

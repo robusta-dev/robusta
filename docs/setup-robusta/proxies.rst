@@ -169,7 +169,7 @@ A non-zero HTTP code (including ``401``/``404``) confirms TCP + TLS reach the ho
 Runner Network Policy
 ----------------------------------------
 
-A Kubernetes NetworkPolicy is a firewall for pods: once a pod is selected by a policy, only the connections the policy allows are let through. Policies are enforced by the cluster's network plugin (Calico, Cilium, GKE Dataplane V2, OpenShift, AWS VPC CNI with policies enabled); without one they have no effect.
+A Kubernetes NetworkPolicy is a firewall for pods: once a pod is selected by a policy, only the connections the policy allows are let through. Policies are enforced by the cluster's network plugin (Calico, Cilium, GKE Dataplane V2, OpenShift, AWS VPC CNI with policies enabled); without one they have no effect. Policies are additive: a pod can reach whatever any policy selecting it allows, so this policy neither overrides nor loosens other policies that select the runner.
 
 The chart can create a NetworkPolicy for the runner in two levels:
 
@@ -180,7 +180,7 @@ The chart can create a NetworkPolicy for the runner in two levels:
         enabled: true
         strict: false   # true for the strict level
 
-**Basic** (``strict: false``) only restricts inbound traffic to the runner's port (TCP 5000) and leaves outbound traffic open, so it works on any cluster.
+**Basic** (``strict: false``) only restricts inbound traffic to the runner's port (TCP 5000) and adds no outbound restrictions, so it does not break outbound connectivity.
 
 **Strict** (``strict: true``) also limits inbound traffic to pods in the Robusta namespace, and outbound traffic to pods in the Robusta namespace (HolmesGPT, bundled Prometheus), DNS (53, 5353) and HTTPS (443, 6443 for the Kubernetes API). Standard NetworkPolicies cannot filter by hostname, so HTTPS is allowed to any address — use the :ref:`firewall-allowlist` for per-host filtering.
 
