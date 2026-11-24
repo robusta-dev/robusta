@@ -64,9 +64,14 @@ def key_mounts(container: dict) -> List[dict]:
     return [m for m in container.get("volumeMounts") or [] if m["name"] == "holmes-api-key"]
 
 
+# A Holmes subchart with API auth has `apiAuth.defaultKey: true` in its
+# defaults; setting it here stands in for that until the subchart is bumped.
+WITH_API_AUTH = "holmes.apiAuth.defaultKey=true"
+
+
 @helm_only
 def test_runner_mounts_the_holmes_chart_key():
-    deployment = render_runner()
+    deployment = render_runner(WITH_API_AUTH)
     container = runner_container(deployment)
     assert env_value(container, "HOLMES_API_KEY_FILE") == KEY_FILE
     assert key_mounts(container) == [
@@ -102,19 +107,22 @@ def test_no_key_wiring_without_holmes():
 
 
 
-
 @helm_only
-def test_runner_reads_the_secret_the_holmes_subchart_creates():
-    """Catches drift on a Holmes chart bump: the runner's Secret name must be
-    the one the subchart's bootstrap hook writes. Skipped while the vendored
-    subchart has no hook (before it ships apiAuth)."""
+def test_runner_key_wiring_matches_the_vendored_holmes_subchart():
+    """With the chart's own values, the runner mounts a key exactly when the
+    Holmes subchart creates one, and the same Secret. Before the subchart
+    ships API auth: no hook, no mount (that Holmes needs no key). After a
+    bump: the runner reads the Secret the subchart's bootstrap hook writes,
+    which catches a name drift between the two charts."""
     docs = render_docs()
     hook = next(
         (d for d in docs if d["kind"] == "Job" and d["metadata"]["name"].endswith("-holmes-api-key-bootstrap")),
         None,
     )
-    if hook is None:
-        pytest.skip("vendored Holmes subchart does not create the API key Secret yet")
-    env = {e["name"]: e.get("value") for e in hook["spec"]["template"]["spec"]["containers"][0]["env"]}
     runner = next(d for d in docs if d["kind"] == "Deployment" and d["metadata"]["name"] == "robusta-runner")
+    if hook is None:
+        assert key_volume(runner) is None
+        assert env_value(runner_container(runner), "HOLMES_API_KEY_FILE") is None
+        return
+    env = {e["name"]: e.get("value") for e in hook["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert key_volume(runner)["secret"]["secretName"] == env["SECRET_NAME"]
