@@ -39,7 +39,14 @@ Settings
 * ``stream_name`` : Name of the channel to send the message to
 * ``topic_name`` : Name of the topic of the stream to send messages to
 * ``topic_override`` : Dynamic topic override, same as the channel_override in the slack sink
+* ``topic_autoresolve`` : [Optional - default: ``false``] When enabled, Prometheus alerts use the alert
+  title as the Zulip topic. When a resolved alert is sent, Robusta looks for an existing topic whose name
+  contains that alert title and resolves it by adding Zulip's resolved-topic prefix. This requires the Zulip
+  bot to have permission to resolve or move topics.
 * ``log_preview_char_limit`` : [Optional - default: ``500``] The amount of log characters to append to the alert message (zulip doesnt have a builtin text file preview). If set to ``0`` a text file will be sent
+
+When ``topic_autoresolve`` is enabled, ``topic_name`` and ``topic_override`` are not used for Prometheus
+findings. They are still used for non-Prometheus notifications.
 
 Configuring the Zulip sink
 ---------------------------
@@ -56,6 +63,7 @@ Configuring the Zulip sink
             bot_api_key: very_secret_key
             stream_name: Monitoring
             topic_name: Robusta
+            topic_autoresolve: false
 
 Save the file and run
 
