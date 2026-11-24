@@ -240,3 +240,11 @@ def test_strict_network_policy_restricts_egress():
     assert policy["spec"]["policyTypes"] == ["Ingress", "Egress"]
     assert policy["spec"]["ingress"][0]["from"] == [{"podSelector": {}}]
     assert egress_ports == {53, 5353, 443, 6443}
+
+
+def test_strict_network_policy_allows_cidrs_both_ways():
+    cidr_args = ["--set", "runner.networkPolicy.strict=true", "--set", "runner.networkPolicy.allowedCidrs[0]=10.0.0.5/32"]
+    spec = get_doc(render_chart(NETWORK_POLICY_ARGS + cidr_args), "NetworkPolicy")["spec"]
+    cidr_peer = {"ipBlock": {"cidr": "10.0.0.5/32"}}
+    assert cidr_peer in spec["ingress"][0]["from"]
+    assert cidr_peer in spec["egress"][0]["to"]

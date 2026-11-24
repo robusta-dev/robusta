@@ -21,6 +21,10 @@ spec:
       {{- if $strict }}
       from:
         - podSelector: {}
+        {{- range .Values.runner.networkPolicy.allowedCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
       {{- end }}
     {{- with .Values.runner.networkPolicy.extraIngress }}
     {{- toYaml . | nindent 4 }}
@@ -29,6 +33,10 @@ spec:
   egress:
     - to:
         - podSelector: {}
+        {{- range .Values.runner.networkPolicy.allowedCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
     - ports:
         - port: 53
           protocol: UDP

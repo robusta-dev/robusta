@@ -184,7 +184,19 @@ The chart can create a NetworkPolicy for the runner in two levels:
 
 **Strict** (``strict: true``) also limits inbound traffic to pods in the Robusta namespace, and outbound traffic to pods in the Robusta namespace (HolmesGPT, bundled Prometheus), DNS (53, 5353) and HTTPS (443, 6443 for the Kubernetes API). Standard NetworkPolicies cannot filter by hostname, so HTTPS is allowed to any address — use the :ref:`firewall-allowlist` for per-host filtering.
 
-With the strict level, allow anything outside the Robusta namespace with ``extraIngress`` and ``extraEgress`` (standard NetworkPolicy rules). For example, an Alertmanager in the ``monitoring`` namespace sending alerts and a Prometheus there being queried:
+With the strict level, allow addresses outside the cluster in both directions with ``allowedCidrs``: the runner accepts alerts from them on port 5000 and can reach them on any port. For example, an external Alertmanager and Prometheus:
+
+.. code-block:: yaml
+
+    runner:
+      networkPolicy:
+        enabled: true
+        strict: true
+        allowedCidrs:
+          - 203.0.113.10/32   # a single IP
+          - 10.20.0.0/16
+
+Standard NetworkPolicies cannot match hostnames or URLs, so list the IP ranges they resolve to. Pod IPs change and some network plugins (Cilium) do not match pods by IP, so allow pods in other namespaces with ``extraIngress`` and ``extraEgress`` (standard NetworkPolicy rules). For example, an Alertmanager in the ``monitoring`` namespace sending alerts and a Prometheus there being queried:
 
 .. code-block:: yaml
 

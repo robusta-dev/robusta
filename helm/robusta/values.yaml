@@ -787,6 +787,7 @@ runner:
   networkPolicy:
     enabled: false
     strict: false
+    allowedCidrs: []
     extraIngress: []
     extraEgress: []
   setKRRSecurityContext: false
