@@ -91,8 +91,9 @@ What ``runner.rbac.namespaceScoped`` does
 
 **RBAC** — instead of ``<release>-runner-cluster-role`` (ClusterRole) + ClusterRoleBinding, the
 chart renders ``<release>-runner-role`` (a namespaced ``Role`` with the same rules) bound by a
-``RoleBinding`` in the release namespace. The ServiceAccount and the namespaced create-permissions
-Role (``<release>-runner-local-role``) are unchanged. Because a Role is namespaced, multiple
+``RoleBinding`` in the release namespace. The ServiceAccount, the namespaced scheduler-state
+Role (``<release>-runner-state-role``) and the optional create-permissions Role
+(``<release>-runner-local-role``) are unchanged. Because a Role is namespaced, multiple
 installs — even with the same release name — cannot collide on cluster-scoped RBAC objects.
 
 **Environment variables** — the flag presets these on the runner (any entry you add to
