@@ -14,6 +14,7 @@ import robusta.core.playbooks.internal as internal_playbooks
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import Action, action
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
+from robusta.model.playbook_action import PlaybookAction
 from robusta.utils.error_codes import ErrorCodes
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -214,9 +215,22 @@ def test_unknown_action_is_still_reported_as_not_found():
     assert handler.run_external_action("no_such_action", {}, sinks=None)["error_code"] == ErrorCodes.ACTION_NOT_FOUND.value
 
 
-def test_playbook_from_configuration_still_runs_a_local_only_action():
-    """Playbooks in the runner's own configuration go through run_actions, which has no local-only check."""
-    source = inspect.getsource(PlaybooksEventHandlerImpl.run_actions) + inspect.getsource(
-        PlaybooksEventHandlerImpl.handle_trigger
-    )
-    assert "local_only" not in source
+def test_configured_playbook_runs_local_only_action():
+    calls = []
+
+    @action(local_only=True)
+    def local_action(event: ExecutionBaseEvent):
+        calls.append(event)
+
+    registry = MagicMock()
+    registry.get_actions.return_value.get_action.return_value = Action(local_action)
+    registry.get_global_config.return_value = {}
+    registry.get_sinks.return_value.get_all.return_value = {}
+    handler = PlaybooksEventHandlerImpl.__new__(PlaybooksEventHandlerImpl)
+    handler.registry = registry
+    event = ExecutionBaseEvent()
+
+    response = handler.run_actions(event, [PlaybookAction(action_name="local_action")], no_sinks=True)
+
+    assert calls == [event]
+    assert response == {"success": True}
