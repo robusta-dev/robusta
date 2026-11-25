@@ -69,7 +69,6 @@ from robusta.core.model.env_vars import (
     PRINTED_TABLE_MAX_WIDTH,
     PROMETHEUS_ENABLED,
     PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
-    RELAY_EXTERNAL_ACTIONS_URL,
     RELEASE_NAME,
     RESOURCE_UPDATES_CACHE_TTL_SEC,
     ROBUSTA_LOGO_URL,
@@ -174,7 +173,6 @@ from robusta.core.reporting import (
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,
     ExternalActionRequest,
-    OutgoingActionRequest,
     PartialAuth,
     sign_action_request,
 )
