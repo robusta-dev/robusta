@@ -7,8 +7,6 @@ from typing import Dict, List, Optional
 import humanize
 from pydantic.v1 import BaseModel
 from robusta.api import (
-    CallbackBlock,
-    CallbackChoice,
     DividerBlock,
     FileBlock,
     Finding,
@@ -417,21 +415,12 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
     else:
-        finding.add_enrichment([MarkdownBlock("Please select an advanced debugging choice:")])
-        choices = {}
-        for proc_pid in relevant_processes_pids:
-            updated_params = params.copy()
-            updated_params.process_substring = ""
-            updated_params.pid = proc_pid
-            choices[f"StackTrace {updated_params.pid}"] = CallbackChoice(
-                action=debugger_stack_trace,
-                action_params=updated_params,
-                kubernetes_object=pod,
-            )
         finding.add_enrichment(
             [
-                CallbackBlock(choices),
-                MarkdownBlock("*After clicking a button please wait up to 120 seconds for a response*"),
+                MarkdownBlock(
+                    "To get a stack trace, add `debugger_stack_trace` with one of these `pid` values to a playbook "
+                    f"in your Robusta configuration: {', '.join(str(pid) for pid in relevant_processes_pids)}"
+                )
             ]
         )
     event.add_finding(finding)

@@ -100,8 +100,6 @@ lightActions:
 - delete_job
 - list_resource_names
 - status_enricher
-- krr_scan
-- popeye_scan
 - handle_alertmanager_event
 - drain
 - cordon

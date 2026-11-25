@@ -3,8 +3,6 @@ import traceback
 from typing import Callable, Dict, List, Optional
 
 from robusta.api import (
-    CallbackBlock,
-    CallbackChoice,
     FileBlock,
     Finding,
     FindingSource,
@@ -66,7 +64,14 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
             )
         ]
     )
-    finding = add_jdk_choices_to_finding(finding, params, process_finder.get_pids(), pod)
+    finding.add_enrichment(
+        [
+            MarkdownBlock(
+                "To run jmap or jstack on one of these processes, add `pod_jmap_pid` or `pod_jstack_pid` "
+                "with its `pid` to a playbook in your Robusta configuration."
+            )
+        ]
+    )
     event.add_finding(finding)
 
 
@@ -152,30 +157,3 @@ def run_java_toolkit_command(
     return RobustaPod.exec_in_java_pod(
         pod.metadata.name, pod.spec.nodeName, java_toolkit_cmd, custom_annotations=custom_annotations
     )
-
-
-def add_jdk_choices_to_finding(finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod) -> Finding:
-    finding.add_enrichment([MarkdownBlock("Please select a Java troubleshooting choice:")])
-    choices = {}
-    for pid in pids:
-        logging.info(f"jdk_choices_in_finding_for_pid {pid}")
-        updated_params = params.copy()
-        updated_params.process_substring = ""
-        updated_params.pid = pid
-        choices[f"jmap {updated_params.pid}"] = CallbackChoice(
-            action=pod_jmap_pid,
-            action_params=updated_params,
-            kubernetes_object=pod,
-        )
-        choices[f"jstack {updated_params.pid}"] = CallbackChoice(
-            action=pod_jstack_pid,
-            action_params=updated_params,
-            kubernetes_object=pod,
-        )
-    finding.add_enrichment(
-        [
-            CallbackBlock(choices),
-            MarkdownBlock("*After clicking a button please wait up to 120 seconds for a response*"),
-        ]
-    )
-    return finding

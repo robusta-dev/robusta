@@ -3,7 +3,7 @@ from typing import Callable, List, Optional
 
 from robusta.core.model.base_params import ProcessParams
 from robusta.core.reporting.base import Finding
-from robusta.core.reporting.blocks import BaseBlock, CallbackBlock, CallbackChoice, MarkdownBlock, TableBlock
+from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock, TableBlock
 from robusta.integrations.kubernetes.custom_models import Process, RobustaPod
 
 
@@ -31,20 +31,21 @@ class ProcessFinder:
     ) -> Optional[Process]:
         """
         Returns the single-matching process. If more than one process matches, blocks will be added to the Finding
-        to report the error and optionally allow re-triggering the action with a chosen process.
+        to report the error and list the processes. The retrigger arguments are unused: the actions that call
+        this are local-only, so a button cannot re-trigger them.
         """
         if self.has_exactly_one_match():
             return self.get_exact_match()
         elif len(self.matching_processes) == 0:
             finding.add_enrichment(
                 [MarkdownBlock("No matching processes. The processes in the pod are:")]
-                + self.__get_error_blocks(self.all_processes, retrigger_text, retrigger_action, debug_action)
+                + self.__get_error_blocks(self.all_processes)
             )
             return None
         elif len(self.matching_processes) > 1:
             finding.add_enrichment(
                 [MarkdownBlock("More than one matching process. The matching processes are:")]
-                + self.__get_error_blocks(self.matching_processes, retrigger_text, retrigger_action, debug_action)
+                + self.__get_error_blocks(self.matching_processes)
             )
             return None
 
@@ -93,33 +94,14 @@ class ProcessFinder:
 
         return [pid_to_process[filters.pid]]
 
-    def __get_error_blocks(
-        self, processes: List[Process], text: str, action: Callable, debug_action: Callable
-    ) -> List[BaseBlock]:
+    @staticmethod
+    def __get_error_blocks(processes: List[Process]) -> List[BaseBlock]:
         if not processes:
             return [MarkdownBlock("No processes")]
-        blocks = [
+        return [
             TableBlock(
                 [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
                 ["pid", "exe", "cmdline"],
-            )
+            ),
+            MarkdownBlock("To choose a process, set `pid` in this action's parameters in your playbook."),
         ]
-        if self.filters.interactive:
-            choices = {}
-            for proc in processes:
-                updated_params = self.filters.copy()
-                updated_params.process_substring = ""
-                updated_params.pid = proc.pid
-                choices[f"{text} {proc.pid}"] = CallbackChoice(
-                    action=action,
-                    action_params=updated_params,
-                    kubernetes_object=self.pod,
-                )
-            choices["Still can't choose?"] = CallbackChoice(
-                action=debug_action,
-                action_params=self.filters,
-                kubernetes_object=self.pod,
-            )
-            blocks.append(CallbackBlock(choices))
-            blocks.append(MarkdownBlock("*After clicking a button please wait up to 120 seconds for a response*"))
-        return blocks

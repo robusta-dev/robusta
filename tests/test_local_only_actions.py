@@ -116,6 +116,23 @@ def test_default_light_actions_have_no_local_only_action():
     assert not LOCAL_ONLY_ACTIONS & set(values["lightActions"])
 
 
+def test_default_light_actions_start_no_scan_job():
+    values = yaml.safe_load((REPO_ROOT / "helm/robusta/values.yaml").read_text())
+    assert not {"krr_scan", "popeye_scan"} & set(values["lightActions"])
+
+
+def test_no_button_calls_a_local_only_action():
+    """A button's callback is an action request, which the runner refuses for a local-only action."""
+    sources = [*(REPO_ROOT / "playbooks/robusta_playbooks").glob("*.py"), *(REPO_ROOT / "src/robusta").rglob("*.py")]
+    callback_actions = set()
+    for source in sources:
+        for choice in re.findall(r"CallbackChoice\((.*?)\)", source.read_text(), re.DOTALL):
+            callback_actions.update(re.findall(r"action=(\w+)", choice))
+    assert callback_actions & set(BUILTIN_ACTIONS), "the scan found no button, so it checks nothing"
+    assert not callback_actions & LOCAL_ONLY_ACTIONS
+    assert callback_actions <= set(BUILTIN_ACTIONS)
+
+
 def test_action_decorator_forms():
     @action
     def plain(event: ExecutionBaseEvent):
