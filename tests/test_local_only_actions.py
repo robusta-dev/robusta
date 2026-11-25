@@ -1,3 +1,4 @@
+import ast
 import importlib
 import inspect
 import pkgutil
@@ -126,8 +127,13 @@ def test_no_button_calls_a_local_only_action():
     sources = [*(REPO_ROOT / "playbooks/robusta_playbooks").glob("*.py"), *(REPO_ROOT / "src/robusta").rglob("*.py")]
     callback_actions = set()
     for source in sources:
-        for choice in re.findall(r"CallbackChoice\((.*?)\)", source.read_text(), re.DOTALL):
-            callback_actions.update(re.findall(r"action=(\w+)", choice))
+        for node in ast.walk(ast.parse(source.read_text())):
+            if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "CallbackChoice":
+                callback_actions.update(
+                    keyword.value.id
+                    for keyword in node.keywords
+                    if keyword.arg == "action" and isinstance(keyword.value, ast.Name)
+                )
     assert callback_actions & set(BUILTIN_ACTIONS), "the scan found no button, so it checks nothing"
     assert not callback_actions & LOCAL_ONLY_ACTIONS
     assert callback_actions <= set(BUILTIN_ACTIONS)
