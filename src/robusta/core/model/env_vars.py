@@ -55,10 +55,6 @@ PROMETHEUS_TENANT_HEADER = os.environ.get("PROMETHEUS_TENANT_HEADER", "X-Scope-O
 
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600))
 
-RELAY_EXTERNAL_ACTIONS_URL = os.environ.get(
-    "RELAY_EXTERNAL_ACTIONS_URL", "https://api.robusta.dev/integrations/generic/actions"
-)
-
 GIT_MAX_RETRIES = int(os.environ.get("GIT_MAX_RETRIES", 100))
 
 PRINTED_TABLE_MAX_WIDTH = int(os.environ.get("PRINTED_TABLE_MAX_WIDTH", 70))
