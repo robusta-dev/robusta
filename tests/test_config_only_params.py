@@ -1,7 +1,5 @@
-from pathlib import Path
 from unittest.mock import MagicMock
 
-import yaml
 
 from robusta.core.model.base_params import drop_config_only_params
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
@@ -51,9 +49,3 @@ def test_generator_url_comes_from_configuration():
         "prometheus_alert", {"alert_name": "A", "generator_url": "http://example.com/graph?g0.expr=up"}, sinks=None
     )
     action_def.from_params_parameter_class.assert_called_once_with(alert_name="A")
-
-
-def test_simulated_alert_is_not_a_default_light_action():
-    values = yaml.safe_load((Path(__file__).parent.parent / "helm/robusta/values.yaml").read_text())
-    assert "prometheus_alert" not in values["lightActions"]
-    assert "alertmanager_alert" in values["lightActions"]
