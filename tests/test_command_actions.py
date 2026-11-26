@@ -12,7 +12,6 @@ import yaml
 import playbooks.robusta_playbooks as builtin_playbooks
 import robusta.core.playbooks.internal as internal_playbooks
 from playbooks.robusta_playbooks.job_actions import JobParams
-from playbooks.robusta_playbooks.kubectl_enrichments import KubectlParams, get_unsafe_template_values, kubectl_command
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import Action, ActionsRegistry, action
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
@@ -46,7 +45,6 @@ REQUEST_ACTIONS = {"http_get", "http_post", "http_put"}
 COMMAND_ACTIONS = {
     "pod_bash_enricher",
     "node_bash_enricher",
-    "kubectl_command",
     "alert_handling_job",
     *REQUEST_ACTIONS,
 }
@@ -240,37 +238,6 @@ def test_playbook_with_missing_action_is_skipped(caplog):
 
 def _subject(namespace="prod", **kwargs) -> FindingSubject:
     return FindingSubject(name="web-1", subject_type=FindingSubjectType.TYPE_POD, namespace=namespace, **kwargs)
-
-
-@pytest.mark.parametrize(
-    "command, subject, unsafe",
-    [
-        ("kubectl get pod $name -n $namespace", _subject(), []),
-        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": "payments"}), []),
-        ("kubectl get pod $name -n $namespace", _subject(namespace="a; b"), ["namespace"]),
-        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": "$(x)"}), ["labels.team"]),
-        ("kubectl get pods -l team=${labels.team}", _subject(), ["labels.team"]),
-        ("kubectl get nodes", _subject(labels={"team": "a b"}), []),
-        ("kubectl delete pod $name -n $namespace", _subject(namespace="--all-namespaces"), ["namespace"]),
-        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": "-A"}), ["labels.team"]),
-        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": ""}), ["labels.team"]),
-        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": "9lives"}), []),
-        ("kubectl get pod $name -n $namespace", _subject(namespace=None), ["namespace"]),
-    ],
-)
-def test_kubectl_command_template_values(command, subject, unsafe):
-    assert get_unsafe_template_values(subject, command) == unsafe
-
-
-def test_kubectl_command_does_not_run_with_unsafe_value():
-    event = MagicMock()
-    event.get_subject.return_value = _subject(labels={"team": "a; b"})
-    with patch("playbooks.robusta_playbooks.kubectl_enrichments.RobustaJob.run_simple_job_spec") as run_job:
-        kubectl_command(event, KubectlParams(command="kubectl get pods -l team=${labels.team}"))
-        run_job.assert_not_called()
-        event.get_subject.return_value = _subject(labels={"team": "payments"})
-        kubectl_command(event, KubectlParams(command="kubectl get pods -l team=${labels.team}"))
-        assert run_job.call_args.args[0].containers[0].args == ["kubectl get pods -l team=payments"]
 
 
 def test_alert_job_label_variables():

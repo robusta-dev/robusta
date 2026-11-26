@@ -3,45 +3,113 @@
 Read-Only Service Account
 ========================================
 
-By default, Robusta's runner service account has permissions to update and delete Kubernetes resources cluster-wide (for remediation actions like ``delete_pod`` and ``rollout_restart``), plus cluster-wide ``create`` on ``pods/eviction`` for node drain. All other ``create`` permissions — pods, pods/exec, jobs, deployments, configmaps and persistentvolumeclaims — are granted **only in Robusta's installation namespace** via a namespaced Role. This guide explains how to restrict the runner further, to fully read-only permissions.
+By default, Robusta's runner service account is **read-only**: its ClusterRole only grants ``get``, ``list`` and ``watch``. This guide explains what read-only mode means, how to enable specific write access, and how to restrict the read rules further.
 
-.. tip::
+Enabling Write Access
+---------------------
 
-   If you only want to remove the namespace-scoped create permissions (used for Jobs and
-   debugger pods), set ``runner.rbac.disableCreateFromServiceAccount: true`` in your
-   Helm values. This removes the namespaced Role and disables the built-in playbook that
-   depends on it (``NodeFSSpaceAlerts``); actions that create resources
-   (``kubectl_command``, the ``node_bash_enricher`` debugger pod) will fail without
-   permissions. It also turns off the weekly KRR scan CronJob, unless you set
-   ``runner.krrCronJob.enabled: true``, see :ref:`krr-cronjob`.
-   For fully read-only mode, use ``overrideClusterRoles`` as described below.
+.. warning::
+
+   These options only exist to support deprecated behaviour. We strongly recommend not enabling them.
+
+Each kind of write access has its own flag under ``runner.rbac``. All flags default to ``false``:
+
+.. code-block:: yaml
+
+    runner:
+      rbac:
+        enablePodDelete: false               # delete pods
+        enableJobDelete: false               # delete Jobs
+        enableNodeEdit: false                # cordon and uncordon nodes
+        enablePodEvict: false                # evict pods when draining nodes
+        enableRobustaConfigMapCreate: false  # create ConfigMaps in Robusta's namespace
+        enableRobustaConfigMapEdit: false    # update the scheduled-jobs ConfigMap
+
+The exact Kubernetes permission each flag grants, and where it applies:
+
+.. list-table::
+   :widths: 30 20 25 25
+   :header-rows: 1
+
+   * - Flag
+     - Verb
+     - Resource
+     - Applies to
+   * - ``enablePodDelete``
+     - ``delete``
+     - ``pods``
+     - All namespaces
+   * - ``enableJobDelete``
+     - ``delete``
+     - ``jobs`` (``batch``)
+     - All namespaces
+   * - ``enableNodeEdit``
+     - ``patch``
+     - ``nodes``
+     - Every node in the cluster
+   * - ``enablePodEvict``
+     - ``create``
+     - ``pods/eviction``
+     - All namespaces
+   * - ``enableRobustaConfigMapCreate``
+     - ``create``
+     - ``configmaps``
+     - Robusta's namespace only
+   * - ``enableRobustaConfigMapEdit``
+     - ``get``, ``update``
+     - ``configmaps``, the ``scheduled-jobs`` ConfigMap only
+     - Robusta's namespace only
+
+``drain`` needs both ``enablePodEvict`` and ``enableNodeEdit``. ``cordon`` and ``uncordon`` need only ``enableNodeEdit``.
+
+With a :ref:`namespace-scoped runner <rbac-namespace-scoped-runner>`, "all namespaces" means Robusta's namespace only, and ``enableNodeEdit`` grants nothing because nodes are not namespaced.
+
+When an action runs without the flag it needs, the runner logs an error that names the flag and links to this page.
+
+``enabledManagedConfiguration`` (default ``false``) grants ``create``, ``update``, ``patch`` and ``delete`` on
+PrometheusRules, to sync alerts from the Robusta UI to the cluster, see :ref:`Managed Prometheus Alerts`.
+
+.. _rbac-scheduled-playbooks:
+
+Scheduled Playbooks
+-------------------
+
+:ref:`Scheduled playbooks <on_schedule>` are deprecated. We recommend using Kubernetes CronJobs instead.
+
+If you must use the legacy scheduler, you can re-enable it with both ConfigMap flags, but we discourage doing so.
+The runner stores the scheduler state in the ``scheduled-jobs`` ConfigMap in its namespace:
+
+.. code-block:: yaml
+
+    runner:
+      rbac:
+        enableRobustaConfigMapCreate: true
+        enableRobustaConfigMapEdit: true
+
+Removing the runner's namespaced Role
+-------------------------------------
+
+Set ``runner.rbac.disableCreateFromServiceAccount: true`` to remove the runner's Role in its own namespace. It
+overrides ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``, and does not change the other flags:
+
+- The chart renders no namespaced Role for the runner, even when a ConfigMap flag is enabled
+- Scheduled playbooks do not run, and the runner logs an error that names this setting
+- The weekly KRR scan :ref:`CronJob <krr-cronjob>` is not created, unless you set ``runner.krrCronJob.enabled: true``
+
+.. code-block:: yaml
+
+    runner:
+      rbac:
+        disableCreateFromServiceAccount: true
 
 Why Read-Only Mode?
 -------------------
 
-Read-only mode is useful in scenarios where you want to:
+Read-only mode is now the recommended way to use Robusta. Several deprecated features in Robusta Classic required
+higher level permissions, but they are no longer officially supported. We recommend all users adopt read-only mode.
 
-- **Prevent accidental modifications**: Ensure that even if a playbook or investigation logic has a bug, no cluster resources will be modified
-- **Comply with security policies**: Meet organizational requirements for read-only access in certain environments
-- **Prevent node operations**: Prevent users from draining or restarting nodes through investigations
-- **Audit-only mode**: Run Holmes for investigation and diagnostics without remediation capabilities
-
-Limitations of Read-Only Mode
------------------------------
-
-When using read-only permissions, the following Robusta features will not be available:
-
-- **Auto-remediation**: Playbooks that automatically fix issues (restart pods, scale deployments, drain nodes, etc.)
-- **Silence management**: Creating or deleting alert silences
-- **Pod debugging**: Live debugging tools that require container execution
-- **Resource modification**: Any playbook or action that modifies Kubernetes resources
-
-These features require write permissions and will gracefully fail if attempted with read-only service account.
-
-**Read-only mode is ideal for**: Investigation, diagnostics, log analysis, metric enrichment, and reporting.
-
-Implementation: Using overrideClusterRoles
--------------------------------------------
+Restricting Read Rules: Using overrideClusterRoles
+--------------------------------------------------
 
 Robusta's Helm chart supports the ``runner.overrideClusterRoles`` parameter. When set, the rules you
 provide **fully replace** the built-in runner ClusterRole rules, so only the permissions you list are granted.
@@ -49,23 +117,22 @@ provide **fully replace** the built-in runner ClusterRole rules, so only the per
 .. note::
 
    Do not confuse this with ``runner.customClusterRoleRules``. That parameter *adds* rules on top of the
-   built-in rules (which include write verbs), so it **cannot** be used to make the runner read-only.
-   Use ``runner.overrideClusterRoles`` for read-only mode.
+   built-in rules, so it **cannot** be used to remove permissions.
 
-To use read-only mode, create a custom values file with the following configuration:
+   ``overrideClusterRoles`` also replaces the rules added by ``enablePodDelete``, ``enableJobDelete``,
+   ``enableNodeEdit`` and ``enablePodEvict``. To use the actions behind these flags, enable the flag and add
+   its permission to the override. The two ConfigMap flags are not affected.
+
+To narrow the built-in read rules, create a custom values file with the following configuration:
 
 .. code-block:: yaml
 
     runner:
-      # remove the namespaced create Role too
-      rbac:
-        disableCreateFromServiceAccount: true
       overrideClusterRoles:
         # Core API resources - read-only
         - apiGroups:
             - ""
           resources:
-            - configmaps
             - daemonsets
             - deployments
             - events
@@ -78,7 +145,6 @@ To use read-only mode, create a custom values file with the following configurat
             - replicasets
             - replicationcontrollers
             - services
-            - serviceaccounts
             - endpoints
           verbs:
             - get
@@ -187,7 +253,6 @@ To use read-only mode, create a custom values file with the following configurat
             - policy
           resources:
             - poddisruptionbudgets
-            - podsecuritypolicies
           verbs:
             - get
             - list

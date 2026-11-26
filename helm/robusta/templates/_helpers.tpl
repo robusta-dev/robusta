@@ -100,14 +100,22 @@ global_config:
 alert_relabel:
 {{ toYaml  .Values.alertRelabel | indent 2 }}
 
-light_actions:
-{{ toYaml  .Values.lightActions | indent 2 }}
-
-{{- $disabledPlaybooks := .Values.disabledPlaybooks }}
-{{- if .Values.runner.rbac.disableCreateFromServiceAccount }}
-{{- /* this playbook creates pods */}}
-{{- $disabledPlaybooks = append $disabledPlaybooks "NodeFSSpaceAlerts" }}
+{{- $rbac := .Values.runner.rbac }}
+{{- $lightActions := .Values.lightActions }}
+{{- if not $rbac.enablePodDelete }}
+{{- $lightActions = without $lightActions "delete_pod" }}
 {{- end }}
+{{- if not $rbac.enableJobDelete }}
+{{- $lightActions = without $lightActions "delete_job" }}
+{{- end }}
+{{- if not $rbac.enableNodeEdit }}
+{{- $lightActions = without $lightActions "drain" "cordon" "uncordon" }}
+{{- end }}
+{{- if not $rbac.enablePodEvict }}
+{{- $lightActions = without $lightActions "drain" }}
+{{- end }}
+light_actions:
+{{ toYaml $lightActions | indent 2 }}
 
 command_actions:
 {{ toYaml .Values.commandActions | indent 2 }}
@@ -116,6 +124,8 @@ active_playbooks:
 {{- if .Values.playbooks }}
   {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
 {{- end }}
+
+{{- $disabledPlaybooks := .Values.disabledPlaybooks }}
 
 {{- $priorityPlaybooks := .Values.priorityBuiltinPlaybooks }}
 {{- $enabledPriorityPlaybooks := list }}

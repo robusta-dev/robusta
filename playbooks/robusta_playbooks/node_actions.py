@@ -4,6 +4,8 @@ from kubernetes import client
 from kubernetes.client import V1OwnerReference, V1PodList
 
 from robusta.api import ActionException, ErrorCodes, FileBlock, MarkdownBlock, NodeEvent, action
+from robusta.core.model.env_vars import ENABLE_POD_EVICT, ENABLE_NODE_EDIT
+from robusta.core.playbooks.rbac_flags import require_rbac_flag
 
 
 @action
@@ -11,6 +13,7 @@ def cordon(event: NodeEvent):
     """
     Cordon, Taints a node as unschedulable.
     """
+    require_rbac_flag(ENABLE_NODE_EDIT, "enableNodeEdit")
     node = event.get_node()
     if not node:
         raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, "Failed to get node for cordon")
@@ -31,6 +34,7 @@ def uncordon(event: NodeEvent):
     """
     Unordon, Taints a node as schedulable.
     """
+    require_rbac_flag(ENABLE_NODE_EDIT, "enableNodeEdit")
     node = event.get_node()
     if not node:
         raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, "Failed to get node for uncordon")
@@ -52,6 +56,7 @@ def drain(event: NodeEvent):
     Drain, taints a node as unschedulable, and evicts all pods from the node.
     DaemonSets pods are skipped, as they tolerant unschedulable nodes by default.
     """
+    require_rbac_flag(ENABLE_POD_EVICT, "enablePodEvict")
     cordon(event)
 
     node = event.get_node()

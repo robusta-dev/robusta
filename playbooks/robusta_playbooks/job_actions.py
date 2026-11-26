@@ -23,6 +23,8 @@ from robusta.api import (
     get_resource_events_table,
     to_kubernetes_name,
 )
+from robusta.core.model.env_vars import ENABLE_JOB_DELETE
+from robusta.core.playbooks.rbac_flags import reject_creation, require_rbac_flag
 from robusta.core.reporting.base import EnrichmentType
 from robusta.integrations.kubernetes.api_client_utils import wait_until_job_complete
 
@@ -85,6 +87,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
     ALERT_LABEL_{LABEL_NAME} for every label on the alert. For example a label named `foo` becomes `ALERT_LABEL_FOO`
 
     """
+    reject_creation("Jobs")
     logging.info(f"Running alert_handling_job alert action for alert {event.alert_name}")
     job_name = to_kubernetes_name(params.name)
     job: Job = Job(
@@ -307,6 +310,7 @@ def delete_job(event: JobEvent):
     """
     Delete the job from the cluster
     """
+    require_rbac_flag(ENABLE_JOB_DELETE, "enableJobDelete")
     job = event.get_job()
     if not job:
         logging.info("Cannot run delete_job with no job. skipping")
