@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+
 from robusta.core.model.base_params import drop_config_only_params
 from robusta.core.playbooks.playbook_utils import merge_global_params
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl

@@ -11,14 +11,15 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.clients.robusta_client import fetch_runner_info
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
-    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR, ENABLE_TELEMETRY
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, RUNNER_VERSION, RUNNER_BIND_ADDR, ENABLE_TELEMETRY, \
+    INSTALLATION_NAMESPACE, KRR_CRONJOB_ENABLED, RELEASE_NAME
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
+from robusta.core.reporting.consts import ScanState, ScanType
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
 from robusta.integrations.prometheus.models import AlertManagerEvent, PrometheusAlert
 from robusta.integrations.prometheus.trigger import PrometheusTriggerEvent
 from robusta.model.alert_relabel_config import AlertRelabelOp
 from robusta.runner.config_loader import ConfigLoader
-from robusta.runner.scan_callbacks import SCAN_TOKEN_QUERY_PARAM, ScanCallbackTokens
 from robusta.utils.task_queue import QueueMetrics, TaskQueue
 
 app = Flask(__name__)
@@ -132,10 +133,9 @@ class Web:
     @app.route("/api/trigger", methods=["POST"])
     def handle_manual_trigger():
         """
-        Receives the result of a KRR scan job this runner started.
+        Receives the result of a scan of the KRR CronJob.
 
-        This endpoint is restricted to KRR scan results: it runs only process_scan, and only for a scan
-        whose token the runner issued when it created the job.
+        This endpoint is restricted to KRR scan results: it runs only process_scan, and only with the KRR CronJob enabled.
         """
         data = request.get_json()
         action_params = data.get("action_params")
@@ -144,10 +144,22 @@ class Web:
             return abort(403)
 
         scan_id = action_params.get("scan_id")
-        token = request.args.get(SCAN_TOKEN_QUERY_PARAM, "")
-        if not isinstance(scan_id, str) or not ScanCallbackTokens.is_valid(scan_id, token):
-            logging.warning(f"Rejected scan result with an unknown scan id or token. scan_id: {scan_id}")
+        if not isinstance(scan_id, str) or not KRR_CRONJOB_ENABLED:
+            logging.warning(f"Rejected scan result. The KRR CronJob is not enabled, or scan_id is missing: {scan_id}")
             return abort(403)
+
+        # the runner creates the scan row for the CronJob
+        try:
+            Web.loader.registry.get_event_emitter().emit_event(
+                "scan_updated",
+                scan_id=scan_id,
+                metadata={"job": {"name": f"{RELEASE_NAME}-krr", "namespace": INSTALLATION_NAMESPACE}},
+                state=ScanState.PENDING,
+                type=ScanType.KRR,
+                start_time=action_params.get("start_time"),
+            )
+        except Exception:
+            logging.exception(f"Failed to create the scan {scan_id} before processing its result")
 
         return jsonify(
             Web.event_handler.run_external_action(

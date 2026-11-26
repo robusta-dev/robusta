@@ -156,7 +156,7 @@ Create or update the RBAC configuration for your account.
                 "provider_group_id": "devops-team-id", 
                 "type": "cluster",
                 "scopes": ["staging-scope"],
-                "permissions": ["NODE_VIEW", "CLUSTER_VIEW", "KRR_SCAN"]
+                "permissions": ["NODE_VIEW", "CLUSTER_VIEW"]
             }
         ],
         "role_permission_groups": [
@@ -269,7 +269,6 @@ These permissions are available for groups with ``type: "namespace"``:
 * ``POD_LOGS`` - View pod logs
 * ``POD_DELETE`` - Delete pods
 * ``KRR_VIEW`` - View KRR recommendations
-* ``POPEYE_VIEW`` - View Popeye scan results
 * ``METRICS_VIEW`` - View metrics
 * ``HOLMES_INVESTIGATE`` - Use Holmes AI investigation
 * ``TIMELINE_VIEW`` - View event timeline
@@ -284,8 +283,6 @@ Cluster-type groups (``type: "cluster"``) have access to all namespace permissio
 * ``NODE_UNCORDON`` - Uncordon nodes
 * ``CLUSTER_VIEW`` - View cluster information
 * ``CLUSTER_DELETE`` - Delete clusters
-* ``KRR_SCAN`` - Run KRR scans
-* ``POPEYE_SCAN`` - Run Popeye scans
 * ``ALERT_CONFIG_EDIT`` - Edit alert configurations
 * ``ALERT_CONFIG_VIEW`` - View alert configurations
 * ``SILENCES_VIEW`` - View alert silences
@@ -413,7 +410,6 @@ Examples
                     "NODE_VIEW",
                     "NODE_DRAIN",
                     "CLUSTER_VIEW",
-                    "KRR_SCAN",
                     "ALERT_CONFIG_VIEW"
                 ]
             }

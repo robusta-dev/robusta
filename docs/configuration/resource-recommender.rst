@@ -4,61 +4,155 @@ Cost Savings (KRR)
 `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool that optimizes resource allocation in Kubernetes clusters.
 It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory, reducing costs and improving performance.
 
-Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Because KRR is so popular, it has dedicated documentation here. You can:
-
-1. Send weekly scan reports to Slack or other sinks via Robusta OSS (disabled by default, configure below)
-2. View scans from all your clusters in the Robusta UI
-
-Both need ``krr_scan`` listed under ``commandActions`` in your Helm values. For the weekly scan that Robusta UI users get:
-
-.. code-block:: yaml
-
-    commandActions:
-    - krr_scan
+Robusta runs a weekly KRR scan. You can view the scans from all your clusters in the Robusta UI.
 
 
-Sending Weekly KRR Scan Reports to Slack
+.. _krr-cronjob:
+
+Weekly KRR Scan CronJob
 ===========================================
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
 
-1. Install Robusta with Helm to your cluster and configure Slack sink.
-2. Create your KRR slack playbook by adding the following to ``generated_values.yaml``:
+The Helm chart creates a ``CronJob`` named ``<release>-krr`` that runs the weekly KRR scan and sends the result
+to the Robusta UI. It runs with the runner service account, unless ``serviceAccountName`` is set.
+
+The CronJob uses the settings under ``runner.krrCronJob`` and the Prometheus address in ``globalConfig.prometheus_url``.
+It uses no other ``globalConfig`` setting, and no runner environment variable:
 
 .. code-block:: yaml
 
-    commandActions:
-    - krr_scan
+    runner:
+      krrCronJob:
+        enabled: ~               # empty: on unless rbac.disableCreateFromServiceAccount is true
+        schedule: "0 12 * * 1"   # every Monday at 12:00
+        timeout: 3600            # seconds
+        image: ~                 # defaults to image.registry/krr
+        strategy: simple
+        krrArgs: ""              # extra KRR arguments
+        memoryRequest: 2Gi
+        memoryLimit: 2Gi
+        jobSpec: {}              # tolerations, nodeSelector, affinity...
+        annotations: {}          # added to the KRR Job and pod
+        serviceAccountName: ~    # an existing service account. Defaults to the runner's
+        additional_env_vars: []  # env vars of the KRR pod
+        additional_env_froms: [] # env sources of the KRR pod
 
-    # Runs a weekly krr scan on the namespace devs-namespace and sends it to the configured slack channel
-    customPlaybooks:
-    - triggers:
-      - on_schedule:
-          fixed_delay_repeat:
-            repeat: -1 # number of times to run or -1 to run forever
-            seconds_delay: 604800 # 1 week
-      actions:
-      - krr_scan:
-          args: "--namespace devs-namespace" ## KRR args here
-      sinks:
-          - "main_slack_sink" # slack sink you want to send the report to here
+The CronJob is not created without a Robusta UI sink, or when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
 
-3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
+Without ``globalConfig.prometheus_url``, KRR finds Prometheus in the cluster by itself. To use another address for KRR, add ``-p <url>`` to ``krrArgs``.
 
-.. grid:: 1 1 1 1
+Credentials for the KRR CronJob
+------------------------------------------------------------
 
-    .. grid-item::
+If your Prometheus needs credentials, set them for KRR under ``runner.krrCronJob``, or the weekly scan fails. The
+Prometheus credentials, headers and labels under ``globalConfig`` and the runner's ``additional_env_vars`` are not passed to KRR.
 
-        .. md-tab-set::
+``krrArgs`` runs in a shell, so ``"$NAME"`` reads an environment variable of the KRR pod.
 
-            .. md-tab-item:: Slack
+.. warning::
 
-                .. image:: /images/krr_slack_example.png
-                    :width: 1000px
+    Never write a credential itself into ``krrArgs``. The CronJob object is readable in the cluster, so anyone who can view it would see the value. Always reference an environment variable that comes from a Secret, as the examples below do.
 
-            .. md-tab-item:: Robusta UI
+**Prometheus with a token:**
 
-                .. image:: /images/krr_example.png
-                    :width: 1000px
+.. code-block:: yaml
+
+    runner:
+      krrCronJob:
+        krrArgs: '--prometheus-auth-header "Bearer $PROMETHEUS_TOKEN"'
+        additional_env_vars:
+        - name: PROMETHEUS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: prometheus-credentials
+              key: token
+
+
+**AWS Managed Prometheus:**
+
+.. code-block:: yaml
+
+    globalConfig:
+      prometheus_url: https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-12345678
+
+    runner:
+      krrCronJob:
+        krrArgs: '--eks-managed-prom --eks-managed-prom-region us-east-1 --eks-access-key "$AWS_ACCESS_KEY" --eks-secret-key "$AWS_SECRET_ACCESS_KEY"'
+        additional_env_vars:
+        - name: AWS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: secret-key
+
+Moving Existing KRR Settings
+------------------------------------------------------------
+
+Settings that the weekly scan used before, and where to set them for the CronJob. The right column is under ``runner.krrCronJob`` unless it says otherwise:
+
+.. list-table::
+   :widths: 40 60
+   :header-rows: 1
+
+   * - Previous setting
+     - CronJob setting
+   * - ``globalConfig.krr_args``
+     - ``krrArgs``
+   * - ``globalConfig.strategy``, ``KRR_STRATEGY``
+     - ``strategy``
+   * - ``globalConfig.timeout``
+     - ``timeout``
+   * - ``globalConfig.max_workers``
+     - ``krrArgs: "--max-workers 2"``
+   * - ``globalConfig.krr_verbose``
+     - ``krrArgs: "-v"``
+   * - ``globalConfig.krr_job_spec``
+     - ``jobSpec``
+   * - ``globalConfig.prometheus_url``
+     - Still used. To use another address for KRR: ``krrArgs: "-p <url>"``
+   * - ``globalConfig.prometheus_auth``
+     - ``krrArgs: '--prometheus-auth-header "$PROMETHEUS_AUTH"'``, with the value in ``additional_env_vars``
+   * - ``globalConfig.prometheus_additional_headers``
+     - ``krrArgs: '--prometheus-headers "X-Scope-OrgID:$ORG_ID"'``, once for each header
+   * - ``globalConfig.prometheus_additional_labels``
+     - ``krrArgs: "--prometheus-label cluster -l my-cluster"``
+   * - ``AWS_REGION``, ``AWS_SERVICE_NAME``, ``AWS_ASSUME_ROLE``
+     - ``krrArgs: "--eks-managed-prom --eks-managed-prom-region <region> --eks-service-name <name> --eks-assume-role <arn>"``
+   * - ``AWS_ACCESS_KEY``, ``AWS_SECRET_ACCESS_KEY``
+     - ``krrArgs: '--eks-access-key "$AWS_ACCESS_KEY" --eks-secret-key "$AWS_SECRET_ACCESS_KEY"'``, with the values in ``additional_env_vars``
+   * - ``CORALOGIX_PROMETHEUS_TOKEN``
+     - ``krrArgs: '--coralogix-token "$CORALOGIX_PROMETHEUS_TOKEN"'``, with the value in ``additional_env_vars``
+   * - OpenShift, ``PROMETHEUS_CLUSTER_TOKEN_AUTH``
+     - ``krrArgs: "--openshift"``
+   * - ``KRR_IMAGE_OVERRIDE``
+     - ``image``
+   * - ``KRR_MEMORY_REQUEST``, ``KRR_MEMORY_LIMIT``
+     - ``memoryRequest``, ``memoryLimit``
+   * - ``SET_KRR_SECURITY_CONTEXT``
+     - ``runner.setKRRSecurityContext``
+   * - ``globalConfig.serviceAccountName``
+     - ``serviceAccountName``
+   * - ``globalConfig.custom_annotations``
+     - ``annotations``
+   * - ``KRR_PUBLISH_URL``, ``KRR_PUSH_SCAN``
+     - No setting
+
+To run a scan now, and to check previous runs (replace ``robusta`` with your release name and namespace):
+
+.. code-block:: bash
+
+    kubectl create job --from=cronjob/robusta-krr krr-manual -n robusta
+    kubectl get jobs -l app=krr.robusta.dev -n robusta
+
+Limitations of the CronJob:
+
+- **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Provide a token as shown above
+- **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
+- **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
 
 Taints, Tolerations and NodeSelectors
 ============================================
@@ -68,28 +162,29 @@ To run KRR on an ARM cluster or on specific nodes you can set custom tolerations
 .. code-block:: yaml
     :name: cb-krr-set-custom-taints
 
-    globalConfig:
-      krr_job_spec:
-        tolerations:
-        - key: "key1"
-          operator: "Exists"
-          effect: "NoSchedule"
-        nodeSelector:
-          nodeName: "your-selector"
+    runner:
+      krrCronJob:
+        jobSpec:
+          tolerations:
+          - key: "key1"
+            operator: "Exists"
+            effect: "NoSchedule"
+          nodeSelector:
+            nodeName: "your-selector"
 
 Customizing Efficiency Recommendations in the Robusta UI
 ====================================================================================
-You can tweak KRR's recommendation algorithm to suit your environment using the ``krr_args`` setting in Robusta's Helm chart.
+You can tweak KRR's recommendation algorithm to suit your environment using the ``runner.krrCronJob.krrArgs`` setting in Robusta's Helm chart.
 
-Add the following config to the top of your ``generated_values.yaml`` with your custom values. KRR will use these values every time it sends data to the Robusta UI or other destinations.
+Add the following config to the top of your ``generated_values.yaml`` with your custom values. KRR will use these values every time it sends data to the Robusta UI.
 
-If you are having performance issues, specifically with Prometheus using a lot of memory, reduce ``max_workers`` to reduce memory usage. KRR uses 3 workers by default.
+If you are having performance issues, specifically with Prometheus using a lot of memory, reduce ``--max-workers`` to reduce memory usage. KRR uses 3 workers by default.
 
 .. code-block:: yaml
 
-    globalConfig:
-      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
-      max_workers: 2
+    runner:
+      krrCronJob:
+        krrArgs: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25 --max-workers 2"
 
 Enabling HPA Recommendations in the Robusta UI
 ------------------------------------------------------------
@@ -97,8 +192,9 @@ To enable Horizontal Pod Autoscaler (HPA) recommendations in the Robusta UI, add
 
 .. code-block:: yaml
 
-    globalConfig:
-      krr_args: "--allow-hpa"
+    runner:
+      krrCronJob:
+        krrArgs: "--allow-hpa"
 
 Common KRR Settings
 ---------------------
@@ -151,16 +247,14 @@ Common KRR Settings
 Configuring KRR Job Memory Requests and Limits
 ======================================================
 
-To prevent the KRR job from OOMKill (Out of Memory), you can configure the memory requests and limits by adding the following environment variables to your ``generated_values.yaml`` file:
+To prevent the KRR job from OOMKill (Out of Memory), you can configure the memory requests and limits by adding the following to your ``generated_values.yaml`` file:
 
 .. code-block:: yaml
 
     runner:
-      additional_env_vars:
-      - name: KRR_MEMORY_REQUEST
-        value: "3Gi"
-      - name: KRR_MEMORY_LIMIT
-        value: "3Gi"
+      krrCronJob:
+        memoryRequest: "3Gi"
+        memoryLimit: "3Gi"
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
 
@@ -372,7 +466,3 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
       "msg": "Failed to query KRR recommendations",
       "error_code": "UNEXPECTED_ERROR"
     }
-
-Reference
-======================================
-.. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
