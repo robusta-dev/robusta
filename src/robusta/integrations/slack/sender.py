@@ -29,7 +29,6 @@ from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, Finding
 from robusta.core.reporting.blocks import (
     BaseBlock,
     CallbackBlock,
-    CallbackChoice,
     DividerBlock,
     FileBlock,
     HeaderBlock,
@@ -42,7 +41,6 @@ from robusta.core.reporting.blocks import (
     TableBlock,
     EmptyFileBlock,
 )
-from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations
 from robusta.core.reporting.holmes import HolmesResultsBlock, ToolCallResult
 from robusta.core.reporting.url_helpers import convert_prom_graph_url_to_robusta_metrics_explorer
@@ -53,7 +51,6 @@ from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.slack.preview.slack_sink_preview_params import SlackSinkPreviewParams
 from robusta.core.sinks.transformer import Transformer
 
-ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"
 SlackBlock = Dict[str, Any]
 MAX_BLOCK_CHARS = 3000
@@ -121,34 +118,6 @@ class SlackSender:
         First unescapes any already escaped newlines, then escapes all newlines.
         """
         return text.replace("\\n", "\n").replace("\n", "\\n")
-
-    def __get_action_block_for_choices(self, sink: str, choices: Dict[str, CallbackChoice] = None):
-        if choices is None:
-            return []
-
-        buttons = []
-        for i, (text, callback_choice) in enumerate(choices.items()):
-            buttons.append(
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": text,
-                    },
-                    "style": "primary",
-                    "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
-                    "value": ExternalActionRequestBuilder.create_for_func(
-                        callback_choice,
-                        sink,
-                        text,
-                        self.account_id,
-                        self.cluster_name,
-                        self.signing_key,
-                    ).json(),
-                }
-            )
-
-        return [{"type": "actions", "elements": buttons}]
 
     def __to_slack_links(self, links: List[LinkProp]) -> List[SlackBlock]:
         if len(links) == 0:
@@ -242,7 +211,7 @@ class SlackSender:
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_slack_diff(block, sink_name)
         elif isinstance(block, CallbackBlock):
-            return self.__get_action_block_for_choices(sink_name, block.choices)
+            return []  # buttons that run actions are no longer rendered
         elif isinstance(block, LinksBlock):
             return self.__to_slack_links(block.links)
         elif isinstance(block, ScanReportBlock):
@@ -1114,28 +1083,4 @@ class SlackSender:
             return resp["ts"]
         except Exception as e:
             logging.exception(f"error sending message to slack\n{e}\nchannel={channel}\n")
-
-    def update_slack_message(self, channel: str, ts: str, blocks: list, text: str = ""):
-        """
-        Update a Slack message with new blocks and optional text.
-
-        Args:
-            channel (str): Slack channel ID.
-            ts (str): Timestamp of the message to update.
-            blocks (list): List of Slack Block Kit blocks for the updated message.
-            text (str, optional): Plain text summary for accessibility. Defaults to "".
-        """
-        try:
-            # Ensure channel ID exists in the mapping
-            if channel not in self.channel_name_to_id.values():
-                logging.error(f"Channel ID for {channel} could not be determined. Update aborted.")
-                return
-
-            # Call Slack's chat_update method
-            resp = self.slack_client.chat_update(channel=channel, ts=ts, text=text, blocks=blocks)
-            logging.debug(f"Message updated successfully: {resp['ts']}")
-            return resp["ts"]
-
-        except Exception as e:
-            logging.exception(f"Error updating Slack message: {e}")
             return None

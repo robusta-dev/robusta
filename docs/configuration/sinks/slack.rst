@@ -236,11 +236,6 @@ your own. This is not recommended for most companies due to the added complexity
         slack_channel: <your-channel>
         api_key: <your Bot User OAuth Token>
 
-.. warning::
-
-    When using a custom Slack app, callback buttons are not supported due to complexities in how Slack handles incoming
-    messages. :ref:`Contact us if you need assistance. <Getting Support>`
-
 
 Message Templating
 -------------------------------------------------------------------

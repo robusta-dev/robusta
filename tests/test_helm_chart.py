@@ -421,3 +421,28 @@ def test_krr_cronjob_uses_only_prometheus_url_from_other_settings(tmp_path):
     assert krr_job_template(other_settings) == default_job
     assert flag_values(krr_arguments(tmp_path, other_settings), "-p") == ["http://prometheus:9090"]
     assert not [doc for doc in render_full_chart(other_settings) if "krr-prometheus" in doc["metadata"]["name"]]
+
+
+def runner_config(extra_args: Optional[List[str]] = None) -> dict:
+    cmd = [
+        "helm",
+        "template",
+        str(CHART_PATH),
+        "--set",
+        "clusterName=test",
+        "--set",
+        "sinksConfig[0].file_sink.name=test",
+        "-s",
+        "templates/playbooks-config.yaml",
+    ] + (extra_args or [])
+    docs = [doc for doc in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if doc]
+    return yaml.safe_load(base64.b64decode(docs[0]["data"]["active_playbooks.yaml"]).decode())
+
+
+def test_command_actions_value_reaches_the_runner_config():
+    assert runner_config()["command_actions"] == []
+    platform = ["--set", "enablePlatformPlaybooks=true"]
+    assert runner_config(platform)["command_actions"] == []
+    assert runner_config(platform + ["--set", "commandActions={kubectl_command}"])["command_actions"] == ["kubectl_command"]
+    enabled = runner_config(["--set", "commandActions={pod_bash_enricher,kubectl_command}"])
+    assert enabled["command_actions"] == ["pod_bash_enricher", "kubectl_command"]

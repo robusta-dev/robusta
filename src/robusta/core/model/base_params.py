@@ -281,6 +281,8 @@ CONFIG_ONLY_PARAMS = frozenset(
         "krr_args",
         "popeye_args",
         "args",
+        # simulated alerts take their query link from the configuration
+        "generator_url",
     }
 )
 
@@ -518,18 +520,6 @@ class GrafanaAnnotationParams(GrafanaParams):
     custom_tags: List[str] = None
 
 
-class ProcessParams(PodRunningParams):
-    """
-    :var process_substring: process name (or substring).
-    :var pid: pid
-    :var interactive: if more than one process matches, interactively ask which process to choose.
-    """
-
-    process_substring: str = ""
-    pid: int = None
-    interactive: bool = True
-
-
 class EventEnricherParams(ActionParams):
     max_events: int = 8
     included_types: List[str] = ["Warning", "Normal"]
@@ -573,7 +563,6 @@ class OomKillParams(OOMGraphEnricherParams, PodRunningParams):
     attach_logs: Optional[bool] = False
     container_memory_graph: Optional[bool] = False
     node_memory_graph: Optional[bool] = False
-    dmesg_log: Optional[bool] = False
 
     def __init__(
         self,

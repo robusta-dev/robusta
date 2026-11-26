@@ -4,7 +4,7 @@ from typing import List
 from robusta.api import BaseBlock, BashParams, MarkdownBlock, NodeEvent, PodEvent, RobustaPod, action
 
 
-@action
+@action(command_action=True)
 def pod_bash_enricher(event: PodEvent, params: BashParams):
     """
     Execute the specified bash command on the target **pod**.
@@ -22,7 +22,7 @@ def pod_bash_enricher(event: PodEvent, params: BashParams):
     event.add_enrichment(block_list)
 
 
-@action
+@action(command_action=True)
 def node_bash_enricher(event: NodeEvent, params: BashParams):
     """
     Execute the specified bash command on the target **node**.

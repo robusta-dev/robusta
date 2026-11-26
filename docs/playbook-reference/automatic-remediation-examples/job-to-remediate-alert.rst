@@ -7,6 +7,9 @@ Add the following to your Helm values, under the :ref:`customPlaybooks<customPla
 
 .. code-block:: yaml
 
+    commandActions:
+    - alert_handling_job
+
     customPlaybooks:
     - triggers:
         # this trigger section defines when to run the remediation
@@ -48,6 +51,9 @@ In this example we are referencing the alert name and a label called region as e
 
 .. code-block:: yaml
 
+    commandActions:
+    - alert_handling_job
+
     customPlaybooks:
     - triggers:
         - on_prometheus_alert:
@@ -88,6 +94,9 @@ Implementation
 Let's see how to mount a Kubernetes secret, that can be used in the remediation command:
 
 .. code-block:: yaml
+
+    commandActions:
+    - alert_handling_job
 
     customPlaybooks:
     - triggers:

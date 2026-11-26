@@ -103,15 +103,18 @@ alert_relabel:
 light_actions:
 {{ toYaml  .Values.lightActions | indent 2 }}
 
-active_playbooks:
-{{- if .Values.playbooks }}
-  {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
-{{- end }}
-
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
 {{- if .Values.runner.rbac.disableCreateFromServiceAccount }}
 {{- /* this playbook creates pods */}}
 {{- $disabledPlaybooks = append $disabledPlaybooks "NodeFSSpaceAlerts" }}
+{{- end }}
+
+command_actions:
+{{ toYaml .Values.commandActions | indent 2 }}
+
+active_playbooks:
+{{- if .Values.playbooks }}
+  {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
 {{- end }}
 
 {{- $priorityPlaybooks := .Values.priorityBuiltinPlaybooks }}

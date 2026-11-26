@@ -7,25 +7,21 @@ from robusta.core.model.events import ExecutionBaseEvent, ExecutionEventBasePara
 from robusta.utils.decorators import doublewrap
 
 
-# actions that were removed. A playbook that still names one is loaded, and logs this error instead of running it
-DEPRECATED_ACTIONS = {
-    "krr_scan": "Action krr_scan is deprecated and no longer supported. Remove it from your playbooks. "
-    "The weekly KRR scan runs from the KRR CronJob, see runner.krrCronJob in the Helm values",
-    "popeye_scan": "Action popeye_scan is deprecated and no longer supported. Remove it from your playbooks",
-}
-
-
 class NotAnActionException(Exception):
     def __init__(self, obj):
         super(NotAnActionException, self).__init__(f"{obj}  is not a playbook action")
 
 
 @doublewrap
-def action(func: Callable):
+def action(func: Callable, command_action: bool = False):
     """
     Decorator to mark functions as playbook actions
+
+    A command action runs a command in a pod or on a node, or starts a job. It runs only from playbooks defined in the
+    runner's own configuration, and only when that configuration lists it under command_actions.
     """
     setattr(func, "_action_name", func.__name__)
+    setattr(func, "_command_action", command_action)
     return func
 
 
@@ -39,6 +35,7 @@ class Action:
 
         self.action_name = func.__name__
         self.func = func
+        self.command_action = getattr(func, "_command_action", False)
         self.event_type = self.__get_action_event_type(func)
         self.params_type = self.__get_action_params_type(func)
         self.from_params_func = None

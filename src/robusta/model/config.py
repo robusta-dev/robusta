@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
 from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
-from robusta.core.playbooks.actions_registry import DEPRECATED_ACTIONS, ActionsRegistry
+from robusta.core.playbooks.actions_registry import ActionsRegistry
 from robusta.core.playbooks.base_trigger import TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params
 from robusta.core.pubsub.event_emitter import EventEmitter
@@ -132,14 +132,9 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 
             for action in playbook_def.get_actions():
                 action_def = actions_registry.get_action(action.action_name)
-                if not action_def and action.action_name in DEPRECATED_ACTIONS:
-                    logging.error(DEPRECATED_ACTIONS[action.action_name])
-                    action.set_func_hash("")
-                    continue
                 if not action_def:
-                    msg = f"Action {action.action_name} not found. Will not be executed"
-                    logging.error(msg)
-                    raise Exception(msg)
+                    logging.error(f"Action {action.action_name} not found. Skipping the playbook that uses it")
+                    break
                 action.set_func_hash(get_function_hash(action_def.func))
                 if action_def.params_type:  # action has params
                     action.action_params = merge_global_params(global_config, action.action_params)
@@ -155,15 +150,18 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
                         msg = f"Action {action_def.action_name} cannot be triggered by {exec_event_type}"
                         logging.error(msg)
                         raise Exception(msg)
+            else:
+                self.__add_playbook(playbook_def)
 
-            playbook_def.post_init()
+    def __add_playbook(self, playbook_def: PlaybookDefinition):
+        playbook_def.post_init()
 
-            # add the playbook only once for each event.
-            playbooks_trigger_events = set(
-                [trigger_definition.get().get_trigger_event() for trigger_definition in playbook_def.triggers]
-            )
-            for event in playbooks_trigger_events:
-                self.triggers_to_playbooks[event].append(playbook_def)
+        # add the playbook only once for each event.
+        playbooks_trigger_events = set(
+            [trigger_definition.get().get_trigger_event() for trigger_definition in playbook_def.triggers]
+        )
+        for event in playbooks_trigger_events:
+            self.triggers_to_playbooks[event].append(playbook_def)
 
     def get_playbooks(self, trigger_event: TriggerEvent) -> List[PlaybookDefinition]:
         return self.triggers_to_playbooks.get(trigger_event.get_event_name(), [])
@@ -178,6 +176,7 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 class Registry:
     _actions: ActionsRegistry = ActionsRegistry()
     _light_actions: List[str] = []
+    _command_actions: List[str] = []
     _playbooks: PlaybooksRegistry = PlaybooksRegistry()
     _sinks: SinksRegistry = None
     _scheduler = None
@@ -196,6 +195,12 @@ class Registry:
 
     def get_light_actions(self) -> List[str]:
         return self._light_actions
+
+    def set_command_actions(self, command_actions: List[str]):
+        self._command_actions = command_actions
+
+    def get_command_actions(self) -> List[str]:
+        return self._command_actions
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions

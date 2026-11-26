@@ -11,7 +11,6 @@ from prometrix import PrometheusNotFound
 
 from robusta.core.model.base_params import drop_config_only_params
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
-from robusta.core.playbooks.actions_registry import DEPRECATED_ACTIONS
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params, to_safe_str
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -154,8 +153,13 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         action_params = drop_config_only_params(action_params)
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
-            msg = DEPRECATED_ACTIONS.get(action_name, f"External action not found {action_name}")
-            return self.__error_resp(msg, ErrorCodes.ACTION_NOT_FOUND.value)
+            return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
+
+        if action_def.command_action:
+            return self.__error_resp(
+                f"Action {action_name} runs only from playbooks in the runner configuration",
+                ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value,
+            )
 
         if not action_def.from_params_func:
             return self.__error_resp(
@@ -213,10 +217,17 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             registered_action = self.registry.get_actions().get_action(action.action_name)
 
             if not registered_action:  # Might happen if manually trying to trigger incorrect action
-                msg = DEPRECATED_ACTIONS.get(
-                    action.action_name, f"action {action.action_name} not found. Skipping for event {type(execution_event)}"
-                )
+                msg = f"action {action.action_name} not found. Skipping for event {type(execution_event)}"
                 execution_event.response = self.__error_resp(msg, ErrorCodes.ACTION_NOT_REGISTERED.value)
+                playbooks_errors_count.labels(source).inc()
+                continue
+
+            if registered_action.command_action and action.action_name not in self.registry.get_command_actions():
+                msg = (
+                    f"Action {action.action_name} is disabled. "
+                    f"To enable it, add it to commandActions in the Helm values"
+                )
+                execution_event.response = self.__error_resp(msg, ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value)
                 playbooks_errors_count.labels(source).inc()
                 continue
 
@@ -382,6 +393,12 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
+
+        if action_def.command_action:
+            return self.__error_resp(
+                f"Action {action_name} runs only from playbooks in the runner configuration",
+                ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value,
+            )
 
         if not action_def.from_params_func:
             return self.__error_resp(
