@@ -297,8 +297,9 @@ def validate_job_spec(job_spec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return job_spec
 
 
-# Parameters that decide the identity, metadata and command line of pods the runner creates. They are taken
-# from the runner's configuration only, never from the parameters of an individual action request.
+# Parameters that decide the identity, metadata and command line of pods the runner creates, or where the
+# runner sends its credentials. They are taken from the runner's configuration only, never from the
+# parameters of an individual action request.
 CONFIG_ONLY_PARAMS = frozenset(
     {
         "serviceAccountName",
@@ -308,6 +309,8 @@ CONFIG_ONLY_PARAMS = frozenset(
         "krr_args",
         "popeye_args",
         "args",
+        # The runner sends its Holmes API key to this URL: a request that set it could receive the key.
+        "holmes_url",
     }
 )
 

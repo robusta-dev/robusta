@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import Dict, List, Optional
+from collections import deque
+from typing import Any, Deque, Dict, List, Optional
 
 from cachetools import TTLCache
 from prometrix import (
@@ -225,6 +226,75 @@ class AlertManagerDiscovery(ServiceDiscovery):
 
 class HolmesDiscovery(ServiceDiscovery):
     MODEL_NAME_URL = "/api/model"
+    # The keys sent recently (a rotation swaps them), so error reports can be
+    # scrubbed of a key that was in use when the error happened.
+    _recent_api_keys: Deque[str] = deque(maxlen=3)
+
+    @classmethod
+    def api_key(cls) -> str:
+        """The key to send to the Holmes API, or "" when the runner has none.
+
+        The Robusta chart mounts the Holmes chart's generated key into the
+        runner and sets HOLMES_API_KEY_FILE; the file is re-read on every call,
+        so a rotated key is picked up without a restart. HOLMES_API_KEY (inline)
+        takes precedence.
+        """
+        key = os.environ.get("HOLMES_API_KEY", "").strip()
+        key_file = os.environ.get("HOLMES_API_KEY_FILE", "")
+        if not key and key_file:
+            try:
+                with open(key_file) as f:
+                    key = f.read().strip()
+            except OSError:
+                # Optional Secret volume not filled in yet: send no key and let
+                # Holmes answer 401, which the caller reports.
+                key = ""
+        if key and key not in cls._recent_api_keys:
+            cls._recent_api_keys.append(key)
+        return key
+
+    @classmethod
+    def auth_headers(cls, extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """Headers for a request to the Holmes API, with its API key when the runner has one.
+
+        Holmes requires an API key on every endpoint except its health probes.
+        With no key, none is sent: an older Holmes that does not require one
+        keeps working.
+        """
+        headers = dict(extra or {})
+        key = cls.api_key()
+        if key:
+            headers["X-API-Key"] = key
+        return headers
+
+    @classmethod
+    def scrub_api_key(cls, event: Any, hint: Any = None) -> Any:
+        """Sentry before_send hook: replace the Holmes API key anywhere in an event.
+
+        Sentry records the local variables of every frame, and the request
+        machinery holds the headers (and the raw request bytes) in locals, so
+        a failed call to Holmes would otherwise send the key out of the cluster.
+        """
+        keys = set(cls._recent_api_keys)
+        current = cls.api_key()
+        if current:
+            keys.add(current)
+        if not keys:
+            return event
+
+        def scrub(value: Any) -> Any:
+            if isinstance(value, str):
+                for key in keys:
+                    if key in value:
+                        value = value.replace(key, "[Filtered]")
+                return value
+            if isinstance(value, dict):
+                return {k: scrub(v) for k, v in value.items()}
+            if isinstance(value, (list, tuple)):
+                return type(value)(scrub(v) for v in value)
+            return value
+
+        return scrub(event)
 
     @classmethod
     def find_holmes_url(cls, holmes_url: Optional[str] = None) -> Optional[str]:

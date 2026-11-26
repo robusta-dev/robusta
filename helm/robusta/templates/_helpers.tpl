@@ -12,6 +12,34 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
+The Holmes API key the runner sends to Holmes. The Holmes subchart generates
+it into a Secret (its `apiAuth` values, default on) and Holmes requires it on
+every endpoint. The runner mounts the same Secret as an optional file, so it
+starts even before the Secret exists and picks the key up once it does.
+Mirrors holmes.apiAuth.enabled / holmes.apiAuth.secretName in the Holmes
+chart. Wired only when the Holmes subchart has `apiAuth` (its defaults are
+visible here): a subchart from before API auth creates no Secret and its
+Holmes needs no key, so the runner gets no mount until the subchart is bumped.
+*/}}
+{{- define "robusta.holmesApiKey.enabled" -}}
+{{- $holmes := .Values.holmes | default dict -}}
+{{- if and .Values.enableHolmesGPT (hasKey $holmes "apiAuth") -}}
+{{- $apiAuth := $holmes.apiAuth | default dict -}}
+{{- if or $apiAuth.defaultKey $apiAuth.existingSecret -}}true{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "robusta.holmesApiKey.secretName" -}}
+{{- $apiAuth := dig "apiAuth" dict (.Values.holmes | default dict) -}}
+{{- $existing := dig "existingSecret" "" $apiAuth -}}
+{{- if $existing -}}
+{{- $existing -}}
+{{- else -}}
+{{- printf "%s-holmes-api-key" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Render dnsPolicy (+ optional dnsConfig) for a component.
 Pass the component's dnsConfig dict as the context, e.g.:
   {{- include "robusta.dnsConfig" .Values.runner.dnsConfig | nindent 6 }}

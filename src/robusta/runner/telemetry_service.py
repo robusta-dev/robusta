@@ -21,6 +21,7 @@ from robusta.core.model.env_vars import (
     SENTRY_ENABLED,
     TELEMETRY_PERIODIC_SEC,
 )
+from robusta.integrations.prometheus.utils import HolmesDiscovery
 from robusta.model.config import Registry, Telemetry
 from robusta.runner.telemetry import SinkInfo
 
@@ -42,6 +43,8 @@ class TelemetryService:
                     integrations=[
                         ThreadingIntegration(propagate_scope=True),
                     ],
+                    # A failed call to Holmes leaves its API key in frame locals.
+                    before_send=HolmesDiscovery.scrub_api_key,
                 )
                 global_config = self.registry.get_global_config()
                 sentry_sdk.set_user({"id": global_config.get("account_id", "")})
