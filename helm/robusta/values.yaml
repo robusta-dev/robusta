@@ -735,30 +735,22 @@ runner:
   # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
   overrideClusterRoles: []
   rbac:
-    # Opt-in write access for the runner. Each flag grants the Kubernetes permission described
-    # above it. An action that needs a disabled flag logs an error.
-    # See docs: "Read-Only Service Account".
-    # With namespaceScoped: true, "all namespaces" means Robusta's namespace only,
-    # and enableNodeEdit grants nothing.
+    # Opt-in write access for the runner, to support deprecated behaviour. We recommend keeping
+    # these flags disabled. See docs: "Read-Only Service Account".
     #
-    # Grants delete on pods in all namespaces. Anyone who can make the runner run
-    # delete_pod or delete_alert_pod can delete any pod in the cluster.
+    # Grants delete on pods in all namespaces. Used by delete_pod and delete_alert_pod.
     enablePodDelete: false
-    # Grants delete on jobs (batch) in all namespaces. Anyone who can make the runner run
-    # delete_job can delete any Job in the cluster.
+    # Grants delete on jobs (batch) in all namespaces. Used by delete_job.
     enableJobDelete: false
-    # Grants patch on nodes, for every node in the cluster. Used by cordon, uncordon and drain.
-    # patch allows changing any field of a node, such as labels and taints, not only cordon.
+    # Grants patch on nodes. Used by cordon, uncordon and drain.
     enableNodeEdit: false
-    # Grants create on pods/eviction in all namespaces, which means evicting any pod in the
-    # cluster. Used by drain, which also needs enableNodeEdit.
+    # Grants create on pods/eviction in all namespaces. Used by drain, together with enableNodeEdit.
     enablePodEvict: false
-    # Grants create on configmaps in Robusta's namespace only. Kubernetes cannot limit create
-    # by name, so the runner can create any ConfigMap in that namespace.
-    # Scheduled playbooks need it together with enableRobustaConfigMapEdit.
+    # Grants create on configmaps in Robusta's namespace. Used by scheduled playbooks,
+    # together with enableRobustaConfigMapEdit.
     enableRobustaConfigMapCreate: false
-    # Grants get and update on the scheduled-jobs ConfigMap in Robusta's namespace only, and on no
-    # other ConfigMap. Scheduled playbooks need it together with enableRobustaConfigMapCreate.
+    # Grants get and update on the scheduled-jobs ConfigMap in Robusta's namespace. Used by
+    # scheduled playbooks, together with enableRobustaConfigMapCreate.
     enableRobustaConfigMapEdit: false
     # true: no runner Role and no KRR CronJob, overrides the flags above
     disableCreateFromServiceAccount: false
