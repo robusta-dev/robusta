@@ -17,7 +17,7 @@ RBAC_FLAGS = [
     "enablePodDelete",
     "enableJobDelete",
     "enableNodeEdit",
-    "enableNodeCreate",
+    "enablePodEvict",
     "enableRobustaConfigMapCreate",
     "enableRobustaConfigMapEdit",
 ]

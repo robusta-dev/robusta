@@ -30,9 +30,9 @@ def test_delete_pod_with_flag_disabled(monkeypatch):
     event.get_pod.return_value.delete.assert_not_called()
 
 
-def test_drain_needs_node_create_flag(monkeypatch):
-    monkeypatch.setattr(node_actions, "ENABLE_NODE_CREATE", False)
-    with pytest.raises(ActionException, match="enableNodeCreate"):
+def test_drain_needs_pod_evict_flag(monkeypatch):
+    monkeypatch.setattr(node_actions, "ENABLE_POD_EVICT", False)
+    with pytest.raises(ActionException, match="enablePodEvict"):
         node_actions.drain(MagicMock())
 
 

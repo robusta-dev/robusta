@@ -107,7 +107,7 @@ alert_relabel:
 {{- if not $rbac.enableNodeEdit }}
 {{- $lightActions = without $lightActions "drain" "cordon" "uncordon" }}
 {{- end }}
-{{- if not $rbac.enableNodeCreate }}
+{{- if not $rbac.enablePodEvict }}
 {{- $lightActions = without $lightActions "drain" }}
 {{- end }}
 light_actions:

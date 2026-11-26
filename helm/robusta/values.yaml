@@ -753,7 +753,7 @@ runner:
     enablePodDelete: false  # delete_pod and delete_alert_pod actions
     enableJobDelete: false  # delete_job action
     enableNodeEdit: false  # cordon, uncordon and drain actions
-    enableNodeCreate: false  # pod evictions, needed by drain
+    enablePodEvict: false  # pod evictions, needed by drain
     # the scheduled-jobs ConfigMap. Scheduled playbooks need both
     enableRobustaConfigMapCreate: false
     enableRobustaConfigMapEdit: false

@@ -23,7 +23,7 @@ Each kind of write access has its own flag under ``runner.rbac``. All flags defa
         enablePodDelete: false               # delete pods
         enableJobDelete: false               # delete Jobs
         enableNodeEdit: false                # cordon and uncordon nodes
-        enableNodeCreate: false              # evict pods when draining nodes
+        enablePodEvict: false                # evict pods when draining nodes
         enableRobustaConfigMapCreate: false  # create ConfigMaps in Robusta's namespace
         enableRobustaConfigMapEdit: false    # update the scheduled-jobs ConfigMap
 
@@ -32,7 +32,8 @@ What each flag grants, and the actions that need it:
 - ``enablePodDelete``: ``delete`` on pods. Needed by ``delete_pod`` and ``delete_alert_pod``
 - ``enableJobDelete``: ``delete`` on Jobs. Needed by ``delete_job``
 - ``enableNodeEdit``: ``patch`` on nodes. Needed by ``cordon``, ``uncordon`` and ``drain``
-- ``enableNodeCreate``: ``create`` on ``pods/eviction``. Needed by ``drain``, together with ``enableNodeEdit``
+- ``enablePodEvict``: ``create`` on ``pods/eviction``. Needed by ``drain``
+- ``drain`` needs both ``enablePodEvict`` and ``enableNodeEdit``. ``cordon`` and ``uncordon`` need only ``enableNodeEdit``
 - ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``: ``create`` on ConfigMaps in Robusta's namespace, and ``update`` on the ``scheduled-jobs`` ConfigMap only. Needed by scheduled playbooks, see below
 
 When an action runs without the flag it needs, the runner logs an error that names the flag and links to this page.
