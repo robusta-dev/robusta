@@ -114,7 +114,6 @@ lightActions:
 - drain
 - cordon
 - uncordon
-- rollout_restart
 - ask_holmes
 - prometheus_all_available_metrics
 - prometheus_get_series
@@ -752,11 +751,16 @@ runner:
   # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
   overrideClusterRoles: []
   rbac:
-    # Default true = read-only runner: no write verbs, no create or pods/exec, the
-    # NodeFSSpaceAlerts and WeeklyKRRScan playbooks are disabled, and actions that create
-    # pods or change resources are removed from lightActions.
-    # Setting false restores the previous write permissions, playbooks and actions.
-    disableCreateFromServiceAccount: true
+    # Opt-in write access for the runner. An action that needs a disabled flag logs an error.
+    # See docs: "Read-Only Service Account".
+    enablePodCreate: false  # debugger pods and pod exec in Robusta's namespace
+    enablePodDelete: false  # delete_pod and delete_alert_pod actions
+    enableJobCreate: false  # krr_scan, popeye_scan, kubectl_command and other Job based actions
+    enableJobDelete: false  # delete_job action
+    enableNodeEdit: false  # cordon, uncordon and drain actions
+    # the scheduled-jobs ConfigMap. Scheduled playbooks need both
+    enableRobustaConfigMapCreate: false
+    enableRobustaConfigMapEdit: false
     # Namespace-scoped runner: render the runner RBAC as a namespaced Role + RoleBinding
     # (no ClusterRole / ClusterRoleBinding), limiting the runner to the release namespace.
     # Also presets the scoped-mode env vars (DISABLE_DISCOVERY, CLUSTER_STATS_NAMESPACE,

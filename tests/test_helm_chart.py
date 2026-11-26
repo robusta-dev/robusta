@@ -13,7 +13,16 @@ CHART_PATH = Path(__file__).parent.parent / "helm" / "robusta"
 pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm binary not available")
 
 READ_ONLY_VERBS = {"get", "list", "watch"}
-ENABLE_CREATE = ["--set", "runner.rbac.disableCreateFromServiceAccount=false"]
+RBAC_FLAGS = [
+    "enablePodCreate",
+    "enablePodDelete",
+    "enableJobCreate",
+    "enableJobDelete",
+    "enableNodeEdit",
+    "enableRobustaConfigMapCreate",
+    "enableRobustaConfigMapEdit",
+]
+SCHEDULER_FLAGS = ["enableJobCreate", "enableRobustaConfigMapCreate", "enableRobustaConfigMapEdit"]
 KRR_CRONJOB_DISABLED = ["--set", "runner.krrCronJob.enabled=false"]
 
 
@@ -35,7 +44,11 @@ def render_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
     return [doc for doc in yaml.safe_load_all(output) if doc]
 
 
-def playbook_names(extra_args: Optional[List[str]] = None) -> set:
+def enable(*flags: str) -> List[str]:
+    return [arg for flag in flags for arg in ("--set", f"runner.rbac.{flag}=true")]
+
+
+def runner_config(extra_args: Optional[List[str]] = None) -> dict:
     cmd = [
         "helm",
         "template",
@@ -50,8 +63,22 @@ def playbook_names(extra_args: Optional[List[str]] = None) -> set:
         "templates/playbooks-config.yaml",
     ] + (extra_args or [])
     docs = [doc for doc in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if doc]
-    config = base64.b64decode(docs[0]["data"]["active_playbooks.yaml"]).decode()
-    return {p.get("name") for p in yaml.safe_load(config)["active_playbooks"]}
+    return yaml.safe_load(base64.b64decode(docs[0]["data"]["active_playbooks.yaml"]).decode())
+
+
+def playbook_names(extra_args: Optional[List[str]] = None) -> set:
+    return {p.get("name") for p in runner_config(extra_args)["active_playbooks"]}
+
+
+def write_rules(docs: List[dict]) -> set:
+    granted = set()
+    for doc in docs:
+        if doc["kind"] not in ("Role", "ClusterRole"):
+            continue
+        for rule in doc["rules"]:
+            for verb in set(rule["verbs"]) - READ_ONLY_VERBS:
+                granted.update((doc["kind"], resource, verb) for resource in rule["resources"])
+    return granted
 
 
 def get_doc(docs: List[dict], kind: str, name_contains: str = "") -> Optional[dict]:
@@ -70,16 +97,6 @@ def test_runner_clusterrole_verbs():
     assert not violations, f"ClusterRole grants write verbs: {violations}"
 
 
-def test_runner_state_role_only_writes_scheduled_jobs_configmap():
-    docs = render_chart()
-    role = get_doc(docs, "Role", "runner-state-role")
-    assert role["rules"] == [
-        {"apiGroups": [""], "resources": ["configmaps"], "verbs": ["create"]},
-        {"apiGroups": [""], "resources": ["configmaps"], "resourceNames": ["scheduled-jobs"], "verbs": ["update"]},
-    ]
-    assert get_doc(docs, "RoleBinding", "runner-state-role-binding") is not None
-
-
 def test_runner_clusterrole_no_cluster_wide_pod_exec():
     docs = render_chart()
     cluster_role = get_doc(docs, "ClusterRole", "runner-cluster-role")
@@ -87,47 +104,62 @@ def test_runner_clusterrole_no_cluster_wide_pod_exec():
         assert "pods/exec" not in rule.get("resources", []), f"pods/exec must not be cluster-wide: {rule}"
 
 
-def test_runner_local_role_grants_namespaced_create():
-    docs = render_chart(ENABLE_CREATE)
-    role = get_doc(docs, "Role", "runner-local-role")
-    assert role is not None, "namespaced Role missing"
-
-    granted = set()
-    for rule in role.get("rules", []):
-        if "create" in rule.get("verbs", []):
-            granted.update(rule.get("resources", []))
-    assert {
-        "pods",
-        "pods/exec",
-        "configmaps",
-        "persistentvolumeclaims",
-        "jobs",
-        "deployments",
-    } <= granted
-    assert "secrets" not in granted
-
-    binding = get_doc(docs, "RoleBinding", "runner-local-role-binding")
-    assert binding is not None
-    subject = binding["subjects"][0]
-    assert subject["kind"] == "ServiceAccount"
-    assert "runner-service-account" in subject["name"]
-
-
-def test_default_render_has_no_local_role():
+def test_default_render_has_no_write_rules():
     docs = render_chart()
     assert get_doc(docs, "Role", "runner-local-role") is None
-    assert get_doc(docs, "RoleBinding", "runner-local-role-binding") is None
+    assert write_rules(docs) == set()
 
-    names = playbook_names()
-    assert "NodeFSSpaceAlerts" not in names
-    assert "WeeklyKRRScan" not in names
+    config = runner_config()
+    names = {p.get("name") for p in config["active_playbooks"]}
+    assert not names & {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"}
+    assert not set(config["light_actions"]) & {"delete_pod", "delete_job", "drain", "krr_scan", "pod_ps", "rollout_restart"}
+
+    env = get_doc(docs, "Deployment", "runner")["spec"]["template"]["spec"]["containers"][0]["env"]
+    assert {"name": "ENABLE_POD_DELETE", "value": "false"} in env
 
 
-def test_create_flag_enables_playbooks():
-    names = playbook_names(ENABLE_CREATE)
-    assert "NodeFSSpaceAlerts" in names
-    assert "WeeklyKRRScan" not in names
-    assert "WeeklyKRRScan" in playbook_names(ENABLE_CREATE + KRR_CRONJOB_DISABLED)
+def test_all_flags_grant_only_listed_write_rules():
+    optional_rules = [
+        "--set", "enabledManagedConfiguration=true",
+        "--set", "openshift.enabled=true",
+        "--set", "argoRollouts=true",
+        "--set", "runner.customCRD={StrimziPodSet,CNPGCluster,ExecutionContext}",
+        "--api-versions", "snapshot.storage.k8s.io/v1/VolumeSnapshot",
+    ]
+    docs = render_chart(enable(*RBAC_FLAGS) + KRR_CRONJOB_DISABLED + optional_rules)
+    assert write_rules(docs) == {
+        ("ClusterRole", "nodes", "patch"),
+        ("ClusterRole", "pods/eviction", "create"),
+        ("ClusterRole", "pods", "delete"),
+        ("ClusterRole", "jobs", "delete"),
+        ("Role", "pods", "create"),
+        ("Role", "pods", "delete"),
+        ("Role", "pods", "patch"),
+        ("Role", "pods/exec", "create"),
+        ("Role", "jobs", "create"),
+        ("Role", "jobs", "delete"),
+        ("Role", "secrets", "create"),
+        ("Role", "configmaps", "create"),
+        ("Role", "configmaps", "update"),
+        ("ClusterRole", "securitycontextconstraints", "use"),
+    }
+    configmap_update = [rule for rule in get_doc(docs, "Role", "runner-local-role")["rules"] if "update" in rule["verbs"]]
+    assert configmap_update[0]["resourceNames"] == ["scheduled-jobs"]
+
+    light_actions = runner_config(enable(*RBAC_FLAGS))["light_actions"]
+    assert {"delete_pod", "delete_job", "drain", "krr_scan", "pod_ps"} <= set(light_actions)
+    assert "rollout_restart" not in light_actions
+
+
+def test_pod_create_flag_enables_node_fs_playbook():
+    assert "NodeFSSpaceAlerts" in playbook_names(enable("enablePodCreate"))
+
+
+def test_scheduled_playbooks_need_scheduler_flags():
+    names = playbook_names(enable(*SCHEDULER_FLAGS) + KRR_CRONJOB_DISABLED)
+    assert {"WeeklyKRRScan", "RobustaMaintenance"} <= names
+    assert "WeeklyKRRScan" not in playbook_names(enable(*SCHEDULER_FLAGS))
+    assert "RobustaMaintenance" not in playbook_names(enable("enableJobCreate") + KRR_CRONJOB_DISABLED)
 
 
 def test_namespace_scoped_rbac_renders_role_and_rolebinding():
@@ -150,9 +182,6 @@ def test_namespace_scoped_rbac_renders_role_and_rolebinding():
     assert binding["roleRef"]["kind"] == "Role"
     assert "runner-role" in binding["roleRef"]["name"]
     assert binding["subjects"][0]["kind"] == "ServiceAccount"
-
-    # the namespaced state Role is unaffected
-    assert get_doc(docs, "Role", "runner-state-role") is not None
 
 
 def test_namespace_scoped_rbac_sets_env_defaults():
@@ -291,7 +320,7 @@ def test_krr_cronjob_default_resources():
 
 
 def test_krr_cronjob_disabled_keeps_runner_scan():
-    docs = render_full_chart(ENABLE_CREATE + KRR_CRONJOB_DISABLED)
+    docs = render_full_chart(enable("enableJobCreate") + KRR_CRONJOB_DISABLED)
     assert get_doc(docs, "CronJob", "robusta-krr") is None
     env_names = {e["name"] for e in get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert "KRR_CRONJOB_ENABLED" not in env_names
@@ -300,7 +329,7 @@ def test_krr_cronjob_disabled_keeps_runner_scan():
 
 
 def test_krr_cronjob_kept_without_runner_role():
-    docs = render_full_chart(["--set", "runner.rbac.disableCreateFromServiceAccount=true"])
+    docs = render_full_chart()
     assert get_doc(docs, "CronJob", "robusta-krr") is not None
     assert get_doc(docs, "Role", "runner-local-role") is None
 

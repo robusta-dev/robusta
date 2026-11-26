@@ -54,6 +54,8 @@ the ``runner`` service account. This container runs privileged with the ``SYS_AD
 a specific user; the debug container typically runs as root in order to attach to and inspect other
 processes on the node.
 
+These playbooks also need ``runner.rbac.enablePodCreate: true``, see :ref:`read-only-service-account`.
+
 **Important**: These capabilities are **OPTIONAL** and only needed for the native debugging features mentioned above. Most Robusta deployments work fine with the baseline SCC.
 
 Baseline SCC is Sufficient For:

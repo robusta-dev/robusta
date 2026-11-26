@@ -61,7 +61,7 @@ Limitations of the CronJob:
 - **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
 - **Scan now**: the "scan now" button in the Robusta UI still uses the ``krr_scan`` action, which creates a Job, and a Secret when Prometheus needs credentials. Creating the Secret needs ``runner.krrCronJob.enabled: false``
 
-Scans created by the runner (the ``krr_scan`` action) also need ``runner.rbac.disableCreateFromServiceAccount: false``, see :ref:`read-only-service-account`.
+Scans created by the runner (the ``krr_scan`` action) also need ``runner.rbac.enableJobCreate: true``, see :ref:`read-only-service-account`.
 
 Sending Weekly KRR Scan Reports to Slack
 ===========================================
@@ -85,7 +85,8 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
       sinks:
           - "main_slack_sink" # slack sink you want to send the report to here
 
-   Scheduled ``krr_scan`` playbooks need ``runner.krrCronJob.enabled: false``, see :ref:`krr-cronjob`.
+   Scheduled ``krr_scan`` playbooks need ``runner.krrCronJob.enabled: false``, see :ref:`krr-cronjob`, and the
+   ``runner.rbac`` flags for scheduled playbooks and Jobs, see :ref:`read-only-service-account`.
 
 3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 

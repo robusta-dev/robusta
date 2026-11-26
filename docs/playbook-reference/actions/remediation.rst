@@ -1,7 +1,8 @@
 Remediation
 ############################
 
-Robusta includes actions that modify Kubernetes resources in your cluster. See also:
+Robusta includes actions that modify Kubernetes resources in your cluster. Most of them need a
+``runner.rbac`` flag, see :ref:`read-only-service-account`. See also:
 
 * :ref:`node_bash_enricher`
 * :ref:`pod_bash_enricher`

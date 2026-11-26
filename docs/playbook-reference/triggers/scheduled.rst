@@ -3,7 +3,8 @@ Scheduled
 
 .. _on_schedule:
 
-Robusta can run actions on a schedule. Schedules come in two forms:
+Robusta can run actions on a schedule. Scheduled playbooks are disabled by default, see
+:ref:`Scheduled Playbooks <rbac-scheduled-playbooks>` to enable them. Schedules come in two forms:
 
 Fixed delay
 ----------------------

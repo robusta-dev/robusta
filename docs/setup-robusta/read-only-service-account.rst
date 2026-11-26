@@ -3,39 +3,71 @@
 Read-Only Service Account
 ========================================
 
-By default, Robusta's runner service account is **read-only**: its ClusterRole only grants ``get``, ``list`` and ``watch``, and it cannot create pods, exec into pods, or update and delete Kubernetes resources. The only write access is in Robusta's installation namespace, where the runner can ``create`` ConfigMaps and ``update`` its own ``scheduled-jobs`` ConfigMap (scheduled playbooks state). This guide explains what read-only mode means, how to re-enable write permissions, and how to restrict the read rules further.
+By default, Robusta's runner service account is **read-only**: its ClusterRole only grants ``get``, ``list`` and ``watch``, and the chart renders no namespaced Role for the runner. It cannot create pods, exec into pods, or update and delete Kubernetes resources. This guide explains what read-only mode means, how to enable specific write access, and how to restrict the read rules further.
 
 .. note::
 
-   The built-in playbooks that create pods or jobs (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``) are
-   disabled by default, and actions that create pods or modify resources (scans, node and pod
-   debugging, remediation such as ``delete_pod``, ``drain`` and ``rollout_restart``) cannot be run from the UI.
-   The weekly KRR scan keeps running from a CronJob, see :ref:`krr-cronjob`.
+   The built-in playbooks that create pods or jobs (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``) and all
+   :ref:`scheduled playbooks <on_schedule>` are disabled by default, and actions that need write access
+   are removed from the actions the UI can run. The weekly KRR scan keeps running from a CronJob, see :ref:`krr-cronjob`.
 
-Re-enabling Write Permissions
------------------------------
+Enabling Write Access
+---------------------
 
-To restore the previous write permissions, playbooks and actions, set:
+Each kind of write access has its own flag under ``runner.rbac``. All flags default to ``false``:
 
 .. code-block:: yaml
 
     runner:
       rbac:
-        disableCreateFromServiceAccount: false
+        enablePodCreate: false               # debugger pods and pod exec in Robusta's namespace
+        enablePodDelete: false               # delete pods
+        enableJobCreate: false               # create Jobs in Robusta's namespace
+        enableJobDelete: false               # delete Jobs
+        enableNodeEdit: false                # cordon, uncordon and drain nodes
+        enableRobustaConfigMapCreate: false  # create ConfigMaps in Robusta's namespace
+        enableRobustaConfigMapEdit: false    # update the scheduled-jobs ConfigMap
 
-To keep the runner read-only and grant only specific write verbs, add the rules you need with
-``runner.customClusterRoleRules``:
+What each flag grants, and the actions that need it:
+
+- ``enablePodCreate``: ``create`` and ``delete`` on pods and ``create`` on ``pods/exec``, in Robusta's namespace. Needed by actions that start a debugger pod, such as ``node_disk_analyzer``, ``python_profiler``, ``pod_ps``, ``python_memory``, ``debugger_stack_trace`` and the node bash and dmesg enrichers. Also enables the ``NodeFSSpaceAlerts`` playbook
+- ``enablePodDelete``: ``delete`` on pods. Needed by ``delete_pod`` and ``delete_alert_pod``
+- ``enableJobCreate``: ``create`` and ``delete`` on Jobs and ``patch`` on pods, in Robusta's namespace, plus ``create`` on Secrets when ``runner.krrCronJob.enabled`` is ``false``. Needed by ``krr_scan``, ``popeye_scan``, ``kubectl_command``, ``alert_handling_job`` and other actions that run a Job
+- ``enableJobDelete``: ``delete`` on Jobs. Needed by ``delete_job``
+- ``enableNodeEdit``: ``patch`` on nodes and ``create`` on ``pods/eviction``. Needed by ``cordon``, ``uncordon`` and ``drain``
+- ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``: ``create`` on ConfigMaps in Robusta's namespace, and ``update`` on the ``scheduled-jobs`` ConfigMap only. Needed by scheduled playbooks, see below
+
+When an action runs without the flag it needs, the runner logs an error that names the flag and links to this page.
+
+The ``rollout_restart`` action is not supported by the built-in rules. To grant other write verbs, add the rules
+you need with ``runner.customClusterRoleRules``:
 
 .. code-block:: yaml
 
     runner:
       customClusterRoleRules:
-        - apiGroups: [""]
-          resources: ["pods"]
-          verbs: ["delete"]
         - apiGroups: ["apps"]
           resources: ["deployments"]
           verbs: ["patch"]
+
+.. _rbac-scheduled-playbooks:
+
+Scheduled Playbooks
+-------------------
+
+The runner stores the state of :ref:`scheduled playbooks <on_schedule>` in the ``scheduled-jobs`` ConfigMap in its
+namespace, so scheduled playbooks only run when both ConfigMap flags are enabled. Otherwise the runner logs an
+error for each configuration that has scheduled playbooks. To enable them:
+
+.. code-block:: yaml
+
+    runner:
+      rbac:
+        enableRobustaConfigMapCreate: true
+        enableRobustaConfigMapEdit: true
+
+The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks also need ``enableJobCreate: true``, and
+``WeeklyKRRScan`` needs ``runner.krrCronJob.enabled: false``.
 
 Why Read-Only Mode?
 -------------------

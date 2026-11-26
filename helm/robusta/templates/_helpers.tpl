@@ -92,9 +92,22 @@ global_config:
 alert_relabel:
 {{ toYaml  .Values.alertRelabel | indent 2 }}
 
-{{- $lightActions := .Values.lightActions }}
-{{- if .Values.runner.rbac.disableCreateFromServiceAccount }}
-{{- $lightActions = without $lightActions "delete_pod" "delete_job" "drain" "cordon" "uncordon" "rollout_restart" "create_pvc_snapshot" "node_disk_analyzer" "node_dmesg_enricher" "volume_analysis" "python_profiler" "pod_ps" "python_memory" "debugger_stack_trace" "python_process_inspector" "krr_scan" "popeye_scan" }}
+{{- $rbac := .Values.runner.rbac }}
+{{- $lightActions := without .Values.lightActions "rollout_restart" "create_pvc_snapshot" }}
+{{- if not $rbac.enablePodCreate }}
+{{- $lightActions = without $lightActions "node_disk_analyzer" "node_dmesg_enricher" "volume_analysis" "python_profiler" "pod_ps" "python_memory" "debugger_stack_trace" "python_process_inspector" }}
+{{- end }}
+{{- if not $rbac.enableJobCreate }}
+{{- $lightActions = without $lightActions "krr_scan" "popeye_scan" }}
+{{- end }}
+{{- if not $rbac.enablePodDelete }}
+{{- $lightActions = without $lightActions "delete_pod" }}
+{{- end }}
+{{- if not $rbac.enableJobDelete }}
+{{- $lightActions = without $lightActions "delete_job" }}
+{{- end }}
+{{- if not $rbac.enableNodeEdit }}
+{{- $lightActions = without $lightActions "drain" "cordon" "uncordon" }}
 {{- end }}
 light_actions:
 {{ toYaml $lightActions | indent 2 }}
@@ -105,9 +118,12 @@ active_playbooks:
 {{- end }}
 
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
-{{- if .Values.runner.rbac.disableCreateFromServiceAccount }}
-{{- /* these playbooks create pods/jobs */}}
-{{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan") }}
+{{- if not $rbac.enablePodCreate }}
+{{- $disabledPlaybooks = append $disabledPlaybooks "NodeFSSpaceAlerts" }}
+{{- end }}
+{{- /* scheduled playbooks that create jobs */}}
+{{- if not (and $rbac.enableJobCreate $rbac.enableRobustaConfigMapCreate $rbac.enableRobustaConfigMapEdit) }}
+{{- $disabledPlaybooks = concat $disabledPlaybooks (list "WeeklyKRRScan" "RobustaMaintenance") }}
 {{- end }}
 {{- if include "robusta.krrCronJobEnabled" . }}
 {{- $disabledPlaybooks = append $disabledPlaybooks "WeeklyKRRScan" }}
