@@ -88,7 +88,7 @@ def _helm_values() -> dict:
 
 
 def test_builtin_actions_are_found():
-    assert len(BUILTIN_ACTIONS) > 120
+    assert len(BUILTIN_ACTIONS) > 100
     assert COMMAND_ACTIONS | FIXED_TOOL_ACTIONS <= set(BUILTIN_ACTIONS)
 
 

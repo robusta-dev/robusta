@@ -77,15 +77,8 @@ def get_missing_metrics_server_message() -> Optional[str]:
     )
 
 
-@action
-def hpa_events_enricher(alert: PrometheusKubernetesAlert, params: EventEnricherParams):
-    """
-    Notify with the events for the HPA.
-    """
+def add_hpa_events(alert: PrometheusKubernetesAlert, params: EventEnricherParams):
     hpa = alert.hpa
-    if not hpa:
-        logging.info(f"hpa_events_enricher - no hpa on event: {alert}")
-        return
     events_table_block = get_resource_events_table(
         "*HPA events:*",
         hpa.kind,
@@ -116,7 +109,7 @@ def hpa_mismatch_enricher(alert: PrometheusKubernetesAlert, params: HPAMismatchP
         f"*Replicas: Desired ({hpa.status.desiredReplicas}) --> Running ({hpa.status.currentReplicas})*"
     )
     alert.add_enrichment([replicas_block])
-    hpa_events_enricher(alert, params)
+    add_hpa_events(alert, params)
 
 
 @action
