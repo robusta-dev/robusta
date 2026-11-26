@@ -86,8 +86,6 @@ The runner stores the scheduler state in the ``scheduled-jobs`` ConfigMap in its
         enableRobustaConfigMapCreate: true
         enableRobustaConfigMapEdit: true
 
-The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks create Jobs, so they are always disabled.
-
 Blocking All Creation
 ---------------------
 
