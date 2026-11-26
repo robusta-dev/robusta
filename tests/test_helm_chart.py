@@ -217,3 +217,34 @@ def test_override_cluster_roles_still_replaces_rules():
     )
     cluster_role = get_doc(docs, "ClusterRole", "runner-cluster-role")
     assert cluster_role["rules"] == [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}]
+
+
+def runner_config(extra_args: Optional[List[str]] = None) -> dict:
+    cmd = [
+        "helm",
+        "template",
+        str(CHART_PATH),
+        "--set",
+        "clusterName=test",
+        "--set",
+        "sinksConfig[0].file_sink.name=test",
+        "-s",
+        "templates/playbooks-config.yaml",
+    ] + (extra_args or [])
+    docs = [doc for doc in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if doc]
+    return yaml.safe_load(base64.b64decode(docs[0]["data"]["active_playbooks.yaml"]).decode())
+
+
+def test_command_actions_value_reaches_the_runner_config():
+    assert runner_config()["command_actions"] == []
+    platform = ["--set", "enablePlatformPlaybooks=true"]
+    assert runner_config(platform)["command_actions"] == []
+    assert runner_config(platform + ["--set", "commandActions={krr_scan}"])["command_actions"] == ["krr_scan"]
+    enabled = runner_config(["--set", "commandActions={pod_bash_enricher,kubectl_command}"])
+    assert enabled["command_actions"] == ["pod_bash_enricher", "kubectl_command"]
+
+
+def test_disk_alert_playbook_has_no_removed_action():
+    playbooks = runner_config()["active_playbooks"]
+    disk_playbook = next(p for p in playbooks if p.get("name") == "NodeFSSpaceAlerts")
+    assert [list(a)[0] for a in disk_playbook["actions"]] == ["alert_graph_enricher"]

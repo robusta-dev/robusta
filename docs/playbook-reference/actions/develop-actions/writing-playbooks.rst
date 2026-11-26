@@ -88,7 +88,7 @@ For example:
    class BashParams(ActionParams):
       bash_command: str
 
-   @action
+   @action(command_action=True)
    def pod_bash_enricher(event: PodEvent, params: BashParams):
        pod = event.get_pod()
        if not pod:
@@ -115,6 +115,21 @@ We can now define the ``bash_command`` parameter in ``generated_values.yaml``:
 Under the hood, we use the excellent `Pydantic <https://pydantic-docs.helpmanual.io/>`_ library to implement this.
 
 Please consult Pydantic's documentation for details. ``ActionParams`` is a drop-in substitute for Pydantic's ``BaseModel``.
+
+Actions that run commands
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Mark an action that runs a command in a pod or on a node, or starts a job, with ``@action(command_action=True)``,
+as above.
+
+A command action runs only from playbooks defined in your Robusta configuration, and only if you explicitly opt in
+by listing it under ``commandActions`` in your Helm values. ``commandActions`` is empty by default, so a command
+action in your playbooks does not run until you add it:
+
+.. code-block:: yaml
+
+   commandActions:
+   - pod_bash_enricher
 
 Rate-limiting
 -------------

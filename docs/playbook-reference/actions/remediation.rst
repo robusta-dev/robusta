@@ -43,6 +43,9 @@ Kubectl
 
     .. code-block:: yaml
 
+        commandActions:
+        - kubectl_command
+
         customPlaybooks:
         - name: CrashLoopScaleDown
           triggers:

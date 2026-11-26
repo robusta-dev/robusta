@@ -255,10 +255,16 @@ class RobustaActionDirective(SphinxDirective):
         indented_triggers = "\n".join(" " * 24 + line for line in triggers)
 
         reference_label = self.options.get("reference-label", action_definition.action_name)
-        manual_trigger_only = "manual-trigger-only" in self.options
+        manual_trigger_only = "manual-trigger-only" in self.options and not action_definition.command_action
 
         indented_cli_trigger_example = ""
-        if cli_trigger:
+        if action_definition.command_action:
+            indented_cli_trigger_example = """\
+
+                        This action runs commands or starts a job in your cluster. It runs only from playbooks defined in your Robusta configuration, and only if you explicitly opt in by listing it under ``commandActions`` in your Helm values. ``commandActions`` is empty by default.
+
+            """
+        elif cli_trigger:
             indented_cli_trigger_example = f"""\
 
                         This action can be :ref:`manually triggered <Manual Triggers>` using the Robusta CLI:

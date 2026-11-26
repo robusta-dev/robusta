@@ -71,6 +71,12 @@ globalConfig:
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []
 
+# Actions that run commands or start jobs in your cluster. They run only from playbooks defined in this
+# configuration, and only if you explicitly opt in by listing them here. The list is empty by default.
+# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job, krr_scan, popeye_scan
+# The WeeklyKRRScan playbook, which enablePlatformPlaybooks adds, needs krr_scan listed here.
+commandActions: []
+
 # safe actions to enable authenticated users to run
 # prometheus_alert, which simulates an alert, is not in the list by default. Add it to simulate alerts from the Robusta UI.
 lightActions:
@@ -87,7 +93,6 @@ lightActions:
 - job_pod_enricher
 - get_resource_yaml
 - node_cpu_enricher
-- node_disk_analyzer
 - node_running_pods_enricher
 - node_allocatable_resources_enricher
 - node_status_enricher
@@ -95,21 +100,12 @@ lightActions:
 - oomkilled_container_graph_enricher
 - pod_oom_killer_enricher
 - oom_killer_enricher
-- volume_analysis
-- python_profiler
-- pod_ps
-- python_memory
-- debugger_stack_trace
-- python_process_inspector
 - alertmanager_alert
 - create_pvc_snapshot
 - resource_events_enricher
 - delete_job
 - list_resource_names
-- node_dmesg_enricher
 - status_enricher
-- krr_scan
-- popeye_scan
 - handle_alertmanager_event
 - drain
 - cordon
@@ -250,7 +246,6 @@ builtinPlaybooks:
       attach_logs: true
       container_memory_graph: true
       node_memory_graph: true
-      dmesg_log: false
   stop: true
 
 # playbooks for prometheus alerts enrichment
@@ -430,7 +425,6 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: NodeFilesystemAlmostOutOfSpace
   actions:
-  - node_disk_analyzer: {}
   - alert_graph_enricher:
       resource_type: Disk
       item_type: Node
@@ -753,7 +747,7 @@ runner:
   overrideClusterRoles: []
   rbac:
     # WARNING: creation only happens in Robusta's namespace and is critical for
-    # KRR/Popeye scans, kubectl_command, netshoot, stress tests and debugger pods.
+    # KRR/Popeye scans, kubectl_command and the node_bash_enricher debugger pod.
     # Setting true removes the runner Role and disables the
     # NodeFSSpaceAlerts and WeeklyKRRScan playbooks
     disableCreateFromServiceAccount: false
