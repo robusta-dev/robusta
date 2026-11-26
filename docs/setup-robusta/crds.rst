@@ -111,13 +111,13 @@ Robusta includes read-only permissions for common Kubernetes operators and tools
 Applying the Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Update your ``values.yaml`` file with the desired configuration
+1. Add the desired configuration to the Helm values file you installed Robusta with (typically ``generated_values.yaml``), keeping your existing settings. If you lost that file, you can :ref:`extract it from the cluster <where-is-generated-values>`.
 2. Apply the changes using Helm:
 
 .. code-block:: bash
 
     helm upgrade robusta robusta/robusta \
-      --values values.yaml \
+      --values generated_values.yaml \
       --namespace robusta
 
 Automatic Configuration with Holmes AI
