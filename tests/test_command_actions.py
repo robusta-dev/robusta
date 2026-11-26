@@ -45,7 +45,6 @@ REQUEST_ACTIONS = {"http_get", "http_post", "http_put"}
 COMMAND_ACTIONS = {
     "pod_bash_enricher",
     "node_bash_enricher",
-    "kubectl_command",
     "alert_handling_job",
     *REQUEST_ACTIONS,
 }
