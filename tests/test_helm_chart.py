@@ -142,6 +142,10 @@ def test_all_flags_grant_only_listed_write_rules():
         ("Role", "configmaps", "create"),
         ("Role", "configmaps", "update"),
         ("ClusterRole", "securitycontextconstraints", "use"),
+        ("ClusterRole", "prometheusrules", "create"),
+        ("ClusterRole", "prometheusrules", "delete"),
+        ("ClusterRole", "prometheusrules", "patch"),
+        ("ClusterRole", "prometheusrules", "update"),
     }
     configmap_update = [rule for rule in get_doc(docs, "Role", "runner-local-role")["rules"] if "update" in rule["verbs"]]
     assert configmap_update[0]["resourceNames"] == ["scheduled-jobs"]

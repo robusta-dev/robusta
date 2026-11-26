@@ -37,6 +37,9 @@ What each flag grants, and the actions that need it:
 
 When an action runs without the flag it needs, the runner logs an error that names the flag and links to this page.
 
+``enabledManagedConfiguration`` (default ``false``) grants ``create``, ``update``, ``patch`` and ``delete`` on
+PrometheusRules, to sync alerts from the Robusta UI to the cluster, see :ref:`Managed Prometheus Alerts`.
+
 The runner does not create Jobs, so actions that run a Job (``krr_scan``, ``popeye_scan``, ``kubectl_command``,
 ``alert_handling_job`` and others) log an error instead. The weekly KRR scan runs from a CronJob, see :ref:`krr-cronjob`.
 
