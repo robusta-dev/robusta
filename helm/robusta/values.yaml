@@ -74,7 +74,7 @@ alertRelabel: []
 # Command actions: actions that run commands or start jobs in your cluster, or send HTTP requests. They run only from
 # playbooks defined in this configuration, and only if you explicitly opt in by listing them here. The list is empty
 # by default.
-# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job,
+# Available: pod_bash_enricher, node_bash_enricher, alert_handling_job,
 # http_get, http_post, http_put
 commandActions: []
 
@@ -102,7 +102,6 @@ lightActions:
 - pod_oom_killer_enricher
 - oom_killer_enricher
 - alertmanager_alert
-- create_pvc_snapshot
 - resource_events_enricher
 - delete_job
 - list_resource_names
@@ -111,7 +110,6 @@ lightActions:
 - drain
 - cordon
 - uncordon
-- rollout_restart
 - ask_holmes
 - prometheus_all_available_metrics
 - prometheus_get_series
@@ -605,17 +603,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "RobustaMaintenance"
-  triggers:
-  - on_schedule:
-      cron_schedule_repeat:
-        cron_expression: "0 */3 * * *" # every 3 hours
-  actions:
-  - cleanup_robusta_pods:
-      hours_back: 6
-  sinks:
-    - "robusta_ui_sink"
-
 # Any playbook name listed here will be disabled
 disabledPlaybooks: []
 
@@ -736,10 +723,24 @@ runner:
   # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
   overrideClusterRoles: []
   rbac:
-    # WARNING: creation only happens in Robusta's namespace and is critical for
-    # kubectl_command and the node_bash_enricher debugger pod.
-    # Setting true removes the runner Role and disables the
-    # NodeFSSpaceAlerts playbook
+    # Opt-in write access for the runner, to support deprecated behaviour. We recommend keeping
+    # these flags disabled. See docs: "Read-Only Service Account".
+    #
+    # Grants delete on pods in all namespaces. Used by delete_pod and delete_alert_pod.
+    enablePodDelete: false
+    # Grants delete on jobs (batch) in all namespaces. Used by delete_job.
+    enableJobDelete: false
+    # Grants patch on nodes. Used by cordon, uncordon and drain.
+    enableNodeEdit: false
+    # Grants create on pods/eviction in all namespaces. Used by drain, together with enableNodeEdit.
+    enablePodEvict: false
+    # Grants create on configmaps in Robusta's namespace. Used by scheduled playbooks,
+    # together with enableRobustaConfigMapEdit.
+    enableRobustaConfigMapCreate: false
+    # Grants get and update on the scheduled-jobs ConfigMap in Robusta's namespace. Used by
+    # scheduled playbooks, together with enableRobustaConfigMapCreate.
+    enableRobustaConfigMapEdit: false
+    # true: no runner Role and no KRR CronJob, overrides the flags above
     disableCreateFromServiceAccount: false
     # Namespace-scoped runner: render the runner RBAC as a namespaced Role + RoleBinding
     # (no ClusterRole / ClusterRoleBinding), limiting the runner to the release namespace.
@@ -794,17 +795,16 @@ runner:
     nameservers: []
     searches: []
     options: []
-# CRD permissions for common Kubernetes operators and tools
+# Read access to CRDs of common Kubernetes operators and tools. Off by default.
   crdPermissions:
-    argo: true
-    flux: true
-    kafka: true
-    keda: true
-    crossplane: true
-    istio: true
-    gatewayApi: true
-    velero: true
-    externalSecrets: true
+    argo: false
+    flux: false
+    kafka: false
+    keda: false
+    crossplane: false
+    istio: false
+    gatewayApi: false
+    velero: false
 
 kube-prometheus-stack:
   alertmanager:

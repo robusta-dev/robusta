@@ -10,6 +10,8 @@ from robusta.api import (
     RateLimiter,
     action,
 )
+from robusta.core.model.env_vars import ENABLE_POD_DELETE
+from robusta.core.playbooks.rbac_flags import require_rbac_flag
 
 
 @action
@@ -17,6 +19,7 @@ def delete_pod(event: PodEvent):
     """
     Deletes a pod
     """
+    require_rbac_flag(ENABLE_POD_DELETE, "enablePodDelete")
     if not event.get_pod():
         raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, "Failed to get the pod for deletion")
 
@@ -40,6 +43,7 @@ def delete_alert_pod(event: PrometheusKubernetesAlert, params: DeleteAlertPodPar
 
     Supports an optional rate limit, scoped by an alert label value.
     """
+    require_rbac_flag(ENABLE_POD_DELETE, "enablePodDelete")
     pod = event.get_pod()
     if not pod:
         raise ActionException(ErrorCodes.RESOURCE_NOT_FOUND, "Failed to get the pod for deletion")
