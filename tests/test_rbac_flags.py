@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from playbooks.robusta_playbooks import node_actions, pod_actions
+from playbooks.robusta_playbooks import kubectl_enrichments, node_actions, pod_actions
 from robusta.core.model import env_vars
 from robusta.core.playbooks.rbac_flags import RBAC_FLAGS_DOCS_URL, require_rbac_flag
 from robusta.integrations.kubernetes.custom_models import RobustaJob, RobustaPod
@@ -81,3 +81,9 @@ def test_job_creation_not_supported():
 def test_flag_without_env_var_is_off(monkeypatch, flag):
     monkeypatch.delenv(flag, raising=False)
     assert importlib.reload(env_vars).__dict__[flag] is False
+
+
+def test_kubectl_command_is_no_longer_supported(caplog):
+    with caplog.at_level(logging.ERROR), pytest.raises(ActionException, match="no longer supported"):
+        kubectl_enrichments.kubectl_command(MagicMock(), kubectl_enrichments.KubectlParams(command="kubectl get pods"))
+    assert "kubectl_command is deprecated" in caplog.text

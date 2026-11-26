@@ -4,10 +4,7 @@ Cost Savings (KRR)
 `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool that optimizes resource allocation in Kubernetes clusters.
 It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory, reducing costs and improving performance.
 
-Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Because KRR is so popular, it has dedicated documentation here. You can:
-
-1. Send weekly scan reports to Slack or other sinks via Robusta OSS (disabled by default, configure below)
-2. View scans from all your clusters in the Robusta UI (enabled by default for UI users)
+Robusta runs a weekly KRR scan. Because KRR is so popular, it has dedicated documentation here. You can view scans from all your clusters in the Robusta UI (enabled by default for UI users).
 
 
 .. _krr-cronjob:
@@ -108,48 +105,6 @@ Limitations of the CronJob:
 - **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
 - **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
 - **Scan now**: the "scan now" button in the Robusta UI uses the ``krr_scan`` action, which is not supported because the runner does not create Jobs. Run the CronJob manually with the command above
-
-Sending Weekly KRR Scan Reports to Slack
-===========================================
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
-
-1. Install Robusta with Helm to your cluster and configure Slack sink.
-2. Create your KRR slack playbook by adding the following to ``generated_values.yaml``:
-
-.. code-block:: yaml
-
-    # Runs a weekly krr scan on the namespace devs-namespace and sends it to the configured slack channel
-    customPlaybooks:
-    - triggers:
-      - on_schedule:
-          fixed_delay_repeat:
-            repeat: -1 # number of times to run or -1 to run forever
-            seconds_delay: 604800 # 1 week
-      actions:
-      - krr_scan:
-          args: "--namespace devs-namespace" ## KRR args here
-      sinks:
-          - "main_slack_sink" # slack sink you want to send the report to here
-
-   ``krr_scan`` playbooks are not supported, because the runner does not create Jobs, see :ref:`read-only-service-account`.
-
-3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
-
-.. grid:: 1 1 1 1
-
-    .. grid-item::
-
-        .. md-tab-set::
-
-            .. md-tab-item:: Slack
-
-                .. image:: /images/krr_slack_example.png
-                    :width: 1000px
-
-            .. md-tab-item:: Robusta UI
-
-                .. image:: /images/krr_example.png
-                    :width: 1000px
 
 Taints, Tolerations and NodeSelectors
 ============================================
