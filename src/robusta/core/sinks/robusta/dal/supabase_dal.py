@@ -4,7 +4,6 @@ from collections import defaultdict
 from datetime import datetime
 import os
 import threading
-import weakref
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -154,6 +153,11 @@ def fetch_supabase_api_key(account_id: str, cluster: str, store_url: str) -> Opt
         return None
 
 
+def _is_jwt_error(exc: PostgrestAPIError) -> bool:
+    message = (exc.message or "").lower()
+    return exc.code in ("PGRST301", "PGRST303") or "jwt expired" in message
+
+
 class _AuthHttpClient(httpx.Client):
     """The httpx client we hand to Supabase's auth (GoTrue) sub-client.
 
@@ -190,7 +194,9 @@ class SupabaseDal(AccountResourceFetcher):
         self.email = email
         self.password = password
         self.__reauth_lock = threading.Lock()
-        self.__replaced_sessions: "weakref.WeakSet[httpx.Client]" = weakref.WeakSet()
+        # One HTTP client for the requests of every supabase client that this DAL builds, with
+        # the settings postgrest gives its own. It is what tells our requests from another DAL's.
+        self.__http_client = httpx.Client(timeout=SUPABASE_TIMEOUT_SECONDS, follow_redirects=True, http2=True)
         self.__connect(options)
         self.patch_postgrest_execute()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
@@ -216,6 +222,8 @@ class SupabaseDal(AccountResourceFetcher):
     def __login(self, api_key: str, options: ClientOptions):
         self.client = create_client(self.url, api_key, options)
         self.__apply_auth_client_timeout()
+        # Set after the client is built, so that the auth client keeps an HTTP client of its own.
+        self.client.options.httpx_client = self.__http_client
         self.user_id = self.sign_in()
 
     def __apply_auth_client_timeout(self) -> None:
@@ -272,12 +280,11 @@ class SupabaseDal(AccountResourceFetcher):
                 try:
                     return original_execute(_self)
                 except PostgrestAPIError as exc:
-                    message = exc.message or ""
-                    if exc.code != "PGRST301" and "expired" not in message.lower():
+                    if not _is_jwt_error(exc):
                         raise
                     # Every SupabaseDal patches the same class, so a request may
                     # belong to another instance with other credentials.
-                    if not self.__owns(_self.request.session):
+                    if _self.request.session is not self.__http_client:
                         raise
                     # The request keeps the headers it was built with.
                     headers = _self.request.headers
@@ -291,17 +298,12 @@ class SupabaseDal(AccountResourceFetcher):
         self._original_rpc_execute = SyncSingleRequestBuilder.execute
         SyncSingleRequestBuilder.execute = with_jwt_retry(self._original_rpc_execute)
 
-    def __owns(self, session) -> bool:
-        return session is self.client.postgrest.session or session in self.__replaced_sessions
-
     def __reauthorize(self, rejected_authorization: Optional[str]) -> Dict[str, str]:
         with self.__reauth_lock:
             # Another thread may already have replaced the rejected token.
             if self.client.options.headers.get("Authorization") == rejected_authorization:
                 logging.warning("JWT token expired/invalid, signing in to Supabase again")
                 previous_client = self.client
-                # Requests of other threads that were built on the replaced client are still ours.
-                self.__replaced_sessions.add(previous_client.postgrest.session)
                 try:
                     self.__connect(self.options)
                 except Exception:

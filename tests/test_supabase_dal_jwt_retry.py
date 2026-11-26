@@ -1,167 +1,267 @@
-"""An expired JWT makes the runner sign in again and repeat the request with the new token."""
+"""A PostgREST call that fails with an expired JWT is repeated with the token of the new sign-in.
 
+Builds a real SupabaseDal and supabase client against an in-process fake GoTrue/PostgREST
+(httpx.MockTransport).
+"""
+
+import base64
+import concurrent.futures
+import json
 import threading
-from types import SimpleNamespace
-from unittest.mock import MagicMock
+import time
+import uuid
 
+import httpx
 import pytest
 from postgrest._sync.request_builder import SyncQueryRequestBuilder, SyncSingleRequestBuilder
 from postgrest.exceptions import APIError
 
+from robusta.core.sinks.robusta.dal import supabase_dal as supabase_dal_module
 from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 
-JWT_EXPIRED = {"message": "JWT expired", "code": "PGRST303", "hint": None, "details": None}
+STORE_URL = "http://supabase.test"
+# a syntactically valid (meaningless) JWT - supabase's client validates the key's shape
+DEFAULT_KEY = "aaa.bbb.ccc"
+FETCHED_KEY = "ddd.eee.fff"
 
 
-class FakeSession:
-    """Stands in for the httpx client of one postgrest client."""
+def _b64(obj) -> str:
+    return base64.urlsafe_b64encode(json.dumps(obj).encode()).rstrip(b"=").decode()
 
 
-class FakeBackend:
-    """Stands in for PostgREST: accepts only the tokens in ``valid_tokens``."""
+def _jwt() -> str:
+    payload = {"sub": "runner", "exp": int(time.time()) + 3600, "jti": uuid.uuid4().hex}
+    return f"{_b64({'alg': 'HS256', 'typ': 'JWT'})}.{_b64(payload)}.{_b64('sig')}"
+
+
+class FakeSupabase:
+    """GoTrue + PostgREST. Tokens stay valid until ``expire_all()``."""
 
     def __init__(self):
-        self.valid_tokens = set()
-        self.seen_tokens = []
         self.lock = threading.Lock()
+        self.valid_tokens: set = set()
+        self.password_grants = 0
+        self.issue_valid_tokens = True
+        self.sign_in_status = 200
+        self.rest_error = None
+        self.rest_calls: list = []
+        self.token_owner: dict = {}
 
-    def execute(self, builder):
-        token = builder.request.headers["Authorization"]
+    def expire_all(self):
         with self.lock:
-            self.seen_tokens.append(token)
-        if token not in self.valid_tokens:
-            raise APIError(JWT_EXPIRED)
-        return "ok"
+            self.valid_tokens.clear()
 
+    @staticmethod
+    def _user():
+        return {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "aud": "authenticated",
+            "role": "authenticated",
+            "email": "runner@example.com",
+            "app_metadata": {},
+            "user_metadata": {},
+            "created_at": "2026-01-01T00:00:00Z",
+        }
 
-def _client(token: str) -> MagicMock:
-    client = MagicMock()
-    client.options.headers = {"Authorization": token, "apiKey": f"key-of-{token}"}
-    client.postgrest.session = FakeSession()
-    return client
-
-
-def _request_of(dal: SupabaseDal) -> SimpleNamespace:
-    """A request as postgrest builds it: a copy of the client's headers, and the client's session."""
-    return SimpleNamespace(
-        request=SimpleNamespace(headers=dict(dal.client.options.headers), session=dal.client.postgrest.session)
-    )
+    def handle(self, request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        with self.lock:
+            if path == "/auth/v1/token":
+                self.password_grants += 1
+                if self.sign_in_status != 200:
+                    return httpx.Response(self.sign_in_status, json={"code": 400, "msg": "sign-in failed"})
+                access = _jwt()
+                self.token_owner[access] = json.loads(request.content)["email"]
+                if self.issue_valid_tokens:
+                    self.valid_tokens.add(access)
+                return httpx.Response(
+                    200,
+                    json={
+                        "access_token": access,
+                        "refresh_token": uuid.uuid4().hex,
+                        "token_type": "bearer",
+                        "expires_in": 3600,
+                        "expires_at": int(time.time()) + 3600,
+                        "user": self._user(),
+                    },
+                )
+            if path == "/auth/v1/user":
+                return httpx.Response(200, json=self._user())
+            if path.startswith("/rest/v1/"):
+                token = request.headers.get("authorization", "").removeprefix("Bearer ")
+                self.rest_calls.append((token, request.headers.get("apikey")))
+                if token not in self.valid_tokens:
+                    return httpx.Response(
+                        401, json={"code": "PGRST303", "message": "JWT expired", "details": None, "hint": None}
+                    )
+                if self.rest_error:
+                    return httpx.Response(400, json=self.rest_error)
+                if path.startswith("/rest/v1/rpc/"):
+                    return httpx.Response(200, json=True)
+                return httpx.Response(200, json=[{"id": 1}])
+        return httpx.Response(404)
 
 
 @pytest.fixture
-def backend(monkeypatch):
-    backend = FakeBackend()
-    # monkeypatch restores the real methods after patch_postgrest_execute replaces them
-    monkeypatch.setattr(SyncQueryRequestBuilder, "execute", backend.execute)
-    monkeypatch.setattr(SyncSingleRequestBuilder, "execute", backend.execute)
-    return backend
-
-
-def _dal(backend: FakeBackend, name: str) -> SupabaseDal:
-    """A DAL on an expired token whose next sign-in gets a valid one, without running __init__."""
-    dal = SupabaseDal.__new__(SupabaseDal)
-    dal.options = MagicMock()
-    dal.client = _client(f"Bearer {name}-expired")
-    dal.sign_in_count = 0
-    dal.sign_in_error = None
-    dal._SupabaseDal__reauth_lock = threading.Lock()
-    dal._SupabaseDal__replaced_sessions = set()
-
-    def connect(options):
-        dal.sign_in_count += 1
-        # like the real __connect, the client is replaced before the sign-in can fail
-        dal.client = _client("Bearer not-signed-in")
-        if dal.sign_in_error:
-            raise dal.sign_in_error
-        token = f"Bearer {name}-fresh-{dal.sign_in_count}"
-        backend.valid_tokens.add(token)
-        dal.client = _client(token)
-
-    dal._SupabaseDal__connect = connect
-    dal.patch_postgrest_execute()
-    return dal
+def fake():
+    return FakeSupabase()
 
 
 @pytest.fixture
-def dal(backend):
-    return _dal(backend, "runner")
+def fetched_key():
+    # What fetch_supabase_api_key returns; None falls back to the key the DAL was built with.
+    return {"value": None}
 
 
-@pytest.mark.parametrize("builder_class", [SyncQueryRequestBuilder, SyncSingleRequestBuilder])
-def test_expired_jwt_is_retried_with_the_new_token(dal, backend, builder_class):
-    request = _request_of(dal)
+@pytest.fixture
+def make_dal(fake, fetched_key, monkeypatch):
+    transport = httpx.MockTransport(fake.handle)
+    monkeypatch.setattr(httpx.Client, "_transport_for_url", lambda self, url: transport)
+    monkeypatch.setattr(supabase_dal_module, "fetch_supabase_api_key", lambda *_: fetched_key["value"])
+    monkeypatch.setattr(supabase_dal_module, "KEY_CACHE", {})
+    # monkeypatch restores postgrest's own execute after each DAL patched it
+    for builder in (SyncQueryRequestBuilder, SyncSingleRequestBuilder):
+        monkeypatch.setattr(builder, "execute", builder.execute)
+    created = []
 
-    assert builder_class.execute(request) == "ok"
+    def make(email="runner@example.com"):
+        created.append(
+            SupabaseDal(
+                url=STORE_URL,
+                key=DEFAULT_KEY,
+                account_id="acc-1",
+                email=email,
+                password="pw",
+                sink_name="robusta_ui_sink",
+                persist_events=False,
+                cluster_name="test-cluster",
+                signing_key="signing-key",
+            )
+        )
+        return created[-1]
 
-    assert backend.seen_tokens == ["Bearer runner-expired", "Bearer runner-fresh-1"]
-    assert request.request.headers["apiKey"] == "key-of-Bearer runner-fresh-1"
-    assert dal.sign_in_count == 1
+    yield make
+    for dal in created:
+        timer = dal.client.auth._refresh_token_timer
+        if timer:
+            timer.cancel()
 
 
-def test_error_code_alone_marks_an_expired_jwt(dal, backend, monkeypatch):
-    def reject_once(builder, calls=[]):
-        calls.append(builder)
-        if len(calls) == 1:
-            raise APIError({"message": "", "code": "PGRST301", "hint": None, "details": None})
-        return "ok"
-
-    monkeypatch.setattr(SyncQueryRequestBuilder, "execute", reject_once)
-    dal.patch_postgrest_execute()
-
-    assert SyncQueryRequestBuilder.execute(_request_of(dal)) == "ok"
-    assert dal.sign_in_count == 1
+@pytest.fixture
+def dal(make_dal):
+    return make_dal()
 
 
-def test_requests_of_other_threads_share_one_sign_in(dal, backend):
-    requests = [_request_of(dal) for _ in range(8)]
-    start = threading.Barrier(len(requests))
-    results = []
+def _bearer(dal) -> str:
+    return dal.client.options.headers["Authorization"].removeprefix("Bearer ")
 
-    def run(request):
+
+def test_table_query_is_retried_with_the_new_token(dal, fake):
+    stale = _bearer(dal)
+    fake.expire_all()
+
+    res = dal.client.table("Issues").select("*").execute()
+
+    assert res.data == [{"id": 1}]
+    assert fake.password_grants == 2
+    assert [token for token, _ in fake.rest_calls] == [stale, _bearer(dal)]
+
+
+def test_rpc_is_retried_with_the_new_token(dal, fake):
+    stale = _bearer(dal)
+    fake.expire_all()
+
+    res = dal.client.rpc("update_cluster_node_count", {}).execute()
+
+    assert res.data is True
+    assert [token for token, _ in fake.rest_calls] == [stale, _bearer(dal)]
+
+
+def test_retry_carries_the_api_key_of_the_new_client(dal, fake, fetched_key):
+    fake.expire_all()
+    fetched_key["value"] = FETCHED_KEY
+
+    dal.client.table("Issues").select("*").execute()
+
+    (_, first_key), (_, retried_key) = fake.rest_calls
+    assert (first_key, retried_key) == (DEFAULT_KEY, FETCHED_KEY)
+
+
+def test_builder_created_before_a_reconnect_still_succeeds(dal, fake):
+    query = dal.client.table("Issues").select("*")
+    fake.expire_all()
+    dal.sign_in()
+
+    assert query.execute().data == [{"id": 1}]
+    assert fake.password_grants == 2
+
+
+def test_jwt_error_on_the_retry_is_raised_not_looped(dal, fake):
+    fake.issue_valid_tokens = False
+    fake.expire_all()
+
+    with pytest.raises(APIError) as exc:
+        dal.client.table("Issues").select("*").execute()
+
+    assert exc.value.code == "PGRST303"
+    assert fake.password_grants == 2
+    assert len(fake.rest_calls) == 2
+
+
+def test_failed_sign_in_is_tried_again_by_the_next_request(dal, fake):
+    fake.expire_all()
+    fake.sign_in_status = 400
+    with pytest.raises(Exception):
+        dal.client.table("Issues").select("*").execute()
+
+    fake.sign_in_status = 200
+    assert dal.client.table("Issues").select("*").execute().data == [{"id": 1}]
+
+
+def test_non_jwt_errors_do_not_sign_in(dal, fake):
+    fake.rest_error = {"code": "42P01", "message": "relation does not exist", "details": None, "hint": None}
+
+    with pytest.raises(APIError) as exc:
+        dal.client.table("Issues").select("*").execute()
+
+    assert exc.value.code == "42P01"
+    assert fake.password_grants == 1
+
+
+def test_expired_in_a_non_jwt_error_does_not_sign_in(dal, fake):
+    fake.rest_error = {"code": "P0001", "message": "invitation expired", "details": None, "hint": None}
+
+    with pytest.raises(APIError) as exc:
+        dal.client.rpc("accept_invitation", {}).execute()
+
+    assert exc.value.code == "P0001"
+    assert fake.password_grants == 1
+
+
+def test_each_dal_retries_only_its_own_requests(make_dal, fake):
+    """Every SupabaseDal patches the same class, and a config change builds a second one."""
+    dal_a = make_dal("a@example.com")
+    dal_b = make_dal("b@example.com")
+    fake.expire_all()
+
+    dal_a.client.table("Issues").select("*").execute()
+    dal_b.client.table("Issues").select("*").execute()
+
+    owners = [fake.token_owner[token] for token, _ in fake.rest_calls]
+    assert owners == ["a@example.com"] * 2 + ["b@example.com"] * 2
+    assert fake.password_grants == 4
+
+
+def test_concurrent_expired_requests_sign_in_once(dal, fake):
+    fake.expire_all()
+    start = threading.Barrier(8)
+
+    def call(_):
         start.wait()
-        results.append(SyncQueryRequestBuilder.execute(request))
+        return dal.client.table("Issues").select("*").execute().data
 
-    threads = [threading.Thread(target=run, args=(request,)) for request in requests]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
+    with concurrent.futures.ThreadPoolExecutor(8) as pool:
+        results = list(pool.map(call, range(8)))
 
-    assert results == ["ok"] * len(requests)
-    assert dal.sign_in_count == 1
-
-
-def test_a_second_dal_does_not_take_over_the_requests_of_the_first(backend):
-    """The sinks registry builds a new DAL on a config change, and the old one stays patched in."""
-    old_dal = _dal(backend, "old")
-    new_dal = _dal(backend, "new")
-
-    for _ in range(3):
-        assert SyncQueryRequestBuilder.execute(_request_of(new_dal)) == "ok"
-
-    assert new_dal.sign_in_count == 1
-    assert old_dal.sign_in_count == 0
-    assert "Bearer old-expired" not in backend.seen_tokens
-
-
-def test_failed_sign_in_is_tried_again_by_the_next_request(dal, backend):
-    dal.sign_in_error = RuntimeError("sign-in failed")
-    with pytest.raises(RuntimeError):
-        SyncQueryRequestBuilder.execute(_request_of(dal))
-    assert dal.client.options.headers["Authorization"] == "Bearer runner-expired"
-
-    dal.sign_in_error = None
-    assert SyncQueryRequestBuilder.execute(_request_of(dal)) == "ok"
-    assert dal.sign_in_count == 2
-
-
-def test_other_errors_are_not_retried(dal, backend, monkeypatch):
-    def fail(builder):
-        raise APIError({"message": "relation does not exist", "code": "42P01", "hint": None, "details": None})
-
-    monkeypatch.setattr(SyncQueryRequestBuilder, "execute", fail)
-    dal.patch_postgrest_execute()
-
-    with pytest.raises(APIError):
-        SyncQueryRequestBuilder.execute(_request_of(dal))
-    assert dal.sign_in_count == 0
+    assert results == [[{"id": 1}]] * 8
+    assert fake.password_grants == 2
