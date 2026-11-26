@@ -1,11 +1,14 @@
 import json
 import logging
+import time
 from unittest.mock import MagicMock
 
 from robusta.api import CallbackBlock, CallbackChoice, Finding, MarkdownBlock, action
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
+from robusta.core.reporting.action_requests import ActionRequestBody, ExternalActionRequest, sign_action_request
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.integrations.slack.sender import SlackSender
+from robusta.utils.error_codes import ErrorCodes
 
 
 @action
@@ -69,3 +72,20 @@ def test_malformed_message_is_not_processed(caplog):
     receiver.on_message(None, "not json")
     receiver._process_action.assert_not_called()
     assert "Failed to parse incoming event" in caplog.text
+
+
+def test_request_made_by_a_button_is_refused():
+    receiver = ActionRequestReceiver.__new__(ActionRequestReceiver)
+    receiver.event_handler = MagicMock()
+    receiver.ws = MagicMock()
+    body = ActionRequestBody(
+        account_id="a", cluster_name="c", action_name="delete_pod", timestamp=time.time(), origin="callback"
+    )
+    request = ExternalActionRequest(body=body, signature=sign_action_request(body, "key"), request_id="r")
+    receiver.event_handler.get_global_config.return_value = {"signing_key": "key"}
+
+    receiver._ActionRequestReceiver__exec_external_request(request, validate_timestamp=True)
+
+    receiver.event_handler.run_external_action.assert_not_called()
+    reply = json.loads(receiver.ws.send.call_args.kwargs["data"])
+    assert reply["data"]["error_code"] == ErrorCodes.BUTTON_REQUEST_NOT_ALLOWED.value

@@ -264,6 +264,14 @@ class ActionRequestReceiver:
 
         If both protocols are present, we only check the signature
         """
+        # the origin that buttons in notifications gave their requests
+        if action_request.body.origin == "callback":
+            return ValidationResponse(
+                http_code=500,
+                error_code=ErrorCodes.BUTTON_REQUEST_NOT_ALLOWED.value,
+                error_msg="Buttons in notifications no longer run actions",
+            )
+
         if validate_timestamp and (time.time() - action_request.body.timestamp > INCOMING_REQUEST_TIME_WINDOW_SECONDS):
             logging.error(f"Rejecting incoming request because it's too old. Cannot verify request {action_request}")
             return ValidationResponse(
