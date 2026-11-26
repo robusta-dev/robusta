@@ -154,14 +154,17 @@ class Web:
 
         if not is_runner_scan:
             # the CronJob has no runner-created scan row
-            Web.loader.registry.get_event_emitter().emit_event(
-                "scan_updated",
-                scan_id=scan_id,
-                metadata={"job": {"name": f"{RELEASE_NAME}-krr", "namespace": INSTALLATION_NAMESPACE}},
-                state=ScanState.PENDING,
-                type=ScanType.KRR,
-                start_time=action_params.get("start_time"),
-            )
+            try:
+                Web.loader.registry.get_event_emitter().emit_event(
+                    "scan_updated",
+                    scan_id=scan_id,
+                    metadata={"job": {"name": f"{RELEASE_NAME}-krr", "namespace": INSTALLATION_NAMESPACE}},
+                    state=ScanState.PENDING,
+                    type=ScanType.KRR,
+                    start_time=action_params.get("start_time"),
+                )
+            except Exception:
+                logging.exception(f"Failed to create the scan {scan_id} before processing its result")
 
         return jsonify(
             Web.event_handler.run_external_action(

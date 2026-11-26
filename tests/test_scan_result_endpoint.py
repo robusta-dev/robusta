@@ -118,3 +118,12 @@ def test_cronjob_scan_runs_only_process_scan(client, cronjob_enabled):
     response = client.post("/api/trigger", json=_scan_payload("cronjob-scan", action_name="krr_scan"))
     assert response.status_code == 403
     Web.event_handler.run_external_action.assert_not_called()
+
+
+def test_cronjob_scan_result_is_processed_when_scan_creation_fails(client, cronjob_enabled):
+    Web.loader.registry.get_event_emitter.return_value.emit_event.side_effect = RuntimeError("store unavailable")
+
+    response = client.post("/api/trigger", json=_scan_payload("cronjob-scan"))
+
+    assert response.status_code == 200
+    Web.event_handler.run_external_action.assert_called_once()

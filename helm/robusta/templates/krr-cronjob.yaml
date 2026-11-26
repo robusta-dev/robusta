@@ -125,7 +125,7 @@ spec:
                 --scan_id="$SCAN_ID" --start_time="$START_TIME" --named_sinks=robusta_ui_sink \
                 {{ $krrArgs }} \
                 {{- $labels := $global.prometheus_additional_labels | default dict }}
-                {{- if and (eq (len $labels) 1) (not (contains "-l" $krrArgs)) }}
+                {{- if and (eq (len $labels) 1) (not (regexMatch "(^|\\s)(-l|--prometheus-label|--prometheus-cluster-label)(\\s|=|$)" $krrArgs)) }}
                 {{- range $label, $value := $labels }}
                 --prometheus-label {{ $label | replace "'" "'\\''" | squote }} -l {{ $value | toString | replace "'" "'\\''" | squote }} \
                 {{- end }}
