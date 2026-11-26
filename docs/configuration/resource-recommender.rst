@@ -60,7 +60,6 @@ Prometheus credentials, headers and labels under ``globalConfig`` and the runner
               name: prometheus-credentials
               key: token
 
-On OpenShift, use the service account token: ``krrArgs: '--prometheus-auth-header "Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"'``.
 
 **AWS Managed Prometheus:**
 
@@ -83,6 +82,58 @@ On OpenShift, use the service account token: ``krrArgs: '--prometheus-auth-heade
             secretKeyRef:
               name: aws-credentials
               key: secret-key
+
+Moving Existing KRR Settings
+------------------------------------------------------------
+
+Settings that the weekly scan used before, and where to set them for the CronJob. The right column is under ``runner.krrCronJob`` unless it says otherwise:
+
+.. list-table::
+   :widths: 40 60
+   :header-rows: 1
+
+   * - Previous setting
+     - CronJob setting
+   * - ``globalConfig.krr_args``
+     - ``krrArgs``
+   * - ``globalConfig.strategy``, ``KRR_STRATEGY``
+     - ``strategy``
+   * - ``globalConfig.timeout``
+     - ``timeout``
+   * - ``globalConfig.max_workers``
+     - ``krrArgs: "--max-workers 2"``
+   * - ``globalConfig.krr_verbose``
+     - ``krrArgs: "-v"``
+   * - ``globalConfig.krr_job_spec``
+     - ``jobSpec``
+   * - ``globalConfig.prometheus_url``
+     - Still used. To use another address for KRR: ``krrArgs: "-p <url>"``
+   * - ``globalConfig.prometheus_auth``
+     - ``krrArgs: '--prometheus-auth-header "$PROMETHEUS_AUTH"'``, with the value in ``additional_env_vars``
+   * - ``globalConfig.prometheus_additional_headers``
+     - ``krrArgs: '--prometheus-headers "X-Scope-OrgID:$ORG_ID"'``, once for each header
+   * - ``globalConfig.prometheus_additional_labels``
+     - ``krrArgs: "--prometheus-label cluster -l my-cluster"``
+   * - ``AWS_REGION``, ``AWS_SERVICE_NAME``, ``AWS_ASSUME_ROLE``
+     - ``krrArgs: "--eks-managed-prom --eks-managed-prom-region <region> --eks-service-name <name> --eks-assume-role <arn>"``
+   * - ``AWS_ACCESS_KEY``, ``AWS_SECRET_ACCESS_KEY``
+     - ``krrArgs: '--eks-access-key "$AWS_ACCESS_KEY" --eks-secret-key "$AWS_SECRET_ACCESS_KEY"'``, with the values in ``additional_env_vars``
+   * - ``CORALOGIX_PROMETHEUS_TOKEN``
+     - ``krrArgs: '--coralogix-token "$CORALOGIX_PROMETHEUS_TOKEN"'``, with the value in ``additional_env_vars``
+   * - OpenShift, ``PROMETHEUS_CLUSTER_TOKEN_AUTH``
+     - ``krrArgs: "--openshift"``
+   * - ``KRR_IMAGE_OVERRIDE``
+     - ``image``
+   * - ``KRR_MEMORY_REQUEST``, ``KRR_MEMORY_LIMIT``
+     - ``memoryRequest``, ``memoryLimit``
+   * - ``SET_KRR_SECURITY_CONTEXT``
+     - ``runner.setKRRSecurityContext``
+   * - ``globalConfig.serviceAccountName``
+     - No setting. KRR runs with the runner service account
+   * - ``globalConfig.custom_annotations``
+     - No setting
+   * - ``KRR_PUBLISH_URL``, ``KRR_PUSH_SCAN``
+     - No setting
 
 To run a scan now, and to check previous runs (replace ``robusta`` with your release name and namespace):
 
