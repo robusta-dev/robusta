@@ -714,3 +714,17 @@ def test_krr_cronjob_has_its_own_env_settings(tmp_path):
         {"name": "AWS_REGION", "value": "us-east-1"},
         {"name": "AWS_ACCESS_KEY", "valueFrom": {"secretKeyRef": {"name": "aws", "key": "access-key"}}},
     ]
+
+
+def test_krr_cronjob_label_kept_with_unrelated_args(tmp_path):
+    arguments = krr_arguments(
+        tmp_path,
+        [
+            "--set-string",
+            "globalConfig.prometheus_additional_labels.cluster=prod",
+            "--set",
+            "runner.krrCronJob.krrArgs=--namespace dev-live",
+        ],
+    )
+    assert flag_values(arguments, "--prometheus-label") == ["cluster"]
+    assert flag_values(arguments, "--namespace") == ["dev-live"]
