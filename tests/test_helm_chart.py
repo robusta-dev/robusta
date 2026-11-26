@@ -222,8 +222,6 @@ def test_override_cluster_roles_still_replaces_rules():
     assert cluster_role["rules"] == [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}]
 
 
-
-
 def render_full_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
     cmd = [
         "helm",
@@ -345,8 +343,8 @@ def test_krr_cronjob_literal_prometheus_auth(tmp_path):
 def test_krr_cronjob_prometheus_auth_from_env(tmp_path):
     arguments = krr_arguments(
         tmp_path,
-        ["--set-string", "globalConfig.prometheus_auth=\\{\\{ env.PROM_AUTH \\}\\}"],
-        env={"PROM_AUTH": "Basic xyz"},
+        ["--set-string", "globalConfig.prometheus_auth=Basic \\{\\{ env.PROM_AUTH \\}\\}"],
+        env={"PROM_AUTH": "xyz"},
     )
     assert flag_values(arguments, "--prometheus-auth-header") == ["Basic xyz"]
 
@@ -462,6 +460,7 @@ def test_krr_cronjob_keeps_job_labels_and_defaults():
     assert job["spec"]["activeDeadlineSeconds"] == 3600
     container = pod["spec"]["containers"][0]
     assert container["image"] == "robustadev/krr:v1.30.0"
+    assert "krr:v1.30.0" in (CHART_PATH.parents[1] / "playbooks/robusta_playbooks/krr.py").read_text()
     assert container["imagePullPolicy"] == "Always"
     assert container["resources"] == {"requests": {"memory": "2Gi"}, "limits": {"memory": "2Gi"}}
     assert "securityContext" not in container
@@ -589,6 +588,38 @@ def test_krr_cronjob_keeps_runner_env_settings(tmp_path):
 
     registry_only = krr_job_template(["--set", "image.registry=registry.local"])
     assert registry_only["spec"]["template"]["spec"]["containers"][0]["image"] == "registry.local/krr:v1.30.0"
+
+
+def test_krr_cronjob_follows_disabled_weekly_playbook():
+    docs = render_full_chart(["--set", "disabledPlaybooks[0]=WeeklyKRRScan"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+
+
+def test_krr_cronjob_uses_runner_pull_secrets():
+    pod_spec = krr_job_template(["--set", "runner.imagePullSecrets[0].name=regcred"])["spec"]["template"]["spec"]
+    assert pod_spec["imagePullSecrets"] == [{"name": "regcred"}]
+
+
+def test_krr_cronjob_strategy_takes_precedence_over_env(tmp_path):
+    arguments = krr_arguments(tmp_path, ["--set", "runner.krrCronJob.strategy=simple_limit"], env={"KRR_STRATEGY": "simple"})
+    assert arguments[1] == "simple_limit"
+
+
+@pytest.mark.parametrize(
+    "extra_args",
+    [
+        ["--set", "runner.krrCronJob.prometheusAuthSecret.name=prom"],
+        [
+            "--set",
+            "runner.additional_env_vars[0].name=KRR_IMAGE_OVERRIDE",
+            "--set",
+            "runner.additional_env_vars[0].valueFrom.configMapKeyRef.name=images",
+        ],
+    ],
+)
+def test_krr_cronjob_unsupported_values(extra_args):
+    with pytest.raises(subprocess.CalledProcessError):
+        render_full_chart(extra_args)
 
 
 def test_krr_cronjob_runtime_env_settings(tmp_path):
