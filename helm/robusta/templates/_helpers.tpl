@@ -101,7 +101,7 @@ alert_relabel:
 {{ toYaml  .Values.alertRelabel | indent 2 }}
 
 {{- $rbac := .Values.runner.rbac }}
-{{- $lightActions := without .Values.lightActions "rollout_restart" "create_pvc_snapshot" "krr_scan" "popeye_scan" "node_disk_analyzer" "node_dmesg_enricher" "volume_analysis" "python_profiler" "pod_ps" "python_memory" "debugger_stack_trace" "python_process_inspector" }}
+{{- $lightActions := .Values.lightActions }}
 {{- if not $rbac.enablePodDelete }}
 {{- $lightActions = without $lightActions "delete_pod" }}
 {{- end }}

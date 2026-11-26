@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from playbooks.robusta_playbooks import kubectl_enrichments, node_actions, pod_actions
+from playbooks.robusta_playbooks import kubectl_enrichments, node_actions, pod_actions, workload_actions
 from robusta.core.model import env_vars
 from robusta.core.playbooks.rbac_flags import RBAC_FLAGS_DOCS_URL, require_rbac_flag
 from robusta.integrations.kubernetes.custom_models import RobustaJob, RobustaPod
@@ -101,3 +101,9 @@ def test_kubectl_command_is_no_longer_supported(caplog):
     with caplog.at_level(logging.ERROR), pytest.raises(ActionException, match="no longer supported"):
         kubectl_enrichments.kubectl_command(MagicMock(), kubectl_enrichments.KubectlParams(command="kubectl get pods"))
     assert "kubectl_command is deprecated" in caplog.text
+
+
+def test_rollout_restart_is_no_longer_supported(caplog):
+    with pytest.raises(ActionException):
+        workload_actions.rollout_restart(MagicMock())
+    assert "rollout_restart is deprecated" in caplog.text

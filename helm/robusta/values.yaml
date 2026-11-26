@@ -102,7 +102,6 @@ lightActions:
 - pod_oom_killer_enricher
 - oom_killer_enricher
 - alertmanager_alert
-- create_pvc_snapshot
 - resource_events_enricher
 - delete_job
 - list_resource_names
