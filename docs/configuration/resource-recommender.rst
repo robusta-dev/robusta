@@ -149,7 +149,6 @@ Limitations of the CronJob:
 - **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Provide a token as shown above
 - **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
 - **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
-- **Scan now**: the "scan now" button in the Robusta UI uses the ``krr_scan`` action, which is deprecated and no longer supported. Run the CronJob manually with the command above
 
 Taints, Tolerations and NodeSelectors
 ============================================
