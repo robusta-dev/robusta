@@ -296,6 +296,8 @@ def render_full_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
         "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "--set",
         "enablePrometheusStack=false",
+        "--set",
+        "enablePlatformPlaybooks=true",
     ] + (extra_args or [])
     return [doc for doc in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if doc]
 
@@ -348,6 +350,13 @@ def test_krr_cronjob_kept_without_runner_role():
     docs = render_full_chart()
     assert get_doc(docs, "CronJob", "robusta-krr") is not None
     assert get_doc(docs, "Role", "runner-local-role") is None
+
+
+def test_krr_cronjob_follows_platform_playbooks():
+    no_platform = ["--set", "enablePlatformPlaybooks=false"]
+    assert get_doc(render_full_chart(no_platform), "CronJob", "robusta-krr") is None
+    docs = render_full_chart(no_platform + ["--set", "runner.krrCronJob.enabled=true"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
 
 
 def test_krr_cronjob_off_without_runner_role():

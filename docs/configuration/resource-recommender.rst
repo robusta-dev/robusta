@@ -22,7 +22,7 @@ It uses no other ``globalConfig`` setting, and no runner environment variable:
 
     runner:
       krrCronJob:
-        enabled: ~               # empty: on unless rbac.disableCreateFromServiceAccount is true
+        enabled: ~               # empty: on with enablePlatformPlaybooks, unless rbac.disableCreateFromServiceAccount is true
         schedule: "0 12 * * 1"   # every Monday at 12:00
         timeout: 3600            # seconds
         image: ~                 # defaults to image.registry/krr
@@ -36,7 +36,8 @@ It uses no other ``globalConfig`` setting, and no runner environment variable:
         additional_env_vars: []  # env vars of the KRR pod
         additional_env_froms: [] # env sources of the KRR pod
 
-The CronJob is not created without a Robusta UI sink, or when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
+By default, the CronJob is created only when ``enablePlatformPlaybooks`` is ``true``. Set ``runner.krrCronJob.enabled: true`` to create it
+without platform playbooks. The CronJob is not created without a Robusta UI sink, or when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
 
 Without ``globalConfig.prometheus_url``, KRR finds Prometheus in the cluster by itself. To use another address for KRR, add ``-p <url>`` to ``krrArgs``.
 
