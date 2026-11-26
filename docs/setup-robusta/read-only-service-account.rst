@@ -3,7 +3,7 @@
 Read-Only Service Account
 ========================================
 
-By default, Robusta's runner service account is **read-only**: its ClusterRole only grants ``get``, ``list`` and ``watch``, and the chart renders no namespaced Role for the runner. It cannot create pods, exec into pods, or update and delete Kubernetes resources. This guide explains what read-only mode means, how to enable specific write access, and how to restrict the read rules further.
+By default, Robusta's runner service account is **read-only**: its ClusterRole only grants ``get``, ``list`` and ``watch``. This guide explains what read-only mode means, how to enable specific write access, and how to restrict the read rules further.
 
 Enabling Write Access
 ---------------------
@@ -102,23 +102,6 @@ setting overrides ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapE
       rbac:
         disableCreateFromServiceAccount: true
 
-.. _runner-read-rules:
-
-Resources the Runner Does Not Read
-----------------------------------
-
-The runner's default rules do not include:
-
-- **Secrets**
-- **ConfigMaps**. With ``enableRobustaConfigMapEdit`` the runner reads its own ``scheduled-jobs`` ConfigMap and no other
-- **ServiceAccounts**
-- **External Secrets Operator** resources
-- **OpenShift users**. With ``openshift.enabled`` the runner reads OpenShift groups
-- **Flux, Argo CD, KEDA, Crossplane, Istio, Gateway API, Velero and Kafka** resources. Enable each group with ``runner.crdPermissions``, see :ref:`crd-permissions`
-
-In the Robusta UI, these kinds are not shown in the per-namespace resource counts and the custom resources page, and
-the YAML of a ConfigMap cannot be viewed. To read a resource that has no flag, add a rule with ``runner.customClusterRoleRules``.
-
 Why Read-Only Mode?
 -------------------
 
@@ -128,20 +111,6 @@ Read-only mode is useful in scenarios where you want to:
 - **Comply with security policies**: Meet organizational requirements for read-only access in certain environments
 - **Prevent node operations**: Prevent users from draining or restarting nodes through investigations
 - **Audit-only mode**: Run Holmes for investigation and diagnostics without remediation capabilities
-
-Limitations of Read-Only Mode
------------------------------
-
-With the default read-only permissions, the following Robusta features will not be available:
-
-- **Auto-remediation**: Playbooks that automatically fix issues (restart pods, scale deployments, drain nodes, etc.)
-- **Silence management**: Creating or deleting alert silences
-- **Pod debugging**: Live debugging tools that require container execution
-- **Resource modification**: Any playbook or action that modifies Kubernetes resources
-
-These features require write permissions and will gracefully fail if attempted with read-only service account.
-
-**Read-only mode is ideal for**: Investigation, diagnostics, log analysis, metric enrichment, and reporting.
 
 Restricting Read Rules: Using overrideClusterRoles
 --------------------------------------------------
