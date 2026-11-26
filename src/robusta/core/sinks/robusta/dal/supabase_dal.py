@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 import os
 import threading
+import weakref
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -11,7 +12,7 @@ from cachetools import TTLCache
 import httpx
 import requests
 from supabase_auth.errors import AuthRetryableError
-from postgrest._sync.request_builder import SyncQueryRequestBuilder
+from postgrest._sync.request_builder import SyncQueryRequestBuilder, SyncSingleRequestBuilder
 from postgrest.base_request_builder import BaseFilterRequestBuilder, QueryArgs
 from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
@@ -188,6 +189,8 @@ class SupabaseDal(AccountResourceFetcher):
         options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.email = email
         self.password = password
+        self.__reauth_lock = threading.Lock()
+        self.__replaced_sessions: "weakref.WeakSet[httpx.Client]" = weakref.WeakSet()
         self.__connect(options)
         self.patch_postgrest_execute()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
@@ -264,21 +267,49 @@ class SupabaseDal(AccountResourceFetcher):
 
     def patch_postgrest_execute(self):
         # This is somewhat hacky.
-        def execute_with_retry(_self):
-            try:
-                return self._original_execute(_self)
-            except PostgrestAPIError as exc:
-                message = exc.message or ""
-                if exc.code == "PGRST301" or "expired" in message.lower():
-                    # JWT expired. Sign in again and retry the query
-                    logging.error("JWT token expired/invalid, signing in to Supabase again")
-                    self.__connect(self.options)
-                    return self._original_execute(_self)
-                else:
-                    raise
+        def with_jwt_retry(original_execute):
+            def execute_with_retry(_self):
+                try:
+                    return original_execute(_self)
+                except PostgrestAPIError as exc:
+                    message = exc.message or ""
+                    if exc.code != "PGRST301" and "expired" not in message.lower():
+                        raise
+                    # Every SupabaseDal patches the same class, so a request may
+                    # belong to another instance with other credentials.
+                    if not self.__owns(_self.request.session):
+                        raise
+                    # The request keeps the headers it was built with.
+                    headers = _self.request.headers
+                    headers.update(self.__reauthorize(headers.get("Authorization")))
+                    return original_execute(_self)
+
+            return execute_with_retry
 
         self._original_execute = SyncQueryRequestBuilder.execute
-        SyncQueryRequestBuilder.execute = execute_with_retry
+        SyncQueryRequestBuilder.execute = with_jwt_retry(self._original_execute)
+        self._original_rpc_execute = SyncSingleRequestBuilder.execute
+        SyncSingleRequestBuilder.execute = with_jwt_retry(self._original_rpc_execute)
+
+    def __owns(self, session) -> bool:
+        return session is self.client.postgrest.session or session in self.__replaced_sessions
+
+    def __reauthorize(self, rejected_authorization: Optional[str]) -> Dict[str, str]:
+        with self.__reauth_lock:
+            # Another thread may already have replaced the rejected token.
+            if self.client.options.headers.get("Authorization") == rejected_authorization:
+                logging.warning("JWT token expired/invalid, signing in to Supabase again")
+                previous_client = self.client
+                # Requests of other threads that were built on the replaced client are still ours.
+                self.__replaced_sessions.add(previous_client.postgrest.session)
+                try:
+                    self.__connect(self.options)
+                except Exception:
+                    # Keep the previous client, so that the next request tries the sign-in again.
+                    self.client = previous_client
+                    raise
+            headers = self.client.options.headers
+            return {"Authorization": headers["Authorization"], "apiKey": headers["apiKey"]}
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
