@@ -129,16 +129,6 @@ def warning_events_report(event: EventChangeEvent, params: WarningEventReportPar
 
 
 @action
-def event_report(event: EventChangeEvent):
-    """
-    Create finding based on the kubernetes event
-    """
-    aggregation_key = f"Kubernetes{event.obj.type}Event"
-    finding = build_event_finding(event=event, aggregation_key=aggregation_key, description=event.obj.note)
-    event.add_finding(finding)
-
-
-@action
 def event_resource_events(event: EventChangeEvent):
     """
     Given a Kubernetes event, gather all other events on the same resource in the near past
