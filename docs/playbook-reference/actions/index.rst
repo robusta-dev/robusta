@@ -15,7 +15,6 @@ Actions Reference
    change-tracking
    networking
    grafana
-   scans
    miscellaneous
    develop-actions/index
 
@@ -50,11 +49,6 @@ Built-in Actions
     .. grid-item-card:: :octicon:`cpu;1em;` Grafana
         :class-card: sd-bg-light sd-bg-text-light
         :link: grafana
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` Scans
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: scans
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Miscellaneous
