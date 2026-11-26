@@ -770,7 +770,7 @@ runner:
     # by name, so the runner can create any ConfigMap in that namespace.
     # Scheduled playbooks need it together with enableRobustaConfigMapEdit.
     enableRobustaConfigMapCreate: false
-    # Grants update on the scheduled-jobs ConfigMap in Robusta's namespace only, and on no
+    # Grants get and update on the scheduled-jobs ConfigMap in Robusta's namespace only, and on no
     # other ConfigMap. Scheduled playbooks need it together with enableRobustaConfigMapCreate.
     enableRobustaConfigMapEdit: false
     # true: no runner Role and no KRR CronJob, overrides the flags above
@@ -834,17 +834,16 @@ runner:
     nameservers: []
     searches: []
     options: []
-# CRD permissions for common Kubernetes operators and tools
+# Read access to CRDs of common Kubernetes operators and tools. Off by default.
   crdPermissions:
-    argo: true
-    flux: true
-    kafka: true
-    keda: true
-    crossplane: true
-    istio: true
-    gatewayApi: true
-    velero: true
-    externalSecrets: true
+    argo: false
+    flux: false
+    kafka: false
+    keda: false
+    crossplane: false
+    istio: false
+    gatewayApi: false
+    velero: false
 
 kube-prometheus-stack:
   alertmanager:

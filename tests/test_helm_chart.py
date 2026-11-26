@@ -157,6 +157,28 @@ def test_no_create_setting_overrides_configmap_flags():
     assert {"name": "DISABLE_CREATE_FROM_SERVICE_ACCOUNT", "value": "true"} in env
 
 
+def test_default_read_rules():
+    docs = render_chart()
+    rules = get_doc(docs, "ClusterRole", "runner-cluster-role")["rules"]
+    resources = [(group, resource) for rule in rules for group in rule["apiGroups"] for resource in rule["resources"]]
+    assert len(resources) == len(set(resources))
+    assert not {"configmaps", "serviceaccounts", "podsecuritypolicies"} & {resource for _, resource in resources}
+    optional_groups = ("argoproj.io", "fluxcd.io", "strimzi.io", "keda.sh", "crossplane.io", "istio.io", "velero.io")
+    assert not [group for group, _ in resources if group == "extensions" or group.endswith(optional_groups)]
+
+
+def test_optional_crd_read_rules():
+    docs = render_chart(["--set", "runner.crdPermissions.flux=true", "--set", "runner.crdPermissions.externalSecrets=true"])
+    groups = {group for rule in get_doc(docs, "ClusterRole", "runner-cluster-role")["rules"] for group in rule["apiGroups"]}
+    assert "helm.toolkit.fluxcd.io" in groups
+    assert "external-secrets.io" not in groups
+
+
+def test_scheduled_jobs_configmap_read_rule():
+    rules = get_doc(render_chart(enable("enableRobustaConfigMapEdit")), "Role", "runner-local-role")["rules"]
+    assert rules == [{"apiGroups": [""], "resources": ["configmaps"], "resourceNames": ["scheduled-jobs"], "verbs": ["get", "update"]}]
+
+
 def test_job_creating_playbooks_always_disabled():
     names = playbook_names(enable(*RBAC_FLAGS) + KRR_CRONJOB_DISABLED)
     assert not {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"} & names

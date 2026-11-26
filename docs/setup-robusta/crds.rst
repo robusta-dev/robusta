@@ -83,10 +83,12 @@ Or to monitor all resources in an API group:
           - "list"
           - "get"
 
-Default CRD Permissions 
+.. _crd-permissions:
+
+Built-in CRD Permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta includes read-only permissions for common Kubernetes operators and tools by default. These can be individually enabled or disabled:
+Robusta includes read-only permissions for common Kubernetes operators and tools. All are disabled by default. Enable the ones you use:
 
 .. code-block:: yaml
 
@@ -100,7 +102,6 @@ Robusta includes read-only permissions for common Kubernetes operators and tools
         istio: true            # Istio service mesh
         gatewayApi: true       # Kubernetes Gateway API
         velero: true           # Velero backup/restore
-        externalSecrets: true  # External Secrets Operator
 
 
 Applying the Configuration
