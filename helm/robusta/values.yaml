@@ -752,10 +752,10 @@ runner:
   # customClusterRoleRules are omitted). Use for a read-only runner. Empty = built-in behavior.
   overrideClusterRoles: []
   rbac:
-    # Default true = read-only runner: no create / pods/exec Role, and the
-    # NodeFSSpaceAlerts and WeeklyKRRScan playbooks are disabled.
-    # Setting false grants create and pods/exec in Robusta's namespace only, needed for
-    # KRR/Popeye scans, kubectl_command, netshoot, stress tests and debugger pods.
+    # Default true = read-only runner: no write verbs, no create or pods/exec, the
+    # NodeFSSpaceAlerts and WeeklyKRRScan playbooks are disabled, and actions that create
+    # pods or change resources are removed from lightActions.
+    # Setting false restores the previous write permissions, playbooks and actions.
     disableCreateFromServiceAccount: true
     # Namespace-scoped runner: render the runner RBAC as a namespaced Role + RoleBinding
     # (no ClusterRole / ClusterRoleBinding), limiting the runner to the release namespace.

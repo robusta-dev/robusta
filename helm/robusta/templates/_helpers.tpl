@@ -92,8 +92,12 @@ global_config:
 alert_relabel:
 {{ toYaml  .Values.alertRelabel | indent 2 }}
 
+{{- $lightActions := .Values.lightActions }}
+{{- if .Values.runner.rbac.disableCreateFromServiceAccount }}
+{{- $lightActions = without $lightActions "delete_pod" "delete_job" "drain" "cordon" "uncordon" "rollout_restart" "create_pvc_snapshot" "node_disk_analyzer" "node_dmesg_enricher" "volume_analysis" "python_profiler" "pod_ps" "python_memory" "debugger_stack_trace" "python_process_inspector" "krr_scan" "popeye_scan" }}
+{{- end }}
 light_actions:
-{{ toYaml  .Values.lightActions | indent 2 }}
+{{ toYaml $lightActions | indent 2 }}
 
 active_playbooks:
 {{- if .Values.playbooks }}

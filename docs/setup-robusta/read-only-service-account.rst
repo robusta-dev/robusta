@@ -8,15 +8,14 @@ By default, Robusta's runner service account is **read-only**: its ClusterRole o
 .. note::
 
    The built-in playbooks that create pods or jobs (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``) are
-   disabled by default, and actions that create or modify resources (scans, kubectl/netshoot/stress,
-   debugger pods, chaos engineering, remediation) fail without permissions.
+   disabled by default, and actions that create pods or modify resources (scans, node and pod
+   debugging, remediation such as ``delete_pod``, ``drain`` and ``rollout_restart``) cannot be run from the UI.
    The weekly KRR scan keeps running from a CronJob, see :ref:`krr-cronjob`.
 
 Re-enabling Write Permissions
 -----------------------------
 
-To grant ``create`` and ``pods/exec`` **only in Robusta's installation namespace** (used for scan Jobs,
-debugger pods and the KRR auth Secret), and re-enable the playbooks that depend on them, set:
+To restore the previous write permissions, playbooks and actions, set:
 
 .. code-block:: yaml
 
@@ -24,8 +23,8 @@ debugger pods and the KRR auth Secret), and re-enable the playbooks that depend 
       rbac:
         disableCreateFromServiceAccount: false
 
-To grant cluster-wide write verbs for remediation actions (like ``delete_pod`` and ``rollout_restart``),
-add only the rules you need with ``runner.customClusterRoleRules``:
+To keep the runner read-only and grant only specific write verbs, add the rules you need with
+``runner.customClusterRoleRules``:
 
 .. code-block:: yaml
 
