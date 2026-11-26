@@ -5,8 +5,9 @@
 {{- $krrArgs := $krr.krrArgs | default $global.args | default $global.krr_args | default "" }}
 {{- /* runner env vars that configured the scan job */}}
 {{- $runnerEnv := dict }}
+{{- $krrSettings := dict "KRR_IMAGE_OVERRIDE" $krr.image "KRR_MEMORY_REQUEST" $krr.memoryRequest "KRR_MEMORY_LIMIT" $krr.memoryLimit }}
 {{- range .Values.runner.additional_env_vars }}
-{{- if and (hasKey . "valueFrom") (has .name (list "KRR_IMAGE_OVERRIDE" "KRR_MEMORY_REQUEST" "KRR_MEMORY_LIMIT")) }}
+{{- if and (hasKey . "valueFrom") (hasKey $krrSettings .name) (not (get $krrSettings .name)) }}
 {{- fail (printf "runner.additional_env_vars: %s must be set with a literal value, or under runner.krrCronJob" .name) }}
 {{- end }}
 {{- $_ := set $runnerEnv .name (.value | default "" | toString) }}

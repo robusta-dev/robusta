@@ -627,6 +627,20 @@ def test_scheduled_playbook_mentioning_krr_scan_in_params_is_kept():
     assert get_doc(docs, "CronJob", "robusta-krr") is not None
 
 
+def test_krr_cronjob_value_takes_precedence_over_env_value_from():
+    job = krr_job_template(
+        [
+            "--set",
+            "runner.additional_env_vars[0].name=KRR_MEMORY_LIMIT",
+            "--set",
+            "runner.additional_env_vars[0].valueFrom.configMapKeyRef.name=krr",
+            "--set",
+            "runner.krrCronJob.memoryLimit=3Gi",
+        ]
+    )
+    assert job["spec"]["template"]["spec"]["containers"][0]["resources"]["limits"] == {"memory": "3Gi"}
+
+
 def test_krr_cronjob_env_setting_from_value_from_points_to_values():
     result = subprocess.run(
         [
