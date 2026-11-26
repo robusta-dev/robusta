@@ -45,7 +45,7 @@ Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_worker
           name: ""
           key: ""
 
-A ``krr_scan`` action on a schedule in ``customPlaybooks`` fails the Helm install while the CronJob is enabled. Remove it and set the frequency with ``runner.krrCronJob.schedule``, or set ``runner.krrCronJob.enabled: false`` to keep running scans from playbooks.
+A ``krr_scan`` action on a schedule in ``customPlaybooks`` fails the Helm install while the CronJob is enabled. Remove it and set the frequency with ``runner.krrCronJob.schedule``.
 
 The CronJob is not created when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
 
@@ -58,10 +58,10 @@ To run a scan now, and to check previous runs (replace ``robusta`` with your rel
 
 Limitations of the CronJob:
 
-- **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Set ``runner.krrCronJob.enabled: false`` to keep the scan created by the runner, or provide a token with ``prometheusAuthSecret``
+- **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Provide a token with ``prometheusAuthSecret``
 - **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
 - **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
-- **Scan now**: the "scan now" button in the Robusta UI still uses the ``krr_scan`` action, which creates a Job, and a Secret when Prometheus needs credentials. Creating the Secret needs ``runner.krrCronJob.enabled: false``
+- **Scan now**: the "scan now" button in the Robusta UI is not supported. Run a scan with the command above
 
 Sending Weekly KRR Scan Reports to Slack
 ===========================================
