@@ -105,12 +105,8 @@ setting overrides ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapE
 Why Read-Only Mode?
 -------------------
 
-Read-only mode is useful in scenarios where you want to:
-
-- **Prevent accidental modifications**: Ensure that even if a playbook or investigation logic has a bug, no cluster resources will be modified
-- **Comply with security policies**: Meet organizational requirements for read-only access in certain environments
-- **Prevent node operations**: Prevent users from draining or restarting nodes through investigations
-- **Audit-only mode**: Run Holmes for investigation and diagnostics without remediation capabilities
+Read-only mode is now the recommended way to use Robusta. Several deprecated features in Robusta Classic required
+higher level permissions, but they are no longer officially supported. We recommend all users adopt read-only mode.
 
 Restricting Read Rules: Using overrideClusterRoles
 --------------------------------------------------
