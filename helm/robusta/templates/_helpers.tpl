@@ -93,12 +93,9 @@ alert_relabel:
 {{ toYaml  .Values.alertRelabel | indent 2 }}
 
 {{- $rbac := .Values.runner.rbac }}
-{{- $lightActions := without .Values.lightActions "rollout_restart" "create_pvc_snapshot" }}
+{{- $lightActions := without .Values.lightActions "rollout_restart" "create_pvc_snapshot" "krr_scan" "popeye_scan" }}
 {{- if not $rbac.enablePodCreate }}
 {{- $lightActions = without $lightActions "node_disk_analyzer" "node_dmesg_enricher" "volume_analysis" "python_profiler" "pod_ps" "python_memory" "debugger_stack_trace" "python_process_inspector" }}
-{{- end }}
-{{- if not $rbac.enableJobCreate }}
-{{- $lightActions = without $lightActions "krr_scan" "popeye_scan" }}
 {{- end }}
 {{- if not $rbac.enablePodDelete }}
 {{- $lightActions = without $lightActions "delete_pod" }}
@@ -121,16 +118,14 @@ active_playbooks:
 {{- if not $rbac.enablePodCreate }}
 {{- $disabledPlaybooks = append $disabledPlaybooks "NodeFSSpaceAlerts" }}
 {{- end }}
-{{- /* scheduled playbooks that create jobs */}}
-{{- if not (and $rbac.enableJobCreate $rbac.enableRobustaConfigMapCreate $rbac.enableRobustaConfigMapEdit) }}
+{{- /* these playbooks create jobs */}}
 {{- $disabledPlaybooks = concat $disabledPlaybooks (list "WeeklyKRRScan" "RobustaMaintenance") }}
-{{- end }}
 {{- if include "robusta.krrCronJobEnabled" . }}
 {{- $disabledPlaybooks = append $disabledPlaybooks "WeeklyKRRScan" }}
 {{- range $playbook := .Values.customPlaybooks }}
 {{- range $action := $playbook.actions }}
 {{- if and (contains "on_schedule" (toJson $playbook.triggers)) (hasKey $action "krr_scan") }}
-{{- fail "customPlaybooks: a scheduled krr_scan is not supported with the KRR CronJob. Remove it and configure the scan under runner.krrCronJob, for example runner.krrCronJob.schedule, or set runner.krrCronJob.enabled=false" }}
+{{- fail "customPlaybooks: a scheduled krr_scan is not supported with the KRR CronJob. Remove it and configure the scan under runner.krrCronJob, for example runner.krrCronJob.schedule" }}
 {{- end }}
 {{- end }}
 {{- end }}

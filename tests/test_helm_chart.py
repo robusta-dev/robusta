@@ -16,13 +16,11 @@ READ_ONLY_VERBS = {"get", "list", "watch"}
 RBAC_FLAGS = [
     "enablePodCreate",
     "enablePodDelete",
-    "enableJobCreate",
     "enableJobDelete",
     "enableNodeEdit",
     "enableRobustaConfigMapCreate",
     "enableRobustaConfigMapEdit",
 ]
-SCHEDULER_FLAGS = ["enableJobCreate", "enableRobustaConfigMapCreate", "enableRobustaConfigMapEdit"]
 KRR_CRONJOB_DISABLED = ["--set", "runner.krrCronJob.enabled=false"]
 
 
@@ -143,11 +141,7 @@ def test_all_flags_grant_only_listed_write_rules():
         ("ClusterRole", "jobs", "delete"),
         ("Role", "pods", "create"),
         ("Role", "pods", "delete"),
-        ("Role", "pods", "patch"),
         ("Role", "pods/exec", "create"),
-        ("Role", "jobs", "create"),
-        ("Role", "jobs", "delete"),
-        ("Role", "secrets", "create"),
         ("Role", "configmaps", "create"),
         ("Role", "configmaps", "update"),
         ("ClusterRole", "securitycontextconstraints", "use"),
@@ -156,8 +150,8 @@ def test_all_flags_grant_only_listed_write_rules():
     assert configmap_update[0]["resourceNames"] == ["scheduled-jobs"]
 
     light_actions = runner_config(enable(*RBAC_FLAGS))["light_actions"]
-    assert {"delete_pod", "delete_job", "drain", "krr_scan", "pod_ps"} <= set(light_actions)
-    assert "rollout_restart" not in light_actions
+    assert {"delete_pod", "delete_job", "drain", "pod_ps"} <= set(light_actions)
+    assert not {"rollout_restart", "krr_scan", "popeye_scan"} & set(light_actions)
 
 
 def test_prometheus_stack_has_no_admission_webhook_rules():
@@ -171,11 +165,9 @@ def test_pod_create_flag_enables_node_fs_playbook():
     assert "NodeFSSpaceAlerts" in playbook_names(enable("enablePodCreate"))
 
 
-def test_scheduled_playbooks_need_scheduler_flags():
-    names = playbook_names(enable(*SCHEDULER_FLAGS) + KRR_CRONJOB_DISABLED)
-    assert {"WeeklyKRRScan", "RobustaMaintenance"} <= names
-    assert "WeeklyKRRScan" not in playbook_names(enable(*SCHEDULER_FLAGS))
-    assert "RobustaMaintenance" not in playbook_names(enable("enableJobCreate") + KRR_CRONJOB_DISABLED)
+def test_job_creating_playbooks_always_disabled():
+    names = playbook_names(enable(*RBAC_FLAGS) + KRR_CRONJOB_DISABLED)
+    assert not {"WeeklyKRRScan", "RobustaMaintenance"} & names
 
 
 def test_namespace_scoped_rbac_renders_role_and_rolebinding():
@@ -335,13 +327,11 @@ def test_krr_cronjob_default_resources():
     assert "secrets" not in created
 
 
-def test_krr_cronjob_disabled_keeps_runner_scan():
-    docs = render_full_chart(enable("enableJobCreate") + KRR_CRONJOB_DISABLED)
+def test_krr_cronjob_disabled():
+    docs = render_full_chart(KRR_CRONJOB_DISABLED)
     assert get_doc(docs, "CronJob", "robusta-krr") is None
     env_names = {e["name"] for e in get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert "KRR_CRONJOB_ENABLED" not in env_names
-    rules = get_doc(docs, "Role", "runner-local-role")["rules"]
-    assert any("secrets" in rule["resources"] and "create" in rule["verbs"] for rule in rules)
 
 
 def test_krr_cronjob_kept_without_runner_role():

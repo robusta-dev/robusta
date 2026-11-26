@@ -22,7 +22,6 @@ Each kind of write access has its own flag under ``runner.rbac``. All flags defa
       rbac:
         enablePodCreate: false               # debugger pods and pod exec in Robusta's namespace
         enablePodDelete: false               # delete pods
-        enableJobCreate: false               # create Jobs in Robusta's namespace
         enableJobDelete: false               # delete Jobs
         enableNodeEdit: false                # cordon, uncordon and drain nodes
         enableRobustaConfigMapCreate: false  # create ConfigMaps in Robusta's namespace
@@ -32,12 +31,14 @@ What each flag grants, and the actions that need it:
 
 - ``enablePodCreate``: ``create`` and ``delete`` on pods and ``create`` on ``pods/exec``, in Robusta's namespace. Needed by actions that start a debugger pod, such as ``node_disk_analyzer``, ``python_profiler``, ``pod_ps``, ``python_memory``, ``debugger_stack_trace`` and the node bash and dmesg enrichers. Also enables the ``NodeFSSpaceAlerts`` playbook
 - ``enablePodDelete``: ``delete`` on pods. Needed by ``delete_pod`` and ``delete_alert_pod``
-- ``enableJobCreate``: ``create`` and ``delete`` on Jobs and ``patch`` on pods, in Robusta's namespace, plus ``create`` on Secrets when ``runner.krrCronJob.enabled`` is ``false``. Needed by ``krr_scan``, ``popeye_scan``, ``kubectl_command``, ``alert_handling_job`` and other actions that run a Job
 - ``enableJobDelete``: ``delete`` on Jobs. Needed by ``delete_job``
 - ``enableNodeEdit``: ``patch`` on nodes and ``create`` on ``pods/eviction``. Needed by ``cordon``, ``uncordon`` and ``drain``
 - ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``: ``create`` on ConfigMaps in Robusta's namespace, and ``update`` on the ``scheduled-jobs`` ConfigMap only. Needed by scheduled playbooks, see below
 
 When an action runs without the flag it needs, the runner logs an error that names the flag and links to this page.
+
+The runner does not create Jobs, so actions that run a Job (``krr_scan``, ``popeye_scan``, ``kubectl_command``,
+``alert_handling_job`` and others) log an error instead. The weekly KRR scan runs from a CronJob, see :ref:`krr-cronjob`.
 
 The ``rollout_restart`` action is not supported by the built-in rules. To grant other write verbs, add the rules
 you need with ``runner.customClusterRoleRules``:
@@ -66,8 +67,7 @@ error for each configuration that has scheduled playbooks. To enable them:
         enableRobustaConfigMapCreate: true
         enableRobustaConfigMapEdit: true
 
-The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks also need ``enableJobCreate: true``, and
-``WeeklyKRRScan`` needs ``runner.krrCronJob.enabled: false``.
+The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks create Jobs, so they are always disabled.
 
 The embedded Prometheus stack (``enablePrometheusStack``, disabled by default) has its own service accounts with
 write access, see :ref:`Embedded Prometheus Stack`.

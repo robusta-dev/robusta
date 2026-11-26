@@ -573,6 +573,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
 
     update_state(ScanState.PENDING)
 
+    logs = ""
     try:
         krr_pod_labels = {"app": "krr.robusta.dev"}
         krr_annotations = {"scan-id": scan_id, "start-time": start_time}

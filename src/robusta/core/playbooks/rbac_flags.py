@@ -10,3 +10,7 @@ def disabled_flag_message(flag_name: str) -> str:
 def require_rbac_flag(enabled: bool, flag_name: str):
     if not enabled:
         raise ActionException(ErrorCodes.RESOURCE_NOT_PERMITTED, disabled_flag_message(flag_name))
+
+
+def reject_job_creation():
+    raise ActionException(ErrorCodes.RESOURCE_NOT_PERMITTED, f"Actions that create Jobs are not supported, see {RBAC_FLAGS_DOCS_URL}")

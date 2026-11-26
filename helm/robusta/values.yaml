@@ -755,7 +755,6 @@ runner:
     # See docs: "Read-Only Service Account".
     enablePodCreate: false  # debugger pods and pod exec in Robusta's namespace
     enablePodDelete: false  # delete_pod and delete_alert_pod actions
-    enableJobCreate: false  # krr_scan, popeye_scan, kubectl_command and other Job based actions
     enableJobDelete: false  # delete_job action
     enableNodeEdit: false  # cordon, uncordon and drain actions
     # the scheduled-jobs ConfigMap. Scheduled playbooks need both

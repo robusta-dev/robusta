@@ -22,8 +22,8 @@ from robusta.api import (
     get_resource_events_table,
     to_kubernetes_name,
 )
-from robusta.core.model.env_vars import ENABLE_JOB_CREATE, ENABLE_JOB_DELETE
-from robusta.core.playbooks.rbac_flags import require_rbac_flag
+from robusta.core.model.env_vars import ENABLE_JOB_DELETE
+from robusta.core.playbooks.rbac_flags import reject_job_creation, require_rbac_flag
 from robusta.core.reporting.base import EnrichmentType
 from robusta.integrations.kubernetes.api_client_utils import wait_until_job_complete
 
@@ -86,7 +86,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
     ALERT_LABEL_{LABEL_NAME} for every label on the alert. For example a label named `foo` becomes `ALERT_LABEL_FOO`
 
     """
-    require_rbac_flag(ENABLE_JOB_CREATE, "enableJobCreate")
+    reject_job_creation()
     logging.info(f"Running alert_handling_job alert action for alert {event.alert_name}")
     job_name = to_kubernetes_name(params.name)
     job: Job = Job(

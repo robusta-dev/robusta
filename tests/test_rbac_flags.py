@@ -5,6 +5,7 @@ import pytest
 
 from playbooks.robusta_playbooks import node_actions, pod_actions
 from robusta.core.playbooks.rbac_flags import RBAC_FLAGS_DOCS_URL, require_rbac_flag
+from robusta.integrations.kubernetes.custom_models import RobustaJob
 from robusta.runner import config_loader
 from robusta.runner.config_loader import ConfigLoader
 from robusta.utils.error_codes import ActionException
@@ -46,3 +47,8 @@ def test_scheduled_playbooks_with_configmap_flags_disabled(monkeypatch, caplog):
 
     loader.registry.get_scheduler.assert_not_called()
     assert "enableRobustaConfigMapEdit" in caplog.text
+
+
+def test_job_creation_not_supported():
+    with pytest.raises(ActionException, match="create Jobs"):
+        RobustaJob.run_simple_job_spec(MagicMock(), "job", 60)
