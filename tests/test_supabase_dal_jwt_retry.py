@@ -5,6 +5,7 @@ Builds a real SupabaseDal and supabase client against an in-process fake GoTrue/
 """
 
 import base64
+import concurrent.futures
 import json
 import threading
 import time
@@ -40,8 +41,15 @@ class FakeSupabase:
         self.lock = threading.Lock()
         self.valid_tokens: set = set()
         self.password_grants = 0
+        self.issue_valid_tokens = True
+        self.sign_in_status = 200
         self.rest_error = None
         self.rest_calls: list = []
+        self.token_owner: dict = {}
+        # A test clears the gate to hold a sign-in open, and waits for `sign_in_started`.
+        self.sign_in_gate = threading.Event()
+        self.sign_in_gate.set()
+        self.sign_in_started = threading.Event()
 
     def expire_all(self):
         with self.lock:
@@ -61,11 +69,18 @@ class FakeSupabase:
 
     def handle(self, request: httpx.Request) -> httpx.Response:
         path = request.url.path
+        if path == "/auth/v1/token":
+            self.sign_in_started.set()
+            self.sign_in_gate.wait(timeout=5)
         with self.lock:
             if path == "/auth/v1/token":
                 self.password_grants += 1
+                if self.sign_in_status != 200:
+                    return httpx.Response(self.sign_in_status, json={"code": 400, "msg": "sign-in failed"})
                 access = _jwt()
-                self.valid_tokens.add(access)
+                self.token_owner[access] = json.loads(request.content)["email"]
+                if self.issue_valid_tokens:
+                    self.valid_tokens.add(access)
                 return httpx.Response(
                     200,
                     json={
@@ -179,6 +194,56 @@ def test_retry_carries_the_api_key_of_the_new_client(dal, fake, fetched_key):
     assert (first_key, retried_key) == (DEFAULT_KEY, FETCHED_KEY)
 
 
+def test_builder_created_before_a_reconnect_still_succeeds(dal, fake):
+    query = dal.client.table("Issues").select("*")
+    fake.expire_all()
+    dal.sign_in()
+
+    assert query.execute().data == [{"id": 1}]
+    assert fake.password_grants == 2
+
+
+def test_jwt_error_on_the_retry_is_raised_not_looped(dal, fake):
+    fake.issue_valid_tokens = False
+    fake.expire_all()
+
+    with pytest.raises(APIError) as exc:
+        dal.client.table("Issues").select("*").execute()
+
+    assert exc.value.code == "PGRST303"
+    assert fake.password_grants == 2
+    assert len(fake.rest_calls) == 2
+
+
+def test_failed_sign_in_is_tried_again_by_the_next_request(dal, fake):
+    client_before = dal.client
+    fake.expire_all()
+    fake.sign_in_status = 400
+    with pytest.raises(Exception):
+        dal.client.table("Issues").select("*").execute()
+    assert dal.client is client_before
+
+    fake.sign_in_status = 200
+    assert dal.client.table("Issues").select("*").execute().data == [{"id": 1}]
+
+
+def test_client_in_use_is_replaced_only_after_the_sign_in(dal, fake):
+    client_before = dal.client
+    fake.expire_all()
+    fake.sign_in_started.clear()
+    fake.sign_in_gate.clear()
+
+    with concurrent.futures.ThreadPoolExecutor(1) as pool:
+        request = pool.submit(lambda: dal.client.table("Issues").select("*").execute().data)
+        assert fake.sign_in_started.wait(timeout=5)
+        # the sign-in is in progress: other threads still get the previous client
+        assert dal.client is client_before
+        fake.sign_in_gate.set()
+        assert request.result(timeout=5) == [{"id": 1}]
+
+    assert dal.client is not client_before
+
+
 def test_non_jwt_errors_do_not_sign_in(dal, fake):
     fake.rest_error = {"code": "42P01", "message": "relation does not exist", "details": None, "hint": None}
 
@@ -187,3 +252,56 @@ def test_non_jwt_errors_do_not_sign_in(dal, fake):
 
     assert exc.value.code == "42P01"
     assert fake.password_grants == 1
+
+
+def test_expired_in_a_non_jwt_error_does_not_sign_in(dal, fake):
+    fake.rest_error = {"code": "P0001", "message": "invitation expired", "details": None, "hint": None}
+
+    with pytest.raises(APIError) as exc:
+        dal.client.rpc("accept_invitation", {}).execute()
+
+    assert exc.value.code == "P0001"
+    assert fake.password_grants == 1
+
+
+def test_each_dal_retries_only_its_own_requests(make_dal, fake):
+    """Every SupabaseDal patches the same class, and a config change builds a second one."""
+    dal_a = make_dal("a@example.com")
+    dal_b = make_dal("b@example.com")
+    fake.expire_all()
+
+    dal_a.client.table("Issues").select("*").execute()
+    dal_b.client.table("Issues").select("*").execute()
+
+    owners = [fake.token_owner[token] for token, _ in fake.rest_calls]
+    assert owners == ["a@example.com"] * 2 + ["b@example.com"] * 2
+    assert fake.password_grants == 4
+
+
+def test_postgrest_is_patched_once_for_any_number_of_dals(make_dal):
+    unpatched = SyncQueryRequestBuilder.execute
+
+    for _ in range(3):
+        make_dal()
+
+    assert SyncQueryRequestBuilder.execute.__wrapped__ is unpatched
+
+
+def test_concurrent_expired_requests_sign_in_once(dal, fake):
+    fake.expire_all()
+    fake.sign_in_gate.clear()
+
+    def call(_):
+        return dal.client.table("Issues").select("*").execute().data
+
+    with concurrent.futures.ThreadPoolExecutor(8) as pool:
+        results = pool.map(call, range(8))
+        # hold the first sign-in open until every request was rejected
+        deadline = time.time() + 5
+        while len(fake.rest_calls) < 8 and time.time() < deadline:
+            time.sleep(0.01)
+        assert len(fake.rest_calls) == 8
+        fake.sign_in_gate.set()
+        assert list(results) == [[{"id": 1}]] * 8
+
+    assert fake.password_grants == 2

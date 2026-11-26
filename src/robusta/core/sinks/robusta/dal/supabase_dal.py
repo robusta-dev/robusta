@@ -1,9 +1,11 @@
+import functools
 import json
 import logging
 from collections import defaultdict
 from datetime import datetime
 import os
 import threading
+import weakref
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -16,7 +18,7 @@ from postgrest.base_request_builder import BaseFilterRequestBuilder, QueryArgs
 from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
-from supabase import create_client
+from supabase import Client, create_client
 from supabase.lib.client_options import SyncClientOptions as ClientOptions
 from tenacity import RetryCallState, Retrying, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
@@ -151,6 +153,11 @@ def fetch_supabase_api_key(account_id: str, cluster: str, store_url: str) -> Opt
         return None
 
 
+def _is_jwt_error(exc: PostgrestAPIError) -> bool:
+    message = (exc.message or "").lower()
+    return exc.code in ("PGRST301", "PGRST303") or "jwt expired" in message
+
+
 class _AuthHttpClient(httpx.Client):
     """The httpx client we hand to Supabase's auth (GoTrue) sub-client.
 
@@ -162,7 +169,26 @@ class _AuthHttpClient(httpx.Client):
         self.close()
 
 
+class _DalHttpClient(httpx.Client):
+    """The httpx client for the PostgREST requests of one SupabaseDal.
+
+    It knows its DAL, so that a failed request can be traced back to the DAL that sent it.
+    The reference is weak: the client must not keep its DAL alive.
+    """
+
+    def __init__(self, dal: "SupabaseDal", **kwargs):
+        super().__init__(**kwargs)
+        self.__dal_ref = weakref.ref(dal)
+
+    @property
+    def dal(self) -> Optional["SupabaseDal"]:
+        """The DAL of this client, or None when the DAL was released."""
+        return self.__dal_ref()
+
+
 class SupabaseDal(AccountResourceFetcher):
+    __patch_lock = threading.Lock()
+
     def __init__(
         self,
         url: str,
@@ -186,6 +212,12 @@ class SupabaseDal(AccountResourceFetcher):
         options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.email = email
         self.password = password
+        self.__reauth_lock = threading.Lock()
+        # One HTTP client for the requests of every supabase client that this DAL builds, with
+        # the settings postgrest gives its own.
+        self.__http_client = _DalHttpClient(
+            self, timeout=SUPABASE_TIMEOUT_SECONDS, follow_redirects=True, http2=True
+        )
         self.__connect(options)
         self.patch_postgrest_execute()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
@@ -209,11 +241,17 @@ class SupabaseDal(AccountResourceFetcher):
         self.__login(self.key, options)
 
     def __login(self, api_key: str, options: ClientOptions):
-        self.client = create_client(self.url, api_key, options)
-        self.__apply_auth_client_timeout()
-        self.user_id = self.sign_in()
+        client = create_client(self.url, api_key, options)
+        self.__apply_auth_client_timeout(client)
+        # Set after the client is built, so that the auth client keeps an HTTP client of its own.
+        client.options.httpx_client = self.__http_client
+        user_id = self.sign_in(client)
+        # Only a client that is signed in replaces the one in use: requests of other threads
+        # keep the previous client until then, and a failed sign-in leaves it in place.
+        self.client = client
+        self.user_id = user_id
 
-    def __apply_auth_client_timeout(self) -> None:
+    def __apply_auth_client_timeout(self, client: Client) -> None:
         """Give the auth (GoTrue) client the configured timeout, over HTTP/1.1.
 
         ``ClientOptions.postgrest_client_timeout`` only reaches postgrest. supabase 2.5.1
@@ -232,7 +270,7 @@ class SupabaseDal(AccountResourceFetcher):
         safe, and this DAL is shared across threads (the same problem as ROB-228). No
         transport is passed, so environment proxies keep being honored as before.
         """
-        auth_client = self.client.auth
+        auth_client = client.auth
         http_client = _AuthHttpClient(
             timeout=httpx.Timeout(
                 SUPABASE_TIMEOUT_SECONDS,
@@ -260,33 +298,50 @@ class SupabaseDal(AccountResourceFetcher):
         admin._http_client = http_client
         previous.close()
 
-    def patch_postgrest_execute(self):
+    @staticmethod
+    def patch_postgrest_execute():
+        """Patch postgrest once for the process, however many DALs are built."""
+        with SupabaseDal.__patch_lock:
+            for builder in (SyncQueryRequestBuilder, SyncSingleRequestBuilder):
+                if not getattr(builder.execute, "is_patched_by_supabase_dal", False):
+                    execute_with_retry = SupabaseDal.__with_jwt_retry(builder.execute)
+                    execute_with_retry.is_patched_by_supabase_dal = True
+                    builder.execute = execute_with_retry
+
+    @staticmethod
+    def __with_jwt_retry(original_execute):
         # This is somewhat hacky.
-        def with_jwt_retry(original_execute):
-            def execute_with_retry(_self):
-                try:
-                    return original_execute(_self)
-                except PostgrestAPIError as exc:
-                    message = exc.message or ""
-                    if exc.code == "PGRST301" or "expired" in message.lower():
-                        # JWT expired. Sign in again and retry the query
-                        logging.error("JWT token expired/invalid, signing in to Supabase again")
-                        self.__connect(self.options)
-                        # The request keeps the headers it was built with.
-                        headers = self.client.options.headers
-                        _self.request.headers.update(
-                            {"Authorization": headers["Authorization"], "apiKey": headers["apiKey"]}
-                        )
-                        return original_execute(_self)
-                    else:
-                        raise
+        @functools.wraps(original_execute)
+        def execute_with_retry(request_builder):
+            try:
+                return original_execute(request_builder)
+            except PostgrestAPIError as exc:
+                if not _is_jwt_error(exc):
+                    raise
+                session = request_builder.request.session
+                if not isinstance(session, _DalHttpClient):
+                    # This wrapper runs for every PostgREST request in the process. A request that
+                    # was not sent by a SupabaseDal has no DAL that can sign in for it.
+                    raise
+                dal = session.dal
+                if dal is None:
+                    # The DAL of this client was released.
+                    raise
+                # The request keeps the headers it was built with.
+                headers = request_builder.request.headers
+                headers.update(dal.__reauthorize(headers.get("Authorization")))
+                return original_execute(request_builder)
 
-            return execute_with_retry
+        return execute_with_retry
 
-        self._original_execute = SyncQueryRequestBuilder.execute
-        SyncQueryRequestBuilder.execute = with_jwt_retry(self._original_execute)
-        self._original_rpc_execute = SyncSingleRequestBuilder.execute
-        SyncSingleRequestBuilder.execute = with_jwt_retry(self._original_rpc_execute)
+    def __reauthorize(self, rejected_authorization: Optional[str]) -> Dict[str, str]:
+        with self.__reauth_lock:
+            # Another thread may already have replaced the rejected token.
+            if self.client.options.headers.get("Authorization") == rejected_authorization:
+                logging.warning("JWT token expired/invalid, signing in to Supabase again")
+                self.__connect(self.options)
+            headers = self.client.options.headers
+            return {"Authorization": headers["Authorization"], "apiKey": headers["apiKey"]}
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
@@ -682,10 +737,10 @@ class SupabaseDal(AccountResourceFetcher):
             logging.exception(f"Failed to delete namespace {namespace_name} error: {e}")
             raise
 
-    def __sign_in_once(self) -> str:
-        res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
-        self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
-        self.client.postgrest.auth(res.session.access_token)
+    def __sign_in_once(self, client: Client) -> str:
+        res = client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+        client.auth.set_session(res.session.access_token, res.session.refresh_token)
+        client.postgrest.auth(res.session.access_token)
         return res.user.id
 
     @staticmethod
@@ -698,8 +753,8 @@ class SupabaseDal(AccountResourceFetcher):
             retry_state.next_action.sleep if retry_state.next_action else 0,
         )
 
-    def sign_in(self) -> str:
-        """Log in to Supabase, retrying transient network failures.
+    def sign_in(self, client: Optional[Client] = None) -> str:
+        """Log in to Supabase on ``client`` (default: the client in use), retrying transient network failures.
 
         A single failure here used to be fatal: it propagates out of ``__init__`` through
         Robusta sink construction up to ConfigLoader, which kills the whole runner process
@@ -721,7 +776,7 @@ class SupabaseDal(AccountResourceFetcher):
                 before_sleep=self.__log_sign_in_retry,
                 reraise=True,
             )
-            return login(self.__sign_in_once)
+            return login(self.__sign_in_once, client or self.client)
         except Exception as e:
             # Check if this is a DNS-related error
             error_msg = str(e).lower()
