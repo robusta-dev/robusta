@@ -84,6 +84,8 @@ Robusta 0.56.0 upgrades the bundled ``kube-prometheus-stack`` from version 72 to
 
 1. If you are upgrading from a Robusta version older than 0.26.0, manually remove the node-exporter daemonset and admission webhooks. Skip this step otherwise.
 
+.. warning:: These commands select by label, so they also match another ``kube-prometheus-stack`` release in the same cluster. If you run one independently of Robusta, list the matching objects first (replace ``delete`` with ``get``) and delete only the ones that belong to the Robusta release.
+
 .. code-block:: bash
 
     kubectl delete daemonset -l app=prometheus-node-exporter
