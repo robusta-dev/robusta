@@ -126,11 +126,6 @@ active_playbooks:
 {{- end }}
 
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
-{{- /* these playbooks create pods or jobs */}}
-{{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan" "RobustaMaintenance") }}
-{{- if include "robusta.krrCronJobEnabled" . }}
-{{- $disabledPlaybooks = append $disabledPlaybooks "WeeklyKRRScan" }}
-{{- end }}
 
 {{- $priorityPlaybooks := .Values.priorityBuiltinPlaybooks }}
 {{- $enabledPriorityPlaybooks := list }}

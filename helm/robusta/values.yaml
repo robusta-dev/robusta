@@ -416,17 +416,6 @@ builtinPlaybooks:
       resource_type: Memory
       item_type: Node
 
-- name: "NodeFSSpaceAlerts"
-  triggers:
-  - on_prometheus_alert:
-      alert_name: NodeFilesystemSpaceFillingUp
-  - on_prometheus_alert:
-      alert_name: NodeFilesystemAlmostOutOfSpace
-  actions:
-  - alert_graph_enricher:
-      resource_type: Disk
-      item_type: Node
-
 - name: "CPUThrottlingHigh"
   triggers:
   - on_prometheus_alert:
@@ -600,17 +589,6 @@ platformPlaybooks:
   - job_info_enricher: {}
   - job_events_enricher: {}
   - job_pod_enricher: {}
-  sinks:
-    - "robusta_ui_sink"
-
-- name: "RobustaMaintenance"
-  triggers:
-  - on_schedule:
-      cron_schedule_repeat:
-        cron_expression: "0 */3 * * *" # every 3 hours
-  actions:
-  - cleanup_robusta_pods:
-      hours_back: 6
   sinks:
     - "robusta_ui_sink"
 
