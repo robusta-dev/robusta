@@ -69,7 +69,7 @@ class YaMessengerClient:
         return file_name, contents, mimetypes.guess_type(file_name, strict=False)[0]
 
     def send_gallery(self, message: str, images: list[tuple[str, bytes]]) -> bool:
-        """Return false only when the API definitively rejects the gallery."""
+        """Return false when no gallery was posted and text can be sent safely."""
         data = {
             "text": message,
             "disable_notification": str(self.disable_notifications).lower(),
@@ -80,11 +80,17 @@ class YaMessengerClient:
         else:
             data["chat_id"] = self.chat_id
 
+        try:
+            files = [("images", self._prepare_file(name, contents)) for name, contents in images]
+        except Exception:
+            logging.exception("Could not prepare the Yandex Messenger gallery; sending text instead")
+            return False
+
         response = requests.post(
             f"{YM_API_BASE_URL}{YM_API_SEND_GALLERY_ENDPOINT}",
             headers={"Authorization": f"OAuth {self.bot_token}"},
             data=data,
-            files=[("images", self._prepare_file(name, contents)) for name, contents in images],
+            files=files,
             timeout=30,
         )
         if response.status_code in (400, 413, 415, 422):

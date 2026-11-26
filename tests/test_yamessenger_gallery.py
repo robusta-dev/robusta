@@ -54,6 +54,22 @@ class YaMessengerGalleryTest(unittest.TestCase):
         self.send()
         self.assertEqual(self.endpoints(), ["sendText", "sendImage", "sendFile", "sendFile"])
 
+    def test_table_render_failure_preserves_text_in_both_modes(self):
+        for gallery in (False, True):
+            with self.subTest(gallery=gallery), patch.object(TableBlock, "render_rows", side_effect=ValueError):
+                self.post.reset_mock()
+                with self.assertRaises(ValueError):
+                    self.send(send_images_as_gallery=gallery)
+                self.assertEqual(self.endpoints(), ["sendText"])
+                self.assertIn("Test alert", self.post.call_args.kwargs["json"]["text"])
+
+    def test_gallery_image_preparation_failure_sends_text(self):
+        with patch(
+            "robusta.core.sinks.yamessenger.yamessenger_client.YaMessengerClient._prepare_file", side_effect=ValueError
+        ):
+            self.send(send_images_as_gallery=True, send_documents=False)
+        self.assertEqual(self.endpoints(), ["sendText"])
+
     def test_gallery_respects_send_files_false(self):
         self.send(send_images_as_gallery=True, send_files=False)
         self.assertEqual(self.endpoints(), ["sendText"])

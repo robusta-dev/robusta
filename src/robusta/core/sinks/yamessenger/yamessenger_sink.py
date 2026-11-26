@@ -44,14 +44,20 @@ class YaMessengerSink(SinkBase):
             self.client.send_message(message)
             return
 
-        attachments = self.__get_attachments(finding)
-        images = [(name, contents) for name, contents in attachments if is_image(name)]
-        if self.send_images_as_gallery and images:
-            if not self.client.send_gallery(message, images):
+        if not self.send_images_as_gallery:
+            self.client.send_message(message)
+            attachments = self.__get_attachments(finding)
+        else:
+            try:
+                attachments = self.__get_attachments(finding)
+                images = [(name, contents) for name, contents in attachments if is_image(name)]
+            except Exception:
+                self.client.send_message(message)
+                raise
+
+            if not images or not self.client.send_gallery(message, images):
                 self.client.send_message(message)
             attachments = [(name, contents) for name, contents in attachments if not is_image(name)]
-        else:
-            self.client.send_message(message)
 
         for name, contents in attachments:
             self.client.send_file(name, contents)
