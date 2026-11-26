@@ -577,7 +577,7 @@ class CallbackChoice(BaseModel):
 
 class CallbackBlock(BaseBlock):
     """
-    A set of buttons that allows callbacks from the sink - for example, a button in Slack that will trigger another action when clicked
+    Deprecated. Sinks no longer render this block, and buttons in notifications no longer run actions.
     """
 
     choices: Dict[str, CallbackChoice]
