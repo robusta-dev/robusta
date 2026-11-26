@@ -69,6 +69,9 @@ error for each configuration that has scheduled playbooks. To enable them:
 The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks also need ``enableJobCreate: true``, and
 ``WeeklyKRRScan`` needs ``runner.krrCronJob.enabled: false``.
 
+The embedded Prometheus stack (``enablePrometheusStack``, disabled by default) has its own service accounts with
+write access, see :ref:`Embedded Prometheus Stack`.
+
 Why Read-Only Mode?
 -------------------
 

@@ -908,6 +908,11 @@ kube-prometheus-stack:
                   values:
                     - fargate
   prometheusOperator:
+    # no webhook certificate Secret or webhook configuration updates
+    admissionWebhooks:
+      enabled: false
+    tls:
+      enabled: false
     resources:
       requests:
         cpu: 100m
