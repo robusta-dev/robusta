@@ -41,8 +41,12 @@ def job_restart_on_oomkilled_community(event: JobEvent, params: IncreaseResource
     try:
         pod = get_job_latest_pod(job_event)
 
-    except:
+    except Exception:
         logging.error(f"get_job_pod was called on event without job: {event}")
+        return
+
+    if pod is None:
+        logging.error(f"no pod found for job event: {event}")
         return
 
     containers = []
@@ -54,7 +58,7 @@ def job_restart_on_oomkilled_community(event: JobEvent, params: IncreaseResource
     """
     OOMKilled = "OOMKilled"
     for status in pod.status.containerStatuses:
-        if status.state.running == None:
+        if status.state.running is None:
             if status.state.terminated.reason == OOMKilled:
                 oomkilled_containers.append(status.name)
         else:
