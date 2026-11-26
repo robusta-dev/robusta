@@ -1,9 +1,11 @@
+import functools
 import json
 import logging
 from collections import defaultdict
 from datetime import datetime
 import os
 import threading
+import weakref
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -169,7 +171,26 @@ class _AuthHttpClient(httpx.Client):
         self.close()
 
 
+class _DalHttpClient(httpx.Client):
+    """The httpx client for the PostgREST requests of one SupabaseDal.
+
+    It knows its DAL, so that a failed request can be traced back to the DAL that sent it.
+    The reference is weak: the client must not keep its DAL alive.
+    """
+
+    def __init__(self, dal: "SupabaseDal", **kwargs):
+        super().__init__(**kwargs)
+        self.__dal_ref = weakref.ref(dal)
+
+    @property
+    def dal(self) -> Optional["SupabaseDal"]:
+        """The DAL of this client, or None when the DAL was released."""
+        return self.__dal_ref()
+
+
 class SupabaseDal(AccountResourceFetcher):
+    __patch_lock = threading.Lock()
+
     def __init__(
         self,
         url: str,
@@ -195,8 +216,10 @@ class SupabaseDal(AccountResourceFetcher):
         self.password = password
         self.__reauth_lock = threading.Lock()
         # One HTTP client for the requests of every supabase client that this DAL builds, with
-        # the settings postgrest gives its own. It is what tells our requests from another DAL's.
-        self.__http_client = httpx.Client(timeout=SUPABASE_TIMEOUT_SECONDS, follow_redirects=True, http2=True)
+        # the settings postgrest gives its own.
+        self.__http_client = _DalHttpClient(
+            self, timeout=SUPABASE_TIMEOUT_SECONDS, follow_redirects=True, http2=True
+        )
         self.__connect(options)
         self.patch_postgrest_execute()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
@@ -273,30 +296,40 @@ class SupabaseDal(AccountResourceFetcher):
         admin._http_client = http_client
         previous.close()
 
-    def patch_postgrest_execute(self):
+    @staticmethod
+    def patch_postgrest_execute():
+        """Patch postgrest once for the process, however many DALs are built."""
+        with SupabaseDal.__patch_lock:
+            for builder in (SyncQueryRequestBuilder, SyncSingleRequestBuilder):
+                if not getattr(builder.execute, "retries_expired_jwt", False):
+                    builder.execute = SupabaseDal.__with_jwt_retry(builder.execute)
+
+    @staticmethod
+    def __with_jwt_retry(original_execute):
         # This is somewhat hacky.
-        def with_jwt_retry(original_execute):
-            def execute_with_retry(_self):
-                try:
-                    return original_execute(_self)
-                except PostgrestAPIError as exc:
-                    if not _is_jwt_error(exc):
-                        raise
-                    # Every SupabaseDal patches the same class, so a request may
-                    # belong to another instance with other credentials.
-                    if _self.request.session is not self.__http_client:
-                        raise
-                    # The request keeps the headers it was built with.
-                    headers = _self.request.headers
-                    headers.update(self.__reauthorize(headers.get("Authorization")))
-                    return original_execute(_self)
+        @functools.wraps(original_execute)
+        def execute_with_retry(request_builder):
+            try:
+                return original_execute(request_builder)
+            except PostgrestAPIError as exc:
+                if not _is_jwt_error(exc):
+                    raise
+                session = request_builder.request.session
+                if not isinstance(session, _DalHttpClient):
+                    # This wrapper runs for every PostgREST request in the process. A request that
+                    # was not sent by a SupabaseDal has no DAL that can sign in for it.
+                    raise
+                dal = session.dal
+                if dal is None:
+                    # The DAL of this client was released.
+                    raise
+                # The request keeps the headers it was built with.
+                headers = request_builder.request.headers
+                headers.update(dal.__reauthorize(headers.get("Authorization")))
+                return original_execute(request_builder)
 
-            return execute_with_retry
-
-        self._original_execute = SyncQueryRequestBuilder.execute
-        SyncQueryRequestBuilder.execute = with_jwt_retry(self._original_execute)
-        self._original_rpc_execute = SyncSingleRequestBuilder.execute
-        SyncSingleRequestBuilder.execute = with_jwt_retry(self._original_rpc_execute)
+        execute_with_retry.retries_expired_jwt = True
+        return execute_with_retry
 
     def __reauthorize(self, rejected_authorization: Optional[str]) -> Dict[str, str]:
         with self.__reauth_lock:

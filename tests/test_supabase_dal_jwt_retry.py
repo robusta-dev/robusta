@@ -252,6 +252,15 @@ def test_each_dal_retries_only_its_own_requests(make_dal, fake):
     assert fake.password_grants == 4
 
 
+def test_postgrest_is_patched_once_for_any_number_of_dals(make_dal):
+    unpatched = SyncQueryRequestBuilder.execute
+
+    for _ in range(3):
+        make_dal()
+
+    assert SyncQueryRequestBuilder.execute.__wrapped__ is unpatched
+
+
 def test_concurrent_expired_requests_sign_in_once(dal, fake):
     fake.expire_all()
     start = threading.Barrier(8)
