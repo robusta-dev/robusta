@@ -47,8 +47,6 @@ Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_worker
 
 A ``krr_scan`` action on a schedule in ``customPlaybooks`` fails the Helm install while the CronJob is enabled. Remove it and set the frequency with ``runner.krrCronJob.schedule``, or set ``runner.krrCronJob.enabled: false`` to keep running scans from playbooks.
 
-``KRR_IMAGE_OVERRIDE``, ``KRR_MEMORY_REQUEST`` and ``KRR_MEMORY_LIMIT`` are read from a literal ``value`` in the runner's ``additional_env_vars``. Set them under ``runner.krrCronJob`` when they come from ``valueFrom`` or ``additional_env_froms``.
-
 The CronJob is not created when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
 
 To run a scan now, and to check previous runs (replace ``robusta`` with your release name and namespace):
@@ -210,6 +208,8 @@ To prevent the KRR job from OOMKill (Out of Memory), you can configure the memor
         value: "3Gi"
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
+
+For the weekly scan :ref:`CronJob <krr-cronjob>`, ``KRR_MEMORY_REQUEST``, ``KRR_MEMORY_LIMIT`` and ``KRR_IMAGE_OVERRIDE`` must be set with a literal ``value`` as above. Values from ``valueFrom`` or ``additional_env_froms`` are not used; set ``runner.krrCronJob.memoryRequest``, ``memoryLimit`` or ``image`` instead.
 
 Enable KRR security context
 ======================================

@@ -595,31 +595,9 @@ def test_krr_cronjob_follows_disabled_weekly_playbook():
     assert get_doc(docs, "CronJob", "robusta-krr") is None
 
 
-def test_krr_cronjob_uses_runner_pull_secrets():
-    pod_spec = krr_job_template(["--set", "runner.imagePullSecrets[0].name=regcred"])["spec"]["template"]["spec"]
-    assert pod_spec["imagePullSecrets"] == [{"name": "regcred"}]
-
-
-def test_krr_cronjob_strategy_takes_precedence_over_env(tmp_path):
-    arguments = krr_arguments(tmp_path, ["--set", "runner.krrCronJob.strategy=simple_limit"], env={"KRR_STRATEGY": "simple"})
-    assert arguments[1] == "simple_limit"
-
-
-@pytest.mark.parametrize(
-    "extra_args",
-    [
-        ["--set", "runner.krrCronJob.prometheusAuthSecret.name=prom"],
-        [
-            "--set",
-            "runner.additional_env_vars[0].name=KRR_IMAGE_OVERRIDE",
-            "--set",
-            "runner.additional_env_vars[0].valueFrom.configMapKeyRef.name=images",
-        ],
-    ],
-)
-def test_krr_cronjob_unsupported_values(extra_args):
+def test_krr_cronjob_prometheus_auth_secret_needs_key():
     with pytest.raises(subprocess.CalledProcessError):
-        render_full_chart(extra_args)
+        render_full_chart(["--set", "runner.krrCronJob.prometheusAuthSecret.name=prom"])
 
 
 def test_krr_cronjob_runtime_env_settings(tmp_path):
@@ -630,3 +608,56 @@ def test_krr_cronjob_runtime_env_settings(tmp_path):
     )
     assert arguments[2] == "--publish_scan_url=http://other/api/trigger"
     assert flag_values(arguments, "-p") == ["http://prometheus:9090"]
+
+
+def test_scheduled_playbook_mentioning_krr_scan_in_params_is_kept():
+    docs = render_full_chart(
+        [
+            "--set",
+            "customPlaybooks[0].triggers[0].on_schedule.fixed_delay_repeat.seconds_delay=3600",
+            "--set",
+            "customPlaybooks[0].actions[0].kubectl_command.command=get pods -l app=krr_scan",
+        ]
+    )
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
+
+
+def test_krr_cronjob_env_setting_from_value_from_points_to_values():
+    result = subprocess.run(
+        [
+            "helm",
+            "template",
+            str(CHART_PATH),
+            "--set",
+            "clusterName=test",
+            "--set",
+            "sinksConfig[0].file_sink.name=test",
+            "--set",
+            "runner.additional_env_vars[0].name=KRR_MEMORY_LIMIT",
+            "--set",
+            "runner.additional_env_vars[0].valueFrom.configMapKeyRef.name=krr",
+            "--set",
+            "runner.additional_env_vars[0].valueFrom.configMapKeyRef.key=limit",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "KRR_MEMORY_LIMIT" in result.stderr and "runner.krrCronJob" in result.stderr
+
+
+def test_krr_cronjob_image_pull_secrets():
+    runner_secrets = ["--set", "runner.imagePullSecrets[0].name=runner-registry"]
+    pod_spec = krr_job_template(runner_secrets)["spec"]["template"]["spec"]
+    assert pod_spec["imagePullSecrets"] == [{"name": "runner-registry"}]
+
+    job_spec_secrets = ["--set", "runner.krrCronJob.jobSpec.imagePullSecrets[0].name=krr-registry"]
+    pod_spec = krr_job_template(runner_secrets + job_spec_secrets)["spec"]["template"]["spec"]
+    assert pod_spec["imagePullSecrets"] == [{"name": "krr-registry"}]
+
+    assert "imagePullSecrets" not in krr_job_template([])["spec"]["template"]["spec"]
+
+
+def test_krr_cronjob_strategy_value_takes_precedence_over_env(tmp_path):
+    arguments = krr_arguments(tmp_path, ["--set", "runner.krrCronJob.strategy=simple_limit"], env={"KRR_STRATEGY": "simple"})
+    assert arguments[1] == "simple_limit"
