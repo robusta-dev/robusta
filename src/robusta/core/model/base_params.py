@@ -297,10 +297,10 @@ def validate_job_spec(job_spec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return job_spec
 
 
-# Parameters that decide the identity, metadata and command line of pods the runner creates. They are taken
-# from the runner's configuration only, never from the parameters of an individual action request.
+# Parameters taken from the runner's configuration only, never from the parameters of an individual action request.
 CONFIG_ONLY_PARAMS = frozenset(
     {
+        # identity and metadata of the pods the runner creates
         "serviceAccountName",
         "service_account_name",
         "custom_annotations",
@@ -310,6 +310,18 @@ CONFIG_ONLY_PARAMS = frozenset(
         "args",
         # simulated alerts take their query link from the configuration
         "generator_url",
+        # where the runner connects to Prometheus, AlertManager, Grafana and Holmes, and with which credentials
+        "prometheus_url",
+        "prometheus_url_query_string",
+        "prometheus_auth",
+        "prometheus_graphs_overrides",
+        "alertmanager_url",
+        "alertmanager_flavor",
+        "alertmanager_auth",
+        "alertmanager_additional_headers",
+        "grafana_url",
+        "grafana_api_key",
+        "holmes_url",
     }
 )
 
