@@ -1,8 +1,6 @@
 from typing import ClassVar
 from pydantic.v1.dataclasses import dataclass
 from hikaru.model.rel_1_26 import HikaruDocumentBase, ObjectMeta, LabelSelector
-import datetime
-import pytz
 from kubernetes import client
 from hikaru.crd import HikaruCRDDocumentMixin
 
@@ -28,18 +26,6 @@ class CRDBase:
         )
         obj = cls(**obj)
         return type("", (object,), {"obj": obj})()
-
-    @classmethod
-    def rollout_restart_patch(cls):
-        return {
-            "metadata": {
-                "annotations": {
-                    "kubectl.kubernetes.io/restartedAt": datetime.datetime.utcnow()
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat()
-                }
-            }
-        }
 
     @classmethod
     def list_namespaced(cls, namespace: str):
@@ -86,12 +72,6 @@ class StrimziPodSet(CRDBase, HikaruDocumentBase, HikaruCRDDocumentMixin):
 
     def __post_init__(self):
         self.spec["selector"] = LabelSelector(**self.spec["selector"])
-
-    @classmethod
-    def rollout_restart_patch(cls):
-        return {
-            "metadata": {"annotations": {"strimzi.io/manual-rolling-update": "true"}}
-        }
 
 
 # https://github.com/search?q=repo%3Acloudnative-pg/cloudnative-pg%20ClusterRestartAnnotationName&type=code // restart

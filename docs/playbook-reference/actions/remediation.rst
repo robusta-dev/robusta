@@ -1,7 +1,8 @@
 Remediation
 ############################
 
-Robusta includes actions that modify Kubernetes resources in your cluster. See also:
+Robusta includes actions that modify Kubernetes resources in your cluster. Most of them need a
+``runner.rbac`` flag, see :ref:`read-only-service-account`. See also:
 
 * :ref:`node_bash_enricher`
 * :ref:`pod_bash_enricher`
@@ -15,6 +16,10 @@ Robusta includes actions that modify Kubernetes resources in your cluster. See a
 .. robusta-action:: playbooks.robusta_playbooks.job_actions.delete_job on_job_failure
 
 .. robusta-action:: playbooks.robusta_playbooks.autoscaler.alert_on_hpa_reached_limit on_horizontalpodautoscaler_update
+
+.. warning::
+
+    ``rollout_restart`` is deprecated and no longer supported. It logs an error and returns an error without restarting the workload.
 
 .. robusta-action:: playbooks.robusta_playbooks.workload_actions.rollout_restart on_prometheus_alert
 
@@ -32,6 +37,10 @@ Node
 Kubectl
 *****************
 
+.. warning::
+
+    ``kubectl_command`` is deprecated and no longer supported. It logs an error and returns an error without running the command.
+
 .. robusta-action:: playbooks.robusta_playbooks.kubectl_enrichments.kubectl_command
 
     Use `kubectl_command` to run kubectl with dynamic placeholders:
@@ -42,9 +51,6 @@ Kubectl
     Example: **Scale Down Deployment on Crash Loop**
 
     .. code-block:: yaml
-
-        commandActions:
-        - kubectl_command
 
         customPlaybooks:
         - name: CrashLoopScaleDown

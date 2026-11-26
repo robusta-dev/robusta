@@ -91,8 +91,8 @@ What ``runner.rbac.namespaceScoped`` does
 
 **RBAC** — instead of ``<release>-runner-cluster-role`` (ClusterRole) + ClusterRoleBinding, the
 chart renders ``<release>-runner-role`` (a namespaced ``Role`` with the same rules) bound by a
-``RoleBinding`` in the release namespace. The ServiceAccount and the namespaced create-permissions
-Role (``<release>-runner-local-role``) are unchanged. Because a Role is namespaced, multiple
+``RoleBinding`` in the release namespace. The ServiceAccount and the optional
+``<release>-runner-local-role`` Role (rendered when a ``runner.rbac.enable*`` flag needs it) are unchanged. Because a Role is namespaced, multiple
 installs — even with the same release name — cannot collide on cluster-scoped RBAC objects.
 
 **Environment variables** — the flag presets these on the runner (any entry you add to
@@ -167,7 +167,7 @@ If your security process requires RBAC managed outside the chart, set
 ``runner.createServiceAccount: false`` (nothing RBAC-related is rendered) plus
 ``runner.customServiceAccount: <name>``, and create the ServiceAccount, a Role with the rules the
 runner needs (workload reads for cluster stats and self-registration, ``configmaps``
-``get/create/update`` for the ``scheduled-jobs`` scheduler state, ``services`` ``list`` for Holmes
+``get/create/update`` for the ``scheduled-jobs`` scheduler state when scheduled playbooks are enabled, ``services`` ``list`` for Holmes
 discovery, ``namespaces`` ``get`` for ``NAMESPACE_DATA_MODE=namespaced``, and ``events``
 ``get/list`` in **both** the ``""`` core and ``events.k8s.io`` API groups for resource event
 enrichment) and a RoleBinding yourself. In that setup also set
