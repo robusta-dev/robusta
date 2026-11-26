@@ -31,8 +31,9 @@ class KubectlParams(PodRunningParams):
     timeout: int = 3600
 
 
-# A value substituted into the command is read by a shell, so it must be a plain Kubernetes-style name.
-SAFE_TEMPLATE_VALUE = re.compile(r"[A-Za-z0-9._:/@=-]*")
+# A value substituted into the command is read by a shell and then by kubectl, so it must be a plain
+# Kubernetes-style name: not empty, and starting with a letter or digit so kubectl cannot read it as an option.
+SAFE_TEMPLATE_VALUE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/@=-]*")
 
 
 def get_unsafe_template_values(subject, command: str) -> List[str]:

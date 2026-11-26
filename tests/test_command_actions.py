@@ -293,6 +293,11 @@ def _subject(namespace="prod", **kwargs) -> FindingSubject:
         ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": "$(x)"}), ["labels.team"]),
         ("kubectl get pods -l team=${labels.team}", _subject(), ["labels.team"]),
         ("kubectl get nodes", _subject(labels={"team": "a b"}), []),
+        ("kubectl delete pod $name -n $namespace", _subject(namespace="--all-namespaces"), ["namespace"]),
+        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": "-A"}), ["labels.team"]),
+        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": ""}), ["labels.team"]),
+        ("kubectl get pods -l team=${labels.team}", _subject(labels={"team": "9lives"}), []),
+        ("kubectl get pod $name -n $namespace", _subject(namespace=None), ["namespace"]),
     ],
 )
 def test_kubectl_command_template_values(command, subject, unsafe):
