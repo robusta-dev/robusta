@@ -74,6 +74,16 @@ def test_malformed_message_is_not_processed(caplog):
     assert "Failed to parse incoming event" in caplog.text
 
 
+def test_unparsable_request_is_logged_without_its_params(caplog):
+    receiver = _receiver()
+    request = {"body": {"action_name": "get_silences", "action_params": {"api_key": "s3cr3t-value"}}}
+    receiver.on_message(None, json.dumps(request))
+    receiver._process_action.assert_not_called()
+    assert "Failed to parse incoming event" in caplog.text
+    assert "get_silences" in caplog.text
+    assert "s3cr3t-value" not in caplog.text
+
+
 def test_request_made_by_a_button_is_refused():
     receiver = ActionRequestReceiver.__new__(ActionRequestReceiver)
     receiver.event_handler = MagicMock()

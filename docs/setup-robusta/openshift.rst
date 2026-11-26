@@ -92,6 +92,10 @@ update the ``generated_values.yaml`` as follows:
       createScc: true
       createPrivilegedScc: true  # Not recommended - only if you need node_bash_enricher
 
+    # node_bash_enricher is a command action, so it also has to be listed here
+    commandActions:
+    - node_bash_enricher
+
 You may also reference an existing SCC using the ``openshift.privilegedSccName`` value.
 In test environments, you can reference the ``privileged`` SCC to enable these features in your
 installation.

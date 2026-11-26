@@ -25,7 +25,6 @@ Create a python file named ``my_action.py`` with the following contents:
         pod = event.get_pod()
         pod_name = pod.metadata.name
         pod_logs = pod.get_logs()
-        pod_processes = pod.exec("ps aux")
 
         # this is how you send data to slack or other destinations
         event.add_enrichment([

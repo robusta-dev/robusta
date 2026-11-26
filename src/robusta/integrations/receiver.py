@@ -193,7 +193,9 @@ class ActionRequestReceiver:
             if self._is_button_press(message):
                 logging.info("Ignoring a button press. Buttons in notifications no longer run actions")
             else:
-                logging.error(f"Failed to parse incoming event {message}", exc_info=True)
+                logging.error(
+                    f"Failed to parse incoming event {self._stringify_incoming_event(message)}", exc_info=True
+                )
             return
 
         self._process_action(incoming_event, validate_timestamp=True)
@@ -209,7 +211,7 @@ class ActionRequestReceiver:
     @staticmethod
     def _stringify_incoming_event(incoming_event) -> str:
         """Stringify incoming request masking action params in case it contains secrets"""
-        if isinstance(incoming_event, str):  # slack format, stringified json
+        if isinstance(incoming_event, (str, bytes, bytearray)):  # a raw websocket message
             try:
                 event_dict = json.loads(incoming_event)
             except Exception:
