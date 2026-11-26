@@ -56,7 +56,6 @@ Get started with these examples:
 .. toctree::
    :maxdepth: 1
 
-   prometheus-examples/bash-alert-enrichment
    prometheus-examples/link-alert-enrichment
 
 Censoring Sensitive Data

@@ -129,7 +129,7 @@ action in your playbooks does not run until you add it:
 .. code-block:: yaml
 
    commandActions:
-   - pod_bash_enricher
+   - http_get
 
 Rate-limiting
 -------------

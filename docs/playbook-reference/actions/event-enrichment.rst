@@ -10,6 +10,10 @@ Node Enrichers
 
 These actions can add context to any node-related event, be it from ``on_prometheus_alert`` or ``on_node_update``.
 
+.. warning::
+
+    ``node_bash_enricher`` is deprecated and no longer supported. It logs an error and returns an error without running the command.
+
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.node_bash_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_status_enricher
@@ -33,8 +37,11 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
 
+.. warning::
+
+    ``pod_bash_enricher`` is deprecated and no longer supported. It logs an error and returns an error without running the command.
+
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
-    :trigger-params: {"alert_name": "ExampleLowDiskAlert"}
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
@@ -125,23 +132,6 @@ These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.default_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.minimal_default_enricher
-
-.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.foreign_logs_enricher
-
-.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_foreign_logs_enricher
-
-    Here is an example using a dynamic selector that depends on the alert's labels
-
-    .. code-block:: yaml
-
-        customPlaybooks:
-        - actions:
-            - alert_foreign_logs_enricher:
-                label_selectors:
-                - "app=${labels.service}"
-                - "env=production"
-        triggers:
-          - on_prometheus_alert: {}
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_definition_enricher
 

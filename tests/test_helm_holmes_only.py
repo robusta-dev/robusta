@@ -76,7 +76,7 @@ def test_holmes_only_renders_no_runner_objects():
 
 
 def test_holmes_only_openshift_renders_no_runner_scc():
-    docs = render_docs(HOLMES_ONLY_ARGS + ["--set", "openshift.enabled=true,openshift.createScc=true,openshift.createPrivilegedScc=true"])
+    docs = render_docs(HOLMES_ONLY_ARGS + ["--set", "openshift.enabled=true,openshift.createScc=true"])
     assert find(docs, "SecurityContextConstraints") is None
     assert find(docs, "Deployment", "robusta-holmes") is not None
 

@@ -2,10 +2,11 @@ Remediation
 ############################
 
 Robusta includes actions that modify Kubernetes resources in your cluster. Most of them need a
-``runner.rbac`` flag, see :ref:`read-only-service-account`. See also:
+``runner.rbac`` flag, see :ref:`read-only-service-account`.
 
-* :ref:`node_bash_enricher`
-* :ref:`pod_bash_enricher`
+.. warning::
+
+    ``alert_handling_job`` is deprecated and no longer supported. It logs an error and returns an error without creating a Job.
 
 .. robusta-action:: playbooks.robusta_playbooks.job_actions.alert_handling_job
 
@@ -21,9 +22,7 @@ Robusta includes actions that modify Kubernetes resources in your cluster. Most 
 
     ``rollout_restart`` is deprecated and no longer supported. It logs an error and returns an error without restarting the workload.
 
-.. robusta-action:: playbooks.robusta_playbooks.workload_actions.rollout_restart on_prometheus_alert
-
-.. robusta-action:: playbooks.robusta_playbooks.workload_actions.restart_named_rollout on_prometheus_alert
+.. robusta-action:: playbooks.robusta_playbooks.workload_actions.rollout_restart
 
 Node
 *****************
@@ -42,42 +41,3 @@ Kubectl
     ``kubectl_command`` is deprecated and no longer supported. It logs an error and returns an error without running the command.
 
 .. robusta-action:: playbooks.robusta_playbooks.kubectl_enrichments.kubectl_command
-
-    Use `kubectl_command` to run kubectl with dynamic placeholders:
-    - `$namespace`: resource namespace
-    - `$kind`: resource kind (e.g., Pod, Deployment)
-    - `$name`: resource name
-
-    Example: **Scale Down Deployment on Crash Loop**
-
-    .. code-block:: yaml
-
-        customPlaybooks:
-        - name: CrashLoopScaleDown
-          triggers:
-          - on_pod_crash_loop:
-              restart_count: 3
-          actions:
-            - kubectl_command:
-                description: "Scale Down Deployment"
-                command: kubectl scale --replicas=0 deployment/payment-processing-worker -n $namespace
-
-    If the pod is in the `production` namespace, the command will be:
-
-    .. code-block:: bash
-
-        kubectl scale --replicas=0 deployment/payment-processing-worker -n production
-
-    Example: **Delete Crashing Resource**
-
-    This deletes the crashing resource by kind, name, and namespace:
-
-    .. code-block:: bash
-
-        kubectl delete $kind $name -n $namespace
-
-    For example, deleting a crashing pod named `api-worker-1` in the `staging` namespace:
-
-    .. code-block:: bash
-
-        kubectl delete Pod api-worker-1 -n staging
