@@ -45,8 +45,6 @@ Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_worker
           name: ""
           key: ""
 
-A ``krr_scan`` action in ``customPlaybooks`` does not run while the CronJob is enabled, and the runner logs an error instead. Remove it and set the frequency with ``runner.krrCronJob.schedule``.
-
 The CronJob is not created without a Robusta UI sink, or when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
 
 To run a scan now, and to check previous runs (replace ``robusta`` with your release name and namespace):
