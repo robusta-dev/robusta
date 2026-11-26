@@ -555,6 +555,10 @@ def test_krr_cronjob_keeps_runner_env_settings(tmp_path):
         "--set",
         "runner.additional_env_froms[0].secretRef.name=runner-env",
         "--set",
+        "runner.additional_env_vars[5].name=KRR_STRATEGY",
+        "--set",
+        "runner.additional_env_vars[5].value=simple_limit",
+        "--set",
         "runner.setKRRSecurityContext=true",
         "--set",
         "runner.customServiceAccount=custom-sa",
@@ -574,11 +578,9 @@ def test_krr_cronjob_keeps_runner_env_settings(tmp_path):
         "capabilities": {"drop": ["ALL"]},
         "seccompProfile": {"type": "RuntimeDefault"},
     }
-    assert container["envFrom"] == [{"secretRef": {"name": "runner-env"}}]
-    assert {"name": "HTTPS_PROXY", "value": "http://proxy:3128"} in container["env"]
-    assert {"name": "ENABLE_JSON_LOGS_FORMAT", "value": "true"} in container["env"]
-    secret_reference = {"secretKeyRef": {"name": "my-secret", "key": "value"}}
-    assert {"name": "SECRET_VALUE", "valueFrom": secret_reference} in container["env"]
+    assert "envFrom" not in container
+    assert container["env"] == [{"name": "ENABLE_JSON_LOGS_FORMAT", "value": "true"}]
+    assert krr_arguments(tmp_path, extra_args)[1] == "simple_limit"
 
     registry_only = krr_job_template(["--set", "image.registry=registry.local"])
     assert registry_only["spec"]["template"]["spec"]["containers"][0]["image"] == "registry.local/krr:v1.30.0"
@@ -667,3 +669,26 @@ def test_krr_cronjob_strategy_value_takes_precedence_over_env(tmp_path):
 def test_scan_actions_not_in_light_actions():
     light_actions = yaml.safe_load((CHART_PATH / "values.yaml").read_text())["lightActions"]
     assert not {"krr_scan", "popeye_scan"} & set(light_actions)
+
+
+def test_krr_cronjob_has_its_own_env_settings(tmp_path):
+    extra_args = [
+        "--set",
+        "runner.krrCronJob.additional_env_vars[0].name=AWS_REGION",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[0].value=us-east-1",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[1].name=AWS_ACCESS_KEY",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[1].valueFrom.secretKeyRef.name=aws",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[1].valueFrom.secretKeyRef.key=access-key",
+        "--set",
+        "runner.krrCronJob.additional_env_froms[0].secretRef.name=krr-env",
+    ]
+    container = krr_job_template(extra_args)["spec"]["template"]["spec"]["containers"][0]
+    assert container["envFrom"] == [{"secretRef": {"name": "krr-env"}}]
+    assert container["env"] == [
+        {"name": "AWS_REGION", "value": "us-east-1"},
+        {"name": "AWS_ACCESS_KEY", "valueFrom": {"secretKeyRef": {"name": "aws", "key": "access-key"}}},
+    ]

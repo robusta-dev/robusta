@@ -797,6 +797,10 @@ runner:
     # scheduling fields such as tolerations and nodeSelector. Defaults to globalConfig.krr_job_spec
     jobSpec: {}
     annotations: {}  # added to globalConfig.custom_annotations
+    # env vars and env sources of the KRR pod, for example Prometheus credentials.
+    # The runner's additional_env_vars and additional_env_froms are not passed to it.
+    additional_env_vars: []
+    additional_env_froms: []
     # an existing Secret holding the Prometheus Authorization header, used instead of
     # globalConfig.prometheus_auth
     prometheusAuthSecret:

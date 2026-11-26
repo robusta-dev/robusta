@@ -120,8 +120,8 @@ spec:
               if [ -n "$AWS_REGION" ] && [ -n "$AWS_ACCESS_KEY" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
                 set -- "$@" --eks-access-key "$AWS_ACCESS_KEY" --eks-secret-key "$AWS_SECRET_ACCESS_KEY"
               fi
-              exec python krr.py "{{ if $krr.strategy }}{{ $krr.strategy }}{{ else }}${KRR_STRATEGY:-{{ $global.strategy | default "simple" }}}{{ end }}" \
-                --publish_scan_url="${KRR_PUBLISH_URL:-http://{{ $fullname }}-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/trigger}" \
+              exec python krr.py "{{ if $krr.strategy }}{{ $krr.strategy }}{{ else }}${KRR_STRATEGY:-{{ $runnerEnv.KRR_STRATEGY | default $global.strategy | default "simple" }}}{{ end }}" \
+                --publish_scan_url="${KRR_PUBLISH_URL:-{{ $runnerEnv.KRR_PUBLISH_URL | default (printf "http://%s-runner.%s.svc.%s/api/trigger" $fullname .Release.Namespace .Values.global.clusterDomain) }}}" \
                 --scan_id="$SCAN_ID" --start_time="$START_TIME" --named_sinks=robusta_ui_sink \
                 {{ $krrArgs }} \
                 {{- $labels := $global.prometheus_additional_labels | default dict }}
@@ -164,10 +164,10 @@ spec:
             - name: ENABLE_JSON_LOGS_FORMAT
               value: "true"
             {{- end }}
-            {{- with .Values.runner.additional_env_vars }}
+            {{- with $krr.additional_env_vars }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- with .Values.runner.additional_env_froms }}
+            {{- with $krr.additional_env_froms }}
             envFrom:
             {{- toYaml . | nindent 12 }}
             {{- end }}
