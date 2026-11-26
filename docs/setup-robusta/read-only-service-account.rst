@@ -27,14 +27,51 @@ Each kind of write access has its own flag under ``runner.rbac``. All flags defa
         enableRobustaConfigMapCreate: false  # create ConfigMaps in Robusta's namespace
         enableRobustaConfigMapEdit: false    # update the scheduled-jobs ConfigMap
 
-What each flag grants, and the actions that need it:
+The exact Kubernetes permission each flag grants, where it applies, and what it allows:
 
-- ``enablePodDelete``: ``delete`` on pods. Needed by ``delete_pod`` and ``delete_alert_pod``
-- ``enableJobDelete``: ``delete`` on Jobs. Needed by ``delete_job``
-- ``enableNodeEdit``: ``patch`` on nodes. Needed by ``cordon``, ``uncordon`` and ``drain``
-- ``enablePodEvict``: ``create`` on ``pods/eviction``. Needed by ``drain``
-- ``drain`` needs both ``enablePodEvict`` and ``enableNodeEdit``. ``cordon`` and ``uncordon`` need only ``enableNodeEdit``
-- ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``: ``create`` on ConfigMaps in Robusta's namespace, and ``update`` on the ``scheduled-jobs`` ConfigMap only. Needed by scheduled playbooks, see below
+.. list-table::
+   :widths: 20 15 15 20 30
+   :header-rows: 1
+
+   * - Flag
+     - Verb
+     - Resource
+     - Applies to
+     - What it allows
+   * - ``enablePodDelete``
+     - ``delete``
+     - ``pods``
+     - All namespaces
+     - Anyone who can make the runner run ``delete_pod`` or ``delete_alert_pod`` can delete any pod in the cluster
+   * - ``enableJobDelete``
+     - ``delete``
+     - ``jobs`` (``batch``)
+     - All namespaces
+     - Anyone who can make the runner run ``delete_job`` can delete any Job in the cluster
+   * - ``enableNodeEdit``
+     - ``patch``
+     - ``nodes``
+     - Every node in the cluster
+     - Used by ``cordon``, ``uncordon`` and ``drain``. ``patch`` allows changing any field of a node, such as labels and taints, not only cordon
+   * - ``enablePodEvict``
+     - ``create``
+     - ``pods/eviction``
+     - All namespaces
+     - Evicting any pod in the cluster. Used by ``drain``
+   * - ``enableRobustaConfigMapCreate``
+     - ``create``
+     - ``configmaps``
+     - Robusta's namespace only
+     - Kubernetes cannot limit ``create`` by name, so the runner can create any ConfigMap in Robusta's namespace. Needed by scheduled playbooks, see below
+   * - ``enableRobustaConfigMapEdit``
+     - ``update``
+     - ``configmaps``, the ``scheduled-jobs`` ConfigMap only
+     - Robusta's namespace only
+     - Updating the ConfigMap that stores scheduled playbook state, and no other ConfigMap. Needed by scheduled playbooks, see below
+
+``drain`` needs both ``enablePodEvict`` and ``enableNodeEdit``. ``cordon`` and ``uncordon`` need only ``enableNodeEdit``.
+
+With a :ref:`namespace-scoped runner <rbac-namespace-scoped-runner>`, "all namespaces" means Robusta's namespace only, and ``enableNodeEdit`` grants nothing because nodes are not namespaced.
 
 When an action runs without the flag it needs, the runner logs an error that names the flag and links to this page.
 
