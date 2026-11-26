@@ -33,6 +33,10 @@ Node
 Kubectl
 *****************
 
+.. warning::
+
+    ``kubectl_command`` is deprecated and no longer supported. It logs an error and returns an error without running the command.
+
 .. robusta-action:: playbooks.robusta_playbooks.kubectl_enrichments.kubectl_command
 
     Use `kubectl_command` to run kubectl with dynamic placeholders:

@@ -4,10 +4,7 @@ Cost Savings (KRR)
 `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool that optimizes resource allocation in Kubernetes clusters.
 It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory, reducing costs and improving performance.
 
-Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Because KRR is so popular, it has dedicated documentation here. You can:
-
-1. Send weekly scan reports to Slack or other sinks via Robusta OSS (disabled by default, configure below)
-2. View scans from all your clusters in the Robusta UI (enabled by default for UI users)
+Robusta runs a weekly KRR scan. Because KRR is so popular, it has dedicated documentation here. You can view scans from all your clusters in the Robusta UI (enabled by default for UI users).
 
 
 .. _krr-cronjob:
@@ -107,10 +104,6 @@ Limitations of the CronJob:
 - **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Provide a token with ``prometheusAuthSecret``
 - **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
 - **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
-- **Scan now**: the "scan now" button in the Robusta UI is not supported. Run a scan with the command above
-
-Sending Weekly KRR Scan Reports to Slack
-===========================================
 With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
 
 1. Install Robusta with Helm to your cluster and configure Slack sink.
@@ -150,6 +143,8 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
 
                 .. image:: /images/krr_example.png
                     :width: 1000px
+=======
+- **Scan now**: the "scan now" button in the Robusta UI uses the ``krr_scan`` action, which is not supported because the runner does not create Jobs. Run the CronJob manually with the command above
 
 Taints, Tolerations and NodeSelectors
 ============================================

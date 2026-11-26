@@ -4,7 +4,7 @@ from kubernetes import client
 from kubernetes.client import V1OwnerReference, V1PodList
 
 from robusta.api import ActionException, ErrorCodes, FileBlock, MarkdownBlock, NodeEvent, action
-from robusta.core.model.env_vars import ENABLE_NODE_CREATE, ENABLE_NODE_EDIT
+from robusta.core.model.env_vars import ENABLE_POD_EVICT, ENABLE_NODE_EDIT
 from robusta.core.playbooks.rbac_flags import require_rbac_flag
 
 
@@ -56,7 +56,7 @@ def drain(event: NodeEvent):
     Drain, taints a node as unschedulable, and evicts all pods from the node.
     DaemonSets pods are skipped, as they tolerant unschedulable nodes by default.
     """
-    require_rbac_flag(ENABLE_NODE_CREATE, "enableNodeCreate")
+    require_rbac_flag(ENABLE_POD_EVICT, "enablePodEvict")
     cordon(event)
 
     node = event.get_node()
