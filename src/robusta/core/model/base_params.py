@@ -303,6 +303,9 @@ def drop_config_only_params(action_params: Optional[Dict[str, Any]]) -> Optional
     """Remove the parameters an action request may not set, so the configured values apply."""
     if not action_params:
         return action_params
+    dropped = sorted(CONFIG_ONLY_PARAMS.intersection(action_params))
+    if dropped:
+        logging.warning(f"Ignoring action request parameters that are taken from the configuration only: {dropped}")
     return {name: value for name, value in action_params.items() if name not in CONFIG_ONLY_PARAMS}
 
 

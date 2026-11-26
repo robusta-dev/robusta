@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-
 from robusta.core.model.base_params import drop_config_only_params
 from robusta.core.playbooks.playbook_utils import merge_global_params
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
@@ -19,6 +18,15 @@ def test_config_only_params_are_dropped():
         "timeout": 60,
     }
     assert drop_config_only_params(params) == {"timeout": 60}
+
+
+def test_dropped_params_are_logged_by_name_only(caplog):
+    drop_config_only_params({"prometheus_auth": "Bearer from-request", "timeout": 60})
+    assert "prometheus_auth" in caplog.text
+    assert "from-request" not in caplog.text
+    caplog.clear()
+    drop_config_only_params({"timeout": 60})
+    assert not caplog.records
 
 
 def test_empty_params_are_left_alone():
