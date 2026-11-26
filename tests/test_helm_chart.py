@@ -32,7 +32,7 @@ def render_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "-s",
         "templates/runner-service-account.yaml",
         "-s",
@@ -54,7 +54,7 @@ def runner_config(extra_args: Optional[List[str]] = None) -> dict:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "--set",
         "enablePlatformPlaybooks=true",
         "-s",
@@ -163,6 +163,16 @@ def test_prometheus_stack_has_no_admission_webhook_rules():
     assert not [doc for doc in docs if "admission" in doc["metadata"]["name"]]
 
 
+def test_no_create_setting_overrides_configmap_flags():
+    no_create = enable(*RBAC_FLAGS) + ["--set", "runner.rbac.disableCreateFromServiceAccount=true"]
+    docs = render_full_chart(no_create)
+    assert get_doc(docs, "Role", "runner-local-role") is None
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+    assert not {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"} & playbook_names(no_create)
+    env = get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]
+    assert {"name": "DISABLE_CREATE_FROM_SERVICE_ACCOUNT", "value": "true"} in env
+
+
 def test_job_creating_playbooks_always_disabled():
     names = playbook_names(enable(*RBAC_FLAGS) + KRR_CRONJOB_DISABLED)
     assert not {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"} & names
@@ -220,7 +230,7 @@ def render_forwarder_chart(extra_args: Optional[List[str]] = None) -> List[dict]
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "-s",
         "templates/forwarder.yaml",
         "-s",
@@ -262,8 +272,6 @@ def test_override_cluster_roles_still_replaces_rules():
     assert cluster_role["rules"] == [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}]
 
 
-
-
 def render_full_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
     cmd = [
         "helm",
@@ -273,7 +281,7 @@ def render_full_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "--set",
         "enablePrometheusStack=false",
     ] + (extra_args or [])
@@ -338,6 +346,14 @@ def test_krr_cronjob_kept_without_runner_role():
     assert get_doc(docs, "Role", "runner-local-role") is None
 
 
+def test_krr_cronjob_off_without_runner_role():
+    no_create = ["--set", "runner.rbac.disableCreateFromServiceAccount=true"]
+    assert get_doc(render_full_chart(no_create), "CronJob", "robusta-krr") is None
+    docs = render_full_chart(no_create + ["--set", "runner.krrCronJob.enabled=true"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
+    assert get_doc(docs, "Role", "runner-local-role") is None
+
+
 def test_krr_cronjob_default_arguments(tmp_path):
     arguments = krr_arguments(tmp_path)
     assert arguments[:5] == [
@@ -383,8 +399,8 @@ def test_krr_cronjob_literal_prometheus_auth(tmp_path):
 def test_krr_cronjob_prometheus_auth_from_env(tmp_path):
     arguments = krr_arguments(
         tmp_path,
-        ["--set-string", "globalConfig.prometheus_auth=\\{\\{ env.PROM_AUTH \\}\\}"],
-        env={"PROM_AUTH": "Basic xyz"},
+        ["--set-string", "globalConfig.prometheus_auth=Basic \\{\\{ env.PROM_AUTH \\}\\}"],
+        env={"PROM_AUTH": "xyz"},
     )
     assert flag_values(arguments, "--prometheus-auth-header") == ["Basic xyz"]
 
@@ -470,15 +486,9 @@ SCHEDULED_KRR_PLAYBOOK = [
 ]
 
 
-def test_scheduled_krr_playbook_points_to_cronjob_values():
-    result = subprocess.run(
-        ["helm", "template", str(CHART_PATH), "--set", "clusterName=test", "--set", "sinksConfig[0].file_sink.name=test"]
-        + SCHEDULED_KRR_PLAYBOOK,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode != 0
-    assert "runner.krrCronJob.schedule" in result.stderr
+def test_scheduled_krr_playbook_renders_with_cronjob():
+    docs = render_full_chart(SCHEDULED_KRR_PLAYBOOK)
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
 
 
 def test_scheduled_krr_playbook_kept_without_cronjob():
@@ -500,6 +510,7 @@ def test_krr_cronjob_keeps_job_labels_and_defaults():
     assert job["spec"]["activeDeadlineSeconds"] == 3600
     container = pod["spec"]["containers"][0]
     assert container["image"] == "robustadev/krr:v1.30.0"
+    assert "krr:v1.30.0" in (CHART_PATH.parents[1] / "playbooks/robusta_playbooks/krr.py").read_text()
     assert container["imagePullPolicy"] == "Always"
     assert container["resources"] == {"requests": {"memory": "2Gi"}, "limits": {"memory": "2Gi"}}
     assert "securityContext" not in container
@@ -600,6 +611,10 @@ def test_krr_cronjob_keeps_runner_env_settings(tmp_path):
         "--set",
         "runner.additional_env_froms[0].secretRef.name=runner-env",
         "--set",
+        "runner.additional_env_vars[5].name=KRR_STRATEGY",
+        "--set",
+        "runner.additional_env_vars[5].value=simple_limit",
+        "--set",
         "runner.setKRRSecurityContext=true",
         "--set",
         "runner.customServiceAccount=custom-sa",
@@ -619,14 +634,27 @@ def test_krr_cronjob_keeps_runner_env_settings(tmp_path):
         "capabilities": {"drop": ["ALL"]},
         "seccompProfile": {"type": "RuntimeDefault"},
     }
-    assert container["envFrom"] == [{"secretRef": {"name": "runner-env"}}]
-    assert {"name": "HTTPS_PROXY", "value": "http://proxy:3128"} in container["env"]
-    assert {"name": "ENABLE_JSON_LOGS_FORMAT", "value": "true"} in container["env"]
-    secret_reference = {"secretKeyRef": {"name": "my-secret", "key": "value"}}
-    assert {"name": "SECRET_VALUE", "valueFrom": secret_reference} in container["env"]
+    assert "envFrom" not in container
+    assert container["env"] == [{"name": "ENABLE_JSON_LOGS_FORMAT", "value": "true"}]
+    assert krr_arguments(tmp_path, extra_args)[1] == "simple_limit"
 
     registry_only = krr_job_template(["--set", "image.registry=registry.local"])
     assert registry_only["spec"]["template"]["spec"]["containers"][0]["image"] == "registry.local/krr:v1.30.0"
+
+
+def test_krr_cronjob_needs_robusta_sink():
+    docs = render_full_chart(["--set", "sinksConfig[0].robusta_sink=null", "--set", "sinksConfig[0].file_sink.name=test"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+
+
+def test_krr_cronjob_follows_disabled_weekly_playbook():
+    docs = render_full_chart(["--set", "disabledPlaybooks[0]=WeeklyKRRScan"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+
+
+def test_krr_cronjob_prometheus_auth_secret_needs_key():
+    with pytest.raises(subprocess.CalledProcessError):
+        render_full_chart(["--set", "runner.krrCronJob.prometheusAuthSecret.name=prom"])
 
 
 def test_krr_cronjob_runtime_env_settings(tmp_path):
@@ -639,16 +667,18 @@ def test_krr_cronjob_runtime_env_settings(tmp_path):
     assert flag_values(arguments, "-p") == ["http://prometheus:9090"]
 
 
-def test_scheduled_playbook_mentioning_krr_scan_in_params_is_kept():
-    docs = render_full_chart(
+def test_krr_cronjob_value_takes_precedence_over_env_value_from():
+    job = krr_job_template(
         [
             "--set",
-            "customPlaybooks[0].triggers[0].on_schedule.fixed_delay_repeat.seconds_delay=3600",
+            "runner.additional_env_vars[0].name=KRR_MEMORY_LIMIT",
             "--set",
-            "customPlaybooks[0].actions[0].kubectl_command.command=get pods -l app=krr_scan",
+            "runner.additional_env_vars[0].valueFrom.configMapKeyRef.name=krr",
+            "--set",
+            "runner.krrCronJob.memoryLimit=3Gi",
         ]
     )
-    assert get_doc(docs, "CronJob", "robusta-krr") is not None
+    assert job["spec"]["template"]["spec"]["containers"][0]["resources"]["limits"] == {"memory": "3Gi"}
 
 
 def test_krr_cronjob_env_setting_from_value_from_points_to_values():
@@ -660,7 +690,7 @@ def test_krr_cronjob_env_setting_from_value_from_points_to_values():
             "--set",
             "clusterName=test",
             "--set",
-            "sinksConfig[0].file_sink.name=test",
+            "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
             "--set",
             "runner.additional_env_vars[0].name=KRR_MEMORY_LIMIT",
             "--set",
@@ -690,3 +720,45 @@ def test_krr_cronjob_image_pull_secrets():
 def test_krr_cronjob_strategy_value_takes_precedence_over_env(tmp_path):
     arguments = krr_arguments(tmp_path, ["--set", "runner.krrCronJob.strategy=simple_limit"], env={"KRR_STRATEGY": "simple"})
     assert arguments[1] == "simple_limit"
+
+
+def test_scan_actions_not_in_light_actions():
+    light_actions = yaml.safe_load((CHART_PATH / "values.yaml").read_text())["lightActions"]
+    assert not {"krr_scan", "popeye_scan"} & set(light_actions)
+
+
+def test_krr_cronjob_has_its_own_env_settings(tmp_path):
+    extra_args = [
+        "--set",
+        "runner.krrCronJob.additional_env_vars[0].name=AWS_REGION",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[0].value=us-east-1",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[1].name=AWS_ACCESS_KEY",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[1].valueFrom.secretKeyRef.name=aws",
+        "--set",
+        "runner.krrCronJob.additional_env_vars[1].valueFrom.secretKeyRef.key=access-key",
+        "--set",
+        "runner.krrCronJob.additional_env_froms[0].secretRef.name=krr-env",
+    ]
+    container = krr_job_template(extra_args)["spec"]["template"]["spec"]["containers"][0]
+    assert container["envFrom"] == [{"secretRef": {"name": "krr-env"}}]
+    assert container["env"] == [
+        {"name": "AWS_REGION", "value": "us-east-1"},
+        {"name": "AWS_ACCESS_KEY", "valueFrom": {"secretKeyRef": {"name": "aws", "key": "access-key"}}},
+    ]
+
+
+def test_krr_cronjob_label_kept_with_unrelated_args(tmp_path):
+    arguments = krr_arguments(
+        tmp_path,
+        [
+            "--set-string",
+            "globalConfig.prometheus_additional_labels.cluster=prod",
+            "--set",
+            "runner.krrCronJob.krrArgs=--namespace dev-live",
+        ],
+    )
+    assert flag_values(arguments, "--prometheus-label") == ["cluster"]
+    assert flag_values(arguments, "--namespace") == ["dev-live"]

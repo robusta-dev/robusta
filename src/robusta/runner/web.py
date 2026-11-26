@@ -15,7 +15,6 @@ from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_
     INSTALLATION_NAMESPACE, KRR_CRONJOB_ENABLED, RELEASE_NAME
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.reporting.consts import ScanState, ScanType
-from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
 from robusta.integrations.prometheus.models import AlertManagerEvent, PrometheusAlert
 from robusta.integrations.prometheus.trigger import PrometheusTriggerEvent
@@ -123,19 +122,6 @@ class Web:
         return hash_value.digest()
 
     @staticmethod
-    @app.route("/api/helm-releases", methods=["POST"])
-    def handle_helm_releases():
-        req_json = request.get_json()
-        Web._trace_incoming("received helm release trigger events via api", req_json)
-        logging.debug("received helm release trigger events via api\n")
-        helm_release_payload = IncomingHelmReleasesEventPayload.parse_obj(req_json)
-        for helm_release in helm_release_payload.data:
-            Web.api_server_queue.add_task(
-                Web.event_handler.handle_trigger, HelmReleasesTriggerEvent(helm_release=helm_release)
-            )
-        return jsonify(success=True)
-
-    @staticmethod
     @app.route("/api/handle", methods=["POST"])
     def handle_api_server_event():
         data = request.get_json()["data"]
@@ -168,14 +154,17 @@ class Web:
 
         if not is_runner_scan:
             # the CronJob has no runner-created scan row
-            Web.loader.registry.get_event_emitter().emit_event(
-                "scan_updated",
-                scan_id=scan_id,
-                metadata={"job": {"name": f"{RELEASE_NAME}-krr", "namespace": INSTALLATION_NAMESPACE}},
-                state=ScanState.PENDING,
-                type=ScanType.KRR,
-                start_time=action_params.get("start_time"),
-            )
+            try:
+                Web.loader.registry.get_event_emitter().emit_event(
+                    "scan_updated",
+                    scan_id=scan_id,
+                    metadata={"job": {"name": f"{RELEASE_NAME}-krr", "namespace": INSTALLATION_NAMESPACE}},
+                    state=ScanState.PENDING,
+                    type=ScanType.KRR,
+                    start_time=action_params.get("start_time"),
+                )
+            except Exception:
+                logging.exception(f"Failed to create the scan {scan_id} before processing its result")
 
         return jsonify(
             Web.event_handler.run_external_action(

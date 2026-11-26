@@ -1,5 +1,9 @@
+import logging
+from unittest.mock import MagicMock
+
 import pytest
 
+from playbooks.robusta_playbooks import krr
 from playbooks.robusta_playbooks.krr import KRRParams
 from playbooks.robusta_playbooks.popeye import PopeyeParams
 
@@ -35,3 +39,15 @@ def test_other_pod_spec_fields_are_rejected(job_spec):
         KRRParams(krr_job_spec=job_spec)
     with pytest.raises(ValueError):
         PopeyeParams(popeye_job_spec=job_spec)
+
+
+def test_krr_scan_with_cronjob_logs_where_to_configure_it(monkeypatch, caplog):
+    monkeypatch.setattr(krr, "KRR_CRONJOB_ENABLED", True)
+    run_job = MagicMock()
+    monkeypatch.setattr(krr.RobustaJob, "run_simple_job_spec", run_job)
+
+    with caplog.at_level(logging.ERROR):
+        krr.krr_scan(MagicMock(), KRRParams())
+
+    assert "runner.krrCronJob.schedule" in caplog.text
+    run_job.assert_not_called()
