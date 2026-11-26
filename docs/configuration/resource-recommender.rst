@@ -19,6 +19,9 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
 
 .. code-block:: yaml
 
+    commandActions:
+    - krr_scan
+
     # Runs a weekly krr scan on the namespace devs-namespace and sends it to the configured slack channel
     customPlaybooks:
     - triggers:
@@ -366,9 +369,3 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
 Reference
 ======================================
 .. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
-
-    You can trigger a KRR scan at any time, by running the following command:
-
-    .. code-block:: bash
-
-        robusta playbooks trigger krr_scan

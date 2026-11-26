@@ -17,7 +17,7 @@ def action(func: Callable, command_action: bool = False):
     """
     Decorator to mark functions as playbook actions
 
-    A command action runs a command in a pod or on a node. It runs only from playbooks defined in the
+    A command action runs a command in a pod or on a node, or starts a job. It runs only from playbooks defined in the
     runner's own configuration, and only when that configuration lists it under command_actions.
     """
     setattr(func, "_action_name", func.__name__)

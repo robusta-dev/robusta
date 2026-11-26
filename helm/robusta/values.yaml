@@ -71,9 +71,10 @@ globalConfig:
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []
 
-# Actions that run commands in your cluster. They run only from playbooks defined in this configuration, and only
-# if you explicitly opt in by listing them here. The list is empty by default, so none of them runs.
-# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job
+# Actions that run commands or start jobs in your cluster. They run only from playbooks defined in this
+# configuration, and only if you explicitly opt in by listing them here. The list is empty by default.
+# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job, krr_scan, popeye_scan
+# With enablePlatformPlaybooks, the chart adds krr_scan itself for its WeeklyKRRScan playbook.
 commandActions: []
 
 # safe actions to enable authenticated users to run

@@ -91,18 +91,23 @@ alert_relabel:
 light_actions:
 {{ toYaml  .Values.lightActions | indent 2 }}
 
-command_actions:
-{{ toYaml  .Values.commandActions | indent 2 }}
-
-active_playbooks:
-{{- if .Values.playbooks }}
-  {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
-{{- end }}
-
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
 {{- if .Values.runner.rbac.disableCreateFromServiceAccount }}
 {{- /* these playbooks create pods/jobs */}}
 {{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan") }}
+{{- end }}
+
+{{- $commandActions := .Values.commandActions }}
+{{- if and .Values.enablePlatformPlaybooks (not (has "WeeklyKRRScan" $disabledPlaybooks)) }}
+{{- /* the WeeklyKRRScan playbook, which this chart adds, runs krr_scan */}}
+{{- $commandActions = append $commandActions "krr_scan" | uniq }}
+{{- end }}
+command_actions:
+{{ toYaml $commandActions | indent 2 }}
+
+active_playbooks:
+{{- if .Values.playbooks }}
+  {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
 {{- end }}
 
 {{- $priorityPlaybooks := .Values.priorityBuiltinPlaybooks }}

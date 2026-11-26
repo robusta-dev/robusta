@@ -33,18 +33,23 @@ EXECUTION_CODE = re.compile(
     r"\.exec\(|exec_in_\w+\(|run_simple_job\w*\(|create_debugger_pod\(|subprocess|\bJob\(|RobustaPod\(\s*apiVersion"
 )
 
-# Actions that execute code and are not command actions: each runs one fixed tool, and none of its command
-# line comes from the request.
+# Actions that execute code and are not command actions: each reads with one fixed tool, starts nothing in the
+# cluster, and takes no command line from the request.
 FIXED_TOOL_ACTIONS = {
-    "krr_scan",
-    "popeye_scan",
     "kubectl_describe",
     "fetch_resource_yaml",
     "fetch_crds",
     "fetch_cr_instances",
 }
 
-COMMAND_ACTIONS = {"pod_bash_enricher", "node_bash_enricher", "kubectl_command", "alert_handling_job"}
+COMMAND_ACTIONS = {
+    "pod_bash_enricher",
+    "node_bash_enricher",
+    "kubectl_command",
+    "alert_handling_job",
+    "krr_scan",
+    "popeye_scan",
+}
 
 REMOVED_ACTIONS = {
     "incluster_ping",
@@ -125,7 +130,7 @@ def test_command_actions_list():
 def test_helm_defaults():
     values = _helm_values()
     assert values["commandActions"] == []
-    assert not (COMMAND_ACTIONS | REMOVED_ACTIONS | {"krr_scan", "popeye_scan"}) & set(values["lightActions"])
+    assert not (COMMAND_ACTIONS | REMOVED_ACTIONS) & set(values["lightActions"])
 
 
 def test_default_playbooks_actions():
@@ -137,7 +142,8 @@ def test_default_playbooks_actions():
         for playbook_action in playbook["actions"]
         for name in playbook_action
     }
-    assert not used & (REMOVED_ACTIONS | COMMAND_ACTIONS)
+    # WeeklyKRRScan is the one default playbook with a command action; the chart enables krr_scan for it
+    assert not used & (REMOVED_ACTIONS | COMMAND_ACTIONS - {"krr_scan"})
 
 
 def test_callback_targets():
