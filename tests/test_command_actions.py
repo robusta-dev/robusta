@@ -37,7 +37,22 @@ FIXED_TOOL_ACTIONS = {
 # Actions that send a request to an address from their parameters.
 REQUEST_ACTIONS = {"http_get", "http_post", "http_put"}
 
-RETIRED_ACTIONS = {"kubectl_command", "rollout_restart", "alert_handling_job", "node_bash_enricher"}
+# Retired actions that are still registered and return a "no longer supported" error.
+RETIRED_ACTIONS_WITH_ERROR = {"kubectl_command", "rollout_restart", "alert_handling_job", "node_bash_enricher"}
+
+# Every action of release 0.55.0 that no longer works.
+RETIRED_ACTIONS = {
+    *RETIRED_ACTIONS_WITH_ERROR,
+    "ack_opsgenie_alert_from_slack", "argo_app_sync", "config_ab_testing", "count_pod_creations",
+    "create_pvc_snapshot", "daemonset_fix_config", "daemonset_silence_false_alarm", "debugger_stack_trace",
+    "disk_benchmark", "event_report", "generate_high_cpu", "git_change_audit", "helm_status_enricher",
+    "hpa_events_enricher", "http_stress_test", "incluster_ping", "java_process_inspector",
+    "job_restart_on_oomkilled_community", "json_change_tracker", "krr_scan", "node_disk_analyzer",
+    "node_dmesg_enricher", "pod_dmesg_enricher", "pod_jmap_pid", "pod_jstack_pid", "pod_ps", "popeye_scan",
+    "prometheus_sla_enricher", "python_debugger", "python_memory", "python_process_inspector", "python_profiler",
+    "report_image_changes", "restart_named_rollout", "scale_hpa_callback", "stack_overflow_enricher",
+    "target_down_dns_enricher", "test_pod_orm", "volume_analysis",
+}
 
 COMMAND_ACTIONS = {
     "pod_bash_enricher",
@@ -80,8 +95,8 @@ def _helm_values() -> dict:
 
 def test_builtin_actions_are_found():
     assert len(BUILTIN_ACTIONS) > 100
-    assert COMMAND_ACTIONS | FIXED_TOOL_ACTIONS | RETIRED_ACTIONS <= set(BUILTIN_ACTIONS)
-    assert not {"krr_scan", "popeye_scan", "restart_named_rollout"} & set(BUILTIN_ACTIONS)
+    assert COMMAND_ACTIONS | FIXED_TOOL_ACTIONS <= set(BUILTIN_ACTIONS)
+    assert RETIRED_ACTIONS & set(BUILTIN_ACTIONS) == RETIRED_ACTIONS_WITH_ERROR
 
 
 @pytest.mark.parametrize("name", sorted(BUILTIN_ACTIONS))
