@@ -19,6 +19,10 @@ spec:
     metadata:
       labels:
         app: krr.robusta.dev
+      {{- with $krr.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       backoffLimit: 0
       ttlSecondsAfterFinished: 43200
@@ -27,8 +31,12 @@ spec:
         metadata:
           labels:
             app: krr.robusta.dev
+          {{- with $krr.annotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         spec:
-          serviceAccountName: {{ .Values.runner.customServiceAccount | default (printf "%s-runner-service-account" $fullname) }}
+          serviceAccountName: {{ $krr.serviceAccountName | default .Values.runner.customServiceAccount | default (printf "%s-runner-service-account" $fullname) }}
           restartPolicy: Never
           {{- with $jobSpec }}
           {{- toYaml . | nindent 10 }}

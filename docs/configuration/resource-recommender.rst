@@ -13,7 +13,7 @@ Weekly KRR Scan CronJob
 ===========================================
 
 The Helm chart creates a ``CronJob`` named ``<release>-krr`` that runs the weekly KRR scan and sends the result
-to the Robusta UI. It runs with the runner service account.
+to the Robusta UI. It runs with the runner service account, unless ``serviceAccountName`` is set.
 
 The CronJob uses the settings under ``runner.krrCronJob`` and the Prometheus address in ``globalConfig.prometheus_url``.
 It uses no other ``globalConfig`` setting, and no runner environment variable:
@@ -31,6 +31,8 @@ It uses no other ``globalConfig`` setting, and no runner environment variable:
         memoryRequest: 2Gi
         memoryLimit: 2Gi
         jobSpec: {}              # tolerations, nodeSelector, affinity...
+        annotations: {}          # added to the KRR Job and pod
+        serviceAccountName: ~    # an existing service account. Defaults to the runner's
         additional_env_vars: []  # env vars of the KRR pod
         additional_env_froms: [] # env sources of the KRR pod
 
@@ -129,9 +131,9 @@ Settings that the weekly scan used before, and where to set them for the CronJob
    * - ``SET_KRR_SECURITY_CONTEXT``
      - ``runner.setKRRSecurityContext``
    * - ``globalConfig.serviceAccountName``
-     - No setting. KRR runs with the runner service account
+     - ``serviceAccountName``
    * - ``globalConfig.custom_annotations``
-     - No setting
+     - ``annotations``
    * - ``KRR_PUBLISH_URL``, ``KRR_PUSH_SCAN``
      - No setting
 

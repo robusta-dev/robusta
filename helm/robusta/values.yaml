@@ -785,6 +785,8 @@ runner:
     memoryLimit: 2Gi
     # pod scheduling fields such as tolerations, nodeSelector and affinity
     jobSpec: {}
+    annotations: {}  # added to the KRR Job and pod
+    serviceAccountName: ~  # an existing service account. Defaults to the runner's
     # env vars and env sources of the KRR pod
     additional_env_vars: []
     additional_env_froms: []

@@ -373,6 +373,8 @@ def test_krr_cronjob_own_settings(tmp_path):
         "--set", "runner.krrCronJob.image=registry.example/krr:v1",
         "--set", "runner.krrCronJob.memoryLimit=3Gi",
         "--set", "runner.krrCronJob.jobSpec.nodeSelector.pool=scans",
+        "--set", "runner.krrCronJob.annotations.team=test",
+        "--set", "runner.krrCronJob.serviceAccountName=krr-scan",
         "--set", "runner.krrCronJob.additional_env_vars[0].name=PROMETHEUS_TOKEN",
         "--set", "runner.krrCronJob.additional_env_vars[0].valueFrom.secretKeyRef.name=prometheus",
         "--set", "runner.krrCronJob.additional_env_vars[0].valueFrom.secretKeyRef.key=token",
@@ -390,6 +392,8 @@ def test_krr_cronjob_own_settings(tmp_path):
     container = pod_spec["containers"][0]
     assert job["spec"]["activeDeadlineSeconds"] == 600
     assert pod_spec["nodeSelector"] == {"pool": "scans"}
+    assert pod_spec["serviceAccountName"] == "krr-scan"
+    assert job["metadata"]["annotations"] == job["spec"]["template"]["metadata"]["annotations"] == {"team": "test"}
     assert container["image"] == "registry.example/krr:v1"
     assert container["resources"] == {"requests": {"memory": "2Gi"}, "limits": {"memory": "3Gi"}}
     assert [var["name"] for var in container["env"]] == ["PROMETHEUS_TOKEN"]
