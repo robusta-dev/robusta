@@ -108,8 +108,6 @@ lightActions:
 - list_resource_names
 - node_dmesg_enricher
 - status_enricher
-- krr_scan
-- popeye_scan
 - handle_alertmanager_event
 - drain
 - cordon

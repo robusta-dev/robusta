@@ -680,3 +680,8 @@ def test_krr_cronjob_image_pull_secrets():
 def test_krr_cronjob_strategy_value_takes_precedence_over_env(tmp_path):
     arguments = krr_arguments(tmp_path, ["--set", "runner.krrCronJob.strategy=simple_limit"], env={"KRR_STRATEGY": "simple"})
     assert arguments[1] == "simple_limit"
+
+
+def test_scan_actions_not_in_light_actions():
+    light_actions = yaml.safe_load((CHART_PATH / "values.yaml").read_text())["lightActions"]
+    assert not {"krr_scan", "popeye_scan"} & set(light_actions)
