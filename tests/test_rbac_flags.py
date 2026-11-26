@@ -1,9 +1,11 @@
+import importlib
 import logging
 from unittest.mock import MagicMock
 
 import pytest
 
 from playbooks.robusta_playbooks import node_actions, pod_actions
+from robusta.core.model import env_vars
 from robusta.core.playbooks.rbac_flags import RBAC_FLAGS_DOCS_URL, require_rbac_flag
 from robusta.integrations.kubernetes.custom_models import RobustaJob, RobustaPod
 from robusta.runner import config_loader
@@ -63,3 +65,19 @@ def test_scheduled_playbooks_with_configmap_flags_disabled(monkeypatch, caplog):
 def test_job_creation_not_supported():
     with pytest.raises(ActionException, match="create Jobs"):
         RobustaJob.run_simple_job_spec(MagicMock(), "job", 60)
+
+
+@pytest.mark.parametrize(
+    "flag",
+    [
+        "ENABLE_POD_DELETE",
+        "ENABLE_JOB_DELETE",
+        "ENABLE_NODE_EDIT",
+        "ENABLE_POD_EVICT",
+        "ENABLE_ROBUSTA_CONFIG_MAP_CREATE",
+        "ENABLE_ROBUSTA_CONFIG_MAP_EDIT",
+    ],
+)
+def test_flag_without_env_var_is_off(monkeypatch, flag):
+    monkeypatch.delenv(flag, raising=False)
+    assert importlib.reload(env_vars).__dict__[flag] is False
