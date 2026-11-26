@@ -7,7 +7,14 @@ It gathers pod usage data from Prometheus and recommends requests and limits for
 Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Because KRR is so popular, it has dedicated documentation here. You can:
 
 1. Send weekly scan reports to Slack or other sinks via Robusta OSS (disabled by default, configure below)
-2. View scans from all your clusters in the Robusta UI (enabled by default for UI users)
+2. View scans from all your clusters in the Robusta UI
+
+Both need ``krr_scan`` listed under ``commandActions`` in your Helm values. For the weekly scan that Robusta UI users get:
+
+.. code-block:: yaml
+
+    commandActions:
+    - krr_scan
 
 
 Sending Weekly KRR Scan Reports to Slack

@@ -238,14 +238,8 @@ def runner_config(extra_args: Optional[List[str]] = None) -> dict:
 def test_command_actions_value_reaches_the_runner_config():
     assert runner_config()["command_actions"] == []
     platform = ["--set", "enablePlatformPlaybooks=true"]
-    assert runner_config(platform)["command_actions"] == ["krr_scan"]
-    assert runner_config(platform + ["--set", "commandActions={krr_scan,popeye_scan}"])["command_actions"] == [
-        "krr_scan",
-        "popeye_scan",
-    ]
-    assert runner_config(platform + ["--set", "disabledPlaybooks={WeeklyKRRScan}"])["command_actions"] == []
-    no_create = platform + ["--set", "runner.rbac.disableCreateFromServiceAccount=true"]
-    assert runner_config(no_create)["command_actions"] == []
+    assert runner_config(platform)["command_actions"] == []
+    assert runner_config(platform + ["--set", "commandActions={krr_scan}"])["command_actions"] == ["krr_scan"]
     enabled = runner_config(["--set", "commandActions={pod_bash_enricher,kubectl_command}"])
     assert enabled["command_actions"] == ["pod_bash_enricher", "kubectl_command"]
 

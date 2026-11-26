@@ -97,13 +97,8 @@ light_actions:
 {{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan") }}
 {{- end }}
 
-{{- $commandActions := .Values.commandActions }}
-{{- if and .Values.enablePlatformPlaybooks (not (has "WeeklyKRRScan" $disabledPlaybooks)) }}
-{{- /* the WeeklyKRRScan playbook, which this chart adds, runs krr_scan */}}
-{{- $commandActions = append $commandActions "krr_scan" | uniq }}
-{{- end }}
 command_actions:
-{{ toYaml $commandActions | indent 2 }}
+{{ toYaml .Values.commandActions | indent 2 }}
 
 active_playbooks:
 {{- if .Values.playbooks }}
