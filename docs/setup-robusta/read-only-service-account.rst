@@ -78,8 +78,8 @@ When an action runs without the flag it needs, the runner logs an error that nam
 ``enabledManagedConfiguration`` (default ``false``) grants ``create``, ``update``, ``patch`` and ``delete`` on
 PrometheusRules, to sync alerts from the Robusta UI to the cluster, see :ref:`Managed Prometheus Alerts`.
 
-The runner does not create Jobs, so actions that run a Job (``krr_scan``, ``popeye_scan``, ``kubectl_command``,
-``alert_handling_job`` and others) log an error instead. The weekly KRR scan runs from a CronJob, see :ref:`krr-cronjob`.
+The runner does not create Jobs, so actions that run a Job (``alert_handling_job`` and others) log an error instead.
+The ``krr_scan``, ``popeye_scan`` and ``kubectl_command`` actions are deprecated and no longer supported. The weekly KRR scan runs from a CronJob, see :ref:`krr-cronjob`.
 
 The ``rollout_restart`` action is not supported by the built-in rules. To grant other write verbs, add the rules
 you need with ``runner.customClusterRoleRules``:

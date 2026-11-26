@@ -476,7 +476,6 @@ def test_krr_cronjob_keeps_job_labels_and_defaults():
     assert job["spec"]["activeDeadlineSeconds"] == 3600
     container = pod["spec"]["containers"][0]
     assert container["image"] == "robustadev/krr:v1.30.0"
-    assert "krr:v1.30.0" in (CHART_PATH.parents[1] / "playbooks/robusta_playbooks/krr.py").read_text()
     assert container["imagePullPolicy"] == "Always"
     assert container["resources"] == {"requests": {"memory": "2Gi"}, "limits": {"memory": "2Gi"}}
     assert "securityContext" not in container

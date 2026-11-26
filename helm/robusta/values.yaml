@@ -607,16 +607,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "WeeklyKRRScan"
-  triggers:
-  - on_schedule:
-      cron_schedule_repeat:
-        cron_expression: "0 12 * * 1" # every Monday at 12:00
-  actions:
-  - krr_scan: {}
-  sinks:
-    - "robusta_ui_sink"
-
 - name: "RobustaMaintenance"
   triggers:
   - on_schedule:
@@ -800,11 +790,11 @@ runner:
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
   setKRRSecurityContext: false
-  # Runs the weekly KRR scan from a CronJob instead of the WeeklyKRRScan playbook.
+  # Runs the weekly KRR scan from a CronJob.
   krrCronJob:
     enabled: true
     schedule: "0 12 * * 1" # every Monday at 12:00
-    # empty settings default to the globalConfig value or runner env var used by the krr_scan action
+    # empty settings default to the globalConfig value or runner env var named next to them
     timeout: ~  # seconds. globalConfig.timeout, then 3600
     image: ~  # KRR_IMAGE_OVERRIDE, then image.registry/krr
     strategy: ~  # KRR_STRATEGY, globalConfig.strategy, then simple

@@ -61,7 +61,6 @@ Baseline SCC is Sufficient For:
 
 - ✅ All investigations and diagnostics
 - ✅ KRR scans (resource right-sizing)
-- ✅ Popeye scans (cluster analysis)
 - ✅ Log analysis and enrichment
 - ✅ Metrics and event analysis
 - ✅ Alert correlation
