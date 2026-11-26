@@ -3,6 +3,8 @@ import logging
 import time
 from unittest.mock import MagicMock
 
+import pytest
+
 from robusta.api import CallbackBlock, CallbackChoice, Finding, MarkdownBlock, action
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.reporting.action_requests import ActionRequestBody, ExternalActionRequest, sign_action_request
@@ -82,6 +84,15 @@ def test_unparsable_request_is_logged_without_its_params(caplog):
     assert "Failed to parse incoming event" in caplog.text
     assert "get_silences" in caplog.text
     assert "s3cr3t-value" not in caplog.text
+
+
+@pytest.mark.parametrize("message", ["[]", "123", '"text"', '{"body": null}', '{"body": "text"}', b"\xff"])
+def test_any_unparsable_message_is_logged_once(caplog, message):
+    receiver = _receiver()
+    receiver.on_message(None, message)
+    receiver._process_action.assert_not_called()
+    assert [record.levelname for record in caplog.records] == ["ERROR"]
+    assert "Failed to parse incoming event" in caplog.text
 
 
 def test_request_made_by_a_button_is_refused():

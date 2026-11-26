@@ -213,15 +213,14 @@ class ActionRequestReceiver:
         """Stringify incoming request masking action params in case it contains secrets"""
         if isinstance(incoming_event, (str, bytes, bytearray)):  # a raw websocket message
             try:
-                event_dict = json.loads(incoming_event)
-            except Exception:
-                logging.error("Failed to parse raw incoming event", exc_info=True)
-                return "parse error"
-        elif isinstance(incoming_event, dict):
-            event_dict = incoming_event
-        else:
-            return f"Unknown incoming_event type {type(incoming_event)}"
-        body = event_dict.pop("body", {})
+                incoming_event = json.loads(incoming_event)
+            except ValueError:
+                return "which is not JSON"
+        if not isinstance(incoming_event, dict):
+            return f"of type {type(incoming_event).__name__}"
+        event_dict = dict(incoming_event)
+        body = event_dict.pop("body", None)
+        body = dict(body) if isinstance(body, dict) else {}
         action_params = body.pop("action_params", {})
         return f"{event_dict} {body} {to_safe_str(action_params)}"
 
