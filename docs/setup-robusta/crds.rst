@@ -147,7 +147,7 @@ Using Holmes to Generate Configuration
     Prepare my config
 
 3. Holmes will analyze your cluster and generate a complete configuration including all CRDs
-4. Copy the generated configuration and add it to your ``values.yaml``
+4. Copy the generated configuration and add it to the Helm values file you installed Robusta with (typically ``generated_values.yaml``)
 5. Apply the configuration using Helm as described above
 
 .. tip::
