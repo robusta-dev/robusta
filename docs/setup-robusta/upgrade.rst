@@ -27,7 +27,9 @@ Now do a helm upgrade, passing your existing settings:
 
 .. warning:: Do **not** run ``helm upgrade --reuse-values``
 
-    `The --reuse-values flag doesn't respect all Chart changes. <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_
+    The ``--reuse-values`` flag keeps the previous version's default values, so changes to the chart's defaults are not applied. Several defaults were changed in Robusta 0.56.0 to be more secure, and an upgrade with this flag does not pick them up. Always pass your values file with ``-f``, as shown above.
+
+    For background, see `how the --reuse-values flag works <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_.
 
 Verify that Robusta is running and there are no errors in the logs:
 
@@ -104,6 +106,8 @@ Robusta 0.56.0 upgrades the bundled ``kube-prometheus-stack`` from version 72 to
 4. Update Robusta with Helm. If you've lost ``generated_values.yaml``, you can :ref:`extract it from the cluster.<where-is-generated-values>`
 
 .. include:: ./_helm_upgrade.rst
+
+.. warning:: Do **not** run ``helm upgrade --reuse-values``. It keeps the previous version's default values, so changed defaults are not applied.
 
 5. Verify that Robusta is running and there are no errors in the logs:
 
