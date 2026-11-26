@@ -5,14 +5,12 @@ Read-Only Service Account
 
 By default, Robusta's runner service account is **read-only**: its ClusterRole only grants ``get``, ``list`` and ``watch``, and the chart renders no namespaced Role for the runner. It cannot create pods, exec into pods, or update and delete Kubernetes resources. This guide explains what read-only mode means, how to enable specific write access, and how to restrict the read rules further.
 
-.. note::
-
-   The built-in playbooks that create pods or jobs (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``) and all
-   :ref:`scheduled playbooks <on_schedule>` are disabled by default, and actions that need write access
-   are removed from the actions the UI can run. The weekly KRR scan keeps running from a CronJob, see :ref:`krr-cronjob`.
-
 Enabling Write Access
 ---------------------
+
+.. warning::
+
+   These options only exist to support deprecated behaviour. We strongly recommend not enabling them.
 
 Each kind of write access has its own flag under ``runner.rbac``. All flags default to ``false``:
 
@@ -27,47 +25,40 @@ Each kind of write access has its own flag under ``runner.rbac``. All flags defa
         enableRobustaConfigMapCreate: false  # create ConfigMaps in Robusta's namespace
         enableRobustaConfigMapEdit: false    # update the scheduled-jobs ConfigMap
 
-The exact Kubernetes permission each flag grants, where it applies, and what it allows:
+The exact Kubernetes permission each flag grants, and where it applies:
 
 .. list-table::
-   :widths: 20 15 15 20 30
+   :widths: 30 20 25 25
    :header-rows: 1
 
    * - Flag
      - Verb
      - Resource
      - Applies to
-     - What it allows
    * - ``enablePodDelete``
      - ``delete``
      - ``pods``
      - All namespaces
-     - Anyone who can make the runner run ``delete_pod`` or ``delete_alert_pod`` can delete any pod in the cluster
    * - ``enableJobDelete``
      - ``delete``
      - ``jobs`` (``batch``)
      - All namespaces
-     - Anyone who can make the runner run ``delete_job`` can delete any Job in the cluster
    * - ``enableNodeEdit``
      - ``patch``
      - ``nodes``
      - Every node in the cluster
-     - Used by ``cordon``, ``uncordon`` and ``drain``. ``patch`` allows changing any field of a node, such as labels and taints, not only cordon
    * - ``enablePodEvict``
      - ``create``
      - ``pods/eviction``
      - All namespaces
-     - Evicting any pod in the cluster. Used by ``drain``
    * - ``enableRobustaConfigMapCreate``
      - ``create``
      - ``configmaps``
      - Robusta's namespace only
-     - Kubernetes cannot limit ``create`` by name, so the runner can create any ConfigMap in Robusta's namespace. Needed by scheduled playbooks, see below
    * - ``enableRobustaConfigMapEdit``
      - ``get``, ``update``
      - ``configmaps``, the ``scheduled-jobs`` ConfigMap only
      - Robusta's namespace only
-     - Reading and updating the ConfigMap that stores scheduled playbook state, and no other ConfigMap. Needed by scheduled playbooks, see below
 
 ``drain`` needs both ``enablePodEvict`` and ``enableNodeEdit``. ``cordon`` and ``uncordon`` need only ``enableNodeEdit``.
 
@@ -78,28 +69,15 @@ When an action runs without the flag it needs, the runner logs an error that nam
 ``enabledManagedConfiguration`` (default ``false``) grants ``create``, ``update``, ``patch`` and ``delete`` on
 PrometheusRules, to sync alerts from the Robusta UI to the cluster, see :ref:`Managed Prometheus Alerts`.
 
-The runner does not create Jobs, so actions that run a Job (``krr_scan``, ``popeye_scan``, ``kubectl_command``,
-``alert_handling_job`` and others) log an error instead. The weekly KRR scan runs from a CronJob, see :ref:`krr-cronjob`.
-
-The ``rollout_restart`` action is not supported by the built-in rules. To grant other write verbs, add the rules
-you need with ``runner.customClusterRoleRules``:
-
-.. code-block:: yaml
-
-    runner:
-      customClusterRoleRules:
-        - apiGroups: ["apps"]
-          resources: ["deployments"]
-          verbs: ["patch"]
-
 .. _rbac-scheduled-playbooks:
 
 Scheduled Playbooks
 -------------------
 
-The runner stores the state of :ref:`scheduled playbooks <on_schedule>` in the ``scheduled-jobs`` ConfigMap in its
-namespace, so scheduled playbooks only run when both ConfigMap flags are enabled. Otherwise the runner logs an
-error for each configuration that has scheduled playbooks. To enable them:
+:ref:`Scheduled playbooks <on_schedule>` are deprecated. We recommend using Kubernetes CronJobs instead.
+
+If you must use the legacy scheduler, you can re-enable it with both ConfigMap flags, but we discourage doing so.
+The runner stores the scheduler state in the ``scheduled-jobs`` ConfigMap in its namespace:
 
 .. code-block:: yaml
 

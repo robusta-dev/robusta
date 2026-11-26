@@ -90,6 +90,10 @@ Built-in CRD Permissions
 
 Robusta includes read-only permissions for common Kubernetes operators and tools. All are disabled by default. Enable the ones you use:
 
+.. note::
+
+    We recommend keeping these disabled, to keep Robusta's privileges minimal.
+
 .. code-block:: yaml
 
     runner:
