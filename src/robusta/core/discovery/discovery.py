@@ -45,7 +45,6 @@ from robusta.core.model.cluster_status import ClusterStats
 from robusta.core.model.env_vars import (
     ARGO_ROLLOUTS,
     CLUSTER_STATS_NAMESPACE,
-    DISABLE_HELM_MONITORING,
     DISCOVERY_BATCH_SIZE,
     DISCOVERY_MAX_BATCHES,
     DISCOVERY_POD_OWNED_PODS,
@@ -54,7 +53,6 @@ from robusta.core.model.env_vars import (
     OPENSHIFT_GROUPS,
     CUSTOM_CRD
 )
-from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
@@ -79,7 +77,6 @@ class DiscoveryResults(BaseModel):
     node_requests: Dict = {}
     jobs: List[JobInfo] = []
     namespaces: List[NamespaceInfo] = []
-    helm_releases: List[HelmRelease] = []
     pods_running_count: int = 0
     openshift_groups: List[OpenshiftGroup] = []
 
@@ -736,41 +733,6 @@ class Discovery:
             )
             raise e
 
-        helm_releases_map: dict[str, HelmRelease] = {}
-        if not DISABLE_HELM_MONITORING:
-            # discover helm state
-            try:
-                continue_ref: Optional[str] = None
-                for _ in range(DISCOVERY_MAX_BATCHES):
-                    secrets = client.CoreV1Api().list_secret_for_all_namespaces(
-                        label_selector="owner=helm", _continue=continue_ref
-                    )
-                    if not secrets.items:
-                        break
-
-                    for secret_item in secrets.items:
-                        release_data = secret_item.data.get("release", None)
-                        if not release_data:
-                            continue
-
-                        try:
-                            decoded_release_row = HelmRelease.from_api_server(secret_item.data["release"])
-                            # we use map here to deduplicate and pick only the latest release data
-                            helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
-                        except Exception as e:
-                            logging.error(f"an error occurred while decoding helm releases: {e}")
-
-                    continue_ref = secrets.metadata._continue
-                    if not continue_ref:
-                        break
-
-            except Exception as e:
-                logging.error(
-                    "Failed to run periodic helm discovery",
-                    exc_info=True,
-                )
-                raise e
-
         # discover namespaces
         try:
             namespaces: List[NamespaceInfo] = [
@@ -790,7 +752,6 @@ class Discovery:
             node_requests=node_requests,
             jobs=active_jobs,
             namespaces=namespaces,
-            helm_releases=list(helm_releases_map.values()),
             pods_running_count=pods_running_count,
             openshift_groups=openshift_groups,
         )

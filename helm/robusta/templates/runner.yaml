@@ -103,10 +103,9 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          {{- if not .Values.monitorHelmReleases }}
+          # keeps runner images older than this chart from listing Secrets during discovery
           - name: DISABLE_HELM_MONITORING
             value: "True"
-          {{- end }}
           {{- if .Values.enableHolmesGPT }}
           - name: HOLMES_ENABLED
             value: "True"
