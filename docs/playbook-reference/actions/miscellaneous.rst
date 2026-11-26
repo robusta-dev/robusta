@@ -3,20 +3,10 @@ Miscellaneous
 
 These actions are useful for general Kubernetes troubleshooting and everything else.
 
-ArgoCD
-^^^^^^^^^^^^^^
-
-.. robusta-action:: playbooks.robusta_playbooks.argo_cd.argo_app_sync
-
 Slack-OpsGenie sync
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. robusta-action:: playbooks.robusta_playbooks.sink_enrichments.opsgenie_slack_enricher
-
-Kubernetes Optimization
--------------------------------
-
-.. robusta-action:: playbooks.robusta_playbooks.configuration_ab_testing.config_ab_testing
 
 Backups
 -------------------
