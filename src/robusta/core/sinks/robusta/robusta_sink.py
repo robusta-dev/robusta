@@ -27,7 +27,6 @@ from robusta.core.model.env_vars import (
     HOLMES_ENABLED,
     MANAGED_CONFIGURATION_ENABLED,
 )
-from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
@@ -44,7 +43,6 @@ from robusta.core.sinks.robusta.rrm.rrm import RRM
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.prometheus.utils import HolmesDiscovery
 from robusta.integrations.receiver import ActionRequestReceiver
-from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
 from robusta.core.model.env_vars import ROBUSTA_API_ENDPOINT
 from cachetools import TTLCache
@@ -121,7 +119,6 @@ class RobustaSink(SinkBase, EventHandler):
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = {}
         # Some clusters have no jobs. helps differentiate between no jobs, to not initialized
         self.__jobs_cache_initialized: bool = False
-        self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__watchdog_thread = threading.Thread(target=self.__discovery_watchdog)
         self.__watchdog_thread.start()
@@ -205,13 +202,6 @@ class RobustaSink(SinkBase, EventHandler):
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
 
-    def __assert_helm_releases_cache_initialized(self):
-        if self.__helm_releases_cache is None:
-            logging.info("Initializing helm releases cache")
-            self.__helm_releases_cache: Dict[str, HelmRelease] = {}
-            for helm_release in self.dal.get_active_helm_release():
-                self.__helm_releases_cache[helm_release.get_service_key()] = helm_release
-
     def __assert_namespaces_cache_initialized(self):
         if not self.__namespaces_cache:
             logging.info("Initializing namespaces cache")
@@ -222,7 +212,6 @@ class RobustaSink(SinkBase, EventHandler):
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__jobs_cache: Dict[str, JobInfo] = {}
         self.__jobs_cache_initialized = False
-        self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         self.__pods_running_count = 0
 
@@ -332,21 +321,6 @@ class RobustaSink(SinkBase, EventHandler):
         except Exception:
             logging.error("Error getting events history", exc_info=True)
 
-    def __send_helm_release_events(self, release_data: List[HelmRelease]):
-        try:
-            logging.debug("Sending helm release events")
-            response = WebApi.send_helm_release_events(
-                release_data=release_data,
-                retries=4,
-                timeout_delay=30,
-            )
-            if response != 200:
-                logging.error("Error occurred while sending `helm release trigger event`")
-            else:
-                logging.debug("Sent `helm release` trigger event.")
-        except Exception:
-            logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
-
     def __discover_custom_namespaced_resources(self, namespaces: List[NamespaceInfo]):
         if not self.namespace_monitored_resources:
             return
@@ -429,9 +403,6 @@ class RobustaSink(SinkBase, EventHandler):
 
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
-
-            self.__assert_helm_releases_cache_initialized()
-            self.__publish_new_helm_releases(results.helm_releases)
 
             self.__assert_namespaces_cache_initialized()
             namespaces = results.namespaces
@@ -539,31 +510,6 @@ class RobustaSink(SinkBase, EventHandler):
         self.__discovery_metrics.on_jobs_updated(len(updated_jobs))
         self.dal.publish_jobs(updated_jobs)
 
-    def __publish_new_helm_releases(self, active_helm_releases: List[HelmRelease]):
-        curr_helm_releases = {}
-        for helm_release in active_helm_releases:
-            curr_helm_releases[helm_release.get_service_key()] = helm_release
-
-        # handle deleted helm release
-        cache_keys = list(self.__helm_releases_cache.keys())
-        helm_releases: List[HelmRelease] = []
-        for helm_release_key in cache_keys:
-            if not curr_helm_releases.get(helm_release_key):  # helm release doesn't exist any more, delete it
-                self.__helm_releases_cache[helm_release_key].deleted = True
-                helm_releases.append(self.__helm_releases_cache[helm_release_key])
-                del self.__helm_releases_cache[helm_release_key]
-
-        # new or changed helm release
-        for helm_release_key in curr_helm_releases.keys():
-            current_helm_release = curr_helm_releases[helm_release_key]
-            if (
-                self.__helm_releases_cache.get(helm_release_key) != current_helm_release
-            ):  # helm_release not in the cache, or changed
-                helm_releases.append(current_helm_release)
-                self.__helm_releases_cache[helm_release_key] = current_helm_release
-
-        self.dal.publish_helm_releases(helm_releases)
-
     def get_holmes_model(self) -> Optional[str]:
         global_config = self.get_global_config()
         params: HolmesParams = HolmesParams(**global_config)
@@ -664,13 +610,11 @@ class RobustaSink(SinkBase, EventHandler):
             self.__periodic_cluster_status()
 
             if not DISABLE_DISCOVERY:
-                discovery_results = self.__discover_resources()
+                self.__discover_resources()
 
                 if get_history:
                     self.__get_events_history()
                     get_history = False
-                if discovery_results and discovery_results.helm_releases:
-                    self.__send_helm_release_events(release_data=discovery_results.helm_releases)
             elif CLUSTER_STATS_NAMESPACE:
                 self.__publish_scoped_services()
 
