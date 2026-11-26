@@ -200,7 +200,6 @@ from robusta.core.schedule.model import (
 from robusta.core.sinks import SinkBase, SinkBaseParams, SinkConfigBase
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper, KafkaSinkParams
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesEvent, HelmReleasesTriggerEvent
-from robusta.integrations.argocd.argocd_client import ArgoCDClient
 from robusta.integrations.git.git_repo import ClusterChanges, GitRepo, GitRepoManager, SingleChange
 from robusta.integrations.grafana import Grafana
 from robusta.integrations.kubernetes.api_client_utils import (

@@ -142,10 +142,10 @@ Sometimes you need to prevent an action from running too often. You can use the 
    from robusta.api import *
 
    @action
-   def argo_app_sync(event: ExecutionBaseEvent, params: ArgoAppParams):
+   def my_action(event: ExecutionBaseEvent, params: MyActionParams):
        if not RateLimiter.mark_and_test(
-           "argo_app_sync",
-           params.argo_url + params.argo_app_name,
+           "my_action",
+           params.name,
            params.rate_limit_seconds,
        ):
            return
