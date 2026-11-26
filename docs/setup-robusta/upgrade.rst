@@ -8,6 +8,10 @@ Robusta is upgraded using ``helm upgrade``. For detailed instructions, see :ref:
 Helm Upgrade
 ^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+    If your install bundles ``kube-prometheus-stack`` (``enablePrometheusStack: true``) and you are upgrading to Robusta 0.56.0 or later from an earlier version, follow the :ref:`Manual Upgrade` steps instead. They update the Prometheus Operator CRDs before running the Helm upgrade.
+
 Find the Helm values that you installed Robusta with (typically a ``generated_values.yaml`` file).
 You'll need this to preserve settings during the upgrade.
 
@@ -27,7 +31,9 @@ Now do a helm upgrade, passing your existing settings:
 
 .. warning:: Do **not** run ``helm upgrade --reuse-values``
 
-    `The --reuse-values flag doesn't respect all Chart changes. <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_
+    The ``--reuse-values`` flag keeps the previous version's default values, so changes to the chart's defaults are not applied. Several defaults were changed in Robusta 0.56.0 to be more secure, and an upgrade with this flag does not pick them up. Always pass your values file with ``-f``, as shown above.
+
+    For background, see `how the --reuse-values flag works <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_.
 
 Verify that Robusta is running and there are no errors in the logs:
 
@@ -61,7 +67,7 @@ Robusta Classic: Manual Upgrade
 Does my upgrade require manual steps?
 ------------------------------------
 
-A manual upgrade is only relevant for older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). You'll know you need it if ``helm upgrade`` fails with a ``com.coreos.monitoring.v1.Prometheus.spec`` error.
+A manual upgrade is only relevant for older Robusta Classic installs that bundled ``kube-prometheus-stack`` (``enablePrometheusStack: true``). You need it when upgrading to Robusta 0.56.0 or later from an earlier version, or if ``helm upgrade`` fails with a ``com.coreos.monitoring.v1.Prometheus.spec`` error.
 
 In all other cases, you can do a :ref:`Simple Upgrade` and no more.
 
@@ -74,7 +80,11 @@ Helm can't update CRDs, so we updated them manually. See the `Helm Documentation
 Manual upgrade instructions
 ----------------------------------
 
-1. Manually remove the node-exporter daemonset and admission webhooks:
+Robusta 0.56.0 upgrades the bundled ``kube-prometheus-stack`` from version 72 to 93, which requires Kubernetes 1.25 or later. For everything that changed between those versions, see the `kube-prometheus-stack upgrade notes <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/UPGRADE.md>`_.
+
+1. If you are upgrading from a Robusta version older than 0.26.0, manually remove the node-exporter daemonset and admission webhooks. Skip this step otherwise.
+
+.. warning:: These commands select by label, so they also match another ``kube-prometheus-stack`` release in the same cluster. If you run one independently of Robusta, list the matching objects first (replace ``delete`` with ``get``) and delete only the ones that belong to the Robusta release.
 
 .. code-block:: bash
 
@@ -82,28 +92,23 @@ Manual upgrade instructions
     kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io -l app=kube-prometheus-stack-admission
     kubectl delete MutatingWebhookConfiguration -l app=kube-prometheus-stack-admission
 
-2. Manually update the Prometheus Operator CRDs. For more info, refer to the `kube-prometheus-stack docs <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#uninstall-chart>`_.
+2. Manually update the Prometheus Operator CRDs. For more info, refer to the `kube-prometheus-stack docs <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#upgrading-chart>`_.
 
 .. warning:: If you have an existing Prometheus Operator installed independently of Robusta then be very careful! Upgrading CRDs will impact all Prometheus Operators in your cluster.
 
 .. code-block:: bash
 
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
-    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+    for crd in alertmanagerconfigs alertmanagers podmonitors probes prometheusagents prometheuses prometheusrules scrapeconfigs servicemonitors thanosrulers; do
+      kubectl apply --server-side --force-conflicts -f "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.95.2/example/prometheus-operator-crd/monitoring.coreos.com_${crd}.yaml"
+    done
 
 3. If you're upgrading from Robusta v0.10.27 or below and using thanos please check if you need to adapt your config according to the `kube-prometheus-stack upgrade docs <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md#from-51x-to-52x>`_.
 
 4. Update Robusta with Helm. If you've lost ``generated_values.yaml``, you can :ref:`extract it from the cluster.<where-is-generated-values>`
 
 .. include:: ./_helm_upgrade.rst
+
+.. warning:: Do **not** run ``helm upgrade --reuse-values``. It keeps the previous version's default values, so changed defaults are not applied.
 
 5. Verify that Robusta is running and there are no errors in the logs:
 
