@@ -7,33 +7,26 @@ from urllib.parse import urlparse
 
 import requests
 from hikaru.model.rel_1_26 import Node
-from kubernetes import client
-from kubernetes.client import V1Pod, V1PodList, exceptions
 from robusta.api import (
-    ActionException,
     ActionParams,
     AlertResourceGraphEnricherParams,
     ChartValuesFormat,
     CustomGraphEnricherParams,
     Emojis,
     EnrichmentType,
-    ErrorCodes,
     ExecutionBaseEvent,
     Finding,
     FindingSource,
-    FindingSubjectType,
     GraphBlock,
     GraphEnricherParams,
     KubeObjFindingSubject,
     KubernetesResourceEvent,
     ListBlock,
-    LogEnricherParams,
     MarkdownBlock,
     PodEvent,
     PrometheusKubernetesAlert,
     ResourceChartItemType,
     ResourceChartResourceType,
-    RobustaPod,
     SlackAnnotations,
     TableBlock,
     action,
@@ -42,12 +35,11 @@ from robusta.api import (
     create_resource_enrichment,
     get_node_internal_ip,
 )
-from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
+from robusta.core.playbooks.oom_killer_utils import logs_enricher
 from robusta.core.playbooks.prometheus_enrichment_utils import with_namespace_tenant
 from robusta.core.reporting import FindingSubject
 from robusta.core.reporting.base import Link, LinkType
 from robusta.core.reporting.blocks import TableBlockFormat
-from robusta.utils.parsing import format_event_templated_string
 
 class SeverityParams(ActionParams):
     """
@@ -479,80 +471,6 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
             [MarkdownBlock(f'Sorry, StackOverflow doesn\'t know anything about "{params.search_term}"')]
         )
     event.add_finding(finding)
-
-
-def format_pod_templated_string(pod: RobustaPod, template: Optional[str]) -> Optional[str]:
-    if not template:
-        return None
-    subject = FindingSubject(
-        name=pod.metadata.name,
-        subject_type=FindingSubjectType.from_kind("pod"),
-        namespace=pod.metadata.namespace,
-        labels=pod.metadata.labels,
-        annotations=pod.metadata.annotations,
-    )
-    return format_event_templated_string(subject, template)
-
-
-class ForeignLogParams(LogEnricherParams):
-    """
-    :var label_selectors: List of specific label selectors to retrieve logs from
-    """
-
-    label_selectors: List[str]
-    title_override: Optional[str]
-
-
-@action
-def alert_foreign_logs_enricher(event: PrometheusKubernetesAlert, params: ForeignLogParams):
-    """
-    Prometheus alert enricher to fetch and attach pod logs.
-
-    This action behaves the same as the foreign_logs_enricher.
-    The logs are fetched for the pod determined by the label selector field in the parameters.
-    The label selector field can use the format ${labels.XYZ} to reference any XYZ label present in the Prometheus alert.
-
-    """
-    subject = event.get_subject()
-    params.label_selectors = [format_event_templated_string(subject, selector) for selector in params.label_selectors]
-    return foreign_logs_enricher(event, params)
-
-
-@action
-def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
-    """
-    Generic enricher to fetch and attach pod logs.
-
-    The logs are fetched for the pod determined by the label selector field in the parameters.
-    """
-
-    api = client.CoreV1Api()
-    matching_pods: List[V1Pod] = []
-
-    logging.debug(f"received a foreign_logs_enricher action: {params}")
-
-    for selector in params.label_selectors:
-        try:
-            pods: V1PodList = api.list_pod_for_all_namespaces(label_selector=selector)
-            if pods.items:
-                matching_pods = pods.items
-                break
-        except Exception as e:
-            if not (isinstance(e, exceptions.ApiException) and e.status == 404):
-                raise ActionException(
-                    ErrorCodes.ACTION_UNEXPECTED_ERROR,
-                    f"[foreign_logs_enricher] Failed to list pods for foreign log enricher.\n{e}",
-                )
-
-    if not matching_pods:
-        logging.warning(
-            f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.label_selectors}"
-        )
-        return
-    for matching_pod in matching_pods:
-        pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
-        title_override = format_pod_templated_string(pod, params.title_override)
-        start_log_enrichment(event=event, params=params, pod=pod, title_override=title_override)
 
 
 logs_enricher = action(logs_enricher)

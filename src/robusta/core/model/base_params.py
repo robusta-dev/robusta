@@ -270,10 +270,10 @@ class NamespacedResourcesParams(ActionParams):
     namespace: str
 
 
-# Parameters that decide the identity, metadata and command line of pods the runner creates. They are taken
-# from the runner's configuration only, never from the parameters of an individual action request.
+# Parameters taken from the runner's configuration only, never from the parameters of an individual action request.
 CONFIG_ONLY_PARAMS = frozenset(
     {
+        # identity and metadata of the pods the runner creates
         "serviceAccountName",
         "service_account_name",
         "custom_annotations",
@@ -283,6 +283,18 @@ CONFIG_ONLY_PARAMS = frozenset(
         "args",
         # simulated alerts take their query link from the configuration
         "generator_url",
+        # where the runner connects to Prometheus, AlertManager, Grafana and Holmes, and with which credentials
+        "prometheus_url",
+        "prometheus_url_query_string",
+        "prometheus_auth",
+        "prometheus_graphs_overrides",
+        "alertmanager_url",
+        "alertmanager_flavor",
+        "alertmanager_auth",
+        "alertmanager_additional_headers",
+        "grafana_url",
+        "grafana_api_key",
+        "holmes_url",
     }
 )
 
@@ -291,6 +303,9 @@ def drop_config_only_params(action_params: Optional[Dict[str, Any]]) -> Optional
     """Remove the parameters an action request may not set, so the configured values apply."""
     if not action_params:
         return action_params
+    dropped = sorted(CONFIG_ONLY_PARAMS.intersection(action_params))
+    if dropped:
+        logging.warning(f"Ignoring action request parameters that are taken from the configuration only: {dropped}")
     return {name: value for name, value in action_params.items() if name not in CONFIG_ONLY_PARAMS}
 
 
