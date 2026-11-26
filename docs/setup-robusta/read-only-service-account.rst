@@ -72,9 +72,6 @@ error for each configuration that has scheduled playbooks. To enable them:
 
 The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks create Jobs, so they are always disabled.
 
-The embedded Prometheus stack (``enablePrometheusStack``, disabled by default) has its own service accounts with
-write access, see :ref:`Embedded Prometheus Stack`.
-
 Why Read-Only Mode?
 -------------------
 

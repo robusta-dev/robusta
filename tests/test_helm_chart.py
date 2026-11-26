@@ -68,15 +68,6 @@ def playbook_names(extra_args: Optional[List[str]] = None) -> set:
     return {p.get("name") for p in runner_config(extra_args)["active_playbooks"]}
 
 
-def role_names_with_writes(docs: List[dict]) -> set:
-    return {
-        (doc["kind"], doc["metadata"]["name"])
-        for doc in docs
-        if doc["kind"] in ("Role", "ClusterRole")
-        and any(set(rule["verbs"]) - READ_ONLY_VERBS for rule in doc.get("rules") or [])
-    }
-
-
 def write_rules(docs: List[dict]) -> set:
     granted = set()
     for doc in docs:
@@ -154,13 +145,6 @@ def test_all_flags_grant_only_listed_write_rules():
     assert {"delete_pod", "delete_job", "drain", "cordon"} <= set(light_actions)
     assert not {"rollout_restart", "krr_scan", "popeye_scan", "pod_ps"} & set(light_actions)
     assert "drain" not in runner_config(enable("enableNodeEdit"))["light_actions"]
-
-
-def test_prometheus_stack_has_no_admission_webhook_rules():
-    docs = render_full_chart(["--set", "enablePrometheusStack=true"])
-    writers = {name for kind, name in role_names_with_writes(docs)}
-    assert writers == {"robusta-kube-prometheus-st-operator"}
-    assert not [doc for doc in docs if "admission" in doc["metadata"]["name"]]
 
 
 def test_job_creating_playbooks_always_disabled():

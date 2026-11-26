@@ -21,30 +21,6 @@ Add to ``generated_values.yaml``:
 
 Apply the change by performing a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-Service Account Access
------------------------------------
-
-The embedded stack is only installed with ``enablePrometheusStack: true``. It then includes the Prometheus operator,
-whose ClusterRole can create, update and delete ``monitoring.coreos.com`` resources, StatefulSets, ConfigMaps,
-Secrets, Services and Endpoints, and delete pods, in all namespaces. The operator uses these to run Prometheus and
-AlertManager.
-
-The operator's admission webhooks are disabled by default, so the chart does not create the webhook certificate
-Secret or update webhook configurations. To enable them:
-
-.. code-block:: yaml
-
-    kube-prometheus-stack:
-      prometheusOperator:
-        admissionWebhooks:
-          enabled: true
-        tls:
-          enabled: true
-
-With webhooks enabled, a Job that runs on install and upgrade creates the certificate Secret in Robusta's namespace,
-and ``get`` and ``update`` access to all validating and mutating webhook configurations lets it add the certificate
-to the operator's webhooks.
-
 Change the retention period
 ------------------------------
 
