@@ -71,7 +71,8 @@ globalConfig:
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []
 
-# Actions that run commands in your cluster are off by default. To let your playbooks use one, list it here.
+# Actions that run commands in your cluster. They run only from playbooks defined in this configuration, and only
+# if you explicitly opt in by listing them here. The list is empty by default, so none of them runs.
 # Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job
 commandActions: []
 
