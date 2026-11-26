@@ -31,7 +31,6 @@ from robusta.core.model.env_vars import (
     SUPABASE_LOGIN_RETRY_MAX_BACKOFF_SEC,
     SUPABASE_TIMEOUT_SECONDS,
 )
-from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
@@ -58,7 +57,6 @@ EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
-HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count_v2"
 SCANS_RESULT_TABLE = "ScansResults"
@@ -672,44 +670,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.exception(f"Failed to delete namespace {namespace_name} error: {e}")
-            raise
-
-    # helm release
-    def get_active_helm_release(self) -> List[HelmRelease]:
-        try:
-            res = (
-                self.client.table(HELM_RELEASES_TABLE)
-                .select("*")
-                .filter("account_id", "eq", self.account_id)
-                .filter("cluster_id", "eq", self.cluster)
-                .filter("deleted", "eq", False)
-                .execute()
-            )
-        except Exception as e:
-            logging.error(f"Failed to get existing helm releases (supabase) error: {e}")
-            raise
-
-        return [HelmRelease.from_db_row(helm_release) for helm_release in res.data]
-
-    def __to_db_helm_release(self, helm_release: HelmRelease) -> Dict[Any, Any]:
-        db_helm_release = helm_release.dict()
-        db_helm_release["account_id"] = self.account_id
-        db_helm_release["cluster_id"] = self.cluster
-        db_helm_release["service_key"] = helm_release.get_service_key()
-        db_helm_release["updated_at"] = "now()"
-        return db_helm_release
-
-    def publish_helm_releases(self, helm_releases: List[HelmRelease]):
-        if not helm_releases:
-            return
-
-        db_helm_releases = [self.__to_db_helm_release(helm_release) for helm_release in helm_releases]
-        logging.debug(f"[supabase] Publishing the helm_releases {db_helm_releases}")
-
-        try:
-            self.client.table(HELM_RELEASES_TABLE).upsert(db_helm_releases, returning=ReturnMethod.minimal).execute()
-        except Exception as e:
-            logging.error(f"Failed to persist helm_releases {helm_releases} error: {e}")
             raise
 
     def __sign_in_once(self) -> str:

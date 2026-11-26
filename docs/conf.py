@@ -142,6 +142,7 @@ redirects = {
     "tutorials/alert-custom-prometheus.html": "/master/configuration/alertmanager-integration/alert-custom-prometheus.html",
     "catalog/triggers/prometheus.html": "/master/configuration/alertmanager-integration/index.html",
     "playbook-reference/prometheus-examples/alert-remediation.html": "/master/playbook-reference/automatic-remediation-examples/index.html",
+    "playbook-reference/triggers/helm-releases-monitoring.html": "/master/playbook-reference/triggers/index.html",
     "configuration/ai-analysis.html": "https://robusta.dev/",
     "configuration/holmesgpt/index.html": "https://robusta.dev/",
     "configuration/holmesgpt/main-features.html": "https://robusta.dev/",

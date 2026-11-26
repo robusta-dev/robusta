@@ -132,7 +132,6 @@ lightActions:
 enablePrometheusStack: false
 enabledManagedConfiguration: false
 enableServiceMonitors: true
-monitorHelmReleases: false
 argoRollouts: false
 
 
