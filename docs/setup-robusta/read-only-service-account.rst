@@ -64,10 +64,10 @@ The exact Kubernetes permission each flag grants, where it applies, and what it 
      - Robusta's namespace only
      - Kubernetes cannot limit ``create`` by name, so the runner can create any ConfigMap in Robusta's namespace. Needed by scheduled playbooks, see below
    * - ``enableRobustaConfigMapEdit``
-     - ``update``
+     - ``get``, ``update``
      - ``configmaps``, the ``scheduled-jobs`` ConfigMap only
      - Robusta's namespace only
-     - Updating the ConfigMap that stores scheduled playbook state, and no other ConfigMap. Needed by scheduled playbooks, see below
+     - Reading and updating the ConfigMap that stores scheduled playbook state, and no other ConfigMap. Needed by scheduled playbooks, see below
 
 ``drain`` needs both ``enablePodEvict`` and ``enableNodeEdit``. ``cordon`` and ``uncordon`` need only ``enableNodeEdit``.
 
@@ -109,6 +109,23 @@ error for each configuration that has scheduled playbooks. To enable them:
         enableRobustaConfigMapEdit: true
 
 The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks create Jobs, so they are always disabled.
+
+.. _runner-read-rules:
+
+Resources the Runner Does Not Read
+----------------------------------
+
+The runner's default rules do not include:
+
+- **Secrets**
+- **ConfigMaps**. With ``enableRobustaConfigMapEdit`` the runner reads its own ``scheduled-jobs`` ConfigMap and no other
+- **ServiceAccounts**
+- **External Secrets Operator** resources
+- **OpenShift users**. With ``openshift.enabled`` the runner reads OpenShift groups
+- **Flux, Argo CD, KEDA, Crossplane, Istio, Gateway API, Velero and Kafka** resources. Enable each group with ``runner.crdPermissions``, see :ref:`crd-permissions`
+
+In the Robusta UI, these kinds are not shown in the per-namespace resource counts and the custom resources page, and
+the YAML of a ConfigMap cannot be viewed. To read a resource that has no flag, add a rule with ``runner.customClusterRoleRules``.
 
 Why Read-Only Mode?
 -------------------
@@ -159,7 +176,6 @@ To narrow the built-in read rules, create a custom values file with the followin
         - apiGroups:
             - ""
           resources:
-            - configmaps
             - daemonsets
             - deployments
             - events
@@ -172,7 +188,6 @@ To narrow the built-in read rules, create a custom values file with the followin
             - replicasets
             - replicationcontrollers
             - services
-            - serviceaccounts
             - endpoints
           verbs:
             - get
@@ -281,7 +296,6 @@ To narrow the built-in read rules, create a custom values file with the followin
             - policy
           resources:
             - poddisruptionbudgets
-            - podsecuritypolicies
           verbs:
             - get
             - list
