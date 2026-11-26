@@ -175,7 +175,6 @@ from robusta.core.reporting.action_requests import (
 )
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.blocks import GraphBlock
-from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import (
     EnrichmentAnnotation,
     FindingAggregationKey,

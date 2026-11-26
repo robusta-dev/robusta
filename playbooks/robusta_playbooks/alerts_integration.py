@@ -13,8 +13,6 @@ from robusta.api import (
     ActionException,
     ActionParams,
     AlertResourceGraphEnricherParams,
-    CallbackBlock,
-    CallbackChoice,
     ChartValuesFormat,
     CustomGraphEnricherParams,
     Emojis,
@@ -464,7 +462,6 @@ class SearchTermParams(ActionParams):
 def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParams):
     """
     Add a finding with StackOverflow top results for the specified search term.
-    This action can be used together with the stack_overflow_enricher.
     """
     url = f"https://api.stackexchange.com/2.2/search/advanced?order=desc&sort=relevance&q={params.search_term}&site=stackoverflow"
     result = requests.get(url).json()
@@ -482,28 +479,6 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
             [MarkdownBlock(f'Sorry, StackOverflow doesn\'t know anything about "{params.search_term}"')]
         )
     event.add_finding(finding)
-
-
-@action
-def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
-    """
-    Add a button to the alert - clicking it will show the top StackOverflow search results on this alert name.
-    """
-    alert_name = alert.alert.labels.get("alertname", "")
-    if not alert_name:
-        return
-    alert.add_enrichment(
-        [
-            CallbackBlock(
-                {
-                    f'Search StackOverflow for "{alert_name}"': CallbackChoice(
-                        action=show_stackoverflow_search,
-                        action_params=SearchTermParams(search_term=alert_name),
-                    )
-                },
-            )
-        ]
-    )
 
 
 def format_pod_templated_string(pod: RobustaPod, template: Optional[str]) -> Optional[str]:

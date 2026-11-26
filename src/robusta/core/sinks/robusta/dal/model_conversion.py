@@ -22,7 +22,6 @@ from robusta.core.reporting import (
     TableBlock,
 )
 from robusta.core.reporting.blocks import EmptyFileBlock, GraphBlock, LinksBlock
-from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.holmes import HolmesChatResultsBlock, HolmesResultsBlock, ToolCallResult
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
@@ -255,23 +254,7 @@ class ModelConversion:
                     }
                 )
             elif isinstance(block, CallbackBlock):
-                callbacks = []
-                for text, callback in block.choices.items():
-                    callbacks.append(
-                        {
-                            "text": text,
-                            "callback": ExternalActionRequestBuilder.create_for_func(
-                                callback,
-                                sink_name,
-                                text,
-                                account_id,
-                                cluster_id,
-                                signing_key,
-                            ).json(),
-                        }
-                    )
-
-                structured_data.append({"type": "callbacks", "data": callbacks})
+                pass  # buttons that run actions are no longer rendered
             elif isinstance(block, JsonBlock):
                 structured_data.append({"type": "json", "data": block.json_str})
             elif isinstance(block, EventsRef):
