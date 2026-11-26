@@ -80,6 +80,7 @@ alertRelabel: []
 commandActions: []
 
 # safe actions to enable authenticated users to run
+# prometheus_alert, which simulates an alert, is not in the list by default. Add it to simulate alerts from the Robusta UI.
 lightActions:
 - related_pods
 - prometheus_enricher
@@ -101,7 +102,6 @@ lightActions:
 - oomkilled_container_graph_enricher
 - pod_oom_killer_enricher
 - oom_killer_enricher
-- prometheus_alert
 - alertmanager_alert
 - create_pvc_snapshot
 - resource_events_enricher

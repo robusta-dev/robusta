@@ -19,6 +19,8 @@ Simulating Alerts
 .. robusta-action:: playbooks.robusta_playbooks.prometheus_simulation.prometheus_alert
     :manual-trigger-only:
 
+Simulating an alert from the Robusta UI is off by default. To turn it on, add ``prometheus_alert`` to ``lightActions`` in your Helm values. Keep the other entries of the default list when you override it.
+
 Adding Slack user/group mentions to k8s/Prometheus events
 ---------------------------------------------------------
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.mention_enricher

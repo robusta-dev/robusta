@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+
 from robusta.core.model.base_params import drop_config_only_params
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
 
@@ -40,3 +41,11 @@ def test_external_action_request_cannot_set_config_only_params():
     action_def.from_params_parameter_class.assert_called_once_with(timeout=60)
     playbook_action = handler.run_actions.call_args.args[1][0]
     assert playbook_action.action_params == {"timeout": 60}
+
+
+def test_generator_url_comes_from_configuration():
+    handler, action_def = _handler_and_action()
+    handler.run_external_action(
+        "prometheus_alert", {"alert_name": "A", "generator_url": "http://example.com/graph?g0.expr=up"}, sinks=None
+    )
+    action_def.from_params_parameter_class.assert_called_once_with(alert_name="A")

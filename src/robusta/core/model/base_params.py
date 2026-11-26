@@ -308,6 +308,8 @@ CONFIG_ONLY_PARAMS = frozenset(
         "krr_args",
         "popeye_args",
         "args",
+        # simulated alerts take their query link from the configuration
+        "generator_url",
     }
 )
 
