@@ -32,7 +32,7 @@ from robusta.api import (
     JobEvent,
 )
 from robusta.core.model.base_params import validate_job_spec
-from robusta.core.model.env_vars import ENABLE_JSON_LOGS_FORMAT, INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, SET_KRR_SECURITY_CONTEXT, load_bool
+from robusta.core.model.env_vars import ENABLE_JSON_LOGS_FORMAT, INSTALLATION_NAMESPACE, KRR_CRONJOB_ENABLED, RELEASE_NAME, CLUSTER_DOMAIN, SET_KRR_SECURITY_CONTEXT, load_bool
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
@@ -475,6 +475,14 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.
     """
+    if KRR_CRONJOB_ENABLED:
+        logging.error(
+            "krr_scan did not run: KRR scans run from the KRR CronJob. Remove the playbook that runs krr_scan and "
+            "set the frequency with runner.krrCronJob.schedule in the Helm values, "
+            "or set runner.krrCronJob.enabled=false to keep running scans from playbooks"
+        )
+        return
+
     scan_id = str(uuid.uuid4())
     start_time = datetime.now()
     job_name = f"krr-job-{scan_id}"

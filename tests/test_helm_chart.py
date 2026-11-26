@@ -430,15 +430,9 @@ SCHEDULED_KRR_PLAYBOOK = [
 ]
 
 
-def test_scheduled_krr_playbook_points_to_cronjob_values():
-    result = subprocess.run(
-        ["helm", "template", str(CHART_PATH), "--set", "clusterName=test", "--set", "sinksConfig[0].robusta_sink.name=robusta_ui_sink"]
-        + SCHEDULED_KRR_PLAYBOOK,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode != 0
-    assert "runner.krrCronJob.schedule" in result.stderr
+def test_scheduled_krr_playbook_renders_with_cronjob():
+    docs = render_full_chart(SCHEDULED_KRR_PLAYBOOK)
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
 
 
 def test_scheduled_krr_playbook_kept_without_cronjob():
@@ -613,18 +607,6 @@ def test_krr_cronjob_runtime_env_settings(tmp_path):
     )
     assert arguments[2] == "--publish_scan_url=http://other/api/trigger"
     assert flag_values(arguments, "-p") == ["http://prometheus:9090"]
-
-
-def test_scheduled_playbook_mentioning_krr_scan_in_params_is_kept():
-    docs = render_full_chart(
-        [
-            "--set",
-            "customPlaybooks[0].triggers[0].on_schedule.fixed_delay_repeat.seconds_delay=3600",
-            "--set",
-            "customPlaybooks[0].actions[0].kubectl_command.command=get pods -l app=krr_scan",
-        ]
-    )
-    assert get_doc(docs, "CronJob", "robusta-krr") is not None
 
 
 def test_krr_cronjob_value_takes_precedence_over_env_value_from():
