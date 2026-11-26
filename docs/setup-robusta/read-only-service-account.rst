@@ -110,6 +110,22 @@ error for each configuration that has scheduled playbooks. To enable them:
 
 The built-in ``WeeklyKRRScan`` and ``RobustaMaintenance`` playbooks create Jobs, so they are always disabled.
 
+Blocking All Creation
+---------------------
+
+Set ``runner.rbac.disableCreateFromServiceAccount: true`` so that Robusta creates nothing in your cluster. This
+setting overrides ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``:
+
+- The chart renders no namespaced Role for the runner, even when a ConfigMap flag is enabled
+- Scheduled playbooks do not run, and the runner logs an error that names this setting
+- The weekly KRR scan :ref:`CronJob <krr-cronjob>` is not created, unless you set ``runner.krrCronJob.enabled: true``
+
+.. code-block:: yaml
+
+    runner:
+      rbac:
+        disableCreateFromServiceAccount: true
+
 .. _runner-read-rules:
 
 Resources the Runner Does Not Read

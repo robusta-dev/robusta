@@ -125,7 +125,7 @@ spec:
           - name: SET_KRR_SECURITY_CONTEXT
             value: {{ .Values.runner.setKRRSecurityContext | quote }}
           {{- range $flag, $enabled := .Values.runner.rbac }}
-          {{- if hasPrefix "enable" $flag }}
+          {{- if or (hasPrefix "enable" $flag) (hasPrefix "disable" $flag) }}
           - name: {{ $flag | snakecase | upper }}
             value: {{ $enabled | quote }}
           {{- end }}

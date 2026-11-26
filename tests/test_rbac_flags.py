@@ -67,6 +67,20 @@ def test_job_creation_not_supported():
         RobustaJob.run_simple_job_spec(MagicMock(), "job", 60)
 
 
+def test_scheduled_playbooks_with_no_create_setting(monkeypatch, caplog):
+    monkeypatch.setattr(config_loader, "DISABLE_CREATE_FROM_SERVICE_ACCOUNT", True)
+    loader = MagicMock()
+    playbooks_registry = MagicMock()
+    playbooks_registry.get_playbooks.return_value = [MagicMock()]
+
+    with caplog.at_level(logging.ERROR):
+        ConfigLoader._ConfigLoader__reload_scheduler(loader, playbooks_registry)
+
+    loader.registry.get_scheduler.assert_not_called()
+    assert len(caplog.records) == 1
+    assert "disableCreateFromServiceAccount" in caplog.text
+
+
 @pytest.mark.parametrize(
     "flag",
     [

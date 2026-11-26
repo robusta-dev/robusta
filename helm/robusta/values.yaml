@@ -773,6 +773,8 @@ runner:
     # Grants get and update on the scheduled-jobs ConfigMap in Robusta's namespace only, and on no
     # other ConfigMap. Scheduled playbooks need it together with enableRobustaConfigMapCreate.
     enableRobustaConfigMapEdit: false
+    # true: no runner Role and no KRR CronJob, overrides the flags above
+    disableCreateFromServiceAccount: false
     # Namespace-scoped runner: render the runner RBAC as a namespaced Role + RoleBinding
     # (no ClusterRole / ClusterRoleBinding), limiting the runner to the release namespace.
     # Also presets the scoped-mode env vars (DISABLE_DISCOVERY, CLUSTER_STATS_NAMESPACE,
@@ -802,7 +804,7 @@ runner:
   setKRRSecurityContext: false
   # Runs the weekly KRR scan from a CronJob instead of the WeeklyKRRScan playbook.
   krrCronJob:
-    enabled: true
+    enabled: ~  # empty: on unless rbac.disableCreateFromServiceAccount is true
     schedule: "0 12 * * 1" # every Monday at 12:00
     # empty settings default to the globalConfig value or runner env var used by the krr_scan action
     timeout: ~  # seconds. globalConfig.timeout, then 3600

@@ -26,7 +26,7 @@ Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_worker
 
     runner:
       krrCronJob:
-        enabled: true
+        enabled: ~               # empty: on unless rbac.disableCreateFromServiceAccount is true
         schedule: "0 12 * * 1"   # every Monday at 12:00
         timeout: ~               # seconds. globalConfig.timeout, then 3600
         image: ~                 # KRR_IMAGE_OVERRIDE, then image.registry/krr
@@ -104,6 +104,46 @@ Limitations of the CronJob:
 - **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Provide a token with ``prometheusAuthSecret``
 - **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
 - **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
+With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
+
+1. Install Robusta with Helm to your cluster and configure Slack sink.
+2. Create your KRR slack playbook by adding the following to ``generated_values.yaml``:
+
+.. code-block:: yaml
+
+    # Runs a weekly krr scan on the namespace devs-namespace and sends it to the configured slack channel
+    customPlaybooks:
+    - triggers:
+      - on_schedule:
+          fixed_delay_repeat:
+            repeat: -1 # number of times to run or -1 to run forever
+            seconds_delay: 604800 # 1 week
+      actions:
+      - krr_scan:
+          args: "--namespace devs-namespace" ## KRR args here
+      sinks:
+          - "main_slack_sink" # slack sink you want to send the report to here
+
+   ``krr_scan`` playbooks are not supported, because the runner does not create Jobs, see :ref:`read-only-service-account`.
+
+3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
+
+.. grid:: 1 1 1 1
+
+    .. grid-item::
+
+        .. md-tab-set::
+
+            .. md-tab-item:: Slack
+
+                .. image:: /images/krr_slack_example.png
+                    :width: 1000px
+
+            .. md-tab-item:: Robusta UI
+
+                .. image:: /images/krr_example.png
+                    :width: 1000px
+=======
 - **Scan now**: the "scan now" button in the Robusta UI uses the ``krr_scan`` action, which is not supported because the runner does not create Jobs. Run the CronJob manually with the command above
 
 Taints, Tolerations and NodeSelectors

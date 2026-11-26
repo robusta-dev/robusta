@@ -147,6 +147,16 @@ def test_all_flags_grant_only_listed_write_rules():
     assert "drain" not in runner_config(enable("enableNodeEdit"))["light_actions"]
 
 
+def test_no_create_setting_overrides_configmap_flags():
+    no_create = enable(*RBAC_FLAGS) + ["--set", "runner.rbac.disableCreateFromServiceAccount=true"]
+    docs = render_full_chart(no_create)
+    assert get_doc(docs, "Role", "runner-local-role") is None
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+    assert not {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"} & playbook_names(no_create)
+    env = get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]
+    assert {"name": "DISABLE_CREATE_FROM_SERVICE_ACCOUNT", "value": "true"} in env
+
+
 def test_default_read_rules():
     docs = render_chart()
     rules = get_doc(docs, "ClusterRole", "runner-cluster-role")["rules"]
@@ -338,6 +348,14 @@ def test_krr_cronjob_disabled():
 
 def test_krr_cronjob_kept_without_runner_role():
     docs = render_full_chart()
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
+    assert get_doc(docs, "Role", "runner-local-role") is None
+
+
+def test_krr_cronjob_off_without_runner_role():
+    no_create = ["--set", "runner.rbac.disableCreateFromServiceAccount=true"]
+    assert get_doc(render_full_chart(no_create), "CronJob", "robusta-krr") is None
+    docs = render_full_chart(no_create + ["--set", "runner.krrCronJob.enabled=true"])
     assert get_doc(docs, "CronJob", "robusta-krr") is not None
     assert get_doc(docs, "Role", "runner-local-role") is None
 

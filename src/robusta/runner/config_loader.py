@@ -21,6 +21,7 @@ from robusta.core.model.env_vars import (
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
     DEFAULT_PLAYBOOKS_ROOT,
+    DISABLE_CREATE_FROM_SERVICE_ACCOUNT,
     ENABLE_ROBUSTA_CONFIG_MAP_CREATE,
     ENABLE_ROBUSTA_CONFIG_MAP_EDIT,
     INTERNAL_PLAYBOOKS_ROOT,
@@ -83,6 +84,10 @@ class ConfigLoader:
 
     def __reload_scheduler(self, playbooks_registry: PlaybooksRegistry):
         scheduled_playbooks = playbooks_registry.get_playbooks(ScheduledTriggerEvent())
+        if DISABLE_CREATE_FROM_SERVICE_ACCOUNT:
+            if scheduled_playbooks:
+                logging.error("Scheduled playbooks are disabled by runner.rbac.disableCreateFromServiceAccount")
+            return
         if not (ENABLE_ROBUSTA_CONFIG_MAP_CREATE and ENABLE_ROBUSTA_CONFIG_MAP_EDIT):
             if scheduled_playbooks:
                 flags = "enableRobustaConfigMapCreate/enableRobustaConfigMapEdit"
