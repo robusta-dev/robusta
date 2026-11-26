@@ -86,11 +86,11 @@ The runner stores the scheduler state in the ``scheduled-jobs`` ConfigMap in its
         enableRobustaConfigMapCreate: true
         enableRobustaConfigMapEdit: true
 
-Blocking All Creation
----------------------
+Removing the runner's namespaced Role
+-------------------------------------
 
-Set ``runner.rbac.disableCreateFromServiceAccount: true`` so that Robusta creates nothing in your cluster. This
-setting overrides ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``:
+Set ``runner.rbac.disableCreateFromServiceAccount: true`` to remove the runner's Role in its own namespace. It
+overrides ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``, and does not change the other flags:
 
 - The chart renders no namespaced Role for the runner, even when a ConfigMap flag is enabled
 - Scheduled playbooks do not run, and the runner logs an error that names this setting
