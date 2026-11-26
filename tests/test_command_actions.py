@@ -142,7 +142,7 @@ def test_default_playbooks_actions():
         for playbook_action in playbook["actions"]
         for name in playbook_action
     }
-    # WeeklyKRRScan is the one default playbook with a command action; the chart enables krr_scan for it
+    # WeeklyKRRScan is the one default playbook with a command action; it runs once krr_scan is in commandActions
     assert not used & (REMOVED_ACTIONS | COMMAND_ACTIONS - {"krr_scan"})
 
 
