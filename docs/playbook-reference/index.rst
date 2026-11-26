@@ -183,8 +183,6 @@ Common Actions
 Popular actions include:
 
 * :ref:`logs_enricher<logs_enricher>` - fetch a Pod's logs
-* :ref:`node_bash_enricher<node_bash_enricher>` - run a bash command on a Node
-* :ref:`pod_bash_enricher<pod_bash_enricher>` - run a bash command on a Pod
 * :ref:`pod_graph_enricher<pod_graph_enricher>` - attach a graph of Pod memory/CPU/disk usage
 
 All actions can be found under :ref:`Actions Reference`.

@@ -16,9 +16,7 @@ You can trigger Robusta playbooks on the following events:
    Kubernetes (API Server) <kubernetes>
    Prometheus and AlertManager <prometheus>
    Scheduled <scheduled>
-   Webhooks <webhook>
    Manual Triggers <manual-triggers>
-   ElasticSearch <elasticsearch>
 
 
 .. grid:: 1 1 2 2
@@ -39,20 +37,11 @@ You can trigger Robusta playbooks on the following events:
         :link: scheduled
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Webhook Triggers
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: webhook
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`cpu;1em;` Manual Triggers
         :class-card: sd-bg-light sd-bg-text-light
         :link: manual-triggers
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` ElasticSearch Monitors
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: elasticsearch
-        :link-type: doc
 
 
 

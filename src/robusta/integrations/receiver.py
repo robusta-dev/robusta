@@ -193,7 +193,9 @@ class ActionRequestReceiver:
             if self._is_button_press(message):
                 logging.info("Ignoring a button press. Buttons in notifications no longer run actions")
             else:
-                logging.error(f"Failed to parse incoming event {message}", exc_info=True)
+                logging.error(
+                    f"Failed to parse incoming event {self._stringify_incoming_event(message)}", exc_info=True
+                )
             return
 
         self._process_action(incoming_event, validate_timestamp=True)
@@ -209,17 +211,16 @@ class ActionRequestReceiver:
     @staticmethod
     def _stringify_incoming_event(incoming_event) -> str:
         """Stringify incoming request masking action params in case it contains secrets"""
-        if isinstance(incoming_event, str):  # slack format, stringified json
+        if isinstance(incoming_event, (str, bytes, bytearray)):  # a raw websocket message
             try:
-                event_dict = json.loads(incoming_event)
-            except Exception:
-                logging.error("Failed to parse raw incoming event", exc_info=True)
-                return "parse error"
-        elif isinstance(incoming_event, dict):
-            event_dict = incoming_event
-        else:
-            return f"Unknown incoming_event type {type(incoming_event)}"
-        body = event_dict.pop("body", {})
+                incoming_event = json.loads(incoming_event)
+            except ValueError:
+                return "which is not JSON"
+        if not isinstance(incoming_event, dict):
+            return f"of type {type(incoming_event).__name__}"
+        event_dict = dict(incoming_event)
+        body = event_dict.pop("body", None)
+        body = dict(body) if isinstance(body, dict) else {}
         action_params = body.pop("action_params", {})
         return f"{event_dict} {body} {to_safe_str(action_params)}"
 

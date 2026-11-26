@@ -25,7 +25,6 @@ Create a python file named ``my_action.py`` with the following contents:
         pod = event.get_pod()
         pod_name = pod.metadata.name
         pod_logs = pod.get_logs()
-        pod_processes = pod.exec("ps aux")
 
         # this is how you send data to slack or other destinations
         event.add_enrichment([
@@ -85,23 +84,23 @@ For example:
 
    from robusta.api import *
 
-   class BashParams(ActionParams):
-      bash_command: str
+   class TailParams(ActionParams):
+      tail_lines: int
 
-   @action(command_action=True)
-   def pod_bash_enricher(event: PodEvent, params: BashParams):
+   @action
+   def pod_logs_tail(event: PodEvent, params: TailParams):
        pod = event.get_pod()
        if not pod:
-           logging.error(f"cannot run PodBashEnricher on event with no pod: {event}")
+           logging.error(f"cannot run pod_logs_tail on event with no pod: {event}")
            return
 
-       block_list: List[BaseBlock] = []
-       exec_result = pod.exec(params.bash_command)
-       block_list.append(MarkdownBlock(f"Command results for *{params.bash_command}:*"))
-       block_list.append(MarkdownBlock(exec_result))
-       event.add_enrichment(block_list)
+       logs = pod.get_logs(tail_lines=params.tail_lines)
+       event.add_enrichment([
+           MarkdownBlock(f"Last *{params.tail_lines}* log lines:"),
+           FileBlock("pod.log", logs),
+       ])
 
-We can now define the ``bash_command`` parameter in ``generated_values.yaml``:
+We can now define the ``tail_lines`` parameter in ``generated_values.yaml``:
 
 .. code-block:: yaml
 
@@ -109,8 +108,8 @@ We can now define the ``bash_command`` parameter in ``generated_values.yaml``:
    - triggers:
      - on_pod_update: {}
      actions:
-     - pod_bash_enricher:
-         bash_command: "ls -al /"
+     - pod_logs_tail:
+         tail_lines: 50
 
 Under the hood, we use the excellent `Pydantic <https://pydantic-docs.helpmanual.io/>`_ library to implement this.
 
@@ -120,16 +119,15 @@ Actions that run commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Mark an action that runs a command in a pod or on a node, starts a job, or sends a request to an address from its
-parameters, with ``@action(command_action=True)``, as above.
+parameters, with ``@action(command_action=True)`` instead of ``@action``.
 
 A command action runs only from playbooks defined in your Robusta configuration, and only if you explicitly opt in
-by listing it under ``commandActions`` in your Helm values. ``commandActions`` is empty by default, so a command
-action in your playbooks does not run until you add it:
+by listing it under ``commandActions`` in your Helm values. ``commandActions`` is empty by default.
 
-.. code-block:: yaml
+.. warning::
 
-   commandActions:
-   - pod_bash_enricher
+    Command actions can change your cluster and often require giving Robusta elevated privileges, so they are not
+    recommended.
 
 Rate-limiting
 -------------
