@@ -72,6 +72,7 @@ globalConfig:
 alertRelabel: []
 
 # safe actions to enable authenticated users to run
+# prometheus_alert, which simulates an alert, is not in the list by default. Add it to simulate alerts from the Robusta UI.
 lightActions:
 - related_pods
 - prometheus_enricher
@@ -100,7 +101,6 @@ lightActions:
 - python_memory
 - debugger_stack_trace
 - python_process_inspector
-- prometheus_alert
 - alertmanager_alert
 - create_pvc_snapshot
 - resource_events_enricher
