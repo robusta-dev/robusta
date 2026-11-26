@@ -131,8 +131,8 @@ Only needed for the integrations and features you actually enable.
 If you mirror images to a private registry, override ``image.registry`` (and the per-component ``image:`` fields) in your Helm values and you can drop the public registries from the allowlist.
 
 If your private registry requires authentication, set ``global.imagePullSecrets``. This applies the
-pull secret to the runner, kubewatch, and the pods the runner launches at runtime (e.g. KRR, Popeye,
-via the runner ServiceAccount). To also cover HolmesGPT, set ``holmes.imagePullSecrets`` — HolmesGPT
+pull secret to the runner, kubewatch, the KRR CronJob, and the pods the runner launches at runtime
+(via the runner ServiceAccount). To also cover HolmesGPT, set ``holmes.imagePullSecrets`` — HolmesGPT
 is a subchart, so set it explicitly alongside the global value:
 
 .. code-block:: yaml

@@ -93,6 +93,7 @@ class RunnerConfig(BaseModel):
         ]
     ]
     light_actions: Optional[List[str]]
+    command_actions: Optional[List[str]] = []
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
     alert_relabel: Optional[List[AlertRelabel]] = []

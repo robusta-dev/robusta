@@ -270,33 +270,6 @@ class NamespacedResourcesParams(ActionParams):
     namespace: str
 
 
-# Fields a scan job spec may set. They only affect where and how the job's pod is scheduled.
-ALLOWED_JOB_SPEC_FIELDS = frozenset(
-    {
-        "tolerations",
-        "nodeSelector",
-        "affinity",
-        "priorityClassName",
-        "imagePullSecrets",
-        "topologySpreadConstraints",
-        "schedulerName",
-    }
-)
-
-
-def validate_job_spec(job_spec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Validate the extra pod spec fields of a scan job. Only scheduling fields are accepted."""
-    if not job_spec:
-        return {}
-    unsupported = sorted(set(job_spec) - ALLOWED_JOB_SPEC_FIELDS)
-    if unsupported:
-        raise ValueError(
-            f"Unsupported job spec fields: {', '.join(map(str, unsupported))}. "
-            f"Supported fields: {', '.join(sorted(ALLOWED_JOB_SPEC_FIELDS))}"
-        )
-    return job_spec
-
-
 # Parameters that decide the identity, metadata and command line of pods the runner creates. They are taken
 # from the runner's configuration only, never from the parameters of an individual action request.
 CONFIG_ONLY_PARAMS = frozenset(
@@ -308,6 +281,8 @@ CONFIG_ONLY_PARAMS = frozenset(
         "krr_args",
         "popeye_args",
         "args",
+        # simulated alerts take their query link from the configuration
+        "generator_url",
     }
 )
 
@@ -545,18 +520,6 @@ class GrafanaAnnotationParams(GrafanaParams):
     custom_tags: List[str] = None
 
 
-class ProcessParams(PodRunningParams):
-    """
-    :var process_substring: process name (or substring).
-    :var pid: pid
-    :var interactive: if more than one process matches, interactively ask which process to choose.
-    """
-
-    process_substring: str = ""
-    pid: int = None
-    interactive: bool = True
-
-
 class EventEnricherParams(ActionParams):
     max_events: int = 8
     included_types: List[str] = ["Warning", "Normal"]
@@ -600,7 +563,6 @@ class OomKillParams(OOMGraphEnricherParams, PodRunningParams):
     attach_logs: Optional[bool] = False
     container_memory_graph: Optional[bool] = False
     node_memory_graph: Optional[bool] = False
-    dmesg_log: Optional[bool] = False
 
     def __init__(
         self,

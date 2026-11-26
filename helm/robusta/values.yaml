@@ -37,8 +37,8 @@ global:
   # of colored text, which is easier to index with log scrapers like Filebeat.
   # This is shared with subcharts (e.g. Holmes) automatically.
   enableJsonLogsFormat: false
-  # Optional image pull secrets applied to the runner, kubewatch, and the runtime pods
-  # created by the runner (e.g. KRR, Popeye, via the runner ServiceAccount).
+  # Optional image pull secrets applied to the runner, kubewatch, the KRR CronJob, and the
+  # runtime pods created by the runner (via the runner ServiceAccount).
   # A component's own imagePullSecrets (e.g. runner.imagePullSecrets), when set, is used
   # instead of this global; otherwise the component inherits this global. Leave empty to
   # keep existing behavior. HolmesGPT is a separate subchart - set holmes.imagePullSecrets.
@@ -71,7 +71,15 @@ globalConfig:
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []
 
+# Command actions: actions that run commands or start jobs in your cluster, or send HTTP requests. They run only from
+# playbooks defined in this configuration, and only if you explicitly opt in by listing them here. The list is empty
+# by default.
+# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job,
+# http_get, http_post, http_put
+commandActions: []
+
 # safe actions to enable authenticated users to run
+# prometheus_alert, which simulates an alert, is not in the list by default. Add it to simulate alerts from the Robusta UI.
 lightActions:
 - related_pods
 - prometheus_enricher
@@ -86,7 +94,6 @@ lightActions:
 - job_pod_enricher
 - get_resource_yaml
 - node_cpu_enricher
-- node_disk_analyzer
 - node_running_pods_enricher
 - node_allocatable_resources_enricher
 - node_status_enricher
@@ -94,19 +101,11 @@ lightActions:
 - oomkilled_container_graph_enricher
 - pod_oom_killer_enricher
 - oom_killer_enricher
-- volume_analysis
-- python_profiler
-- pod_ps
-- python_memory
-- debugger_stack_trace
-- python_process_inspector
-- prometheus_alert
 - alertmanager_alert
 - create_pvc_snapshot
 - resource_events_enricher
 - delete_job
 - list_resource_names
-- node_dmesg_enricher
 - status_enricher
 - handle_alertmanager_event
 - drain
@@ -246,7 +245,6 @@ builtinPlaybooks:
       attach_logs: true
       container_memory_graph: true
       node_memory_graph: true
-      dmesg_log: false
   stop: true
 
 # playbooks for prometheus alerts enrichment
@@ -426,7 +424,6 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: NodeFilesystemAlmostOutOfSpace
   actions:
-  - node_disk_analyzer: {}
   - alert_graph_enricher:
       resource_type: Disk
       item_type: Node
@@ -607,16 +604,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "WeeklyKRRScan"
-  triggers:
-  - on_schedule:
-      cron_schedule_repeat:
-        cron_expression: "0 12 * * 1" # every Monday at 12:00
-  actions:
-  - krr_scan: {}
-  sinks:
-    - "robusta_ui_sink"
-
 - name: "RobustaMaintenance"
   triggers:
   - on_schedule:
@@ -641,7 +628,7 @@ kubewatch:
   # Used with namespace-scoped runner installs - see docs: "RBAC: Namespace-Scoped Runner".
   enabled: true
   image: ~ # image can be used to override image.registry/imageName
-  imageName: kubewatch:v2.16.1
+  imageName: kubewatch:v2.17.0
   imagePullPolicy: IfNotPresent
   revisionHistoryLimit: 10
   pprof: True
@@ -802,31 +789,25 @@ runner:
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
   setKRRSecurityContext: false
-  # Runs the weekly KRR scan from a CronJob instead of the WeeklyKRRScan playbook.
+  # Runs the weekly KRR scan from a CronJob. It uses the settings below and globalConfig.prometheus_url,
+  # and no other globalConfig or runner setting. See docs: "Cost Savings (KRR)".
   krrCronJob:
     enabled: ~  # empty: on unless rbac.disableCreateFromServiceAccount is true
     schedule: "0 12 * * 1" # every Monday at 12:00
-    # empty settings default to the globalConfig value or runner env var used by the krr_scan action
-    timeout: ~  # seconds. globalConfig.timeout, then 3600
-    image: ~  # KRR_IMAGE_OVERRIDE, then image.registry/krr
-    strategy: ~  # KRR_STRATEGY, globalConfig.strategy, then simple
-    krrArgs: ""  # globalConfig.krr_args
-    maxWorkers: ~  # globalConfig.max_workers, then 3
-    verbose: false  # or globalConfig.krr_verbose
-    memoryRequest: ~  # KRR_MEMORY_REQUEST, then 2Gi
-    memoryLimit: ~  # KRR_MEMORY_LIMIT, then 2Gi
-    # scheduling fields such as tolerations and nodeSelector. Defaults to globalConfig.krr_job_spec
+    timeout: 3600  # seconds
+    image: ~  # defaults to image.registry/krr
+    strategy: simple
+    # extra KRR arguments, for example Prometheus credentials. Runs in a shell, so "$NAME" reads an env var
+    krrArgs: ""
+    memoryRequest: 2Gi
+    memoryLimit: 2Gi
+    # pod scheduling fields such as tolerations, nodeSelector and affinity
     jobSpec: {}
-    annotations: {}  # added to globalConfig.custom_annotations
-    # env vars and env sources of the KRR pod, for example Prometheus credentials.
-    # The runner's additional_env_vars and additional_env_froms are not passed to it.
+    annotations: {}  # added to the KRR Job and pod
+    serviceAccountName: ~  # an existing service account. Defaults to the runner's
+    # env vars and env sources of the KRR pod
     additional_env_vars: []
     additional_env_froms: []
-    # an existing Secret holding the Prometheus Authorization header, used instead of
-    # globalConfig.prometheus_auth
-    prometheusAuthSecret:
-      name: ""
-      key: ""
   #Enabled custom DNS configuration for runner
   dnsConfig:
     enabled: false

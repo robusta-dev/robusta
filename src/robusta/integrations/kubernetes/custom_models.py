@@ -4,10 +4,9 @@ import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, TypeVar, Union
 
 import hikaru
-import yaml
 from hikaru.crd import HikaruCRDDocumentMixin, register_crd_class
 from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
 from kubernetes import client
@@ -23,17 +22,12 @@ from robusta.core.model.env_vars import (
 )
 from robusta.core.playbooks.rbac_flags import reject_creation
 from robusta.integrations.kubernetes.api_client_utils import (
-    SUCCEEDED_STATE,
     exec_shell_command,
     get_pod_logs,
     prepare_pod_command,
     to_kubernetes_name,
-    upload_file,
-    wait_for_pod_status,
     wait_until_job_complete,
 )
-from robusta.integrations.kubernetes.templates import get_deployment_yaml
-from robusta.utils.parsing import load_json
 
 if TYPE_CHECKING:
     from src.robusta.core.model.base_params import NamedRegexPattern
@@ -44,17 +38,6 @@ T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE_OVERRIDE = os.getenv("PYTHON_DEBUGGER_IMAGE", "debug-toolkit:v8.0")
 # TODO: import these from the python-tools project
 PYTHON_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/{PYTHON_DEBUGGER_IMAGE_OVERRIDE}"
-JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit:v1.0.2"
-
-
-class Process(BaseModel):
-    pid: int
-    exe: str
-    cmdline: List[str]
-
-
-class ProcessList(BaseModel):
-    processes: List[Process]
 
 
 def _get_match_expression_filter(expression: LabelSelectorRequirement) -> str:
@@ -220,18 +203,6 @@ class RobustaPod(Pod):
         return pods_logs
 
     @staticmethod
-    def exec_in_java_pod(
-        pod_name: str,
-        node_name: str,
-        debug_cmd=None,
-        override_jtk_image: str = JAVA_DEBUGGER_IMAGE,
-        custom_annotations: Optional[Dict[str, str]] = None,
-    ) -> str:
-        return RobustaPod.exec_in_debugger_pod(
-            pod_name, node_name, debug_cmd, debug_image=override_jtk_image, custom_annotations=custom_annotations
-        )
-
-    @staticmethod
     def create_debugger_pod(
         pod_name: str,
         node_name: str,
@@ -286,38 +257,6 @@ class RobustaPod(Pod):
         return debugger
 
     @staticmethod
-    def exec_on_node(pod_name: str, node_name: str, cmd, custom_annotations: Optional[Dict[str, str]] = None):
-        command = f'nsenter -t 1 -a "{cmd}"'
-        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command, custom_annotations=custom_annotations)
-
-    @staticmethod
-    def run_debugger_pod(
-        node_name: str,
-        pod_image: str,
-        env: Optional[List[EnvVar]] = None,
-        mount_host_root: bool = False,
-        custom_annotations: Optional[Dict[str, str]] = None,
-    ) -> str:
-        debugger = RobustaPod.create_debugger_pod(
-            node_name,
-            node_name,
-            pod_image,
-            env=env,
-            mount_host_root=mount_host_root,
-            custom_annotations=custom_annotations,
-        )
-        try:
-            pod_name = debugger.metadata.name
-            pod_namespace = debugger.metadata.namespace
-            pod_status = wait_for_pod_status(pod_name, pod_namespace, SUCCEEDED_STATE, 360, 0.2)
-            if pod_status != SUCCEEDED_STATE:
-                raise Exception(f"pod {pod_name} in {pod_namespace} failed to complete. It is in state {pod_status}")
-
-            return debugger.get_logs()
-        finally:
-            RobustaPod.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
-
-    @staticmethod
     def exec_in_debugger_pod(
         pod_name: str,
         node_name: str,
@@ -346,17 +285,6 @@ class RobustaPod(Pod):
             return None
         return node
 
-    def get_processes(self, custom_annotations: Optional[Dict[str, str]] = None) -> List[Process]:
-        container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
-        output = RobustaPod.exec_in_debugger_pod(
-            self.metadata.name,
-            self.spec.nodeName,
-            f"debug-toolkit pod-ps {self.metadata.uid} {container_ids}",
-            custom_annotations=custom_annotations,
-        )
-        processes = ProcessList(**load_json(output))
-        return processes.processes
-
     def get_images(self) -> Dict[str, str]:
         return get_images(self.spec.containers)
 
@@ -374,18 +302,6 @@ class RobustaPod(Pod):
             if container.resources and container.resources.limits.get("cpu"):
                 return True
         return False
-
-    def upload_file(self, path: str, contents: bytes, container: Optional[str] = None):
-        if container is None:
-            container = self.spec.containers[0].name
-            logging.info(f"no container name given when uploading file, so choosing first container: {container}")
-        upload_file(
-            self.metadata.name,
-            path,
-            contents,
-            namespace=self.metadata.namespace,
-            container=container,
-        )
 
     def is_pod_in_ready_condition(self) -> str:
         ready_condition = [condition.status for condition in self.status.conditions if condition.type == "Ready"]
@@ -430,11 +346,6 @@ class RobustaPod(Pod):
 
 
 class RobustaDeployment(Deployment):
-    @classmethod
-    def from_image(cls: Type[T], name, image="busybox", cmd=None) -> T:
-        obj: RobustaDeployment = hikaru.from_dict(yaml.safe_load(get_deployment_yaml(name, image)), RobustaDeployment)
-        obj.spec.template.spec.containers[0].command = prepare_pod_command(cmd)
-        return obj
 
     def get_images(self) -> Dict[str, str]:
         return get_images(self.spec.template.spec.containers)
@@ -575,21 +486,6 @@ class RobustaJob(Job):
                     job.metadata.namespace,
                     propagation_policy="Foreground",
                 )
-
-    @classmethod
-    def run_simple_job(cls, image, command, timeout) -> str:
-        spec = PodSpec(
-            containers=[
-                Container(
-                    name=to_kubernetes_name(image),
-                    image=image,
-                    command=prepare_pod_command(command),
-                )
-            ],
-            restartPolicy="Never",
-        )
-        return cls.run_simple_job_spec(spec, name=image, timeout=timeout)
-
 
 @dataclass
 class DeploymentTriggerPolicy(HikaruBase):

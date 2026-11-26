@@ -18,7 +18,7 @@ class KubectlParams(PodRunningParams):
     timeout: int = 3600
 
 
-@action
+@action(command_action=True)
 def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
     """
     Deprecated. This action is no longer supported and returns an error.

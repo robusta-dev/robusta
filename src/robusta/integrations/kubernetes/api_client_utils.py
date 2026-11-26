@@ -1,10 +1,7 @@
 import datetime
-import io
 import logging
 import os
 import re
-import tarfile
-import tempfile
 import time
 import traceback
 from typing import Dict, List, Optional
@@ -98,41 +95,6 @@ def exec_shell_command(name, shell_command: str, namespace="default", container=
     commands = default_exec_command.copy()
     commands.append(shell_command)
     return exec_commands(name, commands, namespace, container)
-
-
-def upload_file(name: str, destination: str, contents: bytes, namespace="default", container=None):
-    core_v1 = core_v1_api.CoreV1Api()
-    resp = stream(
-        core_v1.connect_get_namespaced_pod_exec,
-        name,
-        namespace,
-        container=container,
-        command=["tar", "xvf", "-", "-C", "/"],
-        stderr=True,
-        stdin=True,
-        stdout=True,
-        tty=False,
-        _preload_content=False,
-    )
-
-    with tempfile.TemporaryFile() as local_tar_file:
-        with tarfile.open(fileobj=local_tar_file, mode="w") as tar:
-            tarinfo = tarfile.TarInfo(destination)
-            tarinfo.size = len(contents)
-            tar.addfile(tarinfo, fileobj=io.BytesIO(contents))
-
-        local_tar_file.seek(0)
-        resp.write_stdin(local_tar_file.read())
-
-        while resp.is_open():
-            resp.update(timeout=1)
-            if resp.peek_stdout():
-                print("STDOUT: %s" % resp.read_stdout())
-            if resp.peek_stderr():
-                print("STDERR: %s" % resp.read_stderr())
-            else:
-                break
-        resp.close()
 
 
 def get_pod_logs(

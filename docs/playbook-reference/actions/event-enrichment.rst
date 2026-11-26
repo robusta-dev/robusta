@@ -40,8 +40,6 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_node_graph_enricher
 
-.. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
-
 .. robusta-action:: playbooks.robusta_playbooks.image_pull_backoff_enricher.image_pull_backoff_reporter
 
 
@@ -123,8 +121,6 @@ These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.template_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.button_enricher
-
-.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.stack_overflow_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.default_enricher
 

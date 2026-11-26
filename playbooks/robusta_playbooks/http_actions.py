@@ -28,7 +28,7 @@ class HTTP_GET(ActionParams):
     params: Optional[dict] = None
 
 
-@action
+@action(command_action=True)
 def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
     """
     Run an http GET against a url, from within the cluster. Optionally, send the response as a finding.
@@ -97,7 +97,7 @@ class HTTP_POST(ActionParams):
     get_response: Optional[bool] = False
 
 
-@action
+@action(command_action=True)
 def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
     """
     Run an http POST against a url, from within the cluster. Optionally, send the response as a finding.
@@ -167,7 +167,7 @@ class HTTP_PUT(ActionParams):
     get_response: Optional[bool] = False
 
 
-@action
+@action(command_action=True)
 def http_put(event: ExecutionBaseEvent, action_params: HTTP_PUT):
     """
     Run an http PUT against a url, from within the cluster. Optionally, send the response as a finding.
