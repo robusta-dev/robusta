@@ -108,8 +108,10 @@ active_playbooks:
 {{- if include "robusta.krrCronJobEnabled" . }}
 {{- $disabledPlaybooks = append $disabledPlaybooks "WeeklyKRRScan" }}
 {{- range $playbook := .Values.customPlaybooks }}
-{{- if and (contains "on_schedule" (toJson $playbook.triggers)) (contains "krr_scan" (toJson $playbook.actions)) }}
+{{- range $action := $playbook.actions }}
+{{- if and (contains "on_schedule" (toJson $playbook.triggers)) (hasKey $action "krr_scan") }}
 {{- fail "customPlaybooks: a scheduled krr_scan is not supported with the KRR CronJob. Remove it and configure the scan under runner.krrCronJob, for example runner.krrCronJob.schedule, or set runner.krrCronJob.enabled=false" }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

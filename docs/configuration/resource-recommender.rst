@@ -207,6 +207,8 @@ To prevent the KRR job from OOMKill (Out of Memory), you can configure the memor
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
 
+For the weekly scan :ref:`CronJob <krr-cronjob>`, ``KRR_MEMORY_REQUEST``, ``KRR_MEMORY_LIMIT`` and ``KRR_IMAGE_OVERRIDE`` must be set with a literal ``value`` as above. Values from ``valueFrom`` or ``additional_env_froms`` are not used; set ``runner.krrCronJob.memoryRequest``, ``memoryLimit`` or ``image`` instead.
+
 Enable KRR security context
 ======================================
 

@@ -6,6 +6,9 @@
 {{- /* runner env vars that configured the scan job */}}
 {{- $runnerEnv := dict }}
 {{- range .Values.runner.additional_env_vars }}
+{{- if and (hasKey . "valueFrom") (has .name (list "KRR_IMAGE_OVERRIDE" "KRR_MEMORY_REQUEST" "KRR_MEMORY_LIMIT")) }}
+{{- fail (printf "runner.additional_env_vars: %s must be set with a literal value, or under runner.krrCronJob" .name) }}
+{{- end }}
 {{- $_ := set $runnerEnv .name (.value | default "" | toString) }}
 {{- end }}
 {{- $jobSpec := $krr.jobSpec | default $global.krr_job_spec | default dict }}
@@ -13,6 +16,9 @@
 {{- if not (has $field (list "tolerations" "nodeSelector" "affinity" "priorityClassName" "imagePullSecrets" "topologySpreadConstraints" "schedulerName")) }}
 {{- fail (printf "runner.krrCronJob.jobSpec: unsupported field %s" $field) }}
 {{- end }}
+{{- end }}
+{{- if .Values.runner.imagePullSecrets }}
+{{- $jobSpec = merge (dict) $jobSpec (dict "imagePullSecrets" .Values.runner.imagePullSecrets) }}
 {{- end }}
 {{- $annotations := merge (dict) $krr.annotations ($global.custom_annotations | default dict) }}
 {{- /* env var name -> configured value of each Prometheus credential */}}
@@ -113,7 +119,7 @@ spec:
               if [ -n "$AWS_REGION" ] && [ -n "$AWS_ACCESS_KEY" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
                 set -- "$@" --eks-access-key "$AWS_ACCESS_KEY" --eks-secret-key "$AWS_SECRET_ACCESS_KEY"
               fi
-              exec python krr.py "${KRR_STRATEGY:-{{ $krr.strategy | default $global.strategy | default "simple" }}}" \
+              exec python krr.py "{{ if $krr.strategy }}{{ $krr.strategy }}{{ else }}${KRR_STRATEGY:-{{ $global.strategy | default "simple" }}}{{ end }}" \
                 --publish_scan_url="${KRR_PUBLISH_URL:-http://{{ $fullname }}-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/trigger}" \
                 --scan_id="$SCAN_ID" --start_time="$START_TIME" --named_sinks=robusta_ui_sink \
                 {{ $krrArgs }} \
