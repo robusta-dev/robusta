@@ -1,4 +1,5 @@
 import base64
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -13,6 +14,7 @@ pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm binar
 
 # drain needs eviction; it cannot create workloads
 ALLOWED_CLUSTER_WIDE_CREATE = {"pods/eviction"}
+KRR_CRONJOB_DISABLED = ["--set", "runner.krrCronJob.enabled=false"]
 
 
 def render_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
@@ -23,7 +25,7 @@ def render_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "-s",
         "templates/runner-service-account.yaml",
         "-s",
@@ -41,7 +43,7 @@ def playbook_names(extra_args: Optional[List[str]] = None) -> set:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "--set",
         "enablePlatformPlaybooks=true",
         "-s",
@@ -94,10 +96,10 @@ def test_runner_local_role_grants_namespaced_create():
         "pods/exec",
         "configmaps",
         "persistentvolumeclaims",
-        "secrets",
         "jobs",
         "deployments",
     } <= granted
+    assert "secrets" not in granted
 
     binding = get_doc(docs, "RoleBinding", "runner-local-role-binding")
     assert binding is not None
@@ -113,13 +115,10 @@ def test_namespaced_create_flag_removes_role_and_disables_playbooks():
 
     names = playbook_names(["--set", "runner.rbac.disableCreateFromServiceAccount=true"])
     assert "NodeFSSpaceAlerts" not in names
-    assert "WeeklyKRRScan" not in names
 
 
 def test_playbooks_enabled_by_default():
-    names = playbook_names()
-    assert "NodeFSSpaceAlerts" in names
-    assert "WeeklyKRRScan" in names
+    assert "NodeFSSpaceAlerts" in playbook_names()
 
 
 def test_namespace_scoped_rbac_renders_role_and_rolebinding():
@@ -177,7 +176,7 @@ def render_forwarder_chart(extra_args: Optional[List[str]] = None) -> List[dict]
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "-s",
         "templates/forwarder.yaml",
         "-s",
@@ -219,6 +218,211 @@ def test_override_cluster_roles_still_replaces_rules():
     assert cluster_role["rules"] == [{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}]
 
 
+def render_full_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
+    cmd = [
+        "helm",
+        "template",
+        "robusta",
+        str(CHART_PATH),
+        "--set",
+        "clusterName=test",
+        "--set",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
+        "--set",
+        "enablePrometheusStack=false",
+    ] + (extra_args or [])
+    return [doc for doc in yaml.safe_load_all(subprocess.check_output(cmd, text=True)) if doc]
+
+
+def krr_container(docs: List[dict]) -> dict:
+    cron_job = get_doc(docs, "CronJob", "robusta-krr")
+    return cron_job["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
+
+
+def krr_arguments(tmp_path, extra_args: Optional[List[str]] = None, env: Optional[dict] = None) -> List[str]:
+    """Runs the CronJob command with a stand-in python and returns the arguments krr.py would get."""
+    container = krr_container(render_full_chart(extra_args))
+    python_stub = tmp_path / "python"
+    python_stub.write_text('#!/bin/sh\nif [ "$1" = -c ]; then echo generated; exit; fi\nprintf "%s\\n" "$@"\n')
+    python_stub.chmod(0o755)
+    process_env = {"PATH": f"{tmp_path}:{os.environ['PATH']}", **(env or {})}
+    return subprocess.check_output(container["command"], text=True, env=process_env).splitlines()
+
+
+def flag_values(arguments: List[str], flag: str) -> List[str]:
+    return [arguments[index + 1] for index, argument in enumerate(arguments) if argument == flag]
+
+
+def test_krr_cronjob_default_resources():
+    docs = render_full_chart()
+    cron_job = get_doc(docs, "CronJob", "robusta-krr")
+    assert cron_job["spec"]["schedule"] == "0 12 * * 1"
+    assert cron_job["spec"]["concurrencyPolicy"] == "Forbid"
+    pod_spec = cron_job["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    assert pod_spec["serviceAccountName"] == "robusta-runner-service-account"
+
+    runner_env = get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]
+    assert {"name": "KRR_CRONJOB_ENABLED", "value": "true"} in runner_env
+
+    created = set()
+    for doc in docs:
+        if doc["kind"] in ("Role", "ClusterRole") and "runner" in doc["metadata"]["name"]:
+            created.update(*(rule["resources"] for rule in doc["rules"] if "create" in rule["verbs"]))
+    assert "secrets" not in created
+
+
+def test_krr_cronjob_disabled():
+    docs = render_full_chart(KRR_CRONJOB_DISABLED)
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+    env_names = {e["name"] for e in get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert "KRR_CRONJOB_ENABLED" not in env_names
+    rules = get_doc(docs, "Role", "runner-local-role")["rules"]
+    assert not any("secrets" in rule["resources"] for rule in rules)
+
+
+def test_krr_cronjob_off_without_runner_role():
+    no_create = ["--set", "runner.rbac.disableCreateFromServiceAccount=true"]
+    assert get_doc(render_full_chart(no_create), "CronJob", "robusta-krr") is None
+    docs = render_full_chart(no_create + ["--set", "runner.krrCronJob.enabled=true"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
+    assert get_doc(docs, "Role", "runner-local-role") is None
+
+
+def test_krr_cronjob_default_arguments(tmp_path):
+    arguments = krr_arguments(tmp_path)
+    assert arguments[:5] == [
+        "krr.py",
+        "simple",
+        "--publish_scan_url=http://robusta-runner.default.svc.cluster.local/api/trigger",
+        "--scan_id=generated",
+        "--start_time=generated",
+    ]
+    assert arguments[5:] == ["--named_sinks=robusta_ui_sink", "--max-workers", "3", "-f", "json", "--width", "2048"]
+
+
+SCHEDULED_KRR_PLAYBOOK = [
+    "--set",
+    "customPlaybooks[0].triggers[0].on_schedule.fixed_delay_repeat.seconds_delay=3600",
+    "--set-json",
+    "customPlaybooks[0].actions[0].krr_scan={}",
+]
+
+
+def test_scheduled_krr_playbook_renders_with_cronjob():
+    docs = render_full_chart(SCHEDULED_KRR_PLAYBOOK)
+    assert get_doc(docs, "CronJob", "robusta-krr") is not None
+
+
+def test_scheduled_krr_playbook_kept_without_cronjob():
+    docs = render_full_chart(KRR_CRONJOB_DISABLED + SCHEDULED_KRR_PLAYBOOK)
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+
+
+def krr_job_template(extra_args: List[str]) -> dict:
+    docs = render_full_chart(extra_args)
+    return get_doc(docs, "CronJob", "robusta-krr")["spec"]["jobTemplate"]
+
+
+def test_krr_cronjob_keeps_job_labels_and_defaults():
+    job = krr_job_template([])
+    pod = job["spec"]["template"]
+    assert job["metadata"]["labels"] == pod["metadata"]["labels"] == {"app": "krr.robusta.dev"}
+    assert job["spec"]["backoffLimit"] == 0
+    assert job["spec"]["ttlSecondsAfterFinished"] == 43200
+    assert job["spec"]["activeDeadlineSeconds"] == 3600
+    container = pod["spec"]["containers"][0]
+    assert container["image"] == "robustadev/krr:v1.30.0"
+    assert container["imagePullPolicy"] == "Always"
+    assert container["resources"] == {"requests": {"memory": "2Gi"}, "limits": {"memory": "2Gi"}}
+    assert "securityContext" not in container
+    assert pod["spec"]["restartPolicy"] == "Never"
+
+
+def test_krr_cronjob_needs_robusta_sink():
+    docs = render_full_chart(["--set", "sinksConfig[0].robusta_sink=null", "--set", "sinksConfig[0].file_sink.name=test"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+
+
+def test_krr_cronjob_follows_disabled_weekly_playbook():
+    docs = render_full_chart(["--set", "disabledPlaybooks[0]=WeeklyKRRScan"])
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+
+
+def test_krr_cronjob_image_pull_secrets():
+    runner_secrets = ["--set", "runner.imagePullSecrets[0].name=runner-registry"]
+    pod_spec = krr_job_template(runner_secrets)["spec"]["template"]["spec"]
+    assert pod_spec["imagePullSecrets"] == [{"name": "runner-registry"}]
+
+    job_spec_secrets = ["--set", "runner.krrCronJob.jobSpec.imagePullSecrets[0].name=krr-registry"]
+    pod_spec = krr_job_template(runner_secrets + job_spec_secrets)["spec"]["template"]["spec"]
+    assert pod_spec["imagePullSecrets"] == [{"name": "krr-registry"}]
+
+    assert "imagePullSecrets" not in krr_job_template([])["spec"]["template"]["spec"]
+
+
+def test_scan_actions_not_in_light_actions():
+    light_actions = yaml.safe_load((CHART_PATH / "values.yaml").read_text())["lightActions"]
+    assert not {"krr_scan", "popeye_scan"} & set(light_actions)
+
+
+def test_krr_cronjob_own_settings(tmp_path):
+    extra_args = [
+        "--set", "globalConfig.prometheus_url=http://prometheus:9090",
+        "--set", "runner.krrCronJob.strategy=simple_limit",
+        "--set", "runner.krrCronJob.timeout=600",
+        "--set", "runner.krrCronJob.image=registry.example/krr:v1",
+        "--set", "runner.krrCronJob.memoryLimit=3Gi",
+        "--set", "runner.krrCronJob.jobSpec.nodeSelector.pool=scans",
+        "--set", "runner.krrCronJob.annotations.team=test",
+        "--set", "runner.krrCronJob.serviceAccountName=krr-scan",
+        "--set", "runner.krrCronJob.additional_env_vars[0].name=PROMETHEUS_TOKEN",
+        "--set", "runner.krrCronJob.additional_env_vars[0].valueFrom.secretKeyRef.name=prometheus",
+        "--set", "runner.krrCronJob.additional_env_vars[0].valueFrom.secretKeyRef.key=token",
+        "--set", "runner.krrCronJob.additional_env_froms[0].secretRef.name=krr-env",
+        "--set-string", 'runner.krrCronJob.krrArgs=--allow-hpa --prometheus-auth-header "Bearer $PROMETHEUS_TOKEN"',
+    ]
+    arguments = krr_arguments(tmp_path, extra_args, env={"PROMETHEUS_TOKEN": "example-token"})
+    assert arguments[1] == "simple_limit"
+    assert flag_values(arguments, "-p") == ["http://prometheus:9090"]
+    assert flag_values(arguments, "--prometheus-auth-header") == ["Bearer example-token"]
+    assert "--allow-hpa" in arguments
+
+    job = krr_job_template(extra_args)
+    pod_spec = job["spec"]["template"]["spec"]
+    container = pod_spec["containers"][0]
+    assert job["spec"]["activeDeadlineSeconds"] == 600
+    assert pod_spec["nodeSelector"] == {"pool": "scans"}
+    assert pod_spec["serviceAccountName"] == "krr-scan"
+    assert job["metadata"]["annotations"] == job["spec"]["template"]["metadata"]["annotations"] == {"team": "test"}
+    assert container["image"] == "registry.example/krr:v1"
+    assert container["resources"] == {"requests": {"memory": "2Gi"}, "limits": {"memory": "3Gi"}}
+    assert [var["name"] for var in container["env"]] == ["PROMETHEUS_TOKEN"]
+    assert container["envFrom"] == [{"secretRef": {"name": "krr-env"}}]
+
+
+def test_krr_cronjob_uses_only_prometheus_url_from_other_settings(tmp_path):
+    other_settings = [
+        "--set", "globalConfig.prometheus_url=http://prometheus:9090",
+        "--set", "globalConfig.prometheus_auth=Bearer example-token",
+        "--set", "globalConfig.prometheus_additional_headers.X-Scope-OrgID=1",
+        "--set", "globalConfig.prometheus_additional_labels.cluster=test",
+        "--set", "globalConfig.krr_args=--allow-hpa",
+        "--set", "globalConfig.krr_job_spec.nodeSelector.pool=scans",
+        "--set", "globalConfig.custom_annotations.team=test",
+        "--set", "globalConfig.strategy=simple_limit",
+        "--set", "globalConfig.max_workers=1",
+        "--set", "globalConfig.timeout=60",
+        "--set", "openshift.enabled=true",
+        "--set", "runner.additional_env_vars[0].name=KRR_MEMORY_LIMIT",
+        "--set", "runner.additional_env_vars[0].value=5Gi",
+        "--set", "runner.additional_env_froms[0].secretRef.name=runner-env",
+    ]
+    default_job = krr_job_template(["--set", "globalConfig.prometheus_url=http://prometheus:9090"])
+    assert krr_job_template(other_settings) == default_job
+    assert flag_values(krr_arguments(tmp_path, other_settings), "-p") == ["http://prometheus:9090"]
+    assert not [doc for doc in render_full_chart(other_settings) if "krr-prometheus" in doc["metadata"]["name"]]
+
+
 def runner_config(extra_args: Optional[List[str]] = None) -> dict:
     cmd = [
         "helm",
@@ -239,6 +443,6 @@ def test_command_actions_value_reaches_the_runner_config():
     assert runner_config()["command_actions"] == []
     platform = ["--set", "enablePlatformPlaybooks=true"]
     assert runner_config(platform)["command_actions"] == []
-    assert runner_config(platform + ["--set", "commandActions={krr_scan}"])["command_actions"] == ["krr_scan"]
+    assert runner_config(platform + ["--set", "commandActions={kubectl_command}"])["command_actions"] == ["kubectl_command"]
     enabled = runner_config(["--set", "commandActions={pod_bash_enricher,kubectl_command}"])
     assert enabled["command_actions"] == ["pod_bash_enricher", "kubectl_command"]

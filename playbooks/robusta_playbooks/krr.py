@@ -1,57 +1,25 @@
-import base64
 import json
 import logging
-import os
-import re
-from pickle import NONE
-import shlex
-import uuid
 from datetime import datetime
+from pickle import NONE
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector, SecurityContext, Capabilities, SeccompProfile
-from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
-from pydantic.v1 import BaseModel, ValidationError, validator
+from pydantic.v1 import BaseModel, ValidationError
 from robusta.api import (
-    IMAGE_REGISTRY,
     ActionParams,
-    RUNNER_SERVICE_ACCOUNT,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
     Finding,
     FindingSource,
     FindingType,
-    JobSecret,
     KRRScanReportBlock,
-    PodRunningParams,
-    PrometheusParams,
-    RobustaJob,
     ScanReportRow,
     ScanType,
     action,
     JobEvent,
 )
-from robusta.core.model.base_params import validate_job_spec
-from robusta.core.model.env_vars import ENABLE_JSON_LOGS_FORMAT, INSTALLATION_NAMESPACE, RELEASE_NAME, CLUSTER_DOMAIN, SET_KRR_SECURITY_CONTEXT, load_bool
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 from robusta.core.reporting.consts import ScanState
-from robusta.integrations.openshift import IS_OPENSHIFT
-from robusta.integrations.prometheus.utils import generate_prometheus_config
-from robusta.runner.scan_callbacks import SCAN_TOKEN_QUERY_PARAM, ScanCallbackTokens
-from robusta.utils.parsing import format_event_templated_string
-
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.30.0")
-KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
-KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "2Gi")
-KRR_STRATEGY: str = os.getenv("KRR_STRATEGY", "simple")
-KRR_PUSH_SCAN: str = load_bool("KRR_PUSH_SCAN", True)
-KRR_PUBLISH_URL: str = os.getenv("KRR_PUBLISH_URL", f"http://{RELEASE_NAME}-runner.{INSTALLATION_NAMESPACE}.svc.{CLUSTER_DOMAIN}/api/trigger")
-
-
-def _scan_result_url(scan_id: str) -> str:
-    """The URL the KRR job posts its result to. The token ties the result to a scan this runner started."""
-    separator = "&" if "?" in KRR_PUBLISH_URL else "?"
-    return f"{KRR_PUBLISH_URL}{separator}{SCAN_TOKEN_QUERY_PARAM}={ScanCallbackTokens.issue(scan_id)}"
-
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
 ResourceType = Union[Literal["cpu", "memory"], str]
@@ -122,53 +90,6 @@ class KRRResponse(BaseModel):
     clusterSummary: Optional[Dict[str, Any]] = None  # This field is not returned by KRR < v1.12.0
 
 
-class KRRParams(PrometheusParams, PodRunningParams):
-    """
-    :var timeout: Time span for yielding the scan.
-    :var args: Deprecated -  KRR cli arguments.
-    :var krr_args: KRR cli arguments.
-    :var serviceAccountName: The account name to use for the KRR scan job.
-    :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
-    :var max_workers: Number of concurrent workers used in krr.
-    :var krr_verbose: Run krr job with verbose logging
-    """
-
-    serviceAccountName: str = RUNNER_SERVICE_ACCOUNT
-    strategy: str = KRR_STRATEGY
-    args: Optional[str] = None
-    krr_args: str = ""
-    timeout: int = 3600
-    krr_job_spec: Dict[str, Any] = {}
-    max_workers: int = 3
-    krr_verbose: bool = False
-
-    @validator("krr_job_spec", allow_reuse=True)
-    def check_job_spec(cls, job_spec: Dict[str, Any]) -> Dict[str, Any]:
-        return validate_job_spec(job_spec)
-
-    @validator("args", allow_reuse=True)
-    def check_args(cls, args: str) -> str:
-        for forbidden_arg in ["-q", "-f", "-v", "--quiet", "--format", "--verbose"]:
-            if forbidden_arg in args:
-                raise ValueError(f"Argument {forbidden_arg} is not allowed.")
-
-        return args
-
-    @property
-    def args_sanitized(self) -> str:
-        if self.args:
-            logging.warning("The args param for krr_scan has been deprecated, use krr_args instead.")
-            return shlex.join(shlex.split(self.args))
-        return shlex.join(shlex.split(self.krr_args))
-
-    @validator("strategy", allow_reuse=True)
-    def check_strategy(cls, strategy: str) -> str:
-        return shlex.quote(strategy)
-
-
-HEADER_NAME_PATTERN = re.compile(r"[A-Za-z0-9-]+")
-
-
 def krr_severity_to_priority(severity: SeverityType) -> int:
     if severity == "CRITICAL":
         return 4
@@ -182,150 +103,8 @@ def krr_severity_to_priority(severity: SeverityType) -> int:
         return 0
 
 
-def get_krr_additional_flags(params: KRRParams) -> str:
-    if not params.prometheus_additional_labels or len(params.prometheus_additional_labels) != 1:
-        # only one label is supported to be passed to krr currently
-        return ""
-    if any(label in params.args_sanitized for label in ["--prometheus-label", "-l", "--prometheus-cluster-label"]):
-        # a label is already defined in the args
-        return ""
-    key, value = next(iter(params.prometheus_additional_labels.items()))
-    return f"--prometheus-label {shlex.quote(str(key))} -l {shlex.quote(str(value))}"
-
-
-class KRRSecret(BaseModel):
-    env_var_name: str
-    secret_key: str
-    secret_value: str
-    command_flag: str
-
-    @validator('secret_value', pre=True, always=True, allow_reuse=True)
-    def encode_secret_value(cls, v: str) -> str:
-        if isinstance(v, str):
-            return base64.b64encode(bytes(v, "utf-8")).decode("utf-8")
-        raise ValueError("secret_value must be a string")
-
-class KRRSecretKeyValuePair(KRRSecret):
-    arg_key: str
-
-
 def __create_metadata(scan_id: str):
     return {"job": {"name": f"krr-job-{scan_id}", "namespace": INSTALLATION_NAMESPACE}}
-
-def _generate_krr_job_secret(scan_id: str, krr_secrets: Optional[List[KRRSecret]]) -> Optional[JobSecret]:
-    if not krr_secrets:
-        return None
-    krr_secret_name = "krr-auth-secret" + scan_id
-    data = {secret.secret_key: secret.secret_value for secret in krr_secrets}
-    return JobSecret(name=krr_secret_name, data=data)
-
-
-def _generate_krr_env_vars(
-    krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]
-) -> Optional[List[EnvVar]]:
-    if not krr_secrets or not secret_name:
-        return None
-    return [
-        EnvVar(
-            name=secret.env_var_name,
-            valueFrom=EnvVarSource(secretKeyRef=SecretKeySelector(name=secret_name, key=secret.secret_key)),
-        )
-        for secret in krr_secrets
-    ]
-
-
-def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> str:
-    if not krr_secrets:
-        return ""
-    additional_args = []
-    for secret in krr_secrets:
-        if isinstance(secret, KRRSecretKeyValuePair):
-            additional_args.append(f'{secret.command_flag} {shlex.quote(secret.arg_key + ":")}"${{{secret.env_var_name}}}"')
-        else:
-            additional_args.append(f'{secret.command_flag} "${{{secret.env_var_name}}}"')
-
-    return " ".join(additional_args)
-
-
-def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
-    additional_cmd_line_args = ""
-    if isinstance(prom_config, AWSPrometheusConfig):
-        additional_cmd_line_args += (
-            "--eks-managed-prom"
-            + f" --eks-managed-prom-region {shlex.quote(str(prom_config.aws_region))}"
-            + f" --eks-service-name {shlex.quote(str(prom_config.service_name))}"
-        )
-        if prom_config.assume_role_arn:
-            additional_cmd_line_args += f" --eks-assume-role {shlex.quote(str(prom_config.assume_role_arn))}"
-
-    return additional_cmd_line_args
-
-
-def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecret]:
-    krr_secrets = []
-
-    # needed for custom bearer token or Azure
-    headers = PrometheusAuthorization.get_authorization_headers(prom_config)
-    auth_header = headers["Authorization"] if "Authorization" in headers else ""
-
-    if auth_header:
-        krr_secrets.append(
-            KRRSecret(
-                env_var_name="PROMETHEUS_AUTH_HEADER",
-                secret_key="prometheus-auth-header",
-                secret_value=auth_header,
-                command_flag="--prometheus-auth-header",
-            )
-        )
-    
-    if prom_config.headers:
-        for header_name, header_value in prom_config.headers.items():
-            # the name becomes an env var name and a secret key, so it must be a plain HTTP header token
-            if not HEADER_NAME_PATTERN.fullmatch(header_name):
-                raise ValueError(f"Illegal prometheus header name: {header_name!r}")
-
-            env_var_name = f"PROMETHEUS_HEADER_{header_name.upper().replace('-', '_')}"
-            secret_key = f"prometheus-header-{header_name.lower()}"
-            
-            krr_secrets.append(
-                KRRSecretKeyValuePair(
-                    env_var_name=env_var_name,
-                    arg_key=header_name,
-                    secret_key=secret_key,
-                    secret_value=header_value,
-                    command_flag="--prometheus-headers",
-                )
-            )
-
-    if isinstance(prom_config, AWSPrometheusConfig):
-        if prom_config.access_key and prom_config.secret_access_key:
-            krr_secrets.extend(
-                [
-                    KRRSecret(
-                        env_var_name="AWS_KEY",
-                        secret_key="aws-key",
-                        secret_value=prom_config.access_key,
-                        command_flag="--eks-access-key",
-                    ),
-                    KRRSecret(
-                        env_var_name="AWS_SECRET",
-                        secret_key="aws-secret",
-                        secret_value=prom_config.secret_access_key,
-                        command_flag="--eks-secret-key",
-                    ),
-                ]
-            )
-    if isinstance(prom_config, CoralogixPrometheusConfig):
-        krr_secrets.append(
-            KRRSecret(
-                env_var_name="CORALOGIX_TOKEN",
-                secret_key="coralogix_token",
-                secret_value=prom_config.prometheus_token,
-                command_flag="--coralogix-token",
-            )
-        )
-
-    return krr_secrets
 
 class ProcessScanParams(ActionParams):
     scan_type: str
@@ -468,153 +247,3 @@ def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
     metadata = __create_metadata(params.scan_id)
 
     _publish_krr_finding(event=event,krr_json=params.result, scan_id=params.scan_id, start_time=params.start_time, metadata=metadata, timeout=None, config_json=NONE)
-
-
-@action(command_action=True)
-def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
-    """
-    Displays a KRR scan report.
-    """
-    scan_id = str(uuid.uuid4())
-    start_time = datetime.now()
-    job_name = f"krr-job-{scan_id}"
-    metadata = __create_metadata(scan_id)
-
-    prom_config = generate_prometheus_config(params)
-    additional_flags = get_krr_additional_flags(params)
-    args_sanitized = params.args_sanitized
-
-    if args_sanitized and hasattr(event, "obj") and event.obj is not None:
-        subject = event.get_subject()
-        args_sanitized = format_event_templated_string(subject, args_sanitized)
-
-    publish_scan_args = ""
-    if KRR_PUSH_SCAN:
-        publish_scan_args = f"--publish_scan_url={shlex.quote(_scan_result_url(scan_id))} --scan_id={scan_id} --start_time=\"{start_time}\""
-        if event.named_sinks:
-            # Append one flag per sink
-            for sink in event.named_sinks:
-                publish_scan_args += f" --named_sinks={shlex.quote(str(sink))}"
-
-    python_command = (
-        f"python krr.py {params.strategy} {publish_scan_args} {args_sanitized} {additional_flags} "
-        f"--max-workers {params.max_workers} {'-v' if params.krr_verbose else ''} -f json --width 2048"
-    )
-
-    env_var: List[EnvVar] = []
-    secret: Optional[JobSecret] = None
-
-    if params.prometheus_url:
-        python_command += f" -p {shlex.quote(params.prometheus_url)}"
-
-    if IS_OPENSHIFT and params.prometheus_auth is None:
-        python_command += " --openshift"
-    else:
-        krr_secrets = _generate_prometheus_secrets(prom_config)
-        python_command += " " + _generate_cmd_line_args(prom_config)
-        secret = _generate_krr_job_secret(scan_id, krr_secrets)
-        if secret:
-            env_var = _generate_krr_env_vars(krr_secrets, secret.name)
-            python_command += " " + _generate_additional_env_args(krr_secrets)
-
-    logging.info(f"krr command '{python_command}'")
-
-    resources = ResourceRequirements(
-        limits={"memory": str(KRR_MEMORY_LIMIT)},
-        requests={"memory": str(KRR_MEMORY_REQUEST)},
-    )
-
-    security_context = None
-    if SET_KRR_SECURITY_CONTEXT:
-        security_context = SecurityContext(
-            runAsNonRoot=True, 
-            capabilities=Capabilities(
-                drop=["ALL"]
-            ),
-            allowPrivilegeEscalation=False,
-            seccompProfile=SeccompProfile(type="RuntimeDefault")
-        )
-
-    # Mirror the runner's JSON log setting onto the KRR scan job, but ONLY when
-    # KRR_PUSH_SCAN is enabled. In that mode results are POSTed back via
-    # --publish_scan_url and the job's logs are not parsed. When KRR_PUSH_SCAN is
-    # false the result is extracted by json.loads()-ing the job's captured logs
-    # (see below), and pod.get_logs() returns the combined stdout+stderr stream,
-    # so JSON-formatted log lines would corrupt that parsing.
-    if ENABLE_JSON_LOGS_FORMAT and KRR_PUSH_SCAN:
-        env_var.append(EnvVar(name="ENABLE_JSON_LOGS_FORMAT", value="true"))
-
-    spec = PodSpec(
-        serviceAccountName=params.serviceAccountName,
-        containers=[
-            Container(
-                name="krr",
-                image=IMAGE,
-                imagePullPolicy="Always",
-                command=["/bin/sh", "-c", python_command],
-                env=env_var,
-                resources=resources,
-                securityContext=security_context,
-            )
-        ],
-        restartPolicy="Never",
-        **params.krr_job_spec,
-    )
-
-    def update_state(state: ScanState) -> None:
-        event.emit_event(
-            "scan_updated",
-            scan_id=scan_id,
-            metadata=metadata,
-            state=state,
-            type=ScanType.KRR,
-            start_time=start_time,
-        )
-
-    update_state(ScanState.PENDING)
-
-    try:
-        krr_pod_labels = {"app": "krr.robusta.dev"}
-        krr_annotations = {"scan-id": scan_id, "start-time": start_time}
-        if params.custom_annotations:
-            krr_annotations.update(params.custom_annotations)
-
-        logs = RobustaJob.run_simple_job_spec(
-            spec,
-            job_name,
-            params.timeout,
-            secret,
-            custom_annotations=krr_annotations,
-            ttl_seconds_after_finished=43200,
-            delete_job_post_execution=False,
-            process_name=False,
-            finalizers=["robusta.dev/krr-job-output"] if not KRR_PUSH_SCAN else None,
-            custom_pod_labels=krr_pod_labels,
-            return_logs=not KRR_PUSH_SCAN,
-        )
-
-        if KRR_PUSH_SCAN:
-            return
-
-        # Extract the JSON result from logs
-        end_logs_string = "Result collected, displaying..."
-        index = logs.find(end_logs_string)
-        if index != -1:
-            logs = logs[index + len(end_logs_string):]
-
-        if "{" not in logs:
-            raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
-        logs = logs[logs.find("{"):]
-        krr_response = json.loads(logs)
-    
-    except Exception as e:
-        if isinstance(e, json.JSONDecodeError):
-            msg = "*KRR scan job failed. Expecting json result.*"
-        else:
-            msg = f"*KRR scan job unexpected error.*\n {e}"
-
-        _emit_failed_scan_event(event, scan_id, start_time, metadata, msg, e, logs)
-        return
-    
-    _publish_krr_finding(event=event,krr_json=krr_response, scan_id=scan_id, start_time=start_time, metadata=metadata, timeout=params.timeout, config_json=params.json(indent=4))
-

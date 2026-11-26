@@ -1,0 +1,87 @@
+{{- if include "robusta.krrCronJobEnabled" . }}
+{{- $fullname := include "robusta.fullname" . }}
+{{- $krr := .Values.runner.krrCronJob }}
+{{- $jobSpec := $krr.jobSpec }}
+{{- if .Values.runner.imagePullSecrets }}
+{{- $jobSpec = merge (dict) $jobSpec (dict "imagePullSecrets" .Values.runner.imagePullSecrets) }}
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $fullname }}-krr
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: krr.robusta.dev
+spec:
+  schedule: {{ $krr.schedule | quote }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: krr.robusta.dev
+      {{- with $krr.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 43200
+      activeDeadlineSeconds: {{ $krr.timeout }}
+      template:
+        metadata:
+          labels:
+            app: krr.robusta.dev
+          {{- with $krr.annotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          serviceAccountName: {{ $krr.serviceAccountName | default .Values.runner.customServiceAccount | default (printf "%s-runner-service-account" $fullname) }}
+          restartPolicy: Never
+          {{- with $jobSpec }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+          containers:
+          - name: krr
+            image: {{ $krr.image | default (printf "%s/krr:v1.30.0" .Values.image.registry) }}
+            imagePullPolicy: Always
+            {{- if .Values.runner.setKRRSecurityContext }}
+            securityContext:
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+              seccompProfile:
+                type: RuntimeDefault
+            {{- end }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              exec python krr.py {{ $krr.strategy }} \
+                --publish_scan_url=http://{{ $fullname }}-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/trigger \
+                --scan_id="$(python -c 'import uuid; print(uuid.uuid4())')" \
+                --start_time="$(python -c 'from datetime import datetime; print(datetime.now())')" \
+                --named_sinks=robusta_ui_sink --max-workers 3 -f json --width 2048 \
+                {{- with .Values.globalConfig.prometheus_url }}
+                -p {{ . | squote }} \
+                {{- end }}
+                {{ $krr.krrArgs }}
+            env:
+            {{- if .Values.global.enableJsonLogsFormat }}
+            - name: ENABLE_JSON_LOGS_FORMAT
+              value: "true"
+            {{- end }}
+            {{- with $krr.additional_env_vars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $krr.additional_env_froms }}
+            envFrom:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            resources:
+              requests:
+                memory: {{ $krr.memoryRequest | quote }}
+              limits:
+                memory: {{ $krr.memoryLimit | quote }}
+{{- end }}

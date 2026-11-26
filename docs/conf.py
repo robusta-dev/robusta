@@ -68,6 +68,7 @@ myst_heading_anchors = 3
 # sphinx redirects from old docs
 
 redirects = {
+    "playbook-reference/actions/scans.html": "/master/configuration/resource-recommender.html",
     "installation.html": "/master/setup-robusta/installation/index.html",
     "catalog/actions/index.html": "/master/playbook-reference/actions/index.html",
     "configuration/sending-notifications.html": "/master/configuration/configuring-sinks.html",
