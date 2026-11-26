@@ -261,7 +261,9 @@ class RobustaActionDirective(SphinxDirective):
         if action_definition.command_action:
             indented_cli_trigger_example = """\
 
-                        This is a command action. It runs only from playbooks defined in your Robusta configuration, and only if you explicitly opt in by listing it under ``commandActions`` in your Helm values. ``commandActions`` is empty by default.
+                        .. warning::
+
+                            This is a command action. Command actions can change your cluster and often require giving Robusta elevated privileges, so they are not recommended. It runs only from playbooks defined in your Robusta configuration, and only if you explicitly opt in by listing it under ``commandActions`` in your Helm values. ``commandActions`` is empty by default.
 
             """
         elif cli_trigger:

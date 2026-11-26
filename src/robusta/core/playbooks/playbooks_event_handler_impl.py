@@ -224,8 +224,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
             if registered_action.command_action and action.action_name not in self.registry.get_command_actions():
                 msg = (
-                    f"Action {action.action_name} is disabled. "
-                    f"To enable it, add it to commandActions in the Helm values"
+                    f"Action {action.action_name} is disabled. Enabling it is not recommended, as it is less secure. "
+                    f"To enable it anyway, add it to commandActions in the Helm values"
                 )
                 execution_event.response = self.__error_resp(msg, ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value)
                 playbooks_errors_count.labels(source).inc()
