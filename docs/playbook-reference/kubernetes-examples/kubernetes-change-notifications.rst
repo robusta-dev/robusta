@@ -165,36 +165,6 @@ Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
     3. Optionally route notifications to specific sinks
 
 
-Deployment Manifest on Image Change
-------------------------------------
-
-Get the full Deployment manifest sent to a webhook each time the image changes.
-
-Add the following YAML to the ``customPlaybooks`` Helm value:
-
-.. code-block:: yaml
-
-    customPlaybooks:
-    - triggers:
-      - on_deployment_update:
-          change_filters:
-            include:
-            - image
-      actions:
-      - json_change_tracker:
-          url: "https://SOME-WEBHOOK-URL"
-
-This playbook doesn't use a Sink - it sends the manifest as JSON to the webhook URL specified in the action parameters.
-
-Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
-
-.. details:: Testing
-
-    Modify a Deployment image in your cluster.
-
-    A notification with the Deployment manifest, as JSON, should be sent to the webhook URL.
-
-
 Network Resource Tracking
 ==========================
 

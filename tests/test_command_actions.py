@@ -41,6 +41,9 @@ FIXED_TOOL_ACTIONS = {
     "fetch_cr_instances",
 }
 
+# Actions that send a request to an address from their parameters.
+REQUEST_ACTIONS = {"http_get", "http_post", "http_put"}
+
 COMMAND_ACTIONS = {
     "pod_bash_enricher",
     "node_bash_enricher",
@@ -48,6 +51,7 @@ COMMAND_ACTIONS = {
     "alert_handling_job",
     "krr_scan",
     "popeye_scan",
+    *REQUEST_ACTIONS,
 }
 
 def _builtin_actions():
@@ -92,7 +96,7 @@ def test_builtin_actions_are_found():
 @pytest.mark.parametrize("name", sorted(BUILTIN_ACTIONS))
 def test_action_classification(name):
     func = BUILTIN_ACTIONS[name]
-    expected = _executes_code(func) and name not in FIXED_TOOL_ACTIONS
+    expected = (_executes_code(func) and name not in FIXED_TOOL_ACTIONS) or name in REQUEST_ACTIONS
     assert Action(func).command_action == expected
 
 
