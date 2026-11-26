@@ -3,17 +3,40 @@
 Read-Only Service Account
 ========================================
 
-By default, Robusta's runner service account has permissions to update and delete Kubernetes resources cluster-wide (for remediation actions like ``delete_pod`` and ``rollout_restart``), plus cluster-wide ``create`` on ``pods/eviction`` for node drain. All other ``create`` permissions — pods, pods/exec, jobs, secrets, deployments, configmaps and persistentvolumeclaims — are granted **only in Robusta's installation namespace** via a namespaced Role. This guide explains how to restrict the runner further, to fully read-only permissions.
+By default, Robusta's runner service account is **read-only**: its ClusterRole only grants ``get``, ``list`` and ``watch``, and it cannot create pods, exec into pods, or update and delete Kubernetes resources. The only write access is in Robusta's installation namespace, where the runner can ``create`` ConfigMaps and ``update`` its own ``scheduled-jobs`` ConfigMap (scheduled playbooks state). This guide explains what read-only mode means, how to re-enable write permissions, and how to restrict the read rules further.
 
-.. tip::
+.. note::
 
-   If you only want to remove the namespace-scoped create permissions (used for scan Jobs,
-   debugger pods and the KRR auth Secret), set ``runner.rbac.disableCreateFromServiceAccount: true`` in your
-   Helm values. This removes the namespaced Role and disables the built-in playbooks that
-   depend on it (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``); actions that create resources
-   (scans, kubectl/netshoot/stress, debugger pods, chaos engineering) will fail without
-   permissions. The weekly KRR scan keeps running from a CronJob, see :ref:`krr-cronjob`.
-   For fully read-only mode, use ``overrideClusterRoles`` as described below.
+   The built-in playbooks that create pods or jobs (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``) are
+   disabled by default, and actions that create or modify resources (scans, kubectl/netshoot/stress,
+   debugger pods, chaos engineering, remediation) fail without permissions.
+   The weekly KRR scan keeps running from a CronJob, see :ref:`krr-cronjob`.
+
+Re-enabling Write Permissions
+-----------------------------
+
+To grant ``create`` and ``pods/exec`` **only in Robusta's installation namespace** (used for scan Jobs,
+debugger pods and the KRR auth Secret), and re-enable the playbooks that depend on them, set:
+
+.. code-block:: yaml
+
+    runner:
+      rbac:
+        disableCreateFromServiceAccount: false
+
+To grant cluster-wide write verbs for remediation actions (like ``delete_pod`` and ``rollout_restart``),
+add only the rules you need with ``runner.customClusterRoleRules``:
+
+.. code-block:: yaml
+
+    runner:
+      customClusterRoleRules:
+        - apiGroups: [""]
+          resources: ["pods"]
+          verbs: ["delete"]
+        - apiGroups: ["apps"]
+          resources: ["deployments"]
+          verbs: ["patch"]
 
 Why Read-Only Mode?
 -------------------
@@ -28,7 +51,7 @@ Read-only mode is useful in scenarios where you want to:
 Limitations of Read-Only Mode
 -----------------------------
 
-When using read-only permissions, the following Robusta features will not be available:
+With the default read-only permissions, the following Robusta features will not be available:
 
 - **Auto-remediation**: Playbooks that automatically fix issues (restart pods, scale deployments, drain nodes, etc.)
 - **Silence management**: Creating or deleting alert silences
@@ -39,8 +62,8 @@ These features require write permissions and will gracefully fail if attempted w
 
 **Read-only mode is ideal for**: Investigation, diagnostics, log analysis, metric enrichment, and reporting.
 
-Implementation: Using overrideClusterRoles
--------------------------------------------
+Restricting Read Rules: Using overrideClusterRoles
+--------------------------------------------------
 
 Robusta's Helm chart supports the ``runner.overrideClusterRoles`` parameter. When set, the rules you
 provide **fully replace** the built-in runner ClusterRole rules, so only the permissions you list are granted.
@@ -48,17 +71,13 @@ provide **fully replace** the built-in runner ClusterRole rules, so only the per
 .. note::
 
    Do not confuse this with ``runner.customClusterRoleRules``. That parameter *adds* rules on top of the
-   built-in rules (which include write verbs), so it **cannot** be used to make the runner read-only.
-   Use ``runner.overrideClusterRoles`` for read-only mode.
+   built-in rules, so it **cannot** be used to remove permissions.
 
-To use read-only mode, create a custom values file with the following configuration:
+To narrow the built-in read rules, create a custom values file with the following configuration:
 
 .. code-block:: yaml
 
     runner:
-      # remove the namespaced create Role too
-      rbac:
-        disableCreateFromServiceAccount: true
       overrideClusterRoles:
         # Core API resources - read-only
         - apiGroups:
