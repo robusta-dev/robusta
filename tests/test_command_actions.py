@@ -38,7 +38,10 @@ FIXED_TOOL_ACTIONS = {
 REQUEST_ACTIONS = {"http_get", "http_post", "http_put"}
 
 # Retired actions that are still registered and return a "no longer supported" error.
-RETIRED_ACTIONS_WITH_ERROR = {"kubectl_command", "rollout_restart", "alert_handling_job", "node_bash_enricher"}
+RETIRED_ACTIONS_WITH_ERROR = {
+    "kubectl_command", "rollout_restart", "alert_handling_job", "node_bash_enricher", "pod_bash_enricher",
+    "cleanup_robusta_pods",
+}
 
 # Every action of release 0.55.0 that no longer works.
 RETIRED_ACTIONS = {
@@ -54,10 +57,7 @@ RETIRED_ACTIONS = {
     "target_down_dns_enricher", "test_pod_orm", "volume_analysis",
 }
 
-COMMAND_ACTIONS = {
-    "pod_bash_enricher",
-    *REQUEST_ACTIONS,
-}
+COMMAND_ACTIONS = REQUEST_ACTIONS
 
 def _builtin_actions():
     actions = {}
@@ -156,21 +156,21 @@ def _request_handler(command_action: bool):
     return handler, action_def
 
 
-@pytest.mark.parametrize("enabled", [[], ["pod_bash_enricher"]])
+@pytest.mark.parametrize("enabled", [[], ["http_get"]])
 def test_request_for_command_action(enabled):
     handler, action_def = _request_handler(command_action=True)
     handler.registry.get_command_actions.return_value = enabled
-    response = handler.run_external_action("pod_bash_enricher", {"name": "pod", "bash_command": "id"}, sinks=None)
+    response = handler.run_external_action("http_get", {"url": "http://example.com", "params": {"id": "1"}}, sinks=None)
     assert response["success"] is False
     assert response["error_code"] == ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value
-    assert "bash_command" not in response["msg"] and '"id"' not in response["msg"]
+    assert "example.com" not in response["msg"]
     action_def.from_params_func.assert_not_called()
     handler.run_actions.assert_not_called()
 
 
 def test_stream_request_for_command_action():
     handler, action_def = _request_handler(command_action=True)
-    response = handler.run_external_stream_action("pod_bash_enricher", {"name": "pod"}, ws=MagicMock())
+    response = handler.run_external_stream_action("http_get", {"url": "http://example.com"}, ws=MagicMock())
     assert response["error_code"] == ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value
     action_def.from_params_func.assert_not_called()
 

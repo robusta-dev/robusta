@@ -197,6 +197,8 @@ redirects = {
     "catalog/triggers/elasticsearch.html": "/master/playbook-reference/triggers/elasticsearch.html",
     "catalog/actions/remediation.html": "/master/playbook-reference/automatic-remediation-examples/index.html",
     "playbook-reference/automatic-remediation-examples/job-to-remediate-alert.html": "/master/playbook-reference/automatic-remediation-examples/index.html",
+    "playbook-reference/automatic-remediation-examples/bash-command-to-remediate-alert.html": "/master/playbook-reference/automatic-remediation-examples/index.html",
+    "playbook-reference/prometheus-examples/bash-alert-enrichment.html": "/master/playbook-reference/builtin-alert-enrichment.html",
     "catalog/actions/change-tracking.html": "/master/playbook-reference/actions/change-tracking.html#change-tracking",
     "catalog/actions/java-troubleshooting.html": "/master/playbook-reference/actions/java-troubleshooting.html",
     "catalog/actions/miscellaneous.html": "/master/playbook-reference/actions/miscellaneous.html",

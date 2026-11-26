@@ -327,16 +327,6 @@ class FindingKeyParams(ActionParams):
     finding_key: str = "DEFAULT"
 
 
-class BashParams(PodRunningParams):
-    """
-    :var bash_command: Bash command to execute on the target.
-
-    :example bash_command: ls -l /etc/data/db
-    """
-
-    bash_command: str
-
-
 class PrometheusParams(ActionParams):
     """
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster

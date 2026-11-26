@@ -10,6 +10,7 @@ from playbooks.robusta_playbooks import (
     kubectl_enrichments,
     node_actions,
     pod_actions,
+    robusta_utils,
     workload_actions,
 )
 from robusta.core.model import env_vars
@@ -112,6 +113,8 @@ def test_flag_without_env_var_is_off(monkeypatch, flag):
         workload_actions.rollout_restart,
         job_actions.alert_handling_job,
         bash_enrichments.node_bash_enricher,
+        bash_enrichments.pod_bash_enricher,
+        robusta_utils.cleanup_robusta_pods,
     ],
 )
 def test_retired_action_is_no_longer_supported(caplog, retired_action):

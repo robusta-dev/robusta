@@ -498,8 +498,8 @@ def test_command_actions_value_reaches_the_runner_config():
     platform = ["--set", "enablePlatformPlaybooks=true"]
     assert runner_config(platform)["command_actions"] == []
     assert runner_config(platform + ["--set", "commandActions={http_get}"])["command_actions"] == ["http_get"]
-    enabled = runner_config(["--set", "commandActions={pod_bash_enricher,http_get}"])
-    assert enabled["command_actions"] == ["pod_bash_enricher", "http_get"]
+    enabled = runner_config(["--set", "commandActions={http_post,http_get}"])
+    assert enabled["command_actions"] == ["http_post", "http_get"]
 
 
 def test_openshift_scc_rendering():
