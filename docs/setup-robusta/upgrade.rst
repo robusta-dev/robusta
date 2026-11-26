@@ -76,12 +76,7 @@ Helm can't update CRDs, so we updated them manually. See the `Helm Documentation
 Manual upgrade instructions
 ----------------------------------
 
-Robusta 0.56.0 upgrades the bundled ``kube-prometheus-stack`` from version 72 to 93. Before you upgrade, check the following:
-
-* Your cluster must run Kubernetes 1.25 or later.
-* If you mirror images to a private registry, also mirror the ``distroless`` tags that the ``prometheus`` and ``prometheus-node-exporter`` images now use by default.
-* If you customized how control-plane components are scraped (bearer token files or TLS settings under ``kube-prometheus-stack``), see the `kube-prometheus-stack upgrade notes <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/UPGRADE.md>`_ for the renamed values.
-* An existing install keeps its current Grafana admin password. On a new install the password is generated randomly, unless you set ``kube-prometheus-stack.grafana.adminPassword``.
+Robusta 0.56.0 upgrades the bundled ``kube-prometheus-stack`` from version 72 to 93, which requires Kubernetes 1.25 or later. For everything that changed between those versions, see the `kube-prometheus-stack upgrade notes <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/UPGRADE.md>`_.
 
 1. If you are upgrading from a Robusta version older than 0.26.0, manually remove the node-exporter daemonset and admission webhooks. Skip this step otherwise.
 
