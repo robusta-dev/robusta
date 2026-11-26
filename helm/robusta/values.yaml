@@ -783,7 +783,7 @@ runner:
   setKRRSecurityContext: false
   # Runs the weekly KRR scan from a CronJob instead of the WeeklyKRRScan playbook.
   krrCronJob:
-    enabled: true
+    enabled: ~  # empty: on unless rbac.disableCreateFromServiceAccount is true
     schedule: "0 12 * * 1" # every Monday at 12:00
     # empty settings default to the globalConfig value or runner env var used by the krr_scan action
     timeout: ~  # seconds. globalConfig.timeout, then 3600

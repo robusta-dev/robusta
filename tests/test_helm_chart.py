@@ -292,8 +292,10 @@ def test_krr_cronjob_disabled_keeps_runner_scan():
     assert any("secrets" in rule["resources"] and "create" in rule["verbs"] for rule in rules)
 
 
-def test_krr_cronjob_kept_without_runner_role():
-    docs = render_full_chart(["--set", "runner.rbac.disableCreateFromServiceAccount=true"])
+def test_krr_cronjob_off_without_runner_role():
+    no_create = ["--set", "runner.rbac.disableCreateFromServiceAccount=true"]
+    assert get_doc(render_full_chart(no_create), "CronJob", "robusta-krr") is None
+    docs = render_full_chart(no_create + ["--set", "runner.krrCronJob.enabled=true"])
     assert get_doc(docs, "CronJob", "robusta-krr") is not None
     assert get_doc(docs, "Role", "runner-local-role") is None
 

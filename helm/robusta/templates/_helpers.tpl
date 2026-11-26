@@ -50,7 +50,11 @@ dnsPolicy: ClusterFirst
 {{- range .Values.sinksConfig }}
 {{- $hasRobustaSink = or $hasRobustaSink .robusta_sink }}
 {{- end }}
-{{- if and (dig "enabled" true .Values.runner) .Values.runner.krrCronJob.enabled (not (has "WeeklyKRRScan" .Values.disabledPlaybooks)) $hasRobustaSink }}true{{ end -}}
+{{- $cronJobEnabled := .Values.runner.krrCronJob.enabled }}
+{{- if kindIs "invalid" $cronJobEnabled }}
+{{- $cronJobEnabled = not .Values.runner.rbac.disableCreateFromServiceAccount }}
+{{- end }}
+{{- if and (dig "enabled" true .Values.runner) $cronJobEnabled (not (has "WeeklyKRRScan" .Values.disabledPlaybooks)) $hasRobustaSink }}true{{ end -}}
 {{- end -}}
 
 {{ define "robusta.configfile" -}}

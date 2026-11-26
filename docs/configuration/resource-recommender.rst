@@ -29,7 +29,7 @@ Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_worker
 
     runner:
       krrCronJob:
-        enabled: true
+        enabled: ~               # empty: on unless rbac.disableCreateFromServiceAccount is true
         schedule: "0 12 * * 1"   # every Monday at 12:00
         timeout: ~               # seconds. globalConfig.timeout, then 3600
         image: ~                 # KRR_IMAGE_OVERRIDE, then image.registry/krr
