@@ -12,7 +12,8 @@ By default, Robusta's runner service account has permissions to update and delet
    Helm values. This removes the namespaced Role and disables the built-in playbooks that
    depend on it (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``); actions that create resources
    (scans, kubectl/netshoot/stress, debugger pods, chaos engineering) will fail without
-   permissions. For fully read-only mode, use ``overrideClusterRoles`` as described below.
+   permissions. The weekly KRR scan keeps running from a CronJob, see :ref:`krr-cronjob`.
+   For fully read-only mode, use ``overrideClusterRoles`` as described below.
 
 Why Read-Only Mode?
 -------------------

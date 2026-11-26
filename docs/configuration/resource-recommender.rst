@@ -10,6 +10,57 @@ Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Beca
 2. View scans from all your clusters in the Robusta UI (enabled by default for UI users)
 
 
+.. _krr-cronjob:
+
+Weekly KRR Scan CronJob
+===========================================
+
+The Helm chart creates a ``CronJob`` named ``<release>-krr`` that runs the weekly KRR scan and sends the result
+to the Robusta UI. It replaces the ``WeeklyKRRScan`` playbook, so the runner does not create the scan Job
+or a Secret for it. It runs with the runner service account, and uses the Prometheus settings from
+``globalConfig`` and the runner's ``additional_env_vars`` and ``additional_env_froms``.
+
+Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_workers``, ``krr_verbose``, ``strategy``,
+``timeout`` and ``custom_annotations`` under ``globalConfig``, and the ``KRR_IMAGE_OVERRIDE``, ``KRR_MEMORY_REQUEST``,
+``KRR_MEMORY_LIMIT``, ``KRR_STRATEGY`` and ``KRR_PUBLISH_URL`` runner environment variables. A value under
+``runner.krrCronJob`` takes precedence:
+
+.. code-block:: yaml
+
+    runner:
+      krrCronJob:
+        enabled: true
+        schedule: "0 12 * * 1"   # every Monday at 12:00
+        timeout: 3600            # seconds
+        image: ~                 # defaults to image.registry/krr
+        strategy: simple
+        krrArgs: ""
+        maxWorkers: 3
+        verbose: false
+        memoryRequest: 2Gi
+        memoryLimit: 2Gi
+        jobSpec: {}              # tolerations, nodeSelector, affinity...
+        annotations: {}          # added to globalConfig.custom_annotations
+        prometheusAuthSecret:    # a Secret holding the Prometheus Authorization header
+          name: ""
+          key: ""
+
+A ``krr_scan`` action on a schedule in ``customPlaybooks`` fails the Helm install while the CronJob is enabled. Remove it and set the frequency with ``runner.krrCronJob.schedule``, or set ``runner.krrCronJob.enabled: false`` to keep running scans from playbooks.
+
+To run a scan now, and to check previous runs (replace ``robusta`` with your release name and namespace):
+
+.. code-block:: bash
+
+    kubectl create job --from=cronjob/robusta-krr krr-manual -n robusta
+    kubectl get jobs -l app=krr.robusta.dev -n robusta
+
+Limitations of the CronJob:
+
+- **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Set ``runner.krrCronJob.enabled: false`` to keep the scan created by the runner, or provide a token with ``prometheusAuthSecret``
+- **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
+- **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
+- **Scan now**: the "scan now" button in the Robusta UI still uses the ``krr_scan`` action, which creates a Job, and a Secret when Prometheus needs credentials. Creating the Secret needs ``runner.krrCronJob.enabled: false``
+
 Sending Weekly KRR Scan Reports to Slack
 ===========================================
 With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
@@ -31,6 +82,8 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
           args: "--namespace devs-namespace" ## KRR args here
       sinks:
           - "main_slack_sink" # slack sink you want to send the report to here
+
+   Scheduled ``krr_scan`` playbooks need ``runner.krrCronJob.enabled: false``, see :ref:`krr-cronjob`.
 
 3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
 

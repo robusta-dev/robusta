@@ -129,6 +129,10 @@ spec:
           - name: IS_OPENSHIFT
             value: "True"
           {{- end }}
+          {{- if include "robusta.krrCronJobEnabled" . }}
+          - name: KRR_CRONJOB_ENABLED
+            value: "true"
+          {{- end }}
           {{- if .Values.argoRollouts }}
           - name: ARGO_ROLLOUTS
             value: "True"

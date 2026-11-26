@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
+from robusta.core.reporting.consts import ScanState, ScanType
 from robusta.runner.scan_callbacks import SCAN_TOKEN_QUERY_PARAM, ScanCallbackTokens
 from robusta.runner.web import Web, app
 
@@ -11,7 +12,13 @@ from robusta.runner.web import Web, app
 def client():
     Web.event_handler = MagicMock()
     Web.event_handler.run_external_action.return_value = {"success": True}
+    Web.loader = MagicMock()
     return app.test_client()
+
+
+@pytest.fixture
+def cronjob_enabled(monkeypatch):
+    monkeypatch.setattr("robusta.runner.web.KRR_CRONJOB_ENABLED", True)
 
 
 def _scan_payload(scan_id: str, action_name: str = "process_scan") -> dict:
@@ -78,3 +85,36 @@ def test_krr_job_is_given_the_trigger_url_with_a_valid_token():
     url = urlparse(krr._scan_result_url("scan-7"))
     assert url.path == "/api/trigger"
     assert ScanCallbackTokens.is_valid("scan-7", parse_qs(url.query)[SCAN_TOKEN_QUERY_PARAM][0])
+
+
+def test_cronjob_scan_creates_pending_scan_before_process_scan(client, cronjob_enabled):
+    calls = MagicMock()
+    calls.attach_mock(Web.loader.registry.get_event_emitter.return_value.emit_event, "emit_event")
+    calls.attach_mock(Web.event_handler.run_external_action, "run_external_action")
+
+    response = client.post("/api/trigger", json=_scan_payload("cronjob-scan"))
+
+    assert response.status_code == 200
+    assert [call[0] for call in calls.mock_calls] == ["emit_event", "run_external_action"]
+    emitted = calls.emit_event.call_args
+    assert emitted.args == ("scan_updated",)
+    assert emitted.kwargs == {
+        "scan_id": "cronjob-scan",
+        "metadata": {"job": {"name": "robusta-krr", "namespace": "robusta"}},
+        "state": ScanState.PENDING,
+        "type": ScanType.KRR,
+        "start_time": "now",
+    }
+
+
+def test_issued_token_scan_is_not_created_again_with_cronjob(client, cronjob_enabled):
+    token = ScanCallbackTokens.issue("scan-8")
+    response = client.post(_url(token), json=_scan_payload("scan-8"))
+    assert response.status_code == 200
+    Web.loader.registry.get_event_emitter.return_value.emit_event.assert_not_called()
+
+
+def test_cronjob_scan_runs_only_process_scan(client, cronjob_enabled):
+    response = client.post("/api/trigger", json=_scan_payload("cronjob-scan", action_name="krr_scan"))
+    assert response.status_code == 403
+    Web.event_handler.run_external_action.assert_not_called()

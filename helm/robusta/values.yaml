@@ -784,6 +784,27 @@ runner:
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
   setKRRSecurityContext: false
+  # Runs the weekly KRR scan from a CronJob instead of the WeeklyKRRScan playbook.
+  krrCronJob:
+    enabled: true
+    schedule: "0 12 * * 1" # every Monday at 12:00
+    # empty settings default to the globalConfig value or runner env var used by the krr_scan action
+    timeout: ~  # seconds. globalConfig.timeout, then 3600
+    image: ~  # KRR_IMAGE_OVERRIDE, then image.registry/krr
+    strategy: ~  # KRR_STRATEGY, globalConfig.strategy, then simple
+    krrArgs: ""  # globalConfig.krr_args
+    maxWorkers: ~  # globalConfig.max_workers, then 3
+    verbose: false  # or globalConfig.krr_verbose
+    memoryRequest: ~  # KRR_MEMORY_REQUEST, then 2Gi
+    memoryLimit: ~  # KRR_MEMORY_LIMIT, then 2Gi
+    # scheduling fields such as tolerations and nodeSelector. Defaults to globalConfig.krr_job_spec
+    jobSpec: {}
+    annotations: {}  # added to globalConfig.custom_annotations
+    # an existing Secret holding the Prometheus Authorization header, used instead of
+    # globalConfig.prometheus_auth
+    prometheusAuthSecret:
+      name: ""
+      key: ""
   #Enabled custom DNS configuration for runner
   dnsConfig:
     enabled: false
