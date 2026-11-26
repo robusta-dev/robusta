@@ -4,10 +4,7 @@ Cost Savings (KRR)
 `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool that optimizes resource allocation in Kubernetes clusters.
 It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory, reducing costs and improving performance.
 
-Robusta can run KRR scans on a :ref:`schedule <Scheduled>` using playbooks. Because KRR is so popular, it has dedicated documentation here. You can:
-
-1. Send weekly scan reports to Slack or other sinks via Robusta OSS (disabled by default, configure below)
-2. View scans from all your clusters in the Robusta UI (enabled by default for UI users)
+Robusta runs a weekly KRR scan. You can view the scans from all your clusters in the Robusta UI.
 
 
 .. _krr-cronjob:
@@ -16,11 +13,9 @@ Weekly KRR Scan CronJob
 ===========================================
 
 The Helm chart creates a ``CronJob`` named ``<release>-krr`` that runs the weekly KRR scan and sends the result
-to the Robusta UI. It replaces the ``WeeklyKRRScan`` playbook, so the runner does not create the scan Job
-or a Secret for it. It runs with the runner service account, and uses the Prometheus settings from
-``globalConfig``.
+to the Robusta UI. It runs with the runner service account, and uses the Prometheus settings from ``globalConfig``.
 
-Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_workers``, ``krr_verbose``, ``strategy``,
+The CronJob reads ``krr_args``, ``krr_job_spec``, ``max_workers``, ``krr_verbose``, ``strategy``,
 ``timeout`` and ``custom_annotations`` under ``globalConfig``, and the ``KRR_IMAGE_OVERRIDE``, ``KRR_MEMORY_REQUEST``,
 ``KRR_MEMORY_LIMIT``, ``KRR_STRATEGY`` and ``KRR_PUBLISH_URL`` runner environment variables, when set with a literal
 ``value``. A value under ``runner.krrCronJob`` takes precedence:
@@ -107,49 +102,7 @@ Limitations of the CronJob:
 - **Azure Managed Prometheus**: authentication with ``AZURE_CLIENT_ID``/``AZURE_TENANT_ID`` and ``AZURE_CLIENT_SECRET`` or ``AZURE_USE_MANAGED_ID`` is not supported. Provide a token with ``prometheusAuthSecret``
 - **Log mode**: ``KRR_PUSH_SCAN=false`` is not supported
 - **Failed runs**: a run that is killed (out of memory, timeout) is not reported to the Robusta UI. KRR still reports its own input and Prometheus errors. Check the Jobs with the command above
-- **Scan now**: the "scan now" button in the Robusta UI is not supported. Run a scan with the command above
-
-Sending Weekly KRR Scan Reports to Slack
-===========================================
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`. The results can be sent as a PDF to Slack. Follow the steps below to set it up
-
-1. Install Robusta with Helm to your cluster and configure Slack sink.
-2. Create your KRR slack playbook by adding the following to ``generated_values.yaml``:
-
-.. code-block:: yaml
-
-    # Runs a weekly krr scan on the namespace devs-namespace and sends it to the configured slack channel
-    customPlaybooks:
-    - triggers:
-      - on_schedule:
-          fixed_delay_repeat:
-            repeat: -1 # number of times to run or -1 to run forever
-            seconds_delay: 604800 # 1 week
-      actions:
-      - krr_scan:
-          args: "--namespace devs-namespace" ## KRR args here
-      sinks:
-          - "main_slack_sink" # slack sink you want to send the report to here
-
-   Scheduled ``krr_scan`` playbooks need ``runner.krrCronJob.enabled: false``, see :ref:`krr-cronjob`.
-
-3. Do a Helm upgrade to apply the new values: ``helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>``
-
-.. grid:: 1 1 1 1
-
-    .. grid-item::
-
-        .. md-tab-set::
-
-            .. md-tab-item:: Slack
-
-                .. image:: /images/krr_slack_example.png
-                    :width: 1000px
-
-            .. md-tab-item:: Robusta UI
-
-                .. image:: /images/krr_example.png
-                    :width: 1000px
+- **Scan now**: the "scan now" button in the Robusta UI uses the ``krr_scan`` action, which is deprecated and no longer supported. Run the CronJob manually with the command above
 
 Taints, Tolerations and NodeSelectors
 ============================================
@@ -172,7 +125,7 @@ Customizing Efficiency Recommendations in the Robusta UI
 ====================================================================================
 You can tweak KRR's recommendation algorithm to suit your environment using the ``krr_args`` setting in Robusta's Helm chart.
 
-Add the following config to the top of your ``generated_values.yaml`` with your custom values. KRR will use these values every time it sends data to the Robusta UI or other destinations.
+Add the following config to the top of your ``generated_values.yaml`` with your custom values. KRR will use these values every time it sends data to the Robusta UI.
 
 If you are having performance issues, specifically with Prometheus using a lot of memory, reduce ``max_workers`` to reduce memory usage. KRR uses 3 workers by default.
 
@@ -242,20 +195,18 @@ Common KRR Settings
 Configuring KRR Job Memory Requests and Limits
 ======================================================
 
-To prevent the KRR job from OOMKill (Out of Memory), you can configure the memory requests and limits by adding the following environment variables to your ``generated_values.yaml`` file:
+To prevent the KRR job from OOMKill (Out of Memory), you can configure the memory requests and limits by adding the following to your ``generated_values.yaml`` file:
 
 .. code-block:: yaml
 
     runner:
-      additional_env_vars:
-      - name: KRR_MEMORY_REQUEST
-        value: "3Gi"
-      - name: KRR_MEMORY_LIMIT
-        value: "3Gi"
+      krrCronJob:
+        memoryRequest: "3Gi"
+        memoryLimit: "3Gi"
 
 By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
 
-For the weekly scan :ref:`CronJob <krr-cronjob>`, ``KRR_MEMORY_REQUEST``, ``KRR_MEMORY_LIMIT`` and ``KRR_IMAGE_OVERRIDE`` must be set with a literal ``value`` as above. Values from ``valueFrom`` or ``additional_env_froms`` are not used; set ``runner.krrCronJob.memoryRequest``, ``memoryLimit`` or ``image`` instead.
+The ``KRR_MEMORY_REQUEST``, ``KRR_MEMORY_LIMIT`` and ``KRR_IMAGE_OVERRIDE`` runner environment variables are also read, when set with a literal ``value``. Values from ``valueFrom`` or ``additional_env_froms`` are not used.
 
 Enable KRR security context
 ======================================
@@ -465,13 +416,3 @@ Retrieves KRR resource recommendations for a specific cluster and namespace.
       "msg": "Failed to query KRR recommendations",
       "error_code": "UNEXPECTED_ERROR"
     }
-
-Reference
-======================================
-.. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
-
-    You can trigger a KRR scan at any time, by running the following command:
-
-    .. code-block:: bash
-
-        robusta playbooks trigger krr_scan

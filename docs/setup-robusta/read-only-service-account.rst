@@ -3,15 +3,15 @@
 Read-Only Service Account
 ========================================
 
-By default, Robusta's runner service account has permissions to update and delete Kubernetes resources cluster-wide (for remediation actions like ``delete_pod`` and ``rollout_restart``), plus cluster-wide ``create`` on ``pods/eviction`` for node drain. All other ``create`` permissions — pods, pods/exec, jobs, secrets, deployments, configmaps and persistentvolumeclaims — are granted **only in Robusta's installation namespace** via a namespaced Role. This guide explains how to restrict the runner further, to fully read-only permissions.
+By default, Robusta's runner service account has permissions to update and delete Kubernetes resources cluster-wide (for remediation actions like ``delete_pod`` and ``rollout_restart``), plus cluster-wide ``create`` on ``pods/eviction`` for node drain. All other ``create`` permissions — pods, pods/exec, jobs, deployments, configmaps and persistentvolumeclaims — are granted **only in Robusta's installation namespace** via a namespaced Role. This guide explains how to restrict the runner further, to fully read-only permissions.
 
 .. tip::
 
-   If you only want to remove the namespace-scoped create permissions (used for scan Jobs,
-   debugger pods and the KRR auth Secret), set ``runner.rbac.disableCreateFromServiceAccount: true`` in your
-   Helm values. This removes the namespaced Role and disables the built-in playbooks that
-   depend on it (``NodeFSSpaceAlerts``, ``WeeklyKRRScan``); actions that create resources
-   (scans, kubectl/netshoot/stress, debugger pods, chaos engineering) will fail without
+   If you only want to remove the namespace-scoped create permissions (used for Jobs and
+   debugger pods), set ``runner.rbac.disableCreateFromServiceAccount: true`` in your
+   Helm values. This removes the namespaced Role and disables the built-in playbook that
+   depends on it (``NodeFSSpaceAlerts``); actions that create resources
+   (kubectl/netshoot/stress, debugger pods, chaos engineering) will fail without
    permissions. It also turns off the weekly KRR scan CronJob, unless you set
    ``runner.krrCronJob.enabled: true``, see :ref:`krr-cronjob`.
    For fully read-only mode, use ``overrideClusterRoles`` as described below.

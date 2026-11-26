@@ -115,14 +115,10 @@ def test_namespaced_create_flag_removes_role_and_disables_playbooks():
 
     names = playbook_names(["--set", "runner.rbac.disableCreateFromServiceAccount=true"])
     assert "NodeFSSpaceAlerts" not in names
-    assert "WeeklyKRRScan" not in names
 
 
 def test_playbooks_enabled_by_default():
-    names = playbook_names()
-    assert "NodeFSSpaceAlerts" in names
-    assert "WeeklyKRRScan" not in names
-    assert "WeeklyKRRScan" in playbook_names(KRR_CRONJOB_DISABLED)
+    assert "NodeFSSpaceAlerts" in playbook_names()
 
 
 def test_namespace_scoped_rbac_renders_role_and_rolebinding():
@@ -283,13 +279,13 @@ def test_krr_cronjob_default_resources():
     assert "secrets" not in created
 
 
-def test_krr_cronjob_disabled_keeps_runner_scan():
+def test_krr_cronjob_disabled():
     docs = render_full_chart(KRR_CRONJOB_DISABLED)
     assert get_doc(docs, "CronJob", "robusta-krr") is None
     env_names = {e["name"] for e in get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert "KRR_CRONJOB_ENABLED" not in env_names
     rules = get_doc(docs, "Role", "runner-local-role")["rules"]
-    assert any("secrets" in rule["resources"] and "create" in rule["verbs"] for rule in rules)
+    assert not any("secrets" in rule["resources"] for rule in rules)
 
 
 def test_krr_cronjob_off_without_runner_role():
@@ -456,7 +452,6 @@ def test_krr_cronjob_keeps_job_labels_and_defaults():
     assert job["spec"]["activeDeadlineSeconds"] == 3600
     container = pod["spec"]["containers"][0]
     assert container["image"] == "robustadev/krr:v1.30.0"
-    assert "krr:v1.30.0" in (CHART_PATH.parents[1] / "playbooks/robusta_playbooks/krr.py").read_text()
     assert container["imagePullPolicy"] == "Always"
     assert container["resources"] == {"requests": {"memory": "2Gi"}, "limits": {"memory": "2Gi"}}
     assert "securityContext" not in container

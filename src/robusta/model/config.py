@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
 from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
-from robusta.core.playbooks.actions_registry import ActionsRegistry
+from robusta.core.playbooks.actions_registry import DEPRECATED_ACTIONS, ActionsRegistry
 from robusta.core.playbooks.base_trigger import TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params
 from robusta.core.pubsub.event_emitter import EventEmitter
@@ -132,6 +132,10 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 
             for action in playbook_def.get_actions():
                 action_def = actions_registry.get_action(action.action_name)
+                if not action_def and action.action_name in DEPRECATED_ACTIONS:
+                    logging.error(DEPRECATED_ACTIONS[action.action_name])
+                    action.set_func_hash("")
+                    continue
                 if not action_def:
                     msg = f"Action {action.action_name} not found. Will not be executed"
                     logging.error(msg)

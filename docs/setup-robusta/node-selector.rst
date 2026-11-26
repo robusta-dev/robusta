@@ -114,12 +114,6 @@ Add the following to your Helm values:
 
 
     globalConfig:
-      popeye_job_spec:
-        tolerations: ... # Your Toleration
-        - key: "appname"
-          operator: "Equal"
-          value: "robusta"
-          effect: "NoSchedule"
       krr_job_spec:
         tolerations:
         - key: "appname"

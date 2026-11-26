@@ -7,6 +7,14 @@ from robusta.core.model.events import ExecutionBaseEvent, ExecutionEventBasePara
 from robusta.utils.decorators import doublewrap
 
 
+# actions that were removed. A playbook that still names one is loaded, and logs this error instead of running it
+DEPRECATED_ACTIONS = {
+    "krr_scan": "Action krr_scan is deprecated and no longer supported. Remove it from your playbooks. "
+    "The weekly KRR scan runs from the KRR CronJob, see runner.krrCronJob in the Helm values",
+    "popeye_scan": "Action popeye_scan is deprecated and no longer supported. Remove it from your playbooks",
+}
+
+
 class NotAnActionException(Exception):
     def __init__(self, obj):
         super(NotAnActionException, self).__init__(f"{obj}  is not a playbook action")

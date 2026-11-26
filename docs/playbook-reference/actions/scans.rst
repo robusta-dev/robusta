@@ -1,12 +1,8 @@
 Scans
 ########
 
-Robusta includes built-in actions to scan and get insights on Kubernetes clusters.
+Robusta runs a weekly KRR scan from a CronJob, see :ref:`krr-cronjob`.
 
-These actions can be triggered:
+.. warning::
 
-* Automatically, on a schedule.
-* On demand, via the Robusta UI.
-* On demand, via :ref:`cli command <Manual Triggers>`.
-
-There are two built-in: KRR and Popeye.
+    The ``krr_scan`` and ``popeye_scan`` actions are deprecated and no longer supported. A playbook that still uses one of them is loaded, and the runner logs an error instead of running the action. Remove them from your playbooks.
