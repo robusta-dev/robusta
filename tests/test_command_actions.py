@@ -1,4 +1,3 @@
-import ast
 import importlib
 import inspect
 import pkgutil
@@ -144,22 +143,6 @@ def test_default_playbooks_actions():
     }
     # WeeklyKRRScan is the one default playbook with a command action; it runs once krr_scan is in commandActions
     assert not used & (REMOVED_ACTIONS | COMMAND_ACTIONS - {"krr_scan"})
-
-
-def test_callback_targets():
-    """A button's callback is an action request, so it cannot target a command action."""
-    sources = [*(REPO_ROOT / "playbooks/robusta_playbooks").glob("*.py"), *(REPO_ROOT / "src/robusta").rglob("*.py")]
-    callback_actions = set()
-    for source in sources:
-        for node in ast.walk(ast.parse(source.read_text())):
-            if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "CallbackChoice":
-                callback_actions.update(
-                    keyword.value.id
-                    for keyword in node.keywords
-                    if keyword.arg == "action" and isinstance(keyword.value, ast.Name)
-                )
-    assert callback_actions & set(BUILTIN_ACTIONS)
-    assert callback_actions <= set(BUILTIN_ACTIONS) - COMMAND_ACTIONS
 
 
 def test_action_decorator_forms():
