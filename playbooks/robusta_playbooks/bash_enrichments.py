@@ -1,7 +1,18 @@
 import logging
 from typing import List
 
-from robusta.api import BaseBlock, BashParams, MarkdownBlock, NodeEvent, PodEvent, RobustaPod, action
+from robusta.api import (
+    ActionException,
+    BaseBlock,
+    BashParams,
+    ErrorCodes,
+    ExecutionBaseEvent,
+    MarkdownBlock,
+    PodEvent,
+    action,
+)
+
+NODE_BASH_ENRICHER_DEPRECATED = "node_bash_enricher is deprecated and no longer supported"
 
 
 @action(command_action=True)
@@ -22,21 +33,10 @@ def pod_bash_enricher(event: PodEvent, params: BashParams):
     event.add_enrichment(block_list)
 
 
-@action(command_action=True)
-def node_bash_enricher(event: NodeEvent, params: BashParams):
+@action
+def node_bash_enricher(event: ExecutionBaseEvent):
     """
-    Execute the specified bash command on the target **node**.
-    Enrich the finding with the command results.
+    Deprecated. This action is no longer supported and returns an error.
     """
-    node = event.get_node()
-    if not node:
-        logging.error(f"cannot run NodeBashEnricher on event with no node: {event}")
-        return
-
-    block_list: List[BaseBlock] = []
-    exec_result = RobustaPod.exec_in_debugger_pod(
-        "node-bash-pod", node.metadata.name, params.bash_command, custom_annotations=params.custom_annotations
-    )
-    block_list.append(MarkdownBlock(f"Command results for *{params.bash_command}:*"))
-    block_list.append(MarkdownBlock(exec_result))
-    event.add_enrichment(block_list)
+    logging.error(NODE_BASH_ENRICHER_DEPRECATED)
+    raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, NODE_BASH_ENRICHER_DEPRECATED)

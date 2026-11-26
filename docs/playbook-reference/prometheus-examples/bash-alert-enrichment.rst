@@ -15,14 +15,14 @@ Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Ro
 .. code-block:: yaml
 
    commandActions:
-   - node_bash_enricher
+   - pod_bash_enricher
 
    customPlaybooks:
    - triggers:
      - on_prometheus_alert:
          alert_name: CPUThrottlingHigh
      actions:
-     - node_bash_enricher:
+     - pod_bash_enricher:
          bash_command: ps aux | head -n 5
 
 Testing

@@ -74,8 +74,7 @@ alertRelabel: []
 # Command actions: actions that run commands or start jobs in your cluster, or send HTTP requests. They run only from
 # playbooks defined in this configuration, and only if you explicitly opt in by listing them here. The list is empty
 # by default.
-# Available: pod_bash_enricher, node_bash_enricher, alert_handling_job,
-# http_get, http_post, http_put
+# Available: pod_bash_enricher, http_get, http_post, http_put
 commandActions: []
 
 # safe actions to enable authenticated users to run
@@ -905,10 +904,7 @@ kube-prometheus-stack:
 openshift:
   enabled: false
   createScc: false
-  createPrivilegedScc: false
 
-  privilegedSccName: null
   sccName: null
 
   sccPriority: null
-  privilegedSccPriority: null

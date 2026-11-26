@@ -2,7 +2,6 @@ import importlib
 import inspect
 import pkgutil
 import re
-from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -11,13 +10,9 @@ import yaml
 
 import playbooks.robusta_playbooks as builtin_playbooks
 import robusta.core.playbooks.internal as internal_playbooks
-from playbooks.robusta_playbooks.job_actions import JobParams
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import Action, ActionsRegistry, action
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
-from robusta.core.reporting import FindingSubject
-from robusta.core.reporting.base import FindingSubjectType
-from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 from robusta.model.config import PlaybooksRegistryImpl
 from robusta.model.playbook_action import PlaybookAction
 from robusta.model.playbook_definition import PlaybookDefinition
@@ -42,10 +37,10 @@ FIXED_TOOL_ACTIONS = {
 # Actions that send a request to an address from their parameters.
 REQUEST_ACTIONS = {"http_get", "http_post", "http_put"}
 
+RETIRED_ACTIONS = {"kubectl_command", "rollout_restart", "alert_handling_job", "node_bash_enricher"}
+
 COMMAND_ACTIONS = {
     "pod_bash_enricher",
-    "node_bash_enricher",
-    "alert_handling_job",
     *REQUEST_ACTIONS,
 }
 
@@ -85,8 +80,8 @@ def _helm_values() -> dict:
 
 def test_builtin_actions_are_found():
     assert len(BUILTIN_ACTIONS) > 100
-    assert COMMAND_ACTIONS | FIXED_TOOL_ACTIONS <= set(BUILTIN_ACTIONS)
-    assert not {"krr_scan", "popeye_scan"} & set(BUILTIN_ACTIONS)
+    assert COMMAND_ACTIONS | FIXED_TOOL_ACTIONS | RETIRED_ACTIONS <= set(BUILTIN_ACTIONS)
+    assert not {"krr_scan", "popeye_scan", "restart_named_rollout"} & set(BUILTIN_ACTIONS)
 
 
 @pytest.mark.parametrize("name", sorted(BUILTIN_ACTIONS))
@@ -146,11 +141,11 @@ def _request_handler(command_action: bool):
     return handler, action_def
 
 
-@pytest.mark.parametrize("enabled", [[], ["node_bash_enricher"]])
+@pytest.mark.parametrize("enabled", [[], ["pod_bash_enricher"]])
 def test_request_for_command_action(enabled):
     handler, action_def = _request_handler(command_action=True)
     handler.registry.get_command_actions.return_value = enabled
-    response = handler.run_external_action("node_bash_enricher", {"name": "node", "bash_command": "id"}, sinks=None)
+    response = handler.run_external_action("pod_bash_enricher", {"name": "pod", "bash_command": "id"}, sinks=None)
     assert response["success"] is False
     assert response["error_code"] == ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value
     assert "bash_command" not in response["msg"] and '"id"' not in response["msg"]
@@ -160,7 +155,7 @@ def test_request_for_command_action(enabled):
 
 def test_stream_request_for_command_action():
     handler, action_def = _request_handler(command_action=True)
-    response = handler.run_external_stream_action("node_bash_enricher", {"name": "node"}, ws=MagicMock())
+    response = handler.run_external_stream_action("pod_bash_enricher", {"name": "pod"}, ws=MagicMock())
     assert response["error_code"] == ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value
     action_def.from_params_func.assert_not_called()
 
@@ -234,25 +229,3 @@ def test_playbook_with_missing_action_is_skipped(caplog):
     loaded = [playbook for playbooks in registry.triggers_to_playbooks.values() for playbook in playbooks]
     assert loaded == [kept]
     assert "Action pod_ps not found" in caplog.text
-
-
-def _subject(namespace="prod", **kwargs) -> FindingSubject:
-    return FindingSubject(name="web-1", subject_type=FindingSubjectType.TYPE_POD, namespace=namespace, **kwargs)
-
-
-def test_alert_job_label_variables():
-    from playbooks.robusta_playbooks import job_actions
-
-    alert = PrometheusAlert(
-        status="firing",
-        startsAt=datetime.now(),
-        endsAt=datetime.fromtimestamp(0),
-        generatorURL="http://localhost",
-        fingerprint="f",
-        labels={"alertname": "A", "team": "payments", "bad name": "x", "a=b": "y"},
-        annotations={},
-    )
-    event = PrometheusKubernetesAlert(alert=alert, alert_name="A", alert_severity="error")
-    env = getattr(job_actions, "__get_alert_env_vars")(event, JobParams(image="busybox", command=["true"]))
-    label_vars = {var.name: var.value for var in env if var.name.startswith("ALERT_LABEL_")}
-    assert label_vars == {"ALERT_LABEL_ALERTNAME": "A", "ALERT_LABEL_TEAM": "payments"}

@@ -15,6 +15,5 @@ Get started:
 .. toctree::
    :maxdepth: 1
 
-   job-to-remediate-alert
    bash-command-to-remediate-alert
 

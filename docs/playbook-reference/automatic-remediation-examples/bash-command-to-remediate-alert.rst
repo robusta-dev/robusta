@@ -1,28 +1,8 @@
 Remediate Using Bash Commands
 ===============================================
 
-Prometheus Alerts can be remediated by running bash commands on existing nodes or pods.
+Prometheus Alerts can be remediated by running bash commands on existing pods.
 
-
-Run Bash Command on a Kubernetes node
-***************************************
-
-To run a command on a Kubernetes node (the node is chosen according to alert metadata) add the following to your Helm values file:
-
-.. code-block:: yaml
-
-    commandActions:
-    - node_bash_enricher
-
-    customPlaybooks:
-    - triggers:
-      - on_prometheus_alert:
-          alert_name: SomeAlert
-      actions:
-      - node_bash_enricher:
-          bash_command: do something
-  
-Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 Run Bash Command on a Kubernetes Pod
 ***************************************
