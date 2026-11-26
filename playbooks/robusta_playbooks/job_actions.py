@@ -1,176 +1,40 @@
 import logging
-import re
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
-import hikaru
-from hikaru.model.rel_1_26 import Container, EnvVar, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model.rel_1_26 import JobSpec, JobStatus
 
 from robusta.api import (
-    ActionParams,
+    ActionException,
+    ErrorCodes,
     EventEnricherParams,
+    ExecutionBaseEvent,
     FileBlock,
     JobEvent,
     LogEnricherParams,
     MarkdownBlock,
     PodContainer,
-    PrometheusKubernetesAlert,
     RegexReplacementStyle,
-    RobustaJob,
     SlackAnnotations,
     TableBlock,
     action,
     get_job_latest_pod,
     get_resource_events_table,
-    to_kubernetes_name,
 )
 from robusta.core.model.env_vars import ENABLE_JOB_DELETE
-from robusta.core.playbooks.rbac_flags import reject_creation, require_rbac_flag
+from robusta.core.playbooks.rbac_flags import require_rbac_flag
 from robusta.core.reporting.base import EnrichmentType
-from robusta.integrations.kubernetes.api_client_utils import wait_until_job_complete
 
 
-class JobParams(ActionParams):
+ALERT_HANDLING_JOB_DEPRECATED = "alert_handling_job is deprecated and no longer supported"
+
+
+@action
+def alert_handling_job(event: ExecutionBaseEvent):
     """
-    :var image: The job image.
-    :var command: The job command as array of strings
-    :var name: Custom name for the job and job container.
-    :var namespace: The created job namespace.
-    :var service_account: Job pod service account. If omitted, default is used.
-    :var restart_policy: Job container restart policy
-    :var job_ttl_after_finished: Delete finished job ttl (seconds). If omitted, jobs will not be deleted automatically.
-    :var notify: Add a notification for creating the job.
-    :var wait_for_completion: Wait for the job to complete and attach it's output. Only relevant when notify=true.
-    :var completion_timeout: Maximum seconds to wait for job to complete. Only relevant when wait_for_completion=true.
-    :var backoff_limit: Specifies the number of retries before marking this job failed. Defaults to 6
-    :var active_deadline_seconds: Specifies the duration in seconds relative to the startTime
-        that the job may be active before the system tries to terminate it; value must be
-        positive integer
-    :var env: Inject environment variables and secrets just like you do with a Kubernetes Job.
-
-    :example command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+    Deprecated. This action is no longer supported and returns an error.
     """
-
-    image: str
-    command: List[str]
-    name: str = "robusta-action-job"
-    namespace: str = "default"
-    service_account: str = None  # type: ignore
-    restart_policy: str = "OnFailure"
-    job_ttl_after_finished: int = 120  # type: ignore
-    notify: bool = False
-    wait_for_completion: bool = True
-    completion_timeout: int = 300
-    backoff_limit: int = None  # type: ignore
-    active_deadline_seconds: int = None  # type: ignore
-    env: Optional[List[EnvVar]] = None
-
-
-@action(command_action=True)
-def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
-    """
-    Create a kubernetes job with the specified parameters
-
-    In addition, the job pod receives the following alert parameters as environment variables
-
-    ALERT_NAME
-
-    ALERT_STATUS
-
-    ALERT_OBJ_KIND - oneof pod/deployment/node/job/daemonset or None in case it's unknown
-
-    ALERT_OBJ_NAME
-
-    ALERT_OBJ_NAMESPACE (If present)
-
-    ALERT_OBJ_NODE (If present)
-
-    ALERT_LABEL_{LABEL_NAME} for every label on the alert. For example a label named `foo` becomes `ALERT_LABEL_FOO`
-
-    """
-    reject_creation("Jobs")
-    logging.info(f"Running alert_handling_job alert action for alert {event.alert_name}")
-    job_name = to_kubernetes_name(params.name)
-    job: Job = Job(
-        metadata=ObjectMeta(name=job_name, namespace=params.namespace),
-        spec=JobSpec(
-            template=PodTemplateSpec(
-                spec=PodSpec(
-                    containers=[
-                        Container(
-                            name=params.name,
-                            image=params.image,
-                            command=params.command,
-                            env=__get_alert_env_vars(event, params),
-                        )
-                    ],
-                    serviceAccountName=params.service_account,
-                    restartPolicy=params.restart_policy,
-                )
-            ),
-            backoffLimit=params.backoff_limit,
-            activeDeadlineSeconds=params.active_deadline_seconds,
-            ttlSecondsAfterFinished=params.job_ttl_after_finished,
-        ),
-    )
-
-    job.create()
-
-    info_messages = []
-    if params.notify:
-        info_messages.append(f"*Created Job from alert*: {job_name}.")
-
-    if params.wait_for_completion:
-        try:
-            wait_until_job_complete(job, params.completion_timeout)
-            job = hikaru.from_dict(
-                job.to_dict(), cls=RobustaJob
-            )  # temporary workaround for https://github.com/haxsaw/hikaru/issues/15
-            pod = job.get_single_pod()
-            event.add_enrichment([FileBlock("job-runner-logs.txt", pod.get_logs())])
-        except Exception as e:
-            if str(e) != "Failed to reach wait condition":
-                warning_msg = f"Error running Job: {e}"
-                logging.warning(warning_msg)
-                info_messages.append(warning_msg)
-            else:
-                logging.warning(f"{e} This is the error")
-                err_str = "*Status:* Timed out, could not fetch output."
-                logging.warning(f"Failed to fetch Job result: {err_str}")
-                info_messages.append(err_str)
-
-    if info_messages:
-        combined_message = "\n".join(info_messages)
-        event.add_enrichment([MarkdownBlock(combined_message)])
-
-
-# Alert label names that can be used as part of an environment variable name
-ENV_VAR_NAME_PART = re.compile(r"[A-Za-z0-9_]+")
-
-
-def __get_alert_env_vars(event: PrometheusKubernetesAlert, params: JobParams) -> List[EnvVar]:
-    alert_subject = event.get_alert_subject()
-    alert_env_vars = [
-        EnvVar(name="ALERT_NAME", value=event.alert_name),
-        EnvVar(name="ALERT_STATUS", value=event.alert.status),
-        EnvVar(name="ALERT_OBJ_KIND", value=alert_subject.subject_type.value),
-        EnvVar(name="ALERT_OBJ_NAME", value=alert_subject.name),
-    ]
-
-    if alert_subject.namespace:
-        alert_env_vars.append(EnvVar(name="ALERT_OBJ_NAMESPACE", value=alert_subject.namespace))
-    if alert_subject.node:
-        alert_env_vars.append(EnvVar(name="ALERT_OBJ_NODE", value=alert_subject.node))
-    if params.env is not None:
-        alert_env_vars.extend(params.env)
-
-    label_vars = [
-        EnvVar(name=f"ALERT_LABEL_{k.upper()}", value=v)
-        for k, v in event.alert.labels.items()
-        if ENV_VAR_NAME_PART.fullmatch(k)
-    ]
-    alert_env_vars += label_vars
-
-    return alert_env_vars
+    logging.error(ALERT_HANDLING_JOB_DEPRECATED)
+    raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, ALERT_HANDLING_JOB_DEPRECATED)
 
 
 @action

@@ -497,6 +497,13 @@ def test_command_actions_value_reaches_the_runner_config():
     assert runner_config()["command_actions"] == []
     platform = ["--set", "enablePlatformPlaybooks=true"]
     assert runner_config(platform)["command_actions"] == []
-    assert runner_config(platform + ["--set", "commandActions={kubectl_command}"])["command_actions"] == ["kubectl_command"]
-    enabled = runner_config(["--set", "commandActions={pod_bash_enricher,kubectl_command}"])
-    assert enabled["command_actions"] == ["pod_bash_enricher", "kubectl_command"]
+    assert runner_config(platform + ["--set", "commandActions={http_get}"])["command_actions"] == ["http_get"]
+    enabled = runner_config(["--set", "commandActions={http_post,http_get}"])
+    assert enabled["command_actions"] == ["http_post", "http_get"]
+
+
+def test_openshift_scc_rendering():
+    retired_values = "openshift.createPrivilegedScc=true,openshift.privilegedSccName=privileged"
+    docs = render_full_chart(["--set", f"openshift.enabled=true,openshift.createScc=true,{retired_values}"])
+    assert [doc["metadata"]["name"] for doc in docs if doc["kind"] == "SecurityContextConstraints"] == ["robusta-scc"]
+    assert "privileged" not in yaml.safe_dump(get_doc(docs, "ClusterRole", "runner-cluster-role"))

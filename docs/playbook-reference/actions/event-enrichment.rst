@@ -10,6 +10,10 @@ Node Enrichers
 
 These actions can add context to any node-related event, be it from ``on_prometheus_alert`` or ``on_node_update``.
 
+.. warning::
+
+    ``node_bash_enricher`` is deprecated and no longer supported. It logs an error and returns an error without running the command.
+
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.node_bash_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_status_enricher
@@ -33,8 +37,11 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
 
+.. warning::
+
+    ``pod_bash_enricher`` is deprecated and no longer supported. It logs an error and returns an error without running the command.
+
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
-    :trigger-params: {"alert_name": "ExampleLowDiskAlert"}
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 

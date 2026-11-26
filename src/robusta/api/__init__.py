@@ -15,7 +15,6 @@ from robusta.core.model.base_params import (
     ActionParams,
     AIInvestigateParams,
     AlertResourceGraphEnricherParams,
-    BashParams,
     ChartValuesFormat,
     CustomGraphEnricherParams,
     EventEnricherParams,
