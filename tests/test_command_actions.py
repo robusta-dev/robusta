@@ -14,7 +14,6 @@ import playbooks.robusta_playbooks as builtin_playbooks
 import robusta.core.playbooks.internal as internal_playbooks
 from playbooks.robusta_playbooks.job_actions import JobParams
 from playbooks.robusta_playbooks.kubectl_enrichments import KubectlParams, get_unsafe_template_values, kubectl_command
-from playbooks.robusta_playbooks.oom_killer import OomKillParams
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.actions_registry import Action, ActionsRegistry, action
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
@@ -50,28 +49,6 @@ COMMAND_ACTIONS = {
     "krr_scan",
     "popeye_scan",
 }
-
-REMOVED_ACTIONS = {
-    "incluster_ping",
-    "http_stress_test",
-    "disk_benchmark",
-    "generate_high_cpu",
-    "test_pod_orm",
-    "python_profiler",
-    "pod_ps",
-    "python_memory",
-    "debugger_stack_trace",
-    "python_process_inspector",
-    "python_debugger",
-    "java_process_inspector",
-    "pod_jmap_pid",
-    "pod_jstack_pid",
-    "node_dmesg_enricher",
-    "pod_dmesg_enricher",
-    "node_disk_analyzer",
-    "volume_analysis",
-}
-
 
 def _builtin_actions():
     actions = {}
@@ -112,10 +89,6 @@ def test_builtin_actions_are_found():
     assert COMMAND_ACTIONS | FIXED_TOOL_ACTIONS <= set(BUILTIN_ACTIONS)
 
 
-def test_removed_actions_are_gone():
-    assert not REMOVED_ACTIONS & set(BUILTIN_ACTIONS)
-
-
 @pytest.mark.parametrize("name", sorted(BUILTIN_ACTIONS))
 def test_action_classification(name):
     func = BUILTIN_ACTIONS[name]
@@ -130,7 +103,7 @@ def test_command_actions_list():
 def test_helm_defaults():
     values = _helm_values()
     assert values["commandActions"] == []
-    assert not (COMMAND_ACTIONS | REMOVED_ACTIONS) & set(values["lightActions"])
+    assert not COMMAND_ACTIONS & set(values["lightActions"])
 
 
 def test_default_playbooks_actions():
@@ -143,7 +116,7 @@ def test_default_playbooks_actions():
         for name in playbook_action
     }
     # WeeklyKRRScan is the one default playbook with a command action; it runs once krr_scan is in commandActions
-    assert not used & (REMOVED_ACTIONS | COMMAND_ACTIONS - {"krr_scan"})
+    assert not used & (COMMAND_ACTIONS - {"krr_scan"})
 
 
 def test_callback_targets():
@@ -331,8 +304,3 @@ def test_alert_job_label_variables():
     env = getattr(job_actions, "__get_alert_env_vars")(event, JobParams(image="busybox", command=["true"]))
     label_vars = {var.name: var.value for var in env if var.name.startswith("ALERT_LABEL_")}
     assert label_vars == {"ALERT_LABEL_ALERTNAME": "A", "ALERT_LABEL_TEAM": "payments"}
-
-
-def test_oom_enricher_params_ignore_removed_option():
-    params = OomKillParams(attach_logs=True, dmesg_log=True)
-    assert not hasattr(params, "dmesg_log")
