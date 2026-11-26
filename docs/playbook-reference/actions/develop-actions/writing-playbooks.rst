@@ -119,8 +119,8 @@ Please consult Pydantic's documentation for details. ``ActionParams`` is a drop-
 Actions that run commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Mark an action that runs a command in a pod or on a node, or starts a job, with ``@action(command_action=True)``,
-as above.
+Mark an action that runs a command in a pod or on a node, starts a job, or sends a request to an address from its
+parameters, with ``@action(command_action=True)``, as above.
 
 A command action runs only from playbooks defined in your Robusta configuration, and only if you explicitly opt in
 by listing it under ``commandActions`` in your Helm values. ``commandActions`` is empty by default, so a command
