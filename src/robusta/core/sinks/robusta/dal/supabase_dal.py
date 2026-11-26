@@ -18,7 +18,7 @@ from postgrest.base_request_builder import BaseFilterRequestBuilder, QueryArgs
 from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
-from supabase import create_client
+from supabase import Client, create_client
 from supabase.lib.client_options import SyncClientOptions as ClientOptions
 from tenacity import RetryCallState, Retrying, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
@@ -241,13 +241,17 @@ class SupabaseDal(AccountResourceFetcher):
         self.__login(self.key, options)
 
     def __login(self, api_key: str, options: ClientOptions):
-        self.client = create_client(self.url, api_key, options)
-        self.__apply_auth_client_timeout()
+        client = create_client(self.url, api_key, options)
+        self.__apply_auth_client_timeout(client)
         # Set after the client is built, so that the auth client keeps an HTTP client of its own.
-        self.client.options.httpx_client = self.__http_client
-        self.user_id = self.sign_in()
+        client.options.httpx_client = self.__http_client
+        user_id = self.sign_in(client)
+        # Only a client that is signed in replaces the one in use: requests of other threads
+        # keep the previous client until then, and a failed sign-in leaves it in place.
+        self.client = client
+        self.user_id = user_id
 
-    def __apply_auth_client_timeout(self) -> None:
+    def __apply_auth_client_timeout(self, client: Client) -> None:
         """Give the auth (GoTrue) client the configured timeout, over HTTP/1.1.
 
         ``ClientOptions.postgrest_client_timeout`` only reaches postgrest. supabase 2.5.1
@@ -266,7 +270,7 @@ class SupabaseDal(AccountResourceFetcher):
         safe, and this DAL is shared across threads (the same problem as ROB-228). No
         transport is passed, so environment proxies keep being honored as before.
         """
-        auth_client = self.client.auth
+        auth_client = client.auth
         http_client = _AuthHttpClient(
             timeout=httpx.Timeout(
                 SUPABASE_TIMEOUT_SECONDS,
@@ -334,13 +338,7 @@ class SupabaseDal(AccountResourceFetcher):
             # Another thread may already have replaced the rejected token.
             if self.client.options.headers.get("Authorization") == rejected_authorization:
                 logging.warning("JWT token expired/invalid, signing in to Supabase again")
-                previous_client = self.client
-                try:
-                    self.__connect(self.options)
-                except Exception:
-                    # Keep the previous client, so that the next request tries the sign-in again.
-                    self.client = previous_client
-                    raise
+                self.__connect(self.options)
             headers = self.client.options.headers
             return {"Authorization": headers["Authorization"], "apiKey": headers["apiKey"]}
 
@@ -738,10 +736,10 @@ class SupabaseDal(AccountResourceFetcher):
             logging.exception(f"Failed to delete namespace {namespace_name} error: {e}")
             raise
 
-    def __sign_in_once(self) -> str:
-        res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
-        self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
-        self.client.postgrest.auth(res.session.access_token)
+    def __sign_in_once(self, client: Client) -> str:
+        res = client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+        client.auth.set_session(res.session.access_token, res.session.refresh_token)
+        client.postgrest.auth(res.session.access_token)
         return res.user.id
 
     @staticmethod
@@ -754,8 +752,8 @@ class SupabaseDal(AccountResourceFetcher):
             retry_state.next_action.sleep if retry_state.next_action else 0,
         )
 
-    def sign_in(self) -> str:
-        """Log in to Supabase, retrying transient network failures.
+    def sign_in(self, client: Optional[Client] = None) -> str:
+        """Log in to Supabase on ``client`` (default: the client in use), retrying transient network failures.
 
         A single failure here used to be fatal: it propagates out of ``__init__`` through
         Robusta sink construction up to ConfigLoader, which kills the whole runner process
@@ -777,7 +775,7 @@ class SupabaseDal(AccountResourceFetcher):
                 before_sleep=self.__log_sign_in_retry,
                 reraise=True,
             )
-            return login(self.__sign_in_once)
+            return login(self.__sign_in_once, client or self.client)
         except Exception as e:
             # Check if this is a DNS-related error
             error_msg = str(e).lower()

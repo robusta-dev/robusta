@@ -144,7 +144,7 @@ class TestAuthClientTimeout:
         dal = self._dal_with_real_client()
         original = dal.client.auth._http_client
 
-        dal._SupabaseDal__apply_auth_client_timeout()
+        dal._SupabaseDal__apply_auth_client_timeout(dal.client)
 
         auth_http_client = dal.client.auth._http_client
         assert isinstance(auth_http_client, _AuthHttpClient)
@@ -160,7 +160,7 @@ class TestAuthClientTimeout:
         rather than every attempt parking on a 60s read budget."""
         dal = self._dal_with_real_client()
 
-        dal._SupabaseDal__apply_auth_client_timeout()
+        dal._SupabaseDal__apply_auth_client_timeout(dal.client)
 
         timeout = dal.client.auth._http_client.timeout
         assert timeout.connect == SUPABASE_CONNECT_TIMEOUT_SECONDS < SUPABASE_TIMEOUT_SECONDS
@@ -171,7 +171,7 @@ class TestAuthClientTimeout:
         monkeypatch.setattr(supabase_dal_module, "SUPABASE_TIMEOUT_SECONDS", 2)
         dal = self._dal_with_real_client()
 
-        dal._SupabaseDal__apply_auth_client_timeout()
+        dal._SupabaseDal__apply_auth_client_timeout(dal.client)
 
         assert dal.client.auth._http_client.timeout == httpx.Timeout(2, connect=2)
 
@@ -181,7 +181,7 @@ class TestAuthClientTimeout:
         dal = self._dal_with_real_client()
         assert dal.client.auth._http_client._transport._pool._http2 is True
 
-        dal._SupabaseDal__apply_auth_client_timeout()
+        dal._SupabaseDal__apply_auth_client_timeout(dal.client)
 
         assert dal.client.auth._http_client._transport._pool._http2 is False
 
@@ -195,6 +195,6 @@ class TestAuthClientTimeout:
         dal.client = MagicMock()
         dal.client.auth = AuthClientWithoutInternals()
 
-        dal._SupabaseDal__apply_auth_client_timeout()
+        dal._SupabaseDal__apply_auth_client_timeout(dal.client)
 
         assert "Could not apply SUPABASE_TIMEOUT_SECONDS" in caplog.text

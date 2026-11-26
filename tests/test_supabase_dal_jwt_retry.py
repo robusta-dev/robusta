@@ -46,6 +46,10 @@ class FakeSupabase:
         self.rest_error = None
         self.rest_calls: list = []
         self.token_owner: dict = {}
+        # A test clears the gate to hold a sign-in open, and waits for `sign_in_started`.
+        self.sign_in_gate = threading.Event()
+        self.sign_in_gate.set()
+        self.sign_in_started = threading.Event()
 
     def expire_all(self):
         with self.lock:
@@ -65,6 +69,9 @@ class FakeSupabase:
 
     def handle(self, request: httpx.Request) -> httpx.Response:
         path = request.url.path
+        if path == "/auth/v1/token":
+            self.sign_in_started.set()
+            self.sign_in_gate.wait(timeout=5)
         with self.lock:
             if path == "/auth/v1/token":
                 self.password_grants += 1
@@ -209,13 +216,32 @@ def test_jwt_error_on_the_retry_is_raised_not_looped(dal, fake):
 
 
 def test_failed_sign_in_is_tried_again_by_the_next_request(dal, fake):
+    client_before = dal.client
     fake.expire_all()
     fake.sign_in_status = 400
     with pytest.raises(Exception):
         dal.client.table("Issues").select("*").execute()
+    assert dal.client is client_before
 
     fake.sign_in_status = 200
     assert dal.client.table("Issues").select("*").execute().data == [{"id": 1}]
+
+
+def test_client_in_use_is_replaced_only_after_the_sign_in(dal, fake):
+    client_before = dal.client
+    fake.expire_all()
+    fake.sign_in_started.clear()
+    fake.sign_in_gate.clear()
+
+    with concurrent.futures.ThreadPoolExecutor(1) as pool:
+        request = pool.submit(lambda: dal.client.table("Issues").select("*").execute().data)
+        assert fake.sign_in_started.wait(timeout=5)
+        # the sign-in is in progress: other threads still get the previous client
+        assert dal.client is client_before
+        fake.sign_in_gate.set()
+        assert request.result(timeout=5) == [{"id": 1}]
+
+    assert dal.client is not client_before
 
 
 def test_non_jwt_errors_do_not_sign_in(dal, fake):
