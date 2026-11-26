@@ -135,7 +135,6 @@ Every Block represents a different type of visual data. Here are the possible Bl
     KubernetesFieldsBlock
     KubernetesDiffBlock
     JsonBlock
-    CallbackBlock
 
 .. note::
 
@@ -203,5 +202,3 @@ Reference
 .. autoclass:: robusta.api.JsonBlock
     :no-members:
 
-.. autoclass:: robusta.api.CallbackBlock
-    :no-members:

@@ -8,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
 from threading import Thread
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 from uuid import UUID
 
 import sentry_sdk
@@ -16,7 +16,7 @@ import websocket
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
-from pydantic.v1 import BaseModel, ValidationError, validator
+from pydantic.v1 import BaseModel
 
 from robusta.core.model.env_vars import (
     INCOMING_REQUEST_TIME_WINDOW_SECONDS,
@@ -46,32 +46,6 @@ class ValidationResponse(BaseModel):
     http_code: int = 200
     error_code: Optional[int] = None
     error_msg: Optional[str] = None
-
-
-class SlackExternalActionRequest(ExternalActionRequest):
-    # Optional Slack Params
-    slack_username: Optional[str] = None
-    slack_message: Optional[Any] = None
-
-
-class SlackActionRequest(BaseModel):
-    value: SlackExternalActionRequest
-
-    @validator("value", pre=True, always=True)
-    def validate_value(cls, v: str) -> dict:
-        # Slack value is sent as a stringified json, so we need to parse it before validation
-        return json.loads(v)
-
-
-class SlackUserID(BaseModel):
-    username: str
-    name: str
-    team_id: str
-
-
-class SlackActionsMessage(BaseModel):
-    actions: List[SlackActionRequest]
-    user: Optional[SlackUserID]
 
 
 class ActionRequestReceiver:
@@ -158,13 +132,6 @@ class ActionRequestReceiver:
                 )
             return
 
-        # add global slack values to callback
-        if hasattr(action_request, 'slack_username'):
-            action_request.body.action_params["slack_username"] = action_request.slack_username
-
-        if hasattr(action_request, 'slack_message'):
-            action_request.body.action_params["slack_message"] = action_request.slack_message
-
         response = self.event_handler.run_external_action(
             action_request.body.action_name,
             action_request.body.action_params,
@@ -218,46 +185,26 @@ class ActionRequestReceiver:
                 exc_info=True,
             )
 
-    @staticmethod
-    def _parse_websocket_message(
-        message: Union[str, bytes, bytearray]
-    ) -> Union[SlackActionsMessage, ExternalActionRequest]:
-        try:
-            return ActionRequestReceiver._parse_slack_message(message)  # this is slack callback format
-        except ValidationError:
-            return ExternalActionRequest.parse_raw(message)
-
-    @staticmethod
-    def _parse_slack_message(message: Union[str, bytes, bytearray]) -> SlackActionsMessage:
-        slack_actions_message = SlackActionsMessage.parse_raw(message)  # this is slack callback format
-        json_slack_message = json.loads(message)
-        for action in slack_actions_message.actions:
-            action.value.slack_username = slack_actions_message.user.username
-            action.value.slack_message = json_slack_message
-        return slack_actions_message
-
     def on_message(self, ws: websocket.WebSocketApp, message: str) -> None:
-        """Callback for incoming websocket message from relay.
-
-        The message can be in one of two formats:
-        1. ExternalActionRequest - just one plain action request
-        2. SlackActionsMessage - has multiple grouped action requests
-        """
-
+        """Callback for incoming websocket message from relay."""
         try:
-            incoming_event = self._parse_websocket_message(message)
+            incoming_event = ExternalActionRequest.parse_raw(message)
         except Exception:
-            logging.error(f"Failed to parse incoming event {message}", exc_info=True)
+            if self._is_button_press(message):
+                logging.info("Ignoring a button press. Buttons in notifications no longer run actions")
+            else:
+                logging.error(f"Failed to parse incoming event {message}", exc_info=True)
             return
 
-        if isinstance(incoming_event, SlackActionsMessage):
-            # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
-            # which container the actual action details we need to run.
-            # This wrapper format is part of the slack API, and cannot be changed by us.
-            for slack_action_request in incoming_event.actions:
-                self._process_action(slack_action_request.value, validate_timestamp=False)
-        else:
-            self._process_action(incoming_event, validate_timestamp=True)
+        self._process_action(incoming_event, validate_timestamp=True)
+
+    @staticmethod
+    def _is_button_press(message: Union[str, bytes, bytearray]) -> bool:
+        try:
+            event = json.loads(message)
+        except ValueError:
+            return False
+        return isinstance(event, dict) and "actions" in event and "body" not in event
 
     @staticmethod
     def _stringify_incoming_event(incoming_event) -> str:

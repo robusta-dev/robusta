@@ -3,12 +3,7 @@ import textwrap
 
 from hikaru.model.rel_1_26 import DaemonSet, Node, NodeList
 from robusta.api import (
-    CallbackBlock,
-    CallbackChoice,
     DaemonSetEvent,
-    ExecutionBaseEvent,
-    Finding,
-    FindingSource,
     KubernetesFieldsBlock,
     MarkdownBlock,
     PrometheusKubernetesAlert,
@@ -17,83 +12,6 @@ from robusta.api import (
     does_daemonset_have_toleration,
     does_node_have_taint,
 )
-
-
-@action
-def daemonset_fix_config(event: ExecutionBaseEvent):
-    finding = Finding(
-        title="Proposed fix",
-        source=FindingSource.CALLBACK.value,
-        aggregation_key="DaemonsetFixConfig",
-    )
-    finding.add_enrichment(
-        [
-            MarkdownBlock(
-                textwrap.dedent(
-                    """\
-                    Add the following to your daemonset pod-template:
-                    ```
-                    tolerations:
-                    - effect: NoSchedule
-                    key: ToBeDeletedByClusterAutoscaler
-                    operator: Exists
-                    ```"""
-                )
-            )
-        ]
-    )
-
-    finding.add_enrichment(
-        [
-            MarkdownBlock(
-                "This will tell Kubernetes that it is OK if daemonsets keep running while a node shuts down. "
-                "This is desirable for daemonsets like elasticsearch which should keep gathering logs while the "
-                "node shuts down."
-                ""
-            )
-        ]
-    )
-    event.add_finding(finding)
-
-
-@action
-def daemonset_silence_false_alarm(event: ExecutionBaseEvent):
-    finding = Finding(
-        title="Silence the alert",
-        source=FindingSource.CALLBACK,
-        aggregation_key="DaemonsetSilenceFalseAlarm",
-    )
-    finding.add_enrichment(
-        [
-            MarkdownBlock(
-                textwrap.dedent(
-                    """\
-                    Add the following to your `active_playbooks.yaml`:
-                    ```
-                    - name: "alerts_integration"
-                        action_params:
-                        alerts_config:
-                            (...)
-                            - alert_name: "KubernetesDaemonsetMisscheduled"
-                            (...)
-                            silencers:
-                                - name: "DaemonsetMisscheduledSmartSilencer"
-                    ```"""
-                )
-            )
-        ]
-    )
-
-    finding.add_enrichment(
-        [
-            MarkdownBlock(
-                "This will silence the KubernetesDaemonsetMisscheduled alert when the known false alarm occurs but not under "
-                "other conditions."
-                ""
-            )
-        ]
-    )
-    event.add_finding(finding)
 
 
 @action
@@ -192,19 +110,14 @@ def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
                     (<https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/|Learn more>).
 
                     *Remediation*
-                    Would you like to:
-
-                    1. Fix the daemonset configuration to avoid the false alarm
-                    2. Use Robusta to silence the false alarm while passing through real alerts.
-
-                    Choose an option below to learn more."""
+                    Add this toleration to the daemonset pod template, so its pods keep running while a node shuts down:
+                    ```
+                    tolerations:
+                    - effect: NoSchedule
+                      key: ToBeDeletedByClusterAutoscaler
+                      operator: Exists
+                    ```"""
                 )
-            ),
-            CallbackBlock(
-                choices={
-                    "Fix the Configuration": CallbackChoice(action=daemonset_fix_config),
-                    "Silence the false alarm": CallbackChoice(action=daemonset_silence_false_alarm),
-                },
             ),
         ]
     )
