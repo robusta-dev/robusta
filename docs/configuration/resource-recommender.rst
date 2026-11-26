@@ -48,6 +48,10 @@ Prometheus credentials, headers and labels under ``globalConfig`` and the runner
 
 ``krrArgs`` runs in a shell, so ``"$NAME"`` reads an environment variable of the KRR pod.
 
+.. warning::
+
+    Never write a credential itself into ``krrArgs``. The CronJob object is readable in the cluster, so anyone who can view it would see the value. Always reference an environment variable that comes from a Secret, as the examples below do.
+
 **Prometheus with a token:**
 
 .. code-block:: yaml
