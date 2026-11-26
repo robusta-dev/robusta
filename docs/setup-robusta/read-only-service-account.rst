@@ -145,6 +145,10 @@ provide **fully replace** the built-in runner ClusterRole rules, so only the per
    Do not confuse this with ``runner.customClusterRoleRules``. That parameter *adds* rules on top of the
    built-in rules, so it **cannot** be used to remove permissions.
 
+   ``overrideClusterRoles`` also replaces the rules added by ``enablePodDelete``, ``enableJobDelete``,
+   ``enableNodeEdit`` and ``enablePodEvict``. To use the actions behind these flags, enable the flag and add
+   its permission to the override. The two ConfigMap flags are not affected.
+
 To narrow the built-in read rules, create a custom values file with the following configuration:
 
 .. code-block:: yaml
