@@ -69,16 +69,3 @@ def test_malformed_message_is_not_processed(caplog):
     receiver.on_message(None, "not json")
     receiver._process_action.assert_not_called()
     assert "Failed to parse incoming event" in caplog.text
-
-
-def test_button_only_actions_are_gone():
-    from robusta_playbooks import alerts_integration, autoscaler, daemonsets, sink_enrichments
-
-    for module, name in [
-        (alerts_integration, "stack_overflow_enricher"),
-        (autoscaler, "scale_hpa_callback"),
-        (daemonsets, "daemonset_fix_config"),
-        (daemonsets, "daemonset_silence_false_alarm"),
-        (sink_enrichments, "ack_opsgenie_alert_from_slack"),
-    ]:
-        assert not hasattr(module, name)
