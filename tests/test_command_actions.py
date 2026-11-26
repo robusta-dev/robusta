@@ -48,8 +48,6 @@ COMMAND_ACTIONS = {
     "node_bash_enricher",
     "kubectl_command",
     "alert_handling_job",
-    "krr_scan",
-    "popeye_scan",
     *REQUEST_ACTIONS,
 }
 
@@ -90,6 +88,7 @@ def _helm_values() -> dict:
 def test_builtin_actions_are_found():
     assert len(BUILTIN_ACTIONS) > 100
     assert COMMAND_ACTIONS | FIXED_TOOL_ACTIONS <= set(BUILTIN_ACTIONS)
+    assert not {"krr_scan", "popeye_scan"} & set(BUILTIN_ACTIONS)
 
 
 @pytest.mark.parametrize("name", sorted(BUILTIN_ACTIONS))
@@ -118,8 +117,7 @@ def test_default_playbooks_actions():
         for playbook_action in playbook["actions"]
         for name in playbook_action
     }
-    # WeeklyKRRScan is the one default playbook with a command action; it runs once krr_scan is in commandActions
-    assert not used & (COMMAND_ACTIONS - {"krr_scan"})
+    assert not used & COMMAND_ACTIONS
 
 
 def test_action_decorator_forms():

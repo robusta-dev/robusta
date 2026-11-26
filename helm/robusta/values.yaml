@@ -37,8 +37,8 @@ global:
   # of colored text, which is easier to index with log scrapers like Filebeat.
   # This is shared with subcharts (e.g. Holmes) automatically.
   enableJsonLogsFormat: false
-  # Optional image pull secrets applied to the runner, kubewatch, and the runtime pods
-  # created by the runner (e.g. KRR, Popeye, via the runner ServiceAccount).
+  # Optional image pull secrets applied to the runner, kubewatch, the KRR CronJob, and the
+  # runtime pods created by the runner (via the runner ServiceAccount).
   # A component's own imagePullSecrets (e.g. runner.imagePullSecrets), when set, is used
   # instead of this global; otherwise the component inherits this global. Leave empty to
   # keep existing behavior. HolmesGPT is a separate subchart - set holmes.imagePullSecrets.
@@ -74,9 +74,8 @@ alertRelabel: []
 # Command actions: actions that run commands or start jobs in your cluster, or send HTTP requests. They run only from
 # playbooks defined in this configuration, and only if you explicitly opt in by listing them here. The list is empty
 # by default.
-# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job, krr_scan, popeye_scan,
+# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job,
 # http_get, http_post, http_put
-# The WeeklyKRRScan playbook, which enablePlatformPlaybooks adds, needs krr_scan listed here.
 commandActions: []
 
 # safe actions to enable authenticated users to run
@@ -606,16 +605,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "WeeklyKRRScan"
-  triggers:
-  - on_schedule:
-      cron_schedule_repeat:
-        cron_expression: "0 12 * * 1" # every Monday at 12:00
-  actions:
-  - krr_scan: {}
-  sinks:
-    - "robusta_ui_sink"
-
 - name: "RobustaMaintenance"
   triggers:
   - on_schedule:
@@ -748,9 +737,9 @@ runner:
   overrideClusterRoles: []
   rbac:
     # WARNING: creation only happens in Robusta's namespace and is critical for
-    # KRR/Popeye scans, kubectl_command and the node_bash_enricher debugger pod.
+    # kubectl_command and the node_bash_enricher debugger pod.
     # Setting true removes the runner Role and disables the
-    # NodeFSSpaceAlerts and WeeklyKRRScan playbooks
+    # NodeFSSpaceAlerts playbook
     disableCreateFromServiceAccount: false
     # Namespace-scoped runner: render the runner RBAC as a namespaced Role + RoleBinding
     # (no ClusterRole / ClusterRoleBinding), limiting the runner to the release namespace.
@@ -779,6 +768,25 @@ runner:
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
   setKRRSecurityContext: false
+  # Runs the weekly KRR scan from a CronJob. It uses the settings below and globalConfig.prometheus_url,
+  # and no other globalConfig or runner setting. See docs: "Cost Savings (KRR)".
+  krrCronJob:
+    enabled: ~  # empty: on unless rbac.disableCreateFromServiceAccount is true
+    schedule: "0 12 * * 1" # every Monday at 12:00
+    timeout: 3600  # seconds
+    image: ~  # defaults to image.registry/krr
+    strategy: simple
+    # extra KRR arguments, for example Prometheus credentials. Runs in a shell, so "$NAME" reads an env var
+    krrArgs: ""
+    memoryRequest: 2Gi
+    memoryLimit: 2Gi
+    # pod scheduling fields such as tolerations, nodeSelector and affinity
+    jobSpec: {}
+    annotations: {}  # added to the KRR Job and pod
+    serviceAccountName: ~  # an existing service account. Defaults to the runner's
+    # env vars and env sources of the KRR pod
+    additional_env_vars: []
+    additional_env_froms: []
   #Enabled custom DNS configuration for runner
   dnsConfig:
     enabled: false

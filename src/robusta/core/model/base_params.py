@@ -270,33 +270,6 @@ class NamespacedResourcesParams(ActionParams):
     namespace: str
 
 
-# Fields a scan job spec may set. They only affect where and how the job's pod is scheduled.
-ALLOWED_JOB_SPEC_FIELDS = frozenset(
-    {
-        "tolerations",
-        "nodeSelector",
-        "affinity",
-        "priorityClassName",
-        "imagePullSecrets",
-        "topologySpreadConstraints",
-        "schedulerName",
-    }
-)
-
-
-def validate_job_spec(job_spec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Validate the extra pod spec fields of a scan job. Only scheduling fields are accepted."""
-    if not job_spec:
-        return {}
-    unsupported = sorted(set(job_spec) - ALLOWED_JOB_SPEC_FIELDS)
-    if unsupported:
-        raise ValueError(
-            f"Unsupported job spec fields: {', '.join(map(str, unsupported))}. "
-            f"Supported fields: {', '.join(sorted(ALLOWED_JOB_SPEC_FIELDS))}"
-        )
-    return job_spec
-
-
 # Parameters that decide the identity, metadata and command line of pods the runner creates. They are taken
 # from the runner's configuration only, never from the parameters of an individual action request.
 CONFIG_ONLY_PARAMS = frozenset(

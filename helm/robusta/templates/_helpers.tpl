@@ -45,6 +45,18 @@ dnsPolicy: ClusterFirst
 {{- end -}}
 {{- end -}}
 
+{{- define "robusta.krrCronJobEnabled" -}}
+{{- $hasRobustaSink := false }}
+{{- range .Values.sinksConfig }}
+{{- $hasRobustaSink = or $hasRobustaSink .robusta_sink }}
+{{- end }}
+{{- $cronJobEnabled := .Values.runner.krrCronJob.enabled }}
+{{- if kindIs "invalid" $cronJobEnabled }}
+{{- $cronJobEnabled = not .Values.runner.rbac.disableCreateFromServiceAccount }}
+{{- end }}
+{{- if and (dig "enabled" true .Values.runner) $cronJobEnabled (not (has "WeeklyKRRScan" .Values.disabledPlaybooks)) $hasRobustaSink }}true{{ end -}}
+{{- end -}}
+
 {{ define "robusta.configfile" -}}
 playbook_repos:
 {{ toYaml .Values.playbookRepos | indent 2 }}
@@ -93,8 +105,8 @@ light_actions:
 
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
 {{- if .Values.runner.rbac.disableCreateFromServiceAccount }}
-{{- /* these playbooks create pods/jobs */}}
-{{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan") }}
+{{- /* this playbook creates pods */}}
+{{- $disabledPlaybooks = append $disabledPlaybooks "NodeFSSpaceAlerts" }}
 {{- end }}
 
 command_actions:
