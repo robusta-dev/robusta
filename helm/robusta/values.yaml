@@ -416,6 +416,17 @@ builtinPlaybooks:
       resource_type: Memory
       item_type: Node
 
+- name: "NodeFSSpaceAlerts"
+  triggers:
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemSpaceFillingUp
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemAlmostOutOfSpace
+  actions:
+  - alert_graph_enricher:
+      resource_type: Disk
+      item_type: Node
+
 - name: "CPUThrottlingHigh"
   triggers:
   - on_prometheus_alert:

@@ -115,7 +115,7 @@ def test_default_render_has_no_write_rules():
 
     config = runner_config()
     names = {p.get("name") for p in config["active_playbooks"]}
-    assert not names & {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"}
+    assert not names & {"WeeklyKRRScan", "RobustaMaintenance"}
     assert not set(config["light_actions"]) & {"delete_pod", "delete_job", "drain", "krr_scan", "pod_ps", "rollout_restart"}
 
     env = get_doc(docs, "Deployment", "runner")["spec"]["template"]["spec"]["containers"][0]["env"]
@@ -158,7 +158,7 @@ def test_no_create_setting_overrides_configmap_flags():
     docs = render_full_chart(no_create)
     assert get_doc(docs, "Role", "runner-local-role") is None
     assert get_doc(docs, "CronJob", "robusta-krr") is None
-    assert not {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"} & playbook_names(no_create)
+    assert not {"WeeklyKRRScan", "RobustaMaintenance"} & playbook_names(no_create)
     env = get_doc(docs, "Deployment", "robusta-runner")["spec"]["template"]["spec"]["containers"][0]["env"]
     assert {"name": "DISABLE_CREATE_FROM_SERVICE_ACCOUNT", "value": "true"} in env
 
@@ -187,7 +187,7 @@ def test_scheduled_jobs_configmap_read_rule():
 
 def test_job_creating_playbooks_always_disabled():
     names = playbook_names(enable(*RBAC_FLAGS) + KRR_CRONJOB_DISABLED)
-    assert not {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"} & names
+    assert not {"WeeklyKRRScan", "RobustaMaintenance"} & names
 
 
 def test_namespace_scoped_rbac_renders_role_and_rolebinding():
