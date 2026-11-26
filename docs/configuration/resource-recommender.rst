@@ -47,7 +47,7 @@ Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_worker
 
 A ``krr_scan`` action on a schedule in ``customPlaybooks`` fails the Helm install while the CronJob is enabled. Remove it and set the frequency with ``runner.krrCronJob.schedule``.
 
-The CronJob is not created when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
+The CronJob is not created without a Robusta UI sink, or when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
 
 To run a scan now, and to check previous runs (replace ``robusta`` with your release name and namespace):
 

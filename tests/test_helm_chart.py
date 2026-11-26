@@ -25,7 +25,7 @@ def render_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "-s",
         "templates/runner-service-account.yaml",
         "-s",
@@ -43,7 +43,7 @@ def playbook_names(extra_args: Optional[List[str]] = None) -> set:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "--set",
         "enablePlatformPlaybooks=true",
         "-s",
@@ -180,7 +180,7 @@ def render_forwarder_chart(extra_args: Optional[List[str]] = None) -> List[dict]
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "-s",
         "templates/forwarder.yaml",
         "-s",
@@ -231,7 +231,7 @@ def render_full_chart(extra_args: Optional[List[str]] = None) -> List[dict]:
         "--set",
         "clusterName=test",
         "--set",
-        "sinksConfig[0].file_sink.name=test",
+        "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
         "--set",
         "enablePrometheusStack=false",
     ] + (extra_args or [])
@@ -432,7 +432,7 @@ SCHEDULED_KRR_PLAYBOOK = [
 
 def test_scheduled_krr_playbook_points_to_cronjob_values():
     result = subprocess.run(
-        ["helm", "template", str(CHART_PATH), "--set", "clusterName=test", "--set", "sinksConfig[0].file_sink.name=test"]
+        ["helm", "template", str(CHART_PATH), "--set", "clusterName=test", "--set", "sinksConfig[0].robusta_sink.name=robusta_ui_sink"]
         + SCHEDULED_KRR_PLAYBOOK,
         capture_output=True,
         text=True,
@@ -590,6 +590,11 @@ def test_krr_cronjob_keeps_runner_env_settings(tmp_path):
     assert registry_only["spec"]["template"]["spec"]["containers"][0]["image"] == "registry.local/krr:v1.30.0"
 
 
+def test_krr_cronjob_needs_robusta_sink():
+    docs = render_full_chart(["--set-json", 'sinksConfig=[{"file_sink": {"name": "test"}}]'])
+    assert get_doc(docs, "CronJob", "robusta-krr") is None
+
+
 def test_krr_cronjob_follows_disabled_weekly_playbook():
     docs = render_full_chart(["--set", "disabledPlaybooks[0]=WeeklyKRRScan"])
     assert get_doc(docs, "CronJob", "robusta-krr") is None
@@ -631,7 +636,7 @@ def test_krr_cronjob_env_setting_from_value_from_points_to_values():
             "--set",
             "clusterName=test",
             "--set",
-            "sinksConfig[0].file_sink.name=test",
+            "sinksConfig[0].robusta_sink.name=robusta_ui_sink",
             "--set",
             "runner.additional_env_vars[0].name=KRR_MEMORY_LIMIT",
             "--set",
