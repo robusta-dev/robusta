@@ -303,8 +303,10 @@ class SupabaseDal(AccountResourceFetcher):
         """Patch postgrest once for the process, however many DALs are built."""
         with SupabaseDal.__patch_lock:
             for builder in (SyncQueryRequestBuilder, SyncSingleRequestBuilder):
-                if not getattr(builder.execute, "retries_expired_jwt", False):
-                    builder.execute = SupabaseDal.__with_jwt_retry(builder.execute)
+                if not getattr(builder.execute, "is_patched_by_supabase_dal", False):
+                    execute_with_retry = SupabaseDal.__with_jwt_retry(builder.execute)
+                    execute_with_retry.is_patched_by_supabase_dal = True
+                    builder.execute = execute_with_retry
 
     @staticmethod
     def __with_jwt_retry(original_execute):
@@ -330,7 +332,6 @@ class SupabaseDal(AccountResourceFetcher):
                 headers.update(dal.__reauthorize(headers.get("Authorization")))
                 return original_execute(request_builder)
 
-        execute_with_retry.retries_expired_jwt = True
         return execute_with_retry
 
     def __reauthorize(self, rejected_authorization: Optional[str]) -> Dict[str, str]:

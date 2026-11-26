@@ -289,14 +289,19 @@ def test_postgrest_is_patched_once_for_any_number_of_dals(make_dal):
 
 def test_concurrent_expired_requests_sign_in_once(dal, fake):
     fake.expire_all()
-    start = threading.Barrier(8)
+    fake.sign_in_gate.clear()
 
     def call(_):
-        start.wait()
         return dal.client.table("Issues").select("*").execute().data
 
     with concurrent.futures.ThreadPoolExecutor(8) as pool:
-        results = list(pool.map(call, range(8)))
+        results = pool.map(call, range(8))
+        # hold the first sign-in open until every request was rejected
+        deadline = time.time() + 5
+        while len(fake.rest_calls) < 8 and time.time() < deadline:
+            time.sleep(0.01)
+        assert len(fake.rest_calls) == 8
+        fake.sign_in_gate.set()
+        assert list(results) == [[{"id": 1}]] * 8
 
-    assert results == [[{"id": 1}]] * 8
     assert fake.password_grants == 2
