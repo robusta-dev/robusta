@@ -118,8 +118,7 @@ Applying the Configuration
 
     helm upgrade robusta robusta/robusta \
       --values values.yaml \
-      --namespace robusta \
-      --reuse-values
+      --namespace robusta
 
 Automatic Configuration with Holmes AI
 ---------------------------------------
