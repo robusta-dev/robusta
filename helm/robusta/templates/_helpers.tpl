@@ -91,6 +91,9 @@ alert_relabel:
 light_actions:
 {{ toYaml  .Values.lightActions | indent 2 }}
 
+command_actions:
+{{ toYaml  .Values.commandActions | indent 2 }}
+
 active_playbooks:
 {{- if .Values.playbooks }}
   {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}

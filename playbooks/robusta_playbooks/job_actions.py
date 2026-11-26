@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import List, Optional, Tuple
 
 import hikaru
@@ -62,7 +63,7 @@ class JobParams(ActionParams):
     env: Optional[List[EnvVar]] = None
 
 
-@action(local_only=True)
+@action(command_action=True)
 def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
     """
     Create a kubernetes job with the specified parameters
@@ -139,6 +140,10 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
         event.add_enrichment([MarkdownBlock(combined_message)])
 
 
+# Alert label names that can be used as part of an environment variable name
+ENV_VAR_NAME_PART = re.compile(r"[A-Za-z0-9_]+")
+
+
 def __get_alert_env_vars(event: PrometheusKubernetesAlert, params: JobParams) -> List[EnvVar]:
     alert_subject = event.get_alert_subject()
     alert_env_vars = [
@@ -155,7 +160,11 @@ def __get_alert_env_vars(event: PrometheusKubernetesAlert, params: JobParams) ->
     if params.env is not None:
         alert_env_vars.extend(params.env)
 
-    label_vars = [EnvVar(name=f"ALERT_LABEL_{k.upper()}", value=v) for k, v in event.alert.labels.items()]
+    label_vars = [
+        EnvVar(name=f"ALERT_LABEL_{k.upper()}", value=v)
+        for k, v in event.alert.labels.items()
+        if ENV_VAR_NAME_PART.fullmatch(k)
+    ]
     alert_env_vars += label_vars
 
     return alert_env_vars

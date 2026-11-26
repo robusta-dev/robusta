@@ -88,7 +88,7 @@ For example:
    class BashParams(ActionParams):
       bash_command: str
 
-   @action(local_only=True)
+   @action(command_action=True)
    def pod_bash_enricher(event: PodEvent, params: BashParams):
        pod = event.get_pod()
        if not pod:
@@ -119,9 +119,15 @@ Please consult Pydantic's documentation for details. ``ActionParams`` is a drop-
 Actions that run commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Mark an action that runs a command in a pod or on a node with ``@action(local_only=True)``, as above. A local-only
-action runs only from playbooks defined in your Robusta configuration. Robusta refuses it when it arrives as a request
-from the Robusta UI or from a Slack button.
+Mark an action that runs a command in a pod or on a node with ``@action(command_action=True)``, as above. A command
+action is off by default. To use it, add its name to ``commandActions`` in your Helm values:
+
+.. code-block:: yaml
+
+   commandActions:
+   - pod_bash_enricher
+
+A command action runs only from playbooks defined in your Robusta configuration.
 
 Rate-limiting
 -------------

@@ -155,10 +155,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
 
-        if action_def.local_only:
+        if action_def.command_action:
             return self.__error_resp(
                 f"Action {action_name} runs only from playbooks in the runner configuration",
-                ErrorCodes.LOCAL_ONLY_ACTION.value,
+                ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value,
             )
 
         if not action_def.from_params_func:
@@ -219,6 +219,15 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             if not registered_action:  # Might happen if manually trying to trigger incorrect action
                 msg = f"action {action.action_name} not found. Skipping for event {type(execution_event)}"
                 execution_event.response = self.__error_resp(msg, ErrorCodes.ACTION_NOT_REGISTERED.value)
+                playbooks_errors_count.labels(source).inc()
+                continue
+
+            if registered_action.command_action and action.action_name not in self.registry.get_command_actions():
+                msg = (
+                    f"Action {action.action_name} is disabled. "
+                    f"To enable it, add it to commandActions in the Helm values"
+                )
+                execution_event.response = self.__error_resp(msg, ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value)
                 playbooks_errors_count.labels(source).inc()
                 continue
 
@@ -385,10 +394,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)
 
-        if action_def.local_only:
+        if action_def.command_action:
             return self.__error_resp(
                 f"Action {action_name} runs only from playbooks in the runner configuration",
-                ErrorCodes.LOCAL_ONLY_ACTION.value,
+                ErrorCodes.COMMAND_ACTION_NOT_ALLOWED.value,
             )
 
         if not action_def.from_params_func:

@@ -1,6 +1,8 @@
 import logging
 import os
+import re
 import uuid
+from typing import List
 
 from hikaru.model.rel_1_26 import Container, PodSpec
 from robusta.api import (
@@ -12,7 +14,7 @@ from robusta.api import (
     RobustaJob,
     action,
 )
-from robusta.utils.parsing import format_event_templated_string
+from robusta.utils.parsing import ExtendedTemplate, format_event_templated_string
 
 IMAGE: str = os.getenv("KUBECTL_IMAGE_OVERRIDE", f"bitnami/kubectl:latest")
 
@@ -29,13 +31,31 @@ class KubectlParams(PodRunningParams):
     timeout: int = 3600
 
 
-@action(local_only=True)
+# A value substituted into the command is read by a shell, so it must be a plain Kubernetes-style name.
+SAFE_TEMPLATE_VALUE = re.compile(r"[A-Za-z0-9._:/@=-]*")
+
+
+def get_unsafe_template_values(subject, command: str) -> List[str]:
+    """Names of the placeholders in the command whose value for this subject is not a plain name."""
+    template = ExtendedTemplate(command)
+    return sorted(
+        name
+        for name in template.get_identifiers()
+        if not SAFE_TEMPLATE_VALUE.fullmatch(format_event_templated_string(subject, "${" + name + "}"))
+    )
+
+
+@action(command_action=True)
 def kubectl_command(event: ExecutionBaseEvent, params: KubectlParams):
     """
     Runs a custom kubectl command inside a Kubernetes pod using a Job.
     """
 
     subject = event.get_subject()
+    unsafe_values = get_unsafe_template_values(subject, params.command)
+    if unsafe_values:
+        logging.error(f"kubectl_command not running. These template values are not plain names: {unsafe_values}")
+        return
     formatted_kubectl_command = format_event_templated_string(subject, params.command)
     logging.info(f"kubectl_command running '{params.description}'")
     logging.debug(f"kubectl_command: '{formatted_kubectl_command}'")

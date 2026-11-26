@@ -71,6 +71,10 @@ globalConfig:
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []
 
+# Actions that run commands in your cluster are off by default. To let your playbooks use one, list it here.
+# Available: pod_bash_enricher, node_bash_enricher, kubectl_command, alert_handling_job
+commandActions: []
+
 # safe actions to enable authenticated users to run
 lightActions:
 - related_pods
@@ -240,7 +244,6 @@ builtinPlaybooks:
       attach_logs: true
       container_memory_graph: true
       node_memory_graph: true
-      dmesg_log: false
   stop: true
 
 # playbooks for prometheus alerts enrichment
@@ -420,7 +423,6 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: NodeFilesystemAlmostOutOfSpace
   actions:
-  - node_disk_analyzer: {}
   - alert_graph_enricher:
       resource_type: Disk
       item_type: Node
@@ -743,7 +745,7 @@ runner:
   overrideClusterRoles: []
   rbac:
     # WARNING: creation only happens in Robusta's namespace and is critical for
-    # KRR/Popeye scans, kubectl_command, netshoot, stress tests and debugger pods.
+    # KRR/Popeye scans, kubectl_command and the node_bash_enricher debugger pod.
     # Setting true removes the runner Role and disables the
     # NodeFSSpaceAlerts and WeeklyKRRScan playbooks
     disableCreateFromServiceAccount: false

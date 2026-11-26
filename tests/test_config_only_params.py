@@ -25,7 +25,7 @@ def test_empty_params_are_left_alone():
 def _handler_and_action():
     registry = MagicMock()
     action_def = registry.get_actions.return_value.get_action.return_value
-    action_def.local_only = False
+    action_def.command_action = False
     handler = PlaybooksEventHandlerImpl.__new__(PlaybooksEventHandlerImpl)
     handler.registry = registry
     handler.run_actions = MagicMock(return_value={"success": True})
