@@ -26,7 +26,6 @@ class FindingSource(Enum):
     KUBERNETES_API_SERVER = "kubernetes_api_server"
     PROMETHEUS = "prometheus"
     MANUAL = "manual"
-    HELM_RELEASE = "helm_release"
     CALLBACK = "callback"
     SCHEDULER = "scheduler"
 

@@ -18,12 +18,12 @@ Weekly KRR Scan CronJob
 The Helm chart creates a ``CronJob`` named ``<release>-krr`` that runs the weekly KRR scan and sends the result
 to the Robusta UI. It replaces the ``WeeklyKRRScan`` playbook, so the runner does not create the scan Job
 or a Secret for it. It runs with the runner service account, and uses the Prometheus settings from
-``globalConfig`` and the runner's ``additional_env_vars`` and ``additional_env_froms``.
+``globalConfig``.
 
 Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_workers``, ``krr_verbose``, ``strategy``,
 ``timeout`` and ``custom_annotations`` under ``globalConfig``, and the ``KRR_IMAGE_OVERRIDE``, ``KRR_MEMORY_REQUEST``,
-``KRR_MEMORY_LIMIT``, ``KRR_STRATEGY`` and ``KRR_PUBLISH_URL`` runner environment variables. A value under
-``runner.krrCronJob`` takes precedence:
+``KRR_MEMORY_LIMIT``, ``KRR_STRATEGY`` and ``KRR_PUBLISH_URL`` runner environment variables, when set with a literal
+``value``. A value under ``runner.krrCronJob`` takes precedence:
 
 .. code-block:: yaml
 
@@ -31,21 +31,69 @@ Existing KRR settings keep working: ``krr_args``, ``krr_job_spec``, ``max_worker
       krrCronJob:
         enabled: true
         schedule: "0 12 * * 1"   # every Monday at 12:00
-        timeout: 3600            # seconds
-        image: ~                 # defaults to image.registry/krr
-        strategy: simple
-        krrArgs: ""
-        maxWorkers: 3
-        verbose: false
-        memoryRequest: 2Gi
-        memoryLimit: 2Gi
+        timeout: ~               # seconds. globalConfig.timeout, then 3600
+        image: ~                 # KRR_IMAGE_OVERRIDE, then image.registry/krr
+        strategy: ~              # KRR_STRATEGY, globalConfig.strategy, then simple
+        krrArgs: ""              # globalConfig.krr_args
+        maxWorkers: ~            # globalConfig.max_workers, then 3
+        verbose: false           # or globalConfig.krr_verbose
+        memoryRequest: ~         # KRR_MEMORY_REQUEST, then 2Gi
+        memoryLimit: ~           # KRR_MEMORY_LIMIT, then 2Gi
         jobSpec: {}              # tolerations, nodeSelector, affinity...
         annotations: {}          # added to globalConfig.custom_annotations
+        additional_env_vars: []  # env vars of the KRR pod
+        additional_env_froms: [] # env sources of the KRR pod
         prometheusAuthSecret:    # a Secret holding the Prometheus Authorization header
           name: ""
           key: ""
 
-A ``krr_scan`` action on a schedule in ``customPlaybooks`` fails the Helm install while the CronJob is enabled. Remove it and set the frequency with ``runner.krrCronJob.schedule``.
+The CronJob is not created without a Robusta UI sink, or when ``WeeklyKRRScan`` is listed in ``disabledPlaybooks``.
+
+Credentials for the KRR CronJob
+------------------------------------------------------------
+
+The KRR pod does not get the runner's ``additional_env_vars`` or ``additional_env_froms``. If KRR needs credentials
+from environment variables, set them for KRR under ``runner.krrCronJob``. This applies to AWS Managed Prometheus,
+Coralogix, ``PROMETHEUS_CLUSTER_TOKEN_AUTH``, and any ``{{ env.NAME }}`` value in the ``globalConfig`` Prometheus settings.
+
+.. code-block:: yaml
+
+    runner:
+      krrCronJob:
+        additional_env_vars:
+        # AWS Managed Prometheus
+        - name: AWS_REGION
+          value: us-east-1
+        - name: AWS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: secret-key
+        # Coralogix
+        - name: CORALOGIX_PROMETHEUS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: coralogix-credentials
+              key: token
+        # a whole Secret, for example one referenced by prometheus_auth: "{{ env.PROMETHEUS_AUTH }}"
+        additional_env_froms:
+        - secretRef:
+            name: prometheus-credentials
+
+A Prometheus token can also come from an existing Secret, without an environment variable:
+
+.. code-block:: yaml
+
+    runner:
+      krrCronJob:
+        prometheusAuthSecret:
+          name: prometheus-credentials
+          key: auth-header
 
 To run a scan now, and to check previous runs (replace ``robusta`` with your release name and namespace):
 

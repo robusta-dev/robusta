@@ -1,4 +1,5 @@
 import base64
+import logging
 from typing import Dict, List, Optional, Union, cast
 
 from pydantic.v1 import BaseModel, SecretStr, root_validator, validator
@@ -33,6 +34,14 @@ from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.base64_utils import is_base64_encoded
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.incidentio.incidentio_sink_params import IncidentioSinkConfigWrapper
+
+
+REMOVED_HELM_RELEASE_TRIGGERS = {"on_helm_release_unhealthy", "on_helm_release_fail", "on_helm_release_deploy"}
+REMOVED_HELM_RELEASE_ACTIONS = {"helm_status_enricher"}
+
+
+def _has_removed_key(entry, removed: set) -> bool:
+    return isinstance(entry, dict) and bool(removed & entry.keys())
 
 
 class PlaybookRepo(BaseModel):
@@ -87,6 +96,39 @@ class RunnerConfig(BaseModel):
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
     alert_relabel: Optional[List[AlertRelabel]] = []
+
+    @validator("active_playbooks", pre=True)
+    def drop_helm_release_playbooks(cls, playbooks):
+        if not isinstance(playbooks, list):
+            return playbooks
+        kept = []
+        for playbook in playbooks:
+            triggers = playbook.get("triggers") if isinstance(playbook, dict) else None
+            actions = playbook.get("actions") if isinstance(playbook, dict) else None
+            if not isinstance(triggers, list) or not isinstance(actions, list):
+                kept.append(playbook)
+                continue
+            other_triggers = [t for t in triggers if not _has_removed_key(t, REMOVED_HELM_RELEASE_TRIGGERS)]
+            other_actions = [a for a in actions if not _has_removed_key(a, REMOVED_HELM_RELEASE_ACTIONS)]
+            if len(other_triggers) == len(triggers) and len(other_actions) == len(actions):
+                kept.append(playbook)
+                continue
+            removed = sorted(
+                key
+                for entry in triggers + actions
+                if isinstance(entry, dict)
+                for key in entry.keys() & (REMOVED_HELM_RELEASE_TRIGGERS | REMOVED_HELM_RELEASE_ACTIONS)
+            )
+            if other_triggers and other_actions:
+                kept.append({**playbook, "triggers": other_triggers, "actions": other_actions})
+                outcome = f"Removed {removed} from the playbook"
+            else:
+                outcome = f"Skipping the playbook that uses {removed}"
+            name = f" {playbook['name']}" if playbook.get("name") else ""
+            logging.error(
+                f"{outcome}{name}: Helm releases monitoring is no longer supported, remove it from your playbooks"
+            )
+        return kept
 
     @root_validator()
     def ensure_unique_sink_name(cls, val: Dict) -> Dict:

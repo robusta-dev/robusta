@@ -5,8 +5,9 @@
 {{- $krrArgs := $krr.krrArgs | default $global.args | default $global.krr_args | default "" }}
 {{- /* runner env vars that configured the scan job */}}
 {{- $runnerEnv := dict }}
+{{- $krrSettings := dict "KRR_IMAGE_OVERRIDE" $krr.image "KRR_MEMORY_REQUEST" $krr.memoryRequest "KRR_MEMORY_LIMIT" $krr.memoryLimit }}
 {{- range .Values.runner.additional_env_vars }}
-{{- if and (hasKey . "valueFrom") (has .name (list "KRR_IMAGE_OVERRIDE" "KRR_MEMORY_REQUEST" "KRR_MEMORY_LIMIT")) }}
+{{- if and (hasKey . "valueFrom") (hasKey $krrSettings .name) (not (get $krrSettings .name)) }}
 {{- fail (printf "runner.additional_env_vars: %s must be set with a literal value, or under runner.krrCronJob" .name) }}
 {{- end }}
 {{- $_ := set $runnerEnv .name (.value | default "" | toString) }}
@@ -39,7 +40,7 @@
 {{- $envReferences := dict }}
 {{- $secretValues := dict }}
 {{- range $envName, $value := $credentials }}
-{{- $reference := regexReplaceAll ".*{{ *env\\.(\\w+) *}}.*" $value "${1}" }}
+{{- $reference := regexReplaceAll "{{ *env\\.(\\w+) *}}" $value "$${${1}}" }}
 {{- $_ := set (ternary $secretValues $envReferences (eq $reference $value)) $envName $reference }}
 {{- end }}
 apiVersion: batch/v1
@@ -98,7 +99,7 @@ spec:
               SCAN_ID=$(python -c 'import uuid; print(uuid.uuid4())')
               START_TIME=$(python -c 'from datetime import datetime; print(datetime.now())')
               {{- range $envName, $reference := $envReferences }}
-              {{ $envName }}="${{ $reference }}"
+              {{ $envName }}="{{ $reference }}"
               {{- end }}
               if [ -z "$AWS_REGION" ] && [ -n "$CORALOGIX_PROMETHEUS_TOKEN" ]; then
                 PROMETHEUS_AUTH_HEADER="Bearer $CORALOGIX_PROMETHEUS_TOKEN"
@@ -119,20 +120,20 @@ spec:
               if [ -n "$AWS_REGION" ] && [ -n "$AWS_ACCESS_KEY" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
                 set -- "$@" --eks-access-key "$AWS_ACCESS_KEY" --eks-secret-key "$AWS_SECRET_ACCESS_KEY"
               fi
-              exec python krr.py "{{ if $krr.strategy }}{{ $krr.strategy }}{{ else }}${KRR_STRATEGY:-{{ $global.strategy | default "simple" }}}{{ end }}" \
-                --publish_scan_url="${KRR_PUBLISH_URL:-http://{{ $fullname }}-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/trigger}" \
+              exec python krr.py "{{ if $krr.strategy }}{{ $krr.strategy }}{{ else }}${KRR_STRATEGY:-{{ $runnerEnv.KRR_STRATEGY | default $global.strategy | default "simple" }}}{{ end }}" \
+                --publish_scan_url="${KRR_PUBLISH_URL:-{{ $runnerEnv.KRR_PUBLISH_URL | default (printf "http://%s-runner.%s.svc.%s/api/trigger" $fullname .Release.Namespace .Values.global.clusterDomain) }}}" \
                 --scan_id="$SCAN_ID" --start_time="$START_TIME" --named_sinks=robusta_ui_sink \
                 {{ $krrArgs }} \
                 {{- $labels := $global.prometheus_additional_labels | default dict }}
                 {{- if and (eq (len $labels) 1) (not (contains "-l" $krrArgs)) }}
                 {{- range $label, $value := $labels }}
-                --prometheus-label {{ $label | squote }} -l {{ $value | toString | squote }} \
+                --prometheus-label {{ $label | replace "'" "'\\''" | squote }} -l {{ $value | toString | replace "'" "'\\''" | squote }} \
                 {{- end }}
                 {{- end }}
                 --max-workers {{ $krr.maxWorkers | default $global.max_workers | default 3 }} {{ if or $krr.verbose $global.krr_verbose }}-v {{ end }}-f json --width 2048 \
                 {{- with $global.prometheus_url }}
-                {{- $reference := regexReplaceAll ".*{{ *env\\.(\\w+) *}}.*" . "${1}" }}
-                -p {{ eq $reference . | ternary (squote .) (printf "\"$%s\"" $reference) }} \
+                {{- $reference := regexReplaceAll "{{ *env\\.(\\w+) *}}" . "$${${1}}" }}
+                -p {{ eq $reference . | ternary (. | replace "'" "'\\''" | squote) (printf "\"%s\"" $reference) }} \
                 {{- end }}
                 {{- range $headerFlags }}
                 {{ . }} \
@@ -145,7 +146,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .name }}
-                  key: {{ .key }}
+                  key: {{ required "runner.krrCronJob.prometheusAuthSecret.key is required" .key }}
             {{- end }}
             {{- end }}
             {{- range $envName, $_ := $secretValues }}
@@ -163,10 +164,10 @@ spec:
             - name: ENABLE_JSON_LOGS_FORMAT
               value: "true"
             {{- end }}
-            {{- with .Values.runner.additional_env_vars }}
+            {{- with $krr.additional_env_vars }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- with .Values.runner.additional_env_froms }}
+            {{- with $krr.additional_env_froms }}
             envFrom:
             {{- toYaml . | nindent 12 }}
             {{- end }}

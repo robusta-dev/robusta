@@ -46,7 +46,11 @@ dnsPolicy: ClusterFirst
 {{- end -}}
 
 {{- define "robusta.krrCronJobEnabled" -}}
-{{- if and (dig "enabled" true .Values.runner) .Values.runner.krrCronJob.enabled }}true{{ end -}}
+{{- $hasRobustaSink := false }}
+{{- range .Values.sinksConfig }}
+{{- $hasRobustaSink = or $hasRobustaSink .robusta_sink }}
+{{- end }}
+{{- if and (dig "enabled" true .Values.runner) .Values.runner.krrCronJob.enabled (not (has "WeeklyKRRScan" .Values.disabledPlaybooks)) $hasRobustaSink }}true{{ end -}}
 {{- end -}}
 
 {{ define "robusta.configfile" -}}
@@ -119,13 +123,6 @@ active_playbooks:
 {{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan" "RobustaMaintenance") }}
 {{- if include "robusta.krrCronJobEnabled" . }}
 {{- $disabledPlaybooks = append $disabledPlaybooks "WeeklyKRRScan" }}
-{{- range $playbook := .Values.customPlaybooks }}
-{{- range $action := $playbook.actions }}
-{{- if and (contains "on_schedule" (toJson $playbook.triggers)) (hasKey $action "krr_scan") }}
-{{- fail "customPlaybooks: a scheduled krr_scan is not supported with the KRR CronJob. Remove it and configure the scan under runner.krrCronJob, for example runner.krrCronJob.schedule" }}
-{{- end }}
-{{- end }}
-{{- end }}
 {{- end }}
 
 {{- $priorityPlaybooks := .Values.priorityBuiltinPlaybooks }}
