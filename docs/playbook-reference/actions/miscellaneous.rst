@@ -8,11 +8,6 @@ Slack-OpsGenie sync
 
 .. robusta-action:: playbooks.robusta_playbooks.sink_enrichments.opsgenie_slack_enricher
 
-Backups
--------------------
-
-.. robusta-action:: playbooks.robusta_playbooks.pvc_snapshots.create_pvc_snapshot on_schedule
-
 Simulating Alerts
 ---------------------------------------------
 
