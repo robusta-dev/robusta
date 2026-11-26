@@ -27,7 +27,6 @@ from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.rocketchat.rocketchat_sink_params import RocketchatSinkParams
 from robusta.core.sinks.transformer import Transformer
 
-ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"
 RocketchatBlock = Dict[str, Any]
 MAX_BLOCK_CHARS = 3000

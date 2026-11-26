@@ -470,7 +470,7 @@ def process_scan(event: ExecutionBaseEvent, params: ProcessScanParams):
     _publish_krr_finding(event=event,krr_json=params.result, scan_id=params.scan_id, start_time=params.start_time, metadata=metadata, timeout=None, config_json=NONE)
 
 
-@action
+@action(command_action=True)
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.

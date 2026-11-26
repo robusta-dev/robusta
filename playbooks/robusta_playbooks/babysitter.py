@@ -4,11 +4,9 @@
 # * https://github.com/google/diff-match-patch/wiki/Language:-Python (see output format here: https://neil.fraser.name/software/diff_match_patch/demos/diff.html)
 # * https://github.com/wagoodman/diff2HtmlCompare
 # * https://github.com/GerHobbelt/google-diff-match-patch
-import json
 import logging
-from typing import List, Optional, Dict
+from typing import List
 
-import requests
 
 from robusta.api import (
     ActionParams,
@@ -82,28 +80,3 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         title="Kubernetes Manifest Change",
     )
     event.add_finding(finding)
-
-
-class UrlParam(ActionParams):
-    """
-    :var url: Url that should be used in the action
-    :var headers: A dictionary of headers to be added to the request.
-    """
-
-    url: str
-    headers: Optional[Dict[str, str]] = None
-
-
-@action
-def json_change_tracker(event: KubernetesAnyChangeEvent, params: UrlParam):
-    """
-    Posts Kubernetes resource changes as JSON to a specified URL.
-    This action doesn't create a finding
-    """
-    try:
-        event_dict = event.obj.to_dict()
-        event_dict["operation"] = event.operation.value
-        event_json = json.dumps(event_dict, indent=2)
-        requests.post(params.url, headers=params.headers, data=event_json)
-    except Exception as e:
-        logging.exception(f"Failed to post change event to {params.url}. event: {event_json}")

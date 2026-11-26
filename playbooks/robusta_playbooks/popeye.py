@@ -131,7 +131,7 @@ def group_issues_list(issues: List[Issue]) -> Dict[str, GroupedIssues]:
     return grouped_issues
 
 
-@action
+@action(command_action=True)
 def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     """
     Displays a popeye scan report.

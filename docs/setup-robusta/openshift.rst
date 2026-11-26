@@ -47,14 +47,14 @@ Optional: Giving Robusta extra debug permissions
 
 Some lesser used Robusta Classic features require more permissions than the baseline SCC provides.
 
-In order to support the ``python_debugger``, ``java_debugger`` and ``node_disk_analyzer``
-playbooks, permission to run a far more privileged container needs to be granted to
+In order to support the ``node_bash_enricher``
+playbook, permission to run a far more privileged container needs to be granted to
 the ``runner`` service account. This container runs privileged with the ``SYS_ADMIN`` and
 ``SYS_PTRACE`` capabilities. The privileged SCC uses ``runAsUser: RunAsAny``, so it does not force
 a specific user; the debug container typically runs as root in order to attach to and inspect other
 processes on the node.
 
-**Important**: These capabilities are **OPTIONAL** and only needed for the native debugging features mentioned above. Most Robusta deployments work fine with the baseline SCC.
+**Important**: We strongly recommend keeping these capabilities disabled. They are **OPTIONAL**, only needed for the playbook mentioned above, and kept as an option for backwards compatibility only. Most Robusta deployments work fine with the baseline SCC.
 
 Baseline SCC is Sufficient For:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,12 +72,14 @@ Baseline SCC is Sufficient For:
 Privileged SCC Only Needed For:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ❌ Python debugger (``python_debugger`` playbook)
-- ❌ Java debugger (``java_debugger`` playbook)
-- ❌ Node disk analyzer (``node_disk_analyzer`` playbook)
+- ❌ Node bash enricher (``node_bash_enricher`` playbook)
 
 Enabling the Privileged SCC
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+    We strongly recommend keeping the privileged SCC disabled for security reasons. It is kept as an option for backwards compatibility only.
 
 To support these features in a production environment, you may want to only temporarily
 enable this permission so that a normal request cannot bypass the less permissive SCC found
@@ -89,7 +91,7 @@ update the ``generated_values.yaml`` as follows:
     openshift:
       enabled: true
       createScc: true
-      createPrivilegedScc: true  # Optional - only if you need debugging features
+      createPrivilegedScc: true  # Not recommended - only if you need node_bash_enricher
 
 You may also reference an existing SCC using the ``openshift.privilegedSccName`` value.
 In test environments, you can reference the ``privileged`` SCC to enable these features in your

@@ -13,11 +13,15 @@ class NotAnActionException(Exception):
 
 
 @doublewrap
-def action(func: Callable):
+def action(func: Callable, command_action: bool = False):
     """
     Decorator to mark functions as playbook actions
+
+    A command action runs a command in a pod or on a node, or starts a job. It runs only from playbooks defined in the
+    runner's own configuration, and only when that configuration lists it under command_actions.
     """
     setattr(func, "_action_name", func.__name__)
+    setattr(func, "_command_action", command_action)
     return func
 
 
@@ -31,6 +35,7 @@ class Action:
 
         self.action_name = func.__name__
         self.func = func
+        self.command_action = getattr(func, "_command_action", False)
         self.event_type = self.__get_action_event_type(func)
         self.params_type = self.__get_action_params_type(func)
         self.from_params_func = None

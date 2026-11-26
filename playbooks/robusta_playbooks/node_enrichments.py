@@ -14,11 +14,9 @@ from robusta.api import (
     MarkdownBlock,
     NodeChangeEvent,
     NodeEvent,
-    PodRunningParams,
     ResourceGraphEnricherParams,
     action,
     create_node_graph_enrichment,
-    dmesg_enricher,
     get_node_allocatable_resources_table_block,
     get_node_running_pods_table_block_or_none,
     get_node_status_table_block,
@@ -116,18 +114,6 @@ def node_status_enricher(event: NodeEvent):
     logging.info("node_status_enricher is depricated, use status_enricher instead")
 
     event.add_enrichment([get_node_status_table_block(node)])
-
-
-@action
-def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
-    """
-    Gets the dmesg from a node
-    """
-    node = event.get_node()
-    if not node:
-        logging.error(f"node_dmesg_enricher was called on event without node : {event}")
-        return
-    dmesg_enricher(event, node, params.custom_annotations)
 
 
 @action
