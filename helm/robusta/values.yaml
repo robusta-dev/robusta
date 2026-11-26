@@ -771,7 +771,7 @@ runner:
   # Runs the weekly KRR scan from a CronJob. It uses the settings below and globalConfig.prometheus_url,
   # and no other globalConfig or runner setting. See docs: "Cost Savings (KRR)".
   krrCronJob:
-    enabled: ~  # empty: on unless rbac.disableCreateFromServiceAccount is true
+    enabled: ~  # empty: on with enablePlatformPlaybooks, unless rbac.disableCreateFromServiceAccount is true
     schedule: "0 12 * * 1" # every Monday at 12:00
     timeout: 3600  # seconds
     image: ~  # defaults to image.registry/krr

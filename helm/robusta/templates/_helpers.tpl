@@ -52,7 +52,7 @@ dnsPolicy: ClusterFirst
 {{- end }}
 {{- $cronJobEnabled := .Values.runner.krrCronJob.enabled }}
 {{- if kindIs "invalid" $cronJobEnabled }}
-{{- $cronJobEnabled = not .Values.runner.rbac.disableCreateFromServiceAccount }}
+{{- $cronJobEnabled = and .Values.enablePlatformPlaybooks (not .Values.runner.rbac.disableCreateFromServiceAccount) }}
 {{- end }}
 {{- if and (dig "enabled" true .Values.runner) $cronJobEnabled (not (has "WeeklyKRRScan" .Values.disabledPlaybooks)) $hasRobustaSink }}true{{ end -}}
 {{- end -}}
