@@ -11,10 +11,10 @@ appVersion: 0.0.0
 
 dependencies:
   - name: kube-prometheus-stack
-    version: 72.0.1
+    version: 93.11.1
     condition: enablePrometheusStack
     repository: "https://prometheus-community.github.io/helm-charts"
   - name: holmes
-    version: 0.46.0
+    version: 0.48.0
     condition: enableHolmesGPT
     repository: "https://robusta-charts.storage.googleapis.com"
