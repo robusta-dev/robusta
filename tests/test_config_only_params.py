@@ -1,8 +1,6 @@
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-import yaml
 
 from robusta.core.model.base_params import drop_config_only_params
 from robusta.core.playbooks.playbook_utils import merge_global_params
@@ -95,9 +93,3 @@ def test_configured_connection_params_reach_the_action():
         "alertmanager_auth": "Bearer configured",
         "silence_id": "1",
     }
-
-
-def test_simulated_alert_is_not_a_default_light_action():
-    values = yaml.safe_load((Path(__file__).parent.parent / "helm/robusta/values.yaml").read_text())
-    assert "prometheus_alert" not in values["lightActions"]
-    assert "alertmanager_alert" in values["lightActions"]

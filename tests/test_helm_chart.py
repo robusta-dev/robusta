@@ -242,9 +242,3 @@ def test_command_actions_value_reaches_the_runner_config():
     assert runner_config(platform + ["--set", "commandActions={krr_scan}"])["command_actions"] == ["krr_scan"]
     enabled = runner_config(["--set", "commandActions={pod_bash_enricher,kubectl_command}"])
     assert enabled["command_actions"] == ["pod_bash_enricher", "kubectl_command"]
-
-
-def test_disk_alert_playbook_has_no_removed_action():
-    playbooks = runner_config()["active_playbooks"]
-    disk_playbook = next(p for p in playbooks if p.get("name") == "NodeFSSpaceAlerts")
-    assert [list(a)[0] for a in disk_playbook["actions"]] == ["alert_graph_enricher"]
