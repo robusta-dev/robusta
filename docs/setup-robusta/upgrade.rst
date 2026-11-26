@@ -8,6 +8,10 @@ Robusta is upgraded using ``helm upgrade``. For detailed instructions, see :ref:
 Helm Upgrade
 ^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+    If your install bundles ``kube-prometheus-stack`` (``enablePrometheusStack: true``) and you are upgrading to Robusta 0.56.0 or later from an earlier version, follow the :ref:`Manual Upgrade` steps instead. They update the Prometheus Operator CRDs before running the Helm upgrade.
+
 Find the Helm values that you installed Robusta with (typically a ``generated_values.yaml`` file).
 You'll need this to preserve settings during the upgrade.
 
