@@ -771,31 +771,23 @@ runner:
   # Enable hardened filesystem security (read-only root filesystem with writable volume mounts)
   hardenedFs: false
   setKRRSecurityContext: false
-  # Runs the weekly KRR scan from a CronJob.
+  # Runs the weekly KRR scan from a CronJob. It uses the settings below and globalConfig.prometheus_url,
+  # and no other globalConfig or runner setting. See docs: "Cost Savings (KRR)".
   krrCronJob:
     enabled: ~  # empty: on unless rbac.disableCreateFromServiceAccount is true
     schedule: "0 12 * * 1" # every Monday at 12:00
-    # empty settings default to the globalConfig value or runner env var named next to them
-    timeout: ~  # seconds. globalConfig.timeout, then 3600
-    image: ~  # KRR_IMAGE_OVERRIDE, then image.registry/krr
-    strategy: ~  # KRR_STRATEGY, globalConfig.strategy, then simple
-    krrArgs: ""  # globalConfig.krr_args
-    maxWorkers: ~  # globalConfig.max_workers, then 3
-    verbose: false  # or globalConfig.krr_verbose
-    memoryRequest: ~  # KRR_MEMORY_REQUEST, then 2Gi
-    memoryLimit: ~  # KRR_MEMORY_LIMIT, then 2Gi
-    # scheduling fields such as tolerations and nodeSelector. Defaults to globalConfig.krr_job_spec
+    timeout: 3600  # seconds
+    image: ~  # defaults to image.registry/krr
+    strategy: simple
+    # extra KRR arguments, for example Prometheus credentials. Runs in a shell, so "$NAME" reads an env var
+    krrArgs: ""
+    memoryRequest: 2Gi
+    memoryLimit: 2Gi
+    # pod scheduling fields such as tolerations, nodeSelector and affinity
     jobSpec: {}
-    annotations: {}  # added to globalConfig.custom_annotations
-    # env vars and env sources of the KRR pod, for example Prometheus credentials.
-    # The runner's additional_env_vars and additional_env_froms are not passed to it.
+    # env vars and env sources of the KRR pod
     additional_env_vars: []
     additional_env_froms: []
-    # an existing Secret holding the Prometheus Authorization header, used instead of
-    # globalConfig.prometheus_auth
-    prometheusAuthSecret:
-      name: ""
-      key: ""
   #Enabled custom DNS configuration for runner
   dnsConfig:
     enabled: false

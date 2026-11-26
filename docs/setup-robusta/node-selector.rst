@@ -113,18 +113,17 @@ Add the following to your Helm values:
 .. code-block:: yaml
 
 
-    globalConfig:
-      krr_job_spec:
-        tolerations:
-        - key: "appname"
-          operator: "Equal"
-          value: "robusta"
-          effect: "NoSchedule"
-          
-    holmes:
-      tolerations:  ... # copy from above
-
     runner:
+      tolerations:
+      - key: "appname"
+        operator: "Equal"
+        value: "robusta"
+        effect: "NoSchedule"
+      krrCronJob:
+        jobSpec:
+          tolerations:  ... # copy from above
+
+    holmes:
       tolerations:  ... # copy from above
 
     kubewatch:
