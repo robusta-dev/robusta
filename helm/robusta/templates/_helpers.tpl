@@ -46,7 +46,11 @@ dnsPolicy: ClusterFirst
 {{- end -}}
 
 {{- define "robusta.krrCronJobEnabled" -}}
-{{- if and (dig "enabled" true .Values.runner) .Values.runner.krrCronJob.enabled (not (has "WeeklyKRRScan" .Values.disabledPlaybooks)) (contains "\"robusta_sink\":" (toJson .Values.sinksConfig)) }}true{{ end -}}
+{{- $hasRobustaSink := false }}
+{{- range .Values.sinksConfig }}
+{{- $hasRobustaSink = or $hasRobustaSink .robusta_sink }}
+{{- end }}
+{{- if and (dig "enabled" true .Values.runner) .Values.runner.krrCronJob.enabled (not (has "WeeklyKRRScan" .Values.disabledPlaybooks)) $hasRobustaSink }}true{{ end -}}
 {{- end -}}
 
 {{ define "robusta.configfile" -}}

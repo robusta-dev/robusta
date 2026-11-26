@@ -591,7 +591,7 @@ def test_krr_cronjob_keeps_runner_env_settings(tmp_path):
 
 
 def test_krr_cronjob_needs_robusta_sink():
-    docs = render_full_chart(["--set-json", 'sinksConfig=[{"file_sink": {"name": "test"}}]'])
+    docs = render_full_chart(["--set", "sinksConfig[0].robusta_sink=null", "--set", "sinksConfig[0].file_sink.name=test"])
     assert get_doc(docs, "CronJob", "robusta-krr") is None
 
 
