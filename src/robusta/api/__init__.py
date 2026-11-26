@@ -69,7 +69,6 @@ from robusta.core.model.env_vars import (
     PRINTED_TABLE_MAX_WIDTH,
     PROMETHEUS_ENABLED,
     PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
-    RELAY_EXTERNAL_ACTIONS_URL,
     RELEASE_NAME,
     RESOURCE_UPDATES_CACHE_TTL_SEC,
     ROBUSTA_LOGO_URL,
@@ -174,7 +173,6 @@ from robusta.core.reporting import (
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,
     ExternalActionRequest,
-    OutgoingActionRequest,
     PartialAuth,
     sign_action_request,
 )
@@ -204,7 +202,6 @@ from robusta.core.schedule.model import (
 )
 from robusta.core.sinks import SinkBase, SinkBaseParams, SinkConfigBase
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper, KafkaSinkParams
-from robusta.core.triggers.helm_releases_triggers import HelmReleasesEvent, HelmReleasesTriggerEvent
 from robusta.integrations.argocd.argocd_client import ArgoCDClient
 from robusta.integrations.git.git_repo import ClusterChanges, GitRepo, GitRepoManager, SingleChange
 from robusta.integrations.grafana import Grafana

@@ -37,14 +37,12 @@ Issues are organized by installation phase to help you quickly find solutions.
 
 **Quick Diagnosis:**
 
-.. raw:: html
+.. admonition:: Where are you stuck?
+   :class: info
 
-   <div style="margin: 20px 0; padding: 15px; background-color: #f0f7ff; border-left: 4px solid #0066cc;">
-   <strong>Where are you stuck?</strong><br>
-   • <a href="#phase-1-helm-installation">Phase 1: Helm Installation</a> - Helm install/upgrade failures<br>
-   • <a href="#phase-2-runtime-issues">Phase 2: Runtime Issues</a> - Alerts not arriving, pods crashing<br>
-   • <a href="#phase-3-integration-issues">Phase 3: Integration Issues</a> - Slack, Prometheus connection problems
-   </div>
+   * `Phase 1: Helm Installation`_ - Helm install/upgrade failures
+   * `Phase 2: Runtime Issues`_ - Alerts not arriving, pods crashing
+   * `Phase 3: Integration Issues`_ - Slack, Prometheus connection problems
 
 Phase 1: Helm Installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
