@@ -14,10 +14,10 @@ pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm binar
 
 READ_ONLY_VERBS = {"get", "list", "watch"}
 RBAC_FLAGS = [
-    "enablePodCreate",
     "enablePodDelete",
     "enableJobDelete",
     "enableNodeEdit",
+    "enableNodeCreate",
     "enableRobustaConfigMapCreate",
     "enableRobustaConfigMapEdit",
 ]
@@ -139,9 +139,6 @@ def test_all_flags_grant_only_listed_write_rules():
         ("ClusterRole", "pods/eviction", "create"),
         ("ClusterRole", "pods", "delete"),
         ("ClusterRole", "jobs", "delete"),
-        ("Role", "pods", "create"),
-        ("Role", "pods", "delete"),
-        ("Role", "pods/exec", "create"),
         ("Role", "configmaps", "create"),
         ("Role", "configmaps", "update"),
         ("ClusterRole", "securitycontextconstraints", "use"),
@@ -150,8 +147,9 @@ def test_all_flags_grant_only_listed_write_rules():
     assert configmap_update[0]["resourceNames"] == ["scheduled-jobs"]
 
     light_actions = runner_config(enable(*RBAC_FLAGS))["light_actions"]
-    assert {"delete_pod", "delete_job", "drain", "pod_ps"} <= set(light_actions)
-    assert not {"rollout_restart", "krr_scan", "popeye_scan"} & set(light_actions)
+    assert {"delete_pod", "delete_job", "drain", "cordon"} <= set(light_actions)
+    assert not {"rollout_restart", "krr_scan", "popeye_scan", "pod_ps"} & set(light_actions)
+    assert "drain" not in runner_config(enable("enableNodeEdit"))["light_actions"]
 
 
 def test_prometheus_stack_has_no_admission_webhook_rules():
@@ -161,13 +159,9 @@ def test_prometheus_stack_has_no_admission_webhook_rules():
     assert not [doc for doc in docs if "admission" in doc["metadata"]["name"]]
 
 
-def test_pod_create_flag_enables_node_fs_playbook():
-    assert "NodeFSSpaceAlerts" in playbook_names(enable("enablePodCreate"))
-
-
 def test_job_creating_playbooks_always_disabled():
     names = playbook_names(enable(*RBAC_FLAGS) + KRR_CRONJOB_DISABLED)
-    assert not {"WeeklyKRRScan", "RobustaMaintenance"} & names
+    assert not {"NodeFSSpaceAlerts", "WeeklyKRRScan", "RobustaMaintenance"} & names
 
 
 def test_namespace_scoped_rbac_renders_role_and_rolebinding():

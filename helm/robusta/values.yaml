@@ -753,10 +753,10 @@ runner:
   rbac:
     # Opt-in write access for the runner. An action that needs a disabled flag logs an error.
     # See docs: "Read-Only Service Account".
-    enablePodCreate: false  # debugger pods and pod exec in Robusta's namespace
     enablePodDelete: false  # delete_pod and delete_alert_pod actions
     enableJobDelete: false  # delete_job action
     enableNodeEdit: false  # cordon, uncordon and drain actions
+    enableNodeCreate: false  # pod evictions, needed by drain
     # the scheduled-jobs ConfigMap. Scheduled playbooks need both
     enableRobustaConfigMapCreate: false
     enableRobustaConfigMapEdit: false

@@ -20,19 +20,19 @@ Each kind of write access has its own flag under ``runner.rbac``. All flags defa
 
     runner:
       rbac:
-        enablePodCreate: false               # debugger pods and pod exec in Robusta's namespace
         enablePodDelete: false               # delete pods
         enableJobDelete: false               # delete Jobs
-        enableNodeEdit: false                # cordon, uncordon and drain nodes
+        enableNodeEdit: false                # cordon and uncordon nodes
+        enableNodeCreate: false              # evict pods when draining nodes
         enableRobustaConfigMapCreate: false  # create ConfigMaps in Robusta's namespace
         enableRobustaConfigMapEdit: false    # update the scheduled-jobs ConfigMap
 
 What each flag grants, and the actions that need it:
 
-- ``enablePodCreate``: ``create`` and ``delete`` on pods and ``create`` on ``pods/exec``, in Robusta's namespace. Needed by actions that start a debugger pod, such as ``node_disk_analyzer``, ``python_profiler``, ``pod_ps``, ``python_memory``, ``debugger_stack_trace`` and the node bash and dmesg enrichers. Also enables the ``NodeFSSpaceAlerts`` playbook
 - ``enablePodDelete``: ``delete`` on pods. Needed by ``delete_pod`` and ``delete_alert_pod``
 - ``enableJobDelete``: ``delete`` on Jobs. Needed by ``delete_job``
-- ``enableNodeEdit``: ``patch`` on nodes and ``create`` on ``pods/eviction``. Needed by ``cordon``, ``uncordon`` and ``drain``
+- ``enableNodeEdit``: ``patch`` on nodes. Needed by ``cordon``, ``uncordon`` and ``drain``
+- ``enableNodeCreate``: ``create`` on ``pods/eviction``. Needed by ``drain``, together with ``enableNodeEdit``
 - ``enableRobustaConfigMapCreate`` and ``enableRobustaConfigMapEdit``: ``create`` on ConfigMaps in Robusta's namespace, and ``update`` on the ``scheduled-jobs`` ConfigMap only. Needed by scheduled playbooks, see below
 
 When an action runs without the flag it needs, the runner logs an error that names the flag and links to this page.

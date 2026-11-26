@@ -93,10 +93,7 @@ alert_relabel:
 {{ toYaml  .Values.alertRelabel | indent 2 }}
 
 {{- $rbac := .Values.runner.rbac }}
-{{- $lightActions := without .Values.lightActions "rollout_restart" "create_pvc_snapshot" "krr_scan" "popeye_scan" }}
-{{- if not $rbac.enablePodCreate }}
-{{- $lightActions = without $lightActions "node_disk_analyzer" "node_dmesg_enricher" "volume_analysis" "python_profiler" "pod_ps" "python_memory" "debugger_stack_trace" "python_process_inspector" }}
-{{- end }}
+{{- $lightActions := without .Values.lightActions "rollout_restart" "create_pvc_snapshot" "krr_scan" "popeye_scan" "node_disk_analyzer" "node_dmesg_enricher" "volume_analysis" "python_profiler" "pod_ps" "python_memory" "debugger_stack_trace" "python_process_inspector" }}
 {{- if not $rbac.enablePodDelete }}
 {{- $lightActions = without $lightActions "delete_pod" }}
 {{- end }}
@@ -105,6 +102,9 @@ alert_relabel:
 {{- end }}
 {{- if not $rbac.enableNodeEdit }}
 {{- $lightActions = without $lightActions "drain" "cordon" "uncordon" }}
+{{- end }}
+{{- if not $rbac.enableNodeCreate }}
+{{- $lightActions = without $lightActions "drain" }}
 {{- end }}
 light_actions:
 {{ toYaml $lightActions | indent 2 }}
@@ -115,11 +115,8 @@ active_playbooks:
 {{- end }}
 
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
-{{- if not $rbac.enablePodCreate }}
-{{- $disabledPlaybooks = append $disabledPlaybooks "NodeFSSpaceAlerts" }}
-{{- end }}
-{{- /* these playbooks create jobs */}}
-{{- $disabledPlaybooks = concat $disabledPlaybooks (list "WeeklyKRRScan" "RobustaMaintenance") }}
+{{- /* these playbooks create pods or jobs */}}
+{{- $disabledPlaybooks = concat $disabledPlaybooks (list "NodeFSSpaceAlerts" "WeeklyKRRScan" "RobustaMaintenance") }}
 {{- if include "robusta.krrCronJobEnabled" . }}
 {{- $disabledPlaybooks = append $disabledPlaybooks "WeeklyKRRScan" }}
 {{- range $playbook := .Values.customPlaybooks }}

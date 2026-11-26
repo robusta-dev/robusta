@@ -5,7 +5,7 @@ import pytest
 
 from playbooks.robusta_playbooks import node_actions, pod_actions
 from robusta.core.playbooks.rbac_flags import RBAC_FLAGS_DOCS_URL, require_rbac_flag
-from robusta.integrations.kubernetes.custom_models import RobustaJob
+from robusta.integrations.kubernetes.custom_models import RobustaJob, RobustaPod
 from robusta.runner import config_loader
 from robusta.runner.config_loader import ConfigLoader
 from robusta.utils.error_codes import ActionException
@@ -28,6 +28,17 @@ def test_delete_pod_with_flag_disabled(monkeypatch):
     with pytest.raises(ActionException):
         pod_actions.delete_pod(event)
     event.get_pod.return_value.delete.assert_not_called()
+
+
+def test_drain_needs_node_create_flag(monkeypatch):
+    monkeypatch.setattr(node_actions, "ENABLE_NODE_CREATE", False)
+    with pytest.raises(ActionException, match="enableNodeCreate"):
+        node_actions.drain(MagicMock())
+
+
+def test_pod_creation_not_supported():
+    with pytest.raises(ActionException, match="create pods"):
+        RobustaPod.create_debugger_pod("pod", "node")
 
 
 def test_cordon_with_flag_disabled(monkeypatch):

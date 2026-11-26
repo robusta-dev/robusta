@@ -15,14 +15,13 @@ from kubernetes.client import ApiException
 from pydantic.v1 import BaseModel
 
 from robusta.core.model.env_vars import (
-    ENABLE_POD_CREATE,
     IMAGE_REGISTRY,
     INSTALLATION_NAMESPACE,
     POD_WAIT_RETRIES,
     POD_WAIT_RETRIES_SECONDS,
     RUNNER_SERVICE_ACCOUNT,
 )
-from robusta.core.playbooks.rbac_flags import reject_job_creation, require_rbac_flag
+from robusta.core.playbooks.rbac_flags import reject_creation
 from robusta.integrations.kubernetes.api_client_utils import (
     SUCCEEDED_STATE,
     exec_shell_command,
@@ -245,7 +244,7 @@ class RobustaPod(Pod):
         """
         Creates a debugging pod with high privileges
         """
-        require_rbac_flag(ENABLE_POD_CREATE, "enablePodCreate")
+        reject_creation("pods")
 
         volume_mounts = None
         volumes = None
@@ -529,7 +528,7 @@ class RobustaJob(Job):
         custom_pod_labels: Optional[Dict[str, str]] = None,
         return_logs: bool = True,
     ) -> str:
-        reject_job_creation()
+        reject_creation("Jobs")
         pod_meta = ObjectMeta(annotations=custom_annotations, labels=custom_pod_labels)
         if finalizers:
             pod_meta.finalizers = finalizers
