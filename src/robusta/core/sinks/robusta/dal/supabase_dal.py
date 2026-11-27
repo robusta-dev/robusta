@@ -11,7 +11,7 @@ from cachetools import TTLCache
 import httpx
 import requests
 from supabase_auth.errors import AuthRetryableError
-from postgrest._sync.request_builder import SyncQueryRequestBuilder
+from postgrest._sync.request_builder import SyncQueryRequestBuilder, SyncSingleRequestBuilder
 from postgrest.base_request_builder import BaseFilterRequestBuilder, QueryArgs
 from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
@@ -262,21 +262,31 @@ class SupabaseDal(AccountResourceFetcher):
 
     def patch_postgrest_execute(self):
         # This is somewhat hacky.
-        def execute_with_retry(_self):
-            try:
-                return self._original_execute(_self)
-            except PostgrestAPIError as exc:
-                message = exc.message or ""
-                if exc.code == "PGRST301" or "expired" in message.lower():
-                    # JWT expired. Sign in again and retry the query
-                    logging.error("JWT token expired/invalid, signing in to Supabase again")
-                    self.__connect(self.options)
-                    return self._original_execute(_self)
-                else:
-                    raise
+        def with_jwt_retry(original_execute):
+            def execute_with_retry(_self):
+                try:
+                    return original_execute(_self)
+                except PostgrestAPIError as exc:
+                    message = exc.message or ""
+                    if exc.code == "PGRST301" or "expired" in message.lower():
+                        # JWT expired. Sign in again and retry the query
+                        logging.error("JWT token expired/invalid, signing in to Supabase again")
+                        self.__connect(self.options)
+                        # The request keeps the headers it was built with.
+                        headers = self.client.options.headers
+                        _self.request.headers.update(
+                            {"Authorization": headers["Authorization"], "apiKey": headers["apiKey"]}
+                        )
+                        return original_execute(_self)
+                    else:
+                        raise
+
+            return execute_with_retry
 
         self._original_execute = SyncQueryRequestBuilder.execute
-        SyncQueryRequestBuilder.execute = execute_with_retry
+        SyncQueryRequestBuilder.execute = with_jwt_retry(self._original_execute)
+        self._original_rpc_execute = SyncSingleRequestBuilder.execute
+        SyncSingleRequestBuilder.execute = with_jwt_retry(self._original_rpc_execute)
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
