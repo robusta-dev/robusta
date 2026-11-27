@@ -375,6 +375,11 @@ class PrometheusParams(ActionParams):
         if v and not v.startswith("http"):  # if the user configured url without http(s)
             v = f"http://{v}"
             logging.info(f"Adding protocol to prometheus_url: {v}")
+        if v:
+            trimmed = v.rstrip("/")
+            if trimmed != v:
+                logging.info("Stripped trailing slash from prometheus_url")
+            v = trimmed
         return v
 
     @validator("prometheus_url_query_string", allow_reuse=True)
