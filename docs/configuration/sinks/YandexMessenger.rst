@@ -46,6 +46,8 @@ Configuring the Yandex Messenger sink
             disable_links_preview: # Disable links preview, dafault = true
             mark_important: # Mark sent messages as important, default = false
             send_files: # Send files (logs, images), default = true
+            send_images_as_gallery: false
+            send_documents: true
 
 File attachments
 ------------------------------------------------
@@ -61,6 +63,17 @@ Here are some examples of how that might look in your chat or channel:
   :align: center
 
 If you don't want Robusta to send file attachments, set ``send_files`` to ``False`` in your Yandex Messenger sink configuration.
+
+To send the alert text and graphs in one Telemost message, set
+``send_images_as_gallery: true`` and keep ``send_files: true``. This uses the
+Telemost `sendGallery API <https://yandex.ru/dev/messenger/doc/ru/api-requests/message-send-gallery>`_.
+Findings without images use a regular text message. If the API explicitly
+rejects a gallery, Robusta sends the alert text without the images.
+
+Set ``send_documents: false`` to skip separate document and table attachments
+while keeping image delivery enabled. Both options preserve the existing
+behavior by default. Telemost's gallery endpoint doesn't offer a link-preview
+setting, so ``disable_links_preview`` applies only to regular text messages.
 
 After you have configured the sink in your ``generated_values.yaml`` save the file and run:
 

@@ -1,19 +1,29 @@
 import logging
+import mimetypes
 import os
 import uuid
 
-import mimetypes
 import requests
 
-from robusta.core.reporting.utils import PNG_SUFFIX, SVG_SUFFIX, convert_svg_to_png, is_image
+from robusta.core.reporting.utils import SVG_SUFFIX, convert_svg_to_png, is_image
 
 YM_API_BASE_URL = os.environ.get("YM_API_BASE_URL", "https://botapi.messenger.yandex.net")
 YM_API_SEND_TEXT_ENDPOINT = "/bot/v1/messages/sendText"
 YM_API_SEND_FILE_ENDPOINT = "/bot/v1/messages/sendFile"
 YM_API_SEND_IMAGE_ENDPOINT = "/bot/v1/messages/sendImage"
+YM_API_SEND_GALLERY_ENDPOINT = "/bot/v1/messages/sendGallery/"
+
 
 class YaMessengerClient:
-    def __init__(self, bot_token: str, chat_id: str, user_name: str, disable_notifications: bool, disable_links_preview: bool, mark_important: bool):
+    def __init__(
+        self,
+        bot_token: str,
+        chat_id: str,
+        user_name: str,
+        disable_notifications: bool,
+        disable_links_preview: bool,
+        mark_important: bool,
+    ):
         self.bot_token = bot_token
         self.chat_id = chat_id
         self.user_name = user_name
@@ -24,9 +34,7 @@ class YaMessengerClient:
     def send_message(self, message: str):
         url = f"{YM_API_BASE_URL}{YM_API_SEND_TEXT_ENDPOINT}"
 
-        headers = {
-            "Authorization": f"OAuth {self.bot_token}"
-        }
+        headers = {"Authorization": f"OAuth {self.bot_token}"}
 
         request = {
             "disable_notification": self.disable_notifications,
@@ -48,24 +56,66 @@ class YaMessengerClient:
                 f"Failed to send a message via Yandex.Messenger, chat_id:{self.chat_id} reason:{response.reason} response:{response.text})"
             )
 
-    def send_file(self, file_name: str, contents: bytes):        
+    @staticmethod
+    def _prepare_file(file_name: str, contents: bytes):
         if file_name.endswith(SVG_SUFFIX):
             try:
-                contents = convert_svg_to_png(contents)
-                file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
+                png = convert_svg_to_png(contents)
+                if png is not None:
+                    file_name = file_name.removesuffix(SVG_SUFFIX) + ".png"
+                    contents = png
             except Exception:
-                logging.exception(
-                    f"Failed to convert an apparent SVG image to PNG, filename:{file_name}"
-                )
+                logging.exception(f"Failed to convert an apparent SVG image to PNG, filename:{file_name}")
+        return file_name, contents, mimetypes.guess_type(file_name, strict=False)[0]
+
+    def send_gallery(self, message: str, images: list[tuple[str, bytes]]) -> bool:
+        """Return false when no gallery was posted and text can be sent safely."""
+        data = {
+            "text": message,
+            "disable_notification": str(self.disable_notifications).lower(),
+            "important": str(self.mark_important).lower(),
+        }
+        if self.user_name:
+            data["login"] = self.user_name
+        else:
+            data["chat_id"] = self.chat_id
+
+        try:
+            files = [("images", self._prepare_file(name, contents)) for name, contents in images]
+        except Exception:
+            logging.exception("Could not prepare the Yandex Messenger gallery; sending text instead")
+            return False
+
+        response = requests.post(
+            f"{YM_API_BASE_URL}{YM_API_SEND_GALLERY_ENDPOINT}",
+            headers={"Authorization": f"OAuth {self.bot_token}"},
+            data=data,
+            files=files,
+            timeout=30,
+        )
+        if response.status_code in (400, 413, 415, 422):
+            logging.warning(
+                "Yandex Messenger rejected the gallery (HTTP %s); sending text instead", response.status_code
+            )
+            return False
+        response.raise_for_status()
+        if response.json().get("ok") is False:
+            logging.warning("Yandex Messenger rejected the gallery; sending text instead")
+            return False
+        return True
+
+    def send_file(self, file_name: str, contents: bytes):
+        file_name, contents, content_type = self._prepare_file(file_name, contents)
 
         file_type = "image" if is_image(file_name) else "document"
-        content_type = mimetypes.guess_type(file_name, strict=False)[0]
 
-        url = f"{YM_API_BASE_URL}{YM_API_SEND_IMAGE_ENDPOINT}" if file_type == "image" else f"{YM_API_BASE_URL}{YM_API_SEND_FILE_ENDPOINT}"
+        url = (
+            f"{YM_API_BASE_URL}{YM_API_SEND_IMAGE_ENDPOINT}"
+            if file_type == "image"
+            else f"{YM_API_BASE_URL}{YM_API_SEND_FILE_ENDPOINT}"
+        )
 
-        headers = {
-            "Authorization": f"OAuth {self.bot_token}"
-        }
+        headers = {"Authorization": f"OAuth {self.bot_token}"}
 
         request = {
             file_type: (file_name, contents, content_type),
